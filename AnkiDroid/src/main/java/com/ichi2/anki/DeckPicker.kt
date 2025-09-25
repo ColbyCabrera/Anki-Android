@@ -345,15 +345,10 @@ open class DeckPicker :
     private val exitAndSyncBackCallback =
         object : OnBackPressedCallback(enabled = true) {
             override fun handleOnBackPressed() {
-                // TODO: Room for improvement now we use back callbacks
-                // can't use launchCatchingTask because any errors
-                // would need to be shown in the UI
-                lifecycleScope
-                    .launch {
-                        automaticSync(runInBackground = true)
-                    }.invokeOnCompletion {
-                        finish()
-                    }
+                lifecycleScope.launch {
+                    automaticSync(runInBackground = true)
+                    finish()
+                }
             }
         }
 
@@ -1152,7 +1147,10 @@ open class DeckPicker :
 
     private fun processReviewResults(resultCode: Int) {
         if (resultCode == AbstractFlashcardViewer.RESULT_NO_MORE_CARDS) {
-            CongratsPage.onReviewsCompleted(this, getColUnsafe.sched.totalCount() == 0)
+            lifecycleScope.launch {
+                val isFinished = withCol { sched.totalCount() == 0 }
+                CongratsPage.onReviewsCompleted(this@DeckPicker, isFinished)
+            }
         }
     }
 
@@ -1467,22 +1465,25 @@ open class DeckPicker :
         // Force a one-way sync if flag was set in upgrade path, asking the user to confirm if necessary
         if (recommendOneWaySync) {
             recommendOneWaySync = false
-            try {
-                getColUnsafe.modSchema()
-            } catch (e: ConfirmModSchemaException) {
-                Timber.w("Forcing one-way sync")
-                e.log()
-                // If libanki determines it's necessary to confirm the one-way sync then show a confirmation dialog
-                // We have to show the dialog via the DialogHandler since this method is called via an async task
-                val res = resources
-                val message =
-                    """
-                    ${res.getString(R.string.full_sync_confirmation_upgrade)}
-                    
-                    ${res.getString(R.string.full_sync_confirmation)}
-                    """.trimIndent()
+            launchCatchingTask {
+                try {
+                    withCol { modSchema() }
+                } catch (e: ConfirmModSchemaException) {
+                    Timber.w("Forcing one-way sync")
+                    e.log()
+                    // If libanki determines it's necessary to confirm the one-way sync then show a confirmation dialog
+                    // We have to show the dialog via the DialogHandler since this method is called via an async task
+                    val res = resources
+                    val message =
+                        """
+                        ${res.getString(R.string.full_sync_confirmation_upgrade)}
+                        
+                        ${res.getString(R.string.full_sync_confirmation)}
+                        """
+                            .trimIndent()
 
-                dialogHandler.sendMessage(OneWaySyncDialog(message).toMessage())
+                    dialogHandler.sendMessage(OneWaySyncDialog(message).toMessage())
+                }
             }
         } else {
             launchCatchingTask {
@@ -2203,7 +2204,9 @@ class OneWaySyncDialog(
         val confirm =
             Runnable {
                 // Bypass the check once the user confirms
-                CollectionManager.getColUnsafe().modSchemaNoCheck()
+                activity.launchCatchingTask {
+                    withCol { modSchemaNoCheck() }
+                }
             }
         dialog.setConfirm(confirm)
         dialog.setArgs(message)
