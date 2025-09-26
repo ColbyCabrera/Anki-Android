@@ -1,5 +1,6 @@
 package com.ichi2.anki.ui.compose
 
+import android.os.Build
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,6 +28,10 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,10 +41,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.ichi2.anki.R
 import com.ichi2.anki.deckpicker.DisplayDeckNode
+import com.ichi2.themes.Themes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,9 +82,11 @@ fun AnkiDroidApp(
     onSearchFocusRequested: () -> Unit,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
-    val searchFocusRequester = remember {
-        androidx.compose.ui.focus.FocusRequester()
-    }
+    val searchFocusRequester =
+        remember {
+            androidx.compose.ui.focus
+                .FocusRequester()
+        }
 
     LaunchedEffect(requestSearchFocus) {
         if (requestSearchFocus) {
@@ -86,7 +95,24 @@ fun AnkiDroidApp(
         }
     }
 
-    MaterialTheme {
+    val context = LocalContext.current
+    val currentAnkiTheme = Themes.currentTheme
+    val colorScheme =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (currentAnkiTheme.isNightMode) {
+                dynamicDarkColorScheme(context)
+            } else {
+                dynamicLightColorScheme(context)
+            }
+        } else {
+            if (currentAnkiTheme.isNightMode) {
+                darkColorScheme()
+            } else {
+                lightColorScheme()
+            }
+        }
+
+    MaterialTheme(colorScheme = colorScheme) {
         if (fragmented) {
             var isSearchOpen by remember { mutableStateOf(false) }
             var isStudyOptionsMenuOpen by remember { mutableStateOf(false) }
@@ -101,7 +127,7 @@ fun AnkiDroidApp(
                             IconButton(onClick = onNavigationIconClick) {
                                 Icon(
                                     Icons.Default.Menu,
-                                    contentDescription = stringResource(R.string.navigation_drawer_open)
+                                    contentDescription = stringResource(R.string.navigation_drawer_open),
                                 )
                             }
                         },
@@ -110,9 +136,10 @@ fun AnkiDroidApp(
                                 TextField(
                                     value = searchQuery,
                                     onValueChange = onSearchQueryChanged,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .focusRequester(searchFocusRequester),
+                                    modifier =
+                                        Modifier
+                                            .weight(1f)
+                                            .focusRequester(searchFocusRequester),
                                     placeholder = { Text(stringResource(R.string.search_decks)) },
                                     trailingIcon = {
                                         IconButton(onClick = {
@@ -121,7 +148,7 @@ fun AnkiDroidApp(
                                         }) {
                                             Icon(
                                                 Icons.Default.Close,
-                                                contentDescription = stringResource(R.string.close)
+                                                contentDescription = stringResource(R.string.close),
                                             )
                                         }
                                     },
@@ -130,7 +157,7 @@ fun AnkiDroidApp(
                                 IconButton(onClick = { isSearchOpen = true }) {
                                     Icon(
                                         Icons.Default.Search,
-                                        contentDescription = stringResource(R.string.search_decks)
+                                        contentDescription = stringResource(R.string.search_decks),
                                     )
                                 }
                             }
@@ -138,7 +165,7 @@ fun AnkiDroidApp(
                                 IconButton(onClick = { isStudyOptionsMenuOpen = true }) {
                                     Icon(
                                         Icons.Default.MoreVert,
-                                        contentDescription = stringResource(R.string.more_options)
+                                        contentDescription = stringResource(R.string.more_options),
                                     )
                                 }
                                 DropdownMenu(
@@ -155,7 +182,7 @@ fun AnkiDroidApp(
                                             leadingIcon = {
                                                 Icon(
                                                     Icons.Default.Refresh,
-                                                    contentDescription = null
+                                                    contentDescription = null,
                                                 )
                                             },
                                         )
@@ -168,7 +195,7 @@ fun AnkiDroidApp(
                                             leadingIcon = {
                                                 Icon(
                                                     Icons.Outlined.Delete,
-                                                    contentDescription = null
+                                                    contentDescription = null,
                                                 )
                                             },
                                         )
@@ -182,7 +209,7 @@ fun AnkiDroidApp(
                                             leadingIcon = {
                                                 Icon(
                                                     Icons.Default.Star,
-                                                    contentDescription = null
+                                                    contentDescription = null,
                                                 )
                                             },
                                         )
@@ -196,7 +223,7 @@ fun AnkiDroidApp(
                                         leadingIcon = {
                                             Icon(
                                                 Icons.Default.Settings,
-                                                contentDescription = null
+                                                contentDescription = null,
                                             )
                                         },
                                     )
@@ -210,7 +237,7 @@ fun AnkiDroidApp(
                                             leadingIcon = {
                                                 Icon(
                                                     painter = painterResource(R.drawable.undo_24px),
-                                                    contentDescription = null
+                                                    contentDescription = null,
                                                 )
                                             },
                                         )
@@ -264,7 +291,7 @@ fun AnkiDroidApp(
                 Row(
                     Modifier
                         .fillMaxSize()
-                        .padding(paddingValues)
+                        .padding(paddingValues),
                 ) {
                     Box(modifier = Modifier.weight(1f)) {
                         DeckPickerContent(

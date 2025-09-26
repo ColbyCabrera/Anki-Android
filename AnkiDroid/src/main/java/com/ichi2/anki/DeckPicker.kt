@@ -1479,8 +1479,7 @@ open class DeckPicker :
                         ${res.getString(R.string.full_sync_confirmation_upgrade)}
                         
                         ${res.getString(R.string.full_sync_confirmation)}
-                        """
-                            .trimIndent()
+                        """.trimIndent()
 
                     dialogHandler.sendMessage(OneWaySyncDialog(message).toMessage())
                 }
