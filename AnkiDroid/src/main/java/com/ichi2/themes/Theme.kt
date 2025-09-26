@@ -29,11 +29,12 @@ enum class Theme(
     PLAIN("2", R.style.Theme_Light_Plain, false),
     BLACK("3", R.style.Theme_Dark_Black, true),
     DARK("4", R.style.Theme_Dark, true),
+    MATERIAL_YOU("5", 0, false),
     ;
 
     companion object {
         val fallback: Theme
-            get() = LIGHT
+            get() = MATERIAL_YOU
 
         fun ofId(id: String): Theme = entries.find { it.id == id } ?: fallback
     }

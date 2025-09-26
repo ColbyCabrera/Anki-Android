@@ -1,5 +1,6 @@
 package com.ichi2.anki.ui.compose
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,12 +21,17 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -35,10 +41,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.ichi2.anki.R
 import com.ichi2.anki.deckpicker.DisplayDeckNode
+import com.ichi2.themes.Theme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,10 +81,13 @@ fun AnkiDroidApp(
     requestSearchFocus: Boolean,
     onSearchFocusRequested: () -> Unit,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    theme: Theme,
 ) {
-    val searchFocusRequester = remember {
-        androidx.compose.ui.focus.FocusRequester()
-    }
+    val searchFocusRequester =
+        remember {
+            androidx.compose.ui.focus
+                .FocusRequester()
+        }
 
     LaunchedEffect(requestSearchFocus) {
         if (requestSearchFocus) {
@@ -85,232 +96,248 @@ fun AnkiDroidApp(
         }
     }
 
-    if (fragmented) {
-        var isSearchOpen by remember { mutableStateOf(false) }
-        var isStudyOptionsMenuOpen by remember { mutableStateOf(false) }
-        var isFabMenuOpen by remember { mutableStateOf(false) }
-        // Tablet layout
-        Scaffold(
-            snackbarHost = { SnackbarHost(snackbarHostState) },
-            topBar = {
-                TopAppBar(
-                    title = { if (!isSearchOpen) Text(stringResource(R.string.app_name)) },
-                    navigationIcon = {
-                        IconButton(onClick = onNavigationIconClick) {
-                            Icon(
-                                Icons.Default.Menu,
-                                contentDescription = stringResource(R.string.navigation_drawer_open)
-                            )
-                        }
-                    },
-                    actions = {
-                        if (isSearchOpen) {
-                            TextField(
-                                value = searchQuery,
-                                onValueChange = onSearchQueryChanged,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .focusRequester(searchFocusRequester),
-                                placeholder = { Text(stringResource(R.string.search_decks)) },
-                                trailingIcon = {
-                                    IconButton(onClick = {
-                                        onSearchQueryChanged("")
-                                        isSearchOpen = false
-                                    }) {
-                                        Icon(
-                                            Icons.Default.Close,
-                                            contentDescription = stringResource(R.string.close)
+    val colorScheme =
+        when (theme) {
+            Theme.MATERIAL_YOU ->
+                if (isSystemInDarkTheme()) {
+                    dynamicDarkColorScheme(LocalContext.current)
+                } else {
+                    dynamicLightColorScheme(LocalContext.current)
+                }
+            else -> if (theme.isNightMode) darkColorScheme() else lightColorScheme()
+        }
+
+    MaterialTheme(colorScheme = colorScheme) {
+        if (fragmented) {
+            var isSearchOpen by remember { mutableStateOf(false) }
+            var isStudyOptionsMenuOpen by remember { mutableStateOf(false) }
+            var isFabMenuOpen by remember { mutableStateOf(false) }
+            // Tablet layout
+            Scaffold(
+                snackbarHost = { SnackbarHost(snackbarHostState) },
+                topBar = {
+                    TopAppBar(
+                        title = { if (!isSearchOpen) Text(stringResource(R.string.app_name)) },
+                        navigationIcon = {
+                            IconButton(onClick = onNavigationIconClick) {
+                                Icon(
+                                    Icons.Default.Menu,
+                                    contentDescription = stringResource(R.string.navigation_drawer_open),
+                                )
+                            }
+                        },
+                        actions = {
+                            if (isSearchOpen) {
+                                TextField(
+                                    value = searchQuery,
+                                    onValueChange = onSearchQueryChanged,
+                                    modifier =
+                                        Modifier
+                                            .weight(1f)
+                                            .focusRequester(searchFocusRequester),
+                                    placeholder = { Text(stringResource(R.string.search_decks)) },
+                                    trailingIcon = {
+                                        IconButton(onClick = {
+                                            onSearchQueryChanged("")
+                                            isSearchOpen = false
+                                        }) {
+                                            Icon(
+                                                Icons.Default.Close,
+                                                contentDescription = stringResource(R.string.close),
+                                            )
+                                        }
+                                    },
+                                )
+                            } else {
+                                IconButton(onClick = { isSearchOpen = true }) {
+                                    Icon(
+                                        Icons.Default.Search,
+                                        contentDescription = stringResource(R.string.search_decks),
+                                    )
+                                }
+                            }
+                            if (studyOptionsData != null) {
+                                IconButton(onClick = { isStudyOptionsMenuOpen = true }) {
+                                    Icon(
+                                        Icons.Default.MoreVert,
+                                        contentDescription = stringResource(R.string.more_options),
+                                    )
+                                }
+                                DropdownMenu(
+                                    expanded = isStudyOptionsMenuOpen,
+                                    onDismissRequest = { isStudyOptionsMenuOpen = false },
+                                ) {
+                                    if (studyOptionsData.isFiltered) {
+                                        DropdownMenuItem(
+                                            text = { Text(stringResource(R.string.rebuild)) },
+                                            onClick = {
+                                                onRebuildDeck(studyOptionsData.deckId)
+                                                isStudyOptionsMenuOpen = false
+                                            },
+                                            leadingIcon = {
+                                                Icon(
+                                                    Icons.Default.Refresh,
+                                                    contentDescription = null,
+                                                )
+                                            },
+                                        )
+                                        DropdownMenuItem(
+                                            text = { Text(stringResource(R.string.empty_cards_action)) },
+                                            onClick = {
+                                                onEmptyDeck(studyOptionsData.deckId)
+                                                isStudyOptionsMenuOpen = false
+                                            },
+                                            leadingIcon = {
+                                                Icon(
+                                                    Icons.Outlined.Delete,
+                                                    contentDescription = null,
+                                                )
+                                            },
+                                        )
+                                    } else {
+                                        DropdownMenuItem(
+                                            text = { Text(stringResource(R.string.custom_study)) },
+                                            onClick = {
+                                                onCustomStudy(studyOptionsData.deckId)
+                                                isStudyOptionsMenuOpen = false
+                                            },
+                                            leadingIcon = {
+                                                Icon(
+                                                    Icons.Default.Star,
+                                                    contentDescription = null,
+                                                )
+                                            },
                                         )
                                     }
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.deck_options)) },
+                                        onClick = {
+                                            onDeckOptionsItemSelected(studyOptionsData.deckId)
+                                            isStudyOptionsMenuOpen = false
+                                        },
+                                        leadingIcon = {
+                                            Icon(
+                                                Icons.Default.Settings,
+                                                contentDescription = null,
+                                            )
+                                        },
+                                    )
+                                    if (studyOptionsData.haveBuried) {
+                                        DropdownMenuItem(
+                                            text = { Text(stringResource(R.string.unbury)) },
+                                            onClick = {
+                                                onUnbury(studyOptionsData.deckId)
+                                                isStudyOptionsMenuOpen = false
+                                            },
+                                            leadingIcon = {
+                                                Icon(
+                                                    painter = painterResource(R.drawable.undo_24px),
+                                                    contentDescription = null,
+                                                )
+                                            },
+                                        )
+                                    }
+                                }
+                            }
+                        },
+                    )
+                },
+                floatingActionButton = {
+                    FloatingActionButton(
+                        onClick = { isFabMenuOpen = !isFabMenuOpen },
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add))
+                        DropdownMenu(
+                            expanded = isFabMenuOpen,
+                            onDismissRequest = { isFabMenuOpen = false },
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.add_note)) },
+                                onClick = {
+                                    onAddNote()
+                                    isFabMenuOpen = false
                                 },
                             )
-                        } else {
-                            IconButton(onClick = { isSearchOpen = true }) {
-                                Icon(
-                                    Icons.Default.Search,
-                                    contentDescription = stringResource(R.string.search_decks)
-                                )
-                            }
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.new_deck)) },
+                                onClick = {
+                                    onAddDeck()
+                                    isFabMenuOpen = false
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.get_shared)) },
+                                onClick = {
+                                    onAddSharedDeck()
+                                    isFabMenuOpen = false
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.new_dynamic_deck)) },
+                                onClick = {
+                                    onAddFilteredDeck()
+                                    isFabMenuOpen = false
+                                },
+                            )
                         }
-                        if (studyOptionsData != null) {
-                            IconButton(onClick = { isStudyOptionsMenuOpen = true }) {
-                                Icon(
-                                    Icons.Default.MoreVert,
-                                    contentDescription = stringResource(R.string.more_options)
-                                )
-                            }
-                            DropdownMenu(
-                                expanded = isStudyOptionsMenuOpen,
-                                onDismissRequest = { isStudyOptionsMenuOpen = false },
-                            ) {
-                                if (studyOptionsData.isFiltered) {
-                                    DropdownMenuItem(
-                                        text = { Text(stringResource(R.string.rebuild)) },
-                                        onClick = {
-                                            onRebuildDeck(studyOptionsData.deckId)
-                                            isStudyOptionsMenuOpen = false
-                                        },
-                                        leadingIcon = {
-                                            Icon(
-                                                Icons.Default.Refresh,
-                                                contentDescription = null
-                                            )
-                                        },
-                                    )
-                                    DropdownMenuItem(
-                                        text = { Text(stringResource(R.string.empty_cards_action)) },
-                                        onClick = {
-                                            onEmptyDeck(studyOptionsData.deckId)
-                                            isStudyOptionsMenuOpen = false
-                                        },
-                                        leadingIcon = {
-                                            Icon(
-                                                Icons.Outlined.Delete,
-                                                contentDescription = null
-                                            )
-                                        },
-                                    )
-                                } else {
-                                    DropdownMenuItem(
-                                        text = { Text(stringResource(R.string.custom_study)) },
-                                        onClick = {
-                                            onCustomStudy(studyOptionsData.deckId)
-                                            isStudyOptionsMenuOpen = false
-                                        },
-                                        leadingIcon = {
-                                            Icon(
-                                                Icons.Default.Star,
-                                                contentDescription = null
-                                            )
-                                        },
-                                    )
-                                }
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.deck_options)) },
-                                    onClick = {
-                                        onDeckOptionsItemSelected(studyOptionsData.deckId)
-                                        isStudyOptionsMenuOpen = false
-                                    },
-                                    leadingIcon = {
-                                        Icon(
-                                            Icons.Default.Settings,
-                                            contentDescription = null
-                                        )
-                                    },
-                                )
-                                if (studyOptionsData.haveBuried) {
-                                    DropdownMenuItem(
-                                        text = { Text(stringResource(R.string.unbury)) },
-                                        onClick = {
-                                            onUnbury(studyOptionsData.deckId)
-                                            isStudyOptionsMenuOpen = false
-                                        },
-                                        leadingIcon = {
-                                            Icon(
-                                                painter = painterResource(R.drawable.undo_24px),
-                                                contentDescription = null
-                                            )
-                                        },
-                                    )
-                                }
-                            }
-                        }
-                    },
-                )
-            },
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = { isFabMenuOpen = !isFabMenuOpen },
+                    }
+                },
+            ) { paddingValues ->
+                Row(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add))
-                    DropdownMenu(
-                        expanded = isFabMenuOpen,
-                        onDismissRequest = { isFabMenuOpen = false },
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.add_note)) },
-                            onClick = {
-                                onAddNote()
-                                isFabMenuOpen = false
-                            },
+                    Box(modifier = Modifier.weight(1f)) {
+                        DeckPickerContent(
+                            decks = decks,
+                            isRefreshing = isRefreshing,
+                            onRefresh = onRefresh,
+                            backgroundImage = backgroundImage,
+                            onDeckClick = onDeckClick,
+                            onExpandClick = onExpandClick,
+                            onDeckOptions = onDeckOptions,
+                            onRename = onRename,
+                            onExport = onExport,
+                            onDelete = onDelete,
+                            onRebuild = onRebuild,
+                            onEmpty = onEmpty,
                         )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.new_deck)) },
-                            onClick = {
-                                onAddDeck()
-                                isFabMenuOpen = false
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.get_shared)) },
-                            onClick = {
-                                onAddSharedDeck()
-                                isFabMenuOpen = false
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.new_dynamic_deck)) },
-                            onClick = {
-                                onAddFilteredDeck()
-                                isFabMenuOpen = false
-                            },
+                    }
+                    Box(modifier = Modifier.weight(1f)) {
+                        StudyOptionsScreen(
+                            studyOptionsData = studyOptionsData,
+                            onStartStudy = onStartStudy,
+                            onCustomStudy = onCustomStudy,
                         )
                     }
                 }
-            },
-        ) { paddingValues ->
-            Row(Modifier
-                .fillMaxSize()
-                .padding(paddingValues)) {
-                Box(modifier = Modifier.weight(1f)) {
-                    DeckPickerContent(
-                        decks = decks,
-                        isRefreshing = isRefreshing,
-                        onRefresh = onRefresh,
-                        backgroundImage = backgroundImage,
-                        onDeckClick = onDeckClick,
-                        onExpandClick = onExpandClick,
-                        onDeckOptions = onDeckOptions,
-                        onRename = onRename,
-                        onExport = onExport,
-                        onDelete = onDelete,
-                        onRebuild = onRebuild,
-                        onEmpty = onEmpty,
-                    )
-                }
-                Box(modifier = Modifier.weight(1f)) {
-                    StudyOptionsScreen(
-                        studyOptionsData = studyOptionsData,
-                        onStartStudy = onStartStudy,
-                        onCustomStudy = onCustomStudy,
-                    )
-                }
             }
+        } else {
+            // Phone layout
+            DeckPickerScreen(
+                decks = decks,
+                isRefreshing = isRefreshing,
+                searchFocusRequester = searchFocusRequester,
+                snackbarHostState = snackbarHostState,
+                onRefresh = onRefresh,
+                searchQuery = searchQuery,
+                onSearchQueryChanged = onSearchQueryChanged,
+                backgroundImage = backgroundImage,
+                onDeckClick = onDeckClick,
+                onExpandClick = onExpandClick,
+                onAddNote = onAddNote,
+                onAddDeck = onAddDeck,
+                onAddSharedDeck = onAddSharedDeck,
+                onAddFilteredDeck = onAddFilteredDeck,
+                onDeckOptions = onDeckOptions,
+                onRename = onRename,
+                onExport = onExport,
+                onDelete = onDelete,
+                onRebuild = onRebuild,
+                onEmpty = onEmpty,
+                onNavigationIconClick = onNavigationIconClick,
+            )
         }
-    } else {
-        // Phone layout
-        DeckPickerScreen(
-            decks = decks,
-            isRefreshing = isRefreshing,
-            searchFocusRequester = searchFocusRequester,
-            snackbarHostState = snackbarHostState,
-            onRefresh = onRefresh,
-            searchQuery = searchQuery,
-            onSearchQueryChanged = onSearchQueryChanged,
-            backgroundImage = backgroundImage,
-            onDeckClick = onDeckClick,
-            onExpandClick = onExpandClick,
-            onAddNote = onAddNote,
-            onAddDeck = onAddDeck,
-            onAddSharedDeck = onAddSharedDeck,
-            onAddFilteredDeck = onAddFilteredDeck,
-            onDeckOptions = onDeckOptions,
-            onRename = onRename,
-            onExport = onExport,
-            onDelete = onDelete,
-            onRebuild = onRebuild,
-            onEmpty = onEmpty,
-            onNavigationIconClick = onNavigationIconClick,
-        )
     }
 }

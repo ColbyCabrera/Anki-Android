@@ -162,10 +162,11 @@ import com.ichi2.anki.worker.SyncMediaWorker
 import com.ichi2.anki.worker.SyncWorker
 import com.ichi2.anki.worker.UniqueWorkNames
 import com.ichi2.compat.CompatHelper.Companion.getSerializableCompat
+import com.ichi2.themes.Theme
 import com.ichi2.ui.BadgeDrawableBuilder
 import com.ichi2.utils.AdaptionUtil
-import com.ichi2.utils.ColorUtil
 import com.ichi2.utils.ClipboardUtil.IMPORT_MIME_TYPES
+import com.ichi2.utils.ColorUtil
 import com.ichi2.utils.ImportUtils
 import com.ichi2.utils.ImportUtils.ImportResult
 import com.ichi2.utils.NetworkUtils
@@ -465,6 +466,11 @@ open class DeckPicker :
             var requestSearchFocus by remember { mutableStateOf(false) }
             val focusedDeckId by viewModel.flowOfFocusedDeck.collectAsState()
             var studyOptionsData by remember { mutableStateOf<com.ichi2.anki.ui.compose.StudyOptionsData?>(null) }
+            val theme =
+                remember(sharedPrefs()) {
+                    val themeId = sharedPrefs().getString("theme", "5")!!
+                    Theme.ofId(themeId)
+                }
 
             LaunchedEffect(focusedDeckId) {
                 val currentFocusedDeck = focusedDeckId
@@ -545,6 +551,7 @@ open class DeckPicker :
                 requestSearchFocus = requestSearchFocus,
                 onSearchFocusRequested = { requestSearchFocus = false },
                 snackbarHostState = snackbarHostState,
+                theme = theme,
             )
 
             LaunchedEffect(Unit) {

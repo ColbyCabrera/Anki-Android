@@ -16,4 +16,5 @@
     <string name="new_dynamic_deck">New Dynamic Deck</string>
     <string name="add">Add</string>
     <string name="background_image_disabled_too_large">Custom background image disabled as it was too large.</string>
+    <string name="material_you">Material You</string>
 </resources>
