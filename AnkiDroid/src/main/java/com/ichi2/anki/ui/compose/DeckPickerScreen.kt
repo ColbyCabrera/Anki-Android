@@ -18,6 +18,7 @@ import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.painter.Painter
@@ -109,11 +110,13 @@ fun DeckPickerScreen(
 ) {
     var isFabMenuOpen by remember { mutableStateOf(false) }
     var isSearchOpen by remember { mutableStateOf(false) }
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
+            LargeTopAppBar(
                 title = {
                     if (!isSearchOpen) Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge)
                 }, // Expressive TopAppBar Title
@@ -144,6 +147,7 @@ fun DeckPickerScreen(
                         }
                     }
                 },
+                scrollBehavior = scrollBehavior
             )
         },
         floatingActionButton = {

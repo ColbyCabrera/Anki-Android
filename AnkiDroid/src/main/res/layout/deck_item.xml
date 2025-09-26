@@ -49,52 +49,61 @@
             tools:text="Deck name" />
     </LinearLayout>
 
-    <LinearLayout
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/counts_layout"
-        android:contentDescription="@string/deck_picker_counts"
-        android:background="?attr/selectableItemBackground"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:minHeight="48dp"
-        android:minWidth="70dp"
-        android:gravity="end"
+        android:layout_marginVertical="4dp"
+        app:cardBackgroundColor="?attr/colorSurfaceVariant"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:strokeWidth="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent">
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/deckpicker_new"
-            android:contentDescription="@string/deck_picker_new"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:background="@color/transparent"
-            android:gravity="center"
-            android:paddingEnd="5dip"
-            android:textAppearance="?attr/textAppearanceLabelLarge"
-            tools:text="10" />
+        android:contentDescription="@string/deck_picker_counts">
 
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/deckpicker_lrn"
-            android:contentDescription="@string/deck_picker_lrn"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:background="@color/transparent"
-            android:gravity="center"
-            android:paddingEnd="5dip"
-            android:textAppearance="?attr/textAppearanceLabelLarge"
-            tools:text="42" />
+            android:orientation="horizontal"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="8dp">
 
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/deckpicker_rev"
-            android:contentDescription="@string/deck_picker_rev"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginEnd="6dip"
-            android:background="@color/transparent"
-            android:gravity="center"
-            android:textAppearance="?attr/textAppearanceLabelLarge"
-            tools:text="13" />
-    </LinearLayout>
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/deckpicker_new"
+                android:contentDescription="@string/deck_picker_new"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:layout_marginEnd="8dp"
+                android:textAppearance="?attr/textAppearanceBodyLarge"
+                android:textColor="?attr/colorPrimary"
+                tools:text="10" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/deckpicker_lrn"
+                android:contentDescription="@string/deck_picker_lrn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:layout_marginEnd="8dp"
+                android:textAppearance="?attr/textAppearanceBodyLarge"
+                android:textColor="?attr/colorError"
+                tools:text="42" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/deckpicker_rev"
+                android:contentDescription="@string/deck_picker_rev"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:textAppearance="?attr/textAppearanceBodyLarge"
+                android:textColor="?attr/colorTertiary"
+                tools:text="13" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 </androidx.constraintlayout.widget.ConstraintLayout>

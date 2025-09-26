@@ -46,7 +46,8 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -61,6 +62,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -194,11 +196,13 @@ fun AnkiDroidApp(
             var isSearchOpen by remember { mutableStateOf(false) }
             var isStudyOptionsMenuOpen by remember { mutableStateOf(false) }
             var isFabMenuOpen by remember { mutableStateOf(false) }
+            val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
             // Tablet layout
             Scaffold(
+                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                 snackbarHost = { SnackbarHost(snackbarHostState) },
                 topBar = {
-                    TopAppBar(
+                    LargeTopAppBar(
                         title = {
                             if (!isSearchOpen) Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge)
                         }, // Expressive TopAppBar Title
@@ -216,9 +220,9 @@ fun AnkiDroidApp(
                                     value = searchQuery,
                                     onValueChange = onSearchQueryChanged,
                                     modifier =
-                                        Modifier
-                                            .weight(1f)
-                                            .focusRequester(searchFocusRequester),
+                                    Modifier
+                                        .weight(1f)
+                                        .focusRequester(searchFocusRequester),
                                     placeholder = { Text(stringResource(R.string.search_decks)) },
                                     trailingIcon = {
                                         IconButton(onClick = {
@@ -324,6 +328,7 @@ fun AnkiDroidApp(
                                 }
                             }
                         },
+                        scrollBehavior = scrollBehavior,
                     )
                 },
                 floatingActionButton = {
