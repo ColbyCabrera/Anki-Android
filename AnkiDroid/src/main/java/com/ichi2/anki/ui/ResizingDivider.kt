@@ -45,6 +45,6 @@ class ResizingDivider
             dividerHandle = findViewById(R.id.divider_handle)
 
             // Set the default background color
-            setBackgroundColor(ColorUtil.getThemeColor(context, com.google.android.material.R.attr.outline))
+            setBackgroundColor(ColorUtil.getThemeColor(context, R.attr.outline))
         }
     }

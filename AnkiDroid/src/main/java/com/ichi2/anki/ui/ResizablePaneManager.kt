@@ -40,7 +40,7 @@ class ResizablePaneManager(
     private val rightPaneWeightKey: String,
     private val minWeight: Float = 0.5f, // Minimum weight for each pane
     private val dragColor: Int = ColorUtil.getThemeColor(divider.context, com.google.android.material.R.attr.colorPrimary),
-    private val idleColor: Int = ColorUtil.getThemeColor(divider.context, com.google.android.material.R.attr.outline),
+    private val idleColor: Int = ColorUtil.getThemeColor(divider.context, R.attr.outline),
 ) {
     init {
         setupResizableDivider()

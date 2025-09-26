@@ -18,6 +18,7 @@ package com.ichi2.anki.multimedia.audio
 import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.media.MediaPlayer
 import android.os.Bundle
