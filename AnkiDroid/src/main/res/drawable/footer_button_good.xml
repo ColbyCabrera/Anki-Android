@@ -4,17 +4,17 @@
     <selector>
         <item android:state_pressed="true">
             <shape android:shape="rectangle" >
-                <solid android:color="@color/material_green_200" />
+                <solid android:color="?attr/goodButtonBackground" />
             </shape>
         </item>
         <item android:state_focused="true">
             <shape android:shape="rectangle" >
-                <solid android:color="@color/material_green_700" />
+                <solid android:color="?attr/goodButtonBackground" />
             </shape>
         </item>
         <item>
             <shape android:shape="rectangle" >
-                <solid android:color="@color/material_green_500" />
+                <solid android:color="?attr/goodButtonBackground" />
             </shape>
         </item>
     </selector>

@@ -18,22 +18,22 @@
 
     <Button
         android:id="@+id/pen_color_red"
-        android:backgroundTint="@color/material_red_500"
+        android:backgroundTint="?attr/colorError"
         style="@style/reviewer_whiteboard_editor_button_style"/>
 
     <Button
         android:id="@+id/pen_color_green"
-        android:backgroundTint="@color/material_green_500"
+        android:backgroundTint="?attr/goodButtonBackground"
         style="@style/reviewer_whiteboard_editor_button_style"/>
 
     <Button
         android:id="@+id/pen_color_blue"
-        android:backgroundTint="@color/material_blue_500"
+        android:backgroundTint="?attr/widgetColorActivated"
         style="@style/reviewer_whiteboard_editor_button_style"/>
 
     <Button
         android:id="@+id/pen_color_yellow"
-        android:backgroundTint="@color/material_yellow_500"
+        android:backgroundTint="?android:attr/colorAccent"
         style="@style/reviewer_whiteboard_editor_button_style"/>
 
     <Button

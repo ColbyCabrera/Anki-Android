@@ -10,31 +10,31 @@
         <!-- Plain theme uses a static grey color scheme -->
         <item name="colorPrimary">@color/theme_plain_primary</item>
         <item name="colorOnPrimary">@color/white</item>
-        <item name="colorPrimaryContainer">@color/material_grey_300</item>
+        <item name="colorPrimaryContainer">@color/theme_plain_primary_light</item>
         <item name="colorOnPrimaryContainer">@color/theme_plain_primary_text</item>
 
         <item name="colorSecondary">@color/theme_plain_accent</item>
         <item name="colorOnSecondary">@color/white</item>
-        <item name="colorSecondaryContainer">@color/material_blue_grey_200</item>
+        <item name="colorSecondaryContainer">@color/theme_plain_primary_light</item>
         <item name="colorOnSecondaryContainer">@color/theme_plain_primary_text</item>
 
         <item name="colorTertiary">@color/theme_plain_accent</item>
         <item name="colorOnTertiary">@color/white</item>
-        <item name="colorTertiaryContainer">@color/material_blue_grey_200</item>
+        <item name="colorTertiaryContainer">@color/theme_plain_primary_light</item>
         <item name="colorOnTertiaryContainer">@color/theme_plain_primary_text</item>
 
-        <item name="colorError">@color/material_grey_800</item>
+        <item name="colorError">@color/theme_plain_primary_dark</item>
         <item name="colorOnError">@color/white</item>
-        <item name="colorErrorContainer">@color/material_grey_300</item>
+        <item name="colorErrorContainer">@color/theme_plain_primary_light</item>
         <item name="colorOnErrorContainer">@color/theme_plain_primary_text</item>
 
         <item name="android:colorBackground">@color/white</item>
         <item name="colorSurface">@color/white</item>
         <item name="colorOnSurface">@color/theme_plain_primary_text</item>
-        <item name="colorSurfaceVariant">@color/material_grey_300</item>
+        <item name="colorSurfaceVariant">@color/theme_plain_primary_light</item>
         <item name="colorOnSurfaceVariant">@color/theme_plain_primary_text</item>
 
-        <item name="outline">@color/material_grey_500</item>
+        <item name="outline">@color/theme_plain_primary</item>
 
         <!-- The original plain theme had specific button drawables -->
         <item name="againButtonRef">@drawable/footer_button_all_plain</item>

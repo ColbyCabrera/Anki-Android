@@ -41,7 +41,7 @@
             android:layout_weight="1"
             android:paddingEnd="5dp"
             android:text="52"
-            android:textColor="@color/material_red_A700"
+            android:textColor="?attr/colorError"
             android:textSize="20sp"
             tools:ignore="HardcodedText" />
 
@@ -90,7 +90,7 @@
             android:layout_weight="1"
             android:paddingEnd="5dp"
             android:text="20"
-            android:textColor="@color/material_red_A700"
+            android:textColor="?attr/colorError"
             android:textSize="20sp"
             tools:ignore="HardcodedText" />
 
@@ -139,7 +139,7 @@
             android:layout_weight="1"
             android:paddingEnd="5dp"
             android:text="15"
-            android:textColor="@color/material_red_A700"
+            android:textColor="?attr/colorError"
             android:textSize="20sp"
             tools:ignore="HardcodedText" />
 

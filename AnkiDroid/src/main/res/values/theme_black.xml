@@ -32,7 +32,7 @@
         <item name="fab_pressed">?attr/colorPrimary</item>
         <item name="fab_labelsTextColor">?attr/colorOnPrimaryContainer</item>
 
-        <item name="buryCountColor">@color/disabled_gray_dark</item>
+        <item name="buryCountColor">?attr/colorOnSurfaceVariant</item>
         <item name="zeroCountColor">#202020</item>
     </style>
 

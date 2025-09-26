@@ -106,7 +106,7 @@
         <item name="textAllCaps">false</item>
         <!--Custom Tabs colors-->
         <item name="popupBackgroundColor">?attr/colorSurface</item>
-        <item name="editTextDisabled">@color/disabled_gray_dark</item>
+        <item name="editTextDisabled">?attr/colorOnSurfaceVariant</item>
         <item name="overflowAndPopupMenuIconColor">?attr/colorOnSurfaceVariant</item>
         <!-- StatusBar and Navbar for Edge-to-Edge -->
         <item name="android:statusBarColor" tools:targetApi="l">@android:color/transparent</item>

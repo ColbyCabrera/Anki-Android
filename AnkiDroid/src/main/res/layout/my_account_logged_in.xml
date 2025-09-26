@@ -68,7 +68,7 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/remove_account_button"
-                    app:backgroundTint="@color/material_red_500"
+                    app:backgroundTint="?attr/colorError"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:minWidth="200dp"

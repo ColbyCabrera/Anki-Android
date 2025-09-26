@@ -42,7 +42,7 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:paddingEnd="5dp"
-        android:textColor="@color/material_red_A700"
+        android:textColor="?attr/colorError"
         android:textSize="20sp"
         android:text=""
         android:ellipsize="end"
