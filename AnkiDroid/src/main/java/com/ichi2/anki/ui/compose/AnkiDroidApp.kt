@@ -1,3 +1,20 @@
+/*
+ Copyright (c) 2011 Norbert Nagold <norbert.nagold@gmail.com>
+ Copyright (c) 2015 Timothy Rae <perceptualchaos2@gmail.com>
+ Copyright (c) 2021 Akshay Jadhav <jadhavakshay0701@gmail.com>
+
+ This program is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License as published by the Free Software
+ Foundation; either version 3 of the License, or (at your option) any later
+ version.
+
+ This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License along with
+ this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package com.ichi2.anki.ui.compose
 
 import android.os.Build
@@ -5,6 +22,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -23,11 +41,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -44,9 +64,62 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ichi2.anki.R
 import com.ichi2.anki.deckpicker.DisplayDeckNode
 import com.ichi2.themes.Themes
+
+// Define Expressive Typography
+val AppTypography =
+    Typography(
+        displayLarge =
+            TextStyle(
+                fontFamily = FontFamily.Default,
+                fontWeight = FontWeight.Bold, // Expressive: Bolder
+                fontSize = 57.sp,
+                lineHeight = 64.sp,
+                letterSpacing = (-0.25).sp,
+            ),
+        headlineLarge =
+            TextStyle(
+                fontFamily = FontFamily.Default,
+                fontWeight = FontWeight.SemiBold, // Expressive: Bolder
+                fontSize = 32.sp,
+                lineHeight = 40.sp,
+                letterSpacing = 0.sp,
+            ),
+        titleLarge =
+            TextStyle(
+                fontFamily = FontFamily.Default,
+                fontWeight = FontWeight.Medium, // Expressive: Slightly bolder/more prominent
+                fontSize = 24.sp, // Expressive: Slightly larger
+                lineHeight = 28.sp,
+                letterSpacing = 0.sp,
+            ),
+        bodyLarge =
+            TextStyle(
+                fontFamily = FontFamily.Default,
+                fontWeight = FontWeight.Normal,
+                fontSize = 16.sp,
+                lineHeight = 24.sp,
+                letterSpacing = 0.5.sp,
+            ),
+        // Add other text styles as needed, inheriting from M3 defaults or customizing
+    )
+
+// Define Expressive Shapes
+val AppShapes =
+    Shapes(
+        extraSmall = RoundedCornerShape(4.dp), // Default M3
+        small = RoundedCornerShape(8.dp), // Expressive: Slightly more rounded
+        medium = RoundedCornerShape(16.dp), // Expressive: More pronounced rounding for cards/buttons
+        large = RoundedCornerShape(24.dp), // Expressive: Very rounded for larger elements like dialogs
+        extraLarge = RoundedCornerShape(32.dp), // Expressive: For prominent elements like FABs or hero containers
+    )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -112,7 +185,11 @@ fun AnkiDroidApp(
             }
         }
 
-    MaterialTheme(colorScheme = colorScheme) {
+    MaterialTheme(
+        colorScheme = colorScheme,
+        typography = AppTypography, // Apply expressive typography
+        shapes = AppShapes, // Apply expressive shapes
+    ) {
         if (fragmented) {
             var isSearchOpen by remember { mutableStateOf(false) }
             var isStudyOptionsMenuOpen by remember { mutableStateOf(false) }
@@ -122,7 +199,9 @@ fun AnkiDroidApp(
                 snackbarHost = { SnackbarHost(snackbarHostState) },
                 topBar = {
                     TopAppBar(
-                        title = { if (!isSearchOpen) Text(stringResource(R.string.app_name)) },
+                        title = {
+                            if (!isSearchOpen) Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge)
+                        }, // Expressive TopAppBar Title
                         navigationIcon = {
                             IconButton(onClick = onNavigationIconClick) {
                                 Icon(
@@ -250,6 +329,7 @@ fun AnkiDroidApp(
                 floatingActionButton = {
                     FloatingActionButton(
                         onClick = { isFabMenuOpen = !isFabMenuOpen },
+                        shape = MaterialTheme.shapes.extraLarge, // Apply expressive shape
                     ) {
                         Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add))
                         DropdownMenu(
@@ -323,7 +403,7 @@ fun AnkiDroidApp(
             DeckPickerScreen(
                 decks = decks,
                 isRefreshing = isRefreshing,
-                searchFocusRequester = searchFocusRequester,
+                searchFocusRequester = searchFocusRequester, // Typo: searchFocusR                               equester
                 snackbarHostState = snackbarHostState,
                 onRefresh = onRefresh,
                 searchQuery = searchQuery,

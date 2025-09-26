@@ -79,7 +79,7 @@ fun DeckPickerContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3Api::class)
 @Composable
 fun DeckPickerScreen(
     decks: List<DisplayDeckNode>,
@@ -114,7 +114,9 @@ fun DeckPickerScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { if (!isSearchOpen) Text(stringResource(R.string.app_name)) },
+                title = {
+                    if (!isSearchOpen) Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge)
+                }, // Expressive TopAppBar Title
                 navigationIcon = {
                     IconButton(onClick = onNavigationIconClick) {
                         Icon(Icons.Default.Menu, contentDescription = stringResource(R.string.navigation_drawer_open))
@@ -147,6 +149,7 @@ fun DeckPickerScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { isFabMenuOpen = !isFabMenuOpen },
+                shape = MaterialTheme.shapes.extraLarge, // Apply expressive shape
             ) {
                 Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add))
                 DropdownMenu(
