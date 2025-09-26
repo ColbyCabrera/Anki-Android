@@ -20,5 +20,5 @@
         <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>
     </style>
 
-    <style name="Theme_Light" parent="Base.V35.Light"/>
+    <style name="Theme.Light" parent="Base.V35.Light"/>
 </resources>

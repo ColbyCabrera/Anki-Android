@@ -20,5 +20,5 @@
         <item name="colorSurfaceContainer">@color/faded_primary</item>
     </style>
 
-    <style name="Theme_Light" parent="Base.V29.Light"/>
+    <style name="Theme.Light" parent="Base.V29.Light"/>
 </resources>

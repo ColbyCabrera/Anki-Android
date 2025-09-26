@@ -25,10 +25,10 @@ enum class Theme(
 ) {
     // IDs must correspond to the ones at @array/app_theme_values on res/values/constants.xml
     // Follow system is "0", so it starts at "1"
-    LIGHT("1", R.style.Theme_Light, false),
-    PLAIN("2", R.style.Theme_Light_Plain, false),
-    BLACK("3", R.style.Theme_Dark_Black, true),
-    DARK("4", R.style.Theme_Dark, true),
+    LIGHT("1", R.style.Theme.Light, false),
+    PLAIN("2", R.style.Theme.Light.Plain, false),
+    BLACK("3", R.style.Theme.Dark.Black, true),
+    DARK("4", R.style.Theme.Dark, true),
     ;
 
     companion object {
