@@ -1,12 +1,12 @@
 package com.ichi2.anki.ui.compose
 
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,130 +34,131 @@ fun DeckItem(
 ) {
     var isContextMenuOpen by remember { mutableStateOf(false) }
 
-    val isSubDeck = deck.depth > 0
-    val verticalPadding = if (isSubDeck) 0.dp else 4.dp
-    val cardShape = if (isSubDeck) RoundedCornerShape(0.dp) else MaterialTheme.shapes.medium
-    val cardElevation = if (isSubDeck) 0.dp else 1.dp
-    val cardColors = if (isSubDeck) {
-        CardDefaults.cardColors(containerColor = Color.Transparent)
-    } else {
-        CardDefaults.cardColors() // Use default theme colors
-    }
-
-    Card(
-        modifier =
-        modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = verticalPadding) // Spacing for the card itself
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onTap = { onDeckClick() },
-                    onLongPress = { isContextMenuOpen = true },
-                )
-            },
-        shape = cardShape, // Expressive shape
-        elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
-        colors = cardColors
-    ) {
-        Row(
-            modifier =
-            Modifier
-                .padding(start = (deck.depth * 16).dp) // Indentation for sub-decks
-                .padding(vertical = 12.dp, horizontal = 8.dp),
-            // Inner padding for content within the card
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            if (deck.canCollapse) {
-                Icon(
-                    painter =
-                    painterResource(
-                        if (deck.collapsed) R.drawable.ic_expand_more_black_24dp else R.drawable.ic_expand_less_black_24dp,
-                    ),
-                    contentDescription = if (deck.collapsed) stringResource(R.string.expand) else stringResource(R.string.collapse),
-                    modifier =
-                    Modifier.pointerInput(Unit) {
-                        detectTapGestures(onTap = { onExpandClick() })
+    val content =
+        @Composable {
+            Row(
+                modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(start = (deck.depth * 16).dp)
+                    .padding(vertical = 12.dp, horizontal = 8.dp)
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onTap = { onDeckClick() },
+                            onLongPress = { isContextMenuOpen = true },
+                        )
                     },
-                )
-            } else {
-                Spacer(modifier = Modifier.width(24.dp)) // Maintain spacing if not collapsible
-            }
-            Text(
-                text = deck.lastDeckNameComponent,
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.titleLarge, // Expressive typography
-            )
-            Text(
-                text = deck.newCount.toString(),
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(horizontal = 4.dp),
-                style = MaterialTheme.typography.bodyMedium, // Consistent typography for counts
-            )
-            Text(
-                text = deck.lrnCount.toString(),
-                color = MaterialTheme.colorScheme.error, // Or another semantic color
-                modifier = Modifier.padding(horizontal = 4.dp),
-                style = MaterialTheme.typography.bodyMedium, // Consistent typography for counts
-            )
-            Text(
-                text = deck.revCount.toString(),
-                color = Color(0xFF006400), // Darker Green, consider from ColorScheme
-                modifier = Modifier.padding(horizontal = 4.dp),
-                style = MaterialTheme.typography.bodyMedium, // Consistent typography for counts
-            )
-            // Context Menu Anchor - usually an IconButton
-            // IconButton(onClick = { isContextMenuOpen = true }) {
-            //     Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.more_options))
-            // }
-            DropdownMenu(
-                expanded = isContextMenuOpen,
-                onDismissRequest = { isContextMenuOpen = false },
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (deck.filtered) {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.rebuild_cram_label)) },
-                        onClick = {
-                            onRebuild()
-                            isContextMenuOpen = false
-                        },
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.empty_cram_label)) },
-                        onClick = {
-                            onEmpty()
-                            isContextMenuOpen = false
+                if (deck.canCollapse) {
+                    Icon(
+                        painter =
+                        painterResource(
+                            if (deck.collapsed) R.drawable.ic_expand_more_black_24dp else R.drawable.ic_expand_less_black_24dp,
+                        ),
+                        contentDescription = if (deck.collapsed) stringResource(R.string.expand) else stringResource(R.string.collapse),
+                        modifier =
+                        Modifier.pointerInput(Unit) {
+                            detectTapGestures(onTap = { onExpandClick() })
                         },
                     )
                 } else {
+                    Spacer(modifier = Modifier.width(24.dp))
+                }
+                Text(
+                    text = deck.lastDeckNameComponent,
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.titleLarge,
+                )
+                Text(
+                    text = deck.newCount.toString(),
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Text(
+                    text = deck.lrnCount.toString(),
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Text(
+                    text = deck.revCount.toString(),
+                    color = Color(0xFF006400),
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                DropdownMenu(
+                    expanded = isContextMenuOpen,
+                    onDismissRequest = { isContextMenuOpen = false },
+                ) {
+                    if (deck.filtered) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.rebuild_cram_label)) },
+                            onClick = {
+                                onRebuild()
+                                isContextMenuOpen = false
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.empty_cram_label)) },
+                            onClick = {
+                                onEmpty()
+                                isContextMenuOpen = false
+                            },
+                        )
+                    } else {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.rename_deck)) },
+                            onClick = {
+                                onRename()
+                                isContextMenuOpen = false
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.export_deck)) },
+                            onClick = {
+                                onExport()
+                                isContextMenuOpen = false
+                            },
+                        )
+                    }
                     DropdownMenuItem(
-                        text = { Text(stringResource(R.string.rename_deck)) },
+                        text = { Text(stringResource(R.string.deck_options)) },
                         onClick = {
-                            onRename()
+                            onDeckOptions()
                             isContextMenuOpen = false
                         },
                     )
                     DropdownMenuItem(
-                        text = { Text(stringResource(R.string.export_deck)) },
+                        text = { Text("Delete") },
                         onClick = {
-                            onExport()
+                            onDelete()
                             isContextMenuOpen = false
                         },
                     )
                 }
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.deck_options)) }, // Corrected to use resource
-                    onClick = {
-                        onDeckOptions()
-                        isContextMenuOpen = false
-                    },
-                )
-                DropdownMenuItem(
-                    text = { Text("Delete") }, // Corrected to use resource (assuming R.string.delete exists)
-                    onClick = {
-                        onDelete()
-                        isContextMenuOpen = false
-                    },
-                )
+            }
+        }
+
+    when (deck.depth) {
+        0 -> {
+            content()
+        }
+        1 -> {
+            Card(
+                modifier =
+                modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+            ) {
+                content()
+            }
+        }
+        else -> {
+            Box(modifier = modifier.fillMaxWidth().padding(start = 8.dp)) {
+                content()
             }
         }
     }

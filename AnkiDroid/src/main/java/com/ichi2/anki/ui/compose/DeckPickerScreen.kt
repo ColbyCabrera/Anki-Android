@@ -3,7 +3,9 @@ package com.ichi2.anki.ui.compose
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,12 +21,13 @@ import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.ichi2.anki.R
 import com.ichi2.anki.deckpicker.DisplayDeckNode
 
@@ -48,9 +51,10 @@ fun DeckPickerContent(
     val pullRefreshState = rememberPullRefreshState(refreshing = isRefreshing, onRefresh = onRefresh)
 
     Box(
-        modifier = modifier
+        modifier =
+        modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.background),
     ) {
         if (backgroundImage != null) {
             Image(
@@ -62,18 +66,58 @@ fun DeckPickerContent(
         }
         Box(modifier = Modifier.fillMaxSize().pullRefresh(pullRefreshState)) {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(decks) { deck ->
-                    DeckItem(
-                        deck = deck,
-                        onDeckClick = { onDeckClick(deck) },
-                        onExpandClick = { onExpandClick(deck) },
-                        onDeckOptions = { onDeckOptions(deck) },
-                        onRename = { onRename(deck) },
-                        onExport = { onExport(deck) },
-                        onDelete = { onDelete(deck) },
-                        onRebuild = { onRebuild(deck) },
-                        onEmpty = { onEmpty(deck) },
-                    )
+                // Group decks by their parent
+                val groupedDecks = mutableMapOf<DisplayDeckNode, MutableList<DisplayDeckNode>>()
+                val rootDecks = mutableListOf<DisplayDeckNode>()
+                var currentParent: DisplayDeckNode? = null
+
+                for (deck in decks) {
+                    if (deck.depth == 0) {
+                        currentParent = deck
+                        rootDecks.add(deck)
+                        groupedDecks[deck] = mutableListOf()
+                    } else if (currentParent != null) {
+                        groupedDecks[currentParent]?.add(deck)
+                    }
+                }
+
+                items(rootDecks) { rootDeck ->
+                    Card(
+                        modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                    ) {
+                        Column {
+                            // Render the parent deck
+                            DeckItem(
+                                deck = rootDeck,
+                                onDeckClick = { onDeckClick(rootDeck) },
+                                onExpandClick = { onExpandClick(rootDeck) },
+                                onDeckOptions = { onDeckOptions(rootDeck) },
+                                onRename = { onRename(rootDeck) },
+                                onExport = { onExport(rootDeck) },
+                                onDelete = { onDelete(rootDeck) },
+                                onRebuild = { onRebuild(rootDeck) },
+                                onEmpty = { onEmpty(rootDeck) },
+                            )
+                            // Render the sub-decks
+                            groupedDecks[rootDeck]?.forEach { subDeck ->
+                                DeckItem(
+                                    deck = subDeck,
+                                    onDeckClick = { onDeckClick(subDeck) },
+                                    onExpandClick = { onExpandClick(subDeck) },
+                                    onDeckOptions = { onDeckOptions(subDeck) },
+                                    onRename = { onRename(subDeck) },
+                                    onExport = { onExport(subDeck) },
+                                    onDelete = { onDelete(subDeck) },
+                                    onRebuild = { onRebuild(subDeck) },
+                                    onEmpty = { onEmpty(subDeck) },
+                                )
+                            }
+                        }
+                    }
                 }
             }
             PullRefreshIndicator(
@@ -152,11 +196,12 @@ fun DeckPickerScreen(
                         }
                     }
                 },
-                colors = TopAppBarDefaults.largeTopAppBarColors(
+                colors =
+                TopAppBarDefaults.largeTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     scrolledContainerColor = MaterialTheme.colorScheme.surface,
                 ),
-                scrollBehavior = scrollBehavior
+                scrollBehavior = scrollBehavior,
             )
         },
         floatingActionButton = {
