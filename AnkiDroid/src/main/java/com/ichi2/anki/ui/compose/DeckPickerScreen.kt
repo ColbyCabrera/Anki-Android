@@ -48,13 +48,9 @@ fun DeckPickerContent(
     val pullRefreshState = rememberPullRefreshState(refreshing = isRefreshing, onRefresh = onRefresh)
 
     Box(
-        modifier = modifier.fillMaxSize().let {
-            if (backgroundImage == null) {
-                it.background(MaterialTheme.colorScheme.surface)
-            } else {
-                it
-            }
-        }
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
     ) {
         if (backgroundImage != null) {
             Image(
@@ -89,7 +85,7 @@ fun DeckPickerContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeckPickerScreen(
     decks: List<DisplayDeckNode>,

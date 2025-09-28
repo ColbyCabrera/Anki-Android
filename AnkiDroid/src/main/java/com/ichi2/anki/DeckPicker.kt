@@ -101,8 +101,6 @@ import com.ichi2.anki.common.annotations.NeedsTest
 import com.ichi2.anki.common.time.TimeManager
 import com.ichi2.anki.common.utils.annotation.KotlinCleanup
 import com.ichi2.anki.deckpicker.BackgroundImage
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.graphics.painter.ColorPainter
 import com.ichi2.anki.deckpicker.DeckPickerViewModel
 import com.ichi2.anki.deckpicker.DeckPickerViewModel.AnkiDroidEnvironment
 import com.ichi2.anki.deckpicker.DeckPickerViewModel.FlattenedDeckList
@@ -196,17 +194,17 @@ import timber.log.Timber
 import java.io.File
 
 @Composable
-private fun DeckPicker.deckPickerPainter(): Painter {
+private fun DeckPicker.deckPickerPainter(): Painter? {
     // Allow the user to clear data and get back to a good state if they provide an invalid background.
     if (!this.sharedPrefs().getBoolean("deckPickerBackground", false)) {
         Timber.d("No DeckPicker background preference")
-        return ColorPainter(MaterialTheme.colorScheme.surface)
+        return null
     }
     val currentAnkiDroidDirectory = CollectionHelper.getCurrentAnkiDroidDirectory(this)
     val imgFile = File(currentAnkiDroidDirectory, "DeckPickerBackground.png")
     if (!imgFile.exists()) {
         Timber.d("No DeckPicker background image")
-        return ColorPainter(MaterialTheme.colorScheme.surface)
+        return null
     }
 
     Timber.i("Applying background")
