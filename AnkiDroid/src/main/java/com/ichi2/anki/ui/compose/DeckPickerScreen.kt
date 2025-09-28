@@ -1,6 +1,7 @@
 package com.ichi2.anki.ui.compose
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -46,7 +47,15 @@ fun DeckPickerContent(
 ) {
     val pullRefreshState = rememberPullRefreshState(refreshing = isRefreshing, onRefresh = onRefresh)
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(
+        modifier = modifier.fillMaxSize().let {
+            if (backgroundImage == null) {
+                it.background(MaterialTheme.colorScheme.surface)
+            } else {
+                it
+            }
+        }
+    ) {
         if (backgroundImage != null) {
             Image(
                 painter = backgroundImage,
@@ -147,6 +156,10 @@ fun DeckPickerScreen(
                         }
                     }
                 },
+                colors = TopAppBarDefaults.largeTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface,
+                ),
                 scrollBehavior = scrollBehavior
             )
         },

@@ -328,6 +328,10 @@ fun AnkiDroidApp(
                                 }
                             }
                         },
+                        colors = TopAppBarDefaults.largeTopAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            scrolledContainerColor = MaterialTheme.colorScheme.surface,
+                        ),
                         scrollBehavior = scrollBehavior,
                     )
                 },

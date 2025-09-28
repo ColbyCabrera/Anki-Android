@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,38 +34,50 @@ fun DeckItem(
 ) {
     var isContextMenuOpen by remember { mutableStateOf(false) }
 
+    val isSubDeck = deck.depth > 0
+    val verticalPadding = if (isSubDeck) 0.dp else 4.dp
+    val cardShape = if (isSubDeck) RoundedCornerShape(0.dp) else MaterialTheme.shapes.medium
+    val cardElevation = if (isSubDeck) 0.dp else 1.dp
+    val cardColors = if (isSubDeck) {
+        CardDefaults.cardColors(containerColor = Color.Transparent)
+    } else {
+        CardDefaults.cardColors() // Use default theme colors
+    }
+
     Card(
         modifier =
-            modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 4.dp) // Spacing for the card itself
-                .pointerInput(Unit) {
-                    detectTapGestures(
-                        onTap = { onDeckClick() },
-                        onLongPress = { isContextMenuOpen = true },
-                    )
-                },
-        shape = MaterialTheme.shapes.medium, // Expressive shape
+        modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = verticalPadding) // Spacing for the card itself
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = { onDeckClick() },
+                    onLongPress = { isContextMenuOpen = true },
+                )
+            },
+        shape = cardShape, // Expressive shape
+        elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
+        colors = cardColors
     ) {
         Row(
             modifier =
-                Modifier
-                    .padding(start = (deck.depth * 16).dp) // Indentation for sub-decks
-                    .padding(vertical = 12.dp, horizontal = 8.dp),
+            Modifier
+                .padding(start = (deck.depth * 16).dp) // Indentation for sub-decks
+                .padding(vertical = 12.dp, horizontal = 8.dp),
             // Inner padding for content within the card
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (deck.canCollapse) {
                 Icon(
                     painter =
-                        painterResource(
-                            if (deck.collapsed) R.drawable.ic_expand_more_black_24dp else R.drawable.ic_expand_less_black_24dp,
-                        ),
+                    painterResource(
+                        if (deck.collapsed) R.drawable.ic_expand_more_black_24dp else R.drawable.ic_expand_less_black_24dp,
+                    ),
                     contentDescription = if (deck.collapsed) stringResource(R.string.expand) else stringResource(R.string.collapse),
                     modifier =
-                        Modifier.pointerInput(Unit) {
-                            detectTapGestures(onTap = { onExpandClick() })
-                        },
+                    Modifier.pointerInput(Unit) {
+                        detectTapGestures(onTap = { onExpandClick() })
+                    },
                 )
             } else {
                 Spacer(modifier = Modifier.width(24.dp)) // Maintain spacing if not collapsible
