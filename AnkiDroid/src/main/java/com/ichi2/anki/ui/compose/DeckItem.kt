@@ -13,7 +13,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -80,7 +79,7 @@ fun DeckItem(
                 text = deck.lastDeckNameComponent,
                 modifier = Modifier
                     .weight(1f)
-                    .padding(end = 4.dp),
+                    .padding(end = 8.dp),
                 style = MaterialTheme.typography.titleLarge,
             )
             Text(
@@ -156,13 +155,7 @@ fun DeckItem(
 
     when (deck.depth) {
         0 -> {
-            Surface(
-                modifier = modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-            ) {
-                content()
-            }
+            content()
         }
 
         1 -> {

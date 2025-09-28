@@ -88,6 +88,10 @@ fun DeckPickerContent(
                             .fillMaxWidth()
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        )
                     ) {
                         Column {
                             // Render the parent deck
