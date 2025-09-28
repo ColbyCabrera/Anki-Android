@@ -8,7 +8,7 @@
  Foundation; either version 3 of the License, or (at your option) any later
  version.
 
- This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ This program is distributed in the hope that it is useful, but WITHOUT ANY
  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
  PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
@@ -23,7 +23,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
+import androidx.compose.material.
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
@@ -36,12 +36,14 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Shapes
+import androidx.compose.material3.SnackbarDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -123,7 +125,7 @@ val AppShapes =
         extraLarge = RoundedCornerShape(32.dp), // Expressive: For prominent elements like FABs or hero containers
     )
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AnkiDroidApp(
     fragmented: Boolean,
@@ -192,6 +194,11 @@ fun AnkiDroidApp(
         typography = AppTypography, // Apply expressive typography
         shapes = AppShapes, // Apply expressive shapes
     ) {
+        val snackbarDefaults =
+            SnackbarDefaults.colors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+            )
         if (fragmented) {
             var isSearchOpen by remember { mutableStateOf(false) }
             var isStudyOptionsMenuOpen by remember { mutableStateOf(false) }

@@ -310,7 +310,7 @@ suspend fun monitorMediaSync(deckPicker: DeckPicker) {
                 }.show()
         }
 
-    fun showMessage(msg: String) = deckPicker.viewModel.snackbarMessage.tryEmit(msg)
+    suspend fun showMessage(msg: String) = deckPicker.viewModel.snackbarMessage.emit(msg)
 
     scope.launch {
         try {
@@ -341,7 +341,7 @@ suspend fun monitorMediaSync(deckPicker: DeckPicker) {
  * Show a simple snackbar message or notification if the activity is not in foreground
  * @param messageResource String resource for message
  */
-fun DeckPicker.showSyncLogMessage(
+suspend fun DeckPicker.showSyncLogMessage(
     @StringRes messageResource: Int,
     syncMessage: String?,
 ) {
@@ -354,7 +354,7 @@ fun DeckPicker.showSyncLogMessage(
         )
     } else {
         if (syncMessage.isNullOrEmpty()) {
-            viewModel.snackbarMessage.tryEmit(getString(messageResource))
+            viewModel.snackbarMessage.emit(getString(messageResource))
         } else {
             val res = AnkiDroidApp.appResources
             showSimpleMessageDialog(title = res.getString(messageResource), message = syncMessage)
