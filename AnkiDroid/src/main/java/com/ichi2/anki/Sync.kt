@@ -21,7 +21,6 @@ import androidx.appcompat.app.AlertDialog
 import anki.sync.SyncAuth
 import anki.sync.SyncCollectionResponse
 import anki.sync.syncAuth
-import com.google.android.material.snackbar.Snackbar
 import com.ichi2.anki.CollectionManager.TR
 import com.ichi2.anki.CollectionManager.withCol
 import com.ichi2.anki.common.time.TimeManager
@@ -29,7 +28,6 @@ import com.ichi2.anki.dialogs.SyncErrorDialog
 import com.ichi2.anki.observability.ChangeManager.notifySubscribersAllValuesChanged
 import com.ichi2.anki.settings.Prefs
 import com.ichi2.anki.settings.enums.ShouldFetchMedia
-import com.ichi2.anki.snackbar.showSnackbar
 import com.ichi2.anki.ui.internationalization.toSentenceCase
 import com.ichi2.anki.worker.SyncMediaWorker
 import com.ichi2.preferences.VersatileTextWithASwitchPreference
@@ -312,7 +310,7 @@ suspend fun monitorMediaSync(deckPicker: DeckPicker) {
                 }.show()
         }
 
-    fun showMessage(msg: String) = deckPicker.showSnackbar(msg, Snackbar.LENGTH_SHORT)
+    fun showMessage(msg: String) = deckPicker.viewModel.snackbarMessage.tryEmit(msg)
 
     scope.launch {
         try {
@@ -356,7 +354,7 @@ fun DeckPicker.showSyncLogMessage(
         )
     } else {
         if (syncMessage.isNullOrEmpty()) {
-            showSnackbar(messageResource)
+            viewModel.snackbarMessage.tryEmit(getString(messageResource))
         } else {
             val res = AnkiDroidApp.appResources
             showSimpleMessageDialog(title = res.getString(messageResource), message = syncMessage)

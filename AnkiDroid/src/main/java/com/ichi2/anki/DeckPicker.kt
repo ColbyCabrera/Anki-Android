@@ -81,7 +81,6 @@ import anki.collection.OpChanges
 import anki.sync.SyncStatusResponse
 import coil.compose.rememberAsyncImagePainter
 import com.google.android.material.progressindicator.LinearProgressIndicator
-import com.google.android.material.snackbar.Snackbar
 import com.ichi2.anki.CollectionManager.TR
 import com.ichi2.anki.CollectionManager.withCol
 import com.ichi2.anki.CollectionManager.withOpenColOrNull
@@ -149,9 +148,6 @@ import com.ichi2.anki.preferences.sharedPrefs
 import com.ichi2.anki.receiver.SdCardReceiver
 import com.ichi2.anki.servicelayer.ScopedStorageService
 import com.ichi2.anki.settings.Prefs
-import com.ichi2.anki.snackbar.BaseSnackbarBuilderProvider
-import com.ichi2.anki.snackbar.SnackbarBuilder
-import com.ichi2.anki.snackbar.showSnackbar
 import com.ichi2.anki.ui.compose.AnkiDroidApp
 import com.ichi2.anki.ui.windows.permissions.PermissionsActivity
 import com.ichi2.anki.utils.Destination
@@ -246,11 +242,9 @@ open class DeckPicker :
     OnRequestPermissionsResultCallback,
     ChangeManager.Subscriber,
     ImportColpkgListener,
-    BaseSnackbarBuilderProvider,
     ApkgImportResultLauncherProvider,
     CsvImportResultLauncherProvider,
     CollectionPermissionScreenLauncher {
-    override val baseSnackbarBuilder: SnackbarBuilder = {}
     val viewModel: DeckPickerViewModel by viewModels()
 
     var fragmented: Boolean
@@ -607,6 +601,12 @@ open class DeckPicker :
                             onDeckCompleted()
                         }
                     }
+                }
+            }
+
+            LaunchedEffect(Unit) {
+                viewModel.snackbarMessage.flowWithLifecycle(lifecycle).collect { message ->
+                    snackbarHostState.showSnackbar(message)
                 }
             }
         }
@@ -1636,7 +1636,7 @@ open class DeckPicker :
                 // Don't show new features dialog for development builds
                 InitialActivity.setUpgradedToLatestVersion(preferences)
                 val ver = resources.getString(R.string.updated_version, VersionUtils.pkgVersionName)
-                postSnackbar(ver, Snackbar.LENGTH_SHORT)
+                postSnackbar(ver)
                 showStartupScreensAndDialogs(preferences, 2)
             }
         } else {
@@ -1646,18 +1646,9 @@ open class DeckPicker :
         }
     }
 
-    // #16061. We have to queue snackbar to avoid the misaligned snackbar showed from onCreate()
-    private fun postSnackbar(
-        text: CharSequence,
-        duration: Int = Snackbar.LENGTH_LONG,
-    ) {
-        val view: View? = findViewById(R.id.root_layout)
-        if (view != null) {
-            view.post {
-                showSnackbar(text, duration)
-            }
-        } else {
-            showSnackbar(text, duration)
+    private fun postSnackbar(text: String) {
+        lifecycleScope.launch {
+            viewModel.snackbarMessage.emit(text)
         }
     }
 
@@ -1887,7 +1878,7 @@ open class DeckPicker :
 
     fun openAnkiWebSharedDecks() {
         if (!NetworkUtils.isOnline) {
-            showSnackbar(R.string.check_network)
+            postSnackbar(getString(R.string.check_network))
             Timber.d("DeckPicker:: No network, Shared deck download failed")
             return
         }
