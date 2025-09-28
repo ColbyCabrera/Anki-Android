@@ -211,7 +211,7 @@ fun DeckPickerScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { isFabMenuOpen = !isFabMenuOpen },
-                shape = MaterialTheme.shapes.extraLarge, // Apply expressive shape
+                shape = MaterialTheme.shapes.extraLarge, // Apply expressive.
             ) {
                 Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add))
                 DropdownMenu(

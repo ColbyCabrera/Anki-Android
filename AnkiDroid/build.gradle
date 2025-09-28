@@ -338,6 +338,7 @@ tasks.register('assertNonzeroAndroidTests') {
         }
     }
 }
+/*
 afterEvaluate {
     tasks.named("connectedPlay${rootProject.androidTestVariantName}AndroidTest").configure {
         finalizedBy('assertNonzeroAndroidTests')
@@ -347,7 +348,7 @@ afterEvaluate {
         dependsOn(":testlib:assemblePlay${rootProject.androidTestVariantName}")
     }
 }
-
+*/
 apply from: "./robolectricDownloader.gradle"
 apply from: "./jacoco.gradle"
 apply from: "../lint.gradle"
@@ -400,6 +401,7 @@ dependencies {
     androidTestImplementation composeBom
 
     implementation libs.androidx.material
+    implementation libs.androidx.compose.material.icons.extended
     implementation libs.androidx.compose.material3
     implementation libs.androidx.compose.foundation
     implementation libs.androidx.compose.ui

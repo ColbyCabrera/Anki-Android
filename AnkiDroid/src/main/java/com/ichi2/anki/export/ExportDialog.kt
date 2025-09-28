@@ -246,7 +246,7 @@ fun DropdownSelector(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .menuAnchor(),
+                        .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, true),
                 readOnly = true,
                 value = selectedOption,
                 onValueChange = {},
