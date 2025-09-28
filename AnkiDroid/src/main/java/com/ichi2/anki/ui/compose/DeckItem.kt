@@ -40,7 +40,7 @@ fun DeckItem(
                 modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(start = (deck.depth * 16).dp)
+                    .padding(start = (deck.depth * 8).dp)
                     .padding(vertical = 12.dp, horizontal = 8.dp)
                     .pointerInput(Unit) {
                         detectTapGestures(
@@ -60,10 +60,10 @@ fun DeckItem(
                         modifier =
                         Modifier.pointerInput(Unit) {
                             detectTapGestures(onTap = { onExpandClick() })
-                        },
+                        }.padding(end = 4.dp),
                     )
                 } else {
-                    Spacer(modifier = Modifier.width(24.dp))
+                    Spacer(modifier = Modifier.width(28.dp))
                 }
                 Text(
                     text = deck.lastDeckNameComponent,
