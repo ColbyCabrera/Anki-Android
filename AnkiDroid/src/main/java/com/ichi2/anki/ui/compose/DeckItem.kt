@@ -3,7 +3,6 @@ package com.ichi2.anki.ui.compose
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -49,7 +48,7 @@ fun DeckItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 12.dp, horizontal = 8.dp)
+                .padding(vertical = 12.dp, horizontal = 12.dp)
                 .pointerInput(Unit) {
                     detectTapGestures(
                         onTap = { onDeckClick() },
@@ -63,7 +62,7 @@ fun DeckItem(
                 modifier = Modifier
                     .weight(1f)
                     .padding(end = 8.dp),
-                style = MaterialTheme.typography.titleLarge,
+                style = if (deck.depth == 0) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium,
             )
             Text(
                 text = deck.newCount.toString(),
@@ -85,11 +84,13 @@ fun DeckItem(
             )
             if (deck.canCollapse) {
                 Surface(
-                    modifier = Modifier.height(44.dp).padding(start = 8.dp),
+                    modifier = Modifier
+                        .height(44.dp)
+                        .padding(start = 8.dp),
                     contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                     color = MaterialTheme.colorScheme.tertiaryContainer,
                     shape = MaterialTheme.shapes.extraLarge,
-                    ) {
+                ) {
                     Icon(
                         painter = painterResource(
                             if (deck.collapsed) R.drawable.ic_expand_more_black_24dp else R.drawable.ic_expand_less_black_24dp,
@@ -100,7 +101,8 @@ fun DeckItem(
                         modifier = Modifier
                             .pointerInput(Unit) {
                                 detectTapGestures(onTap = { onExpandClick() })
-                            }.padding(vertical = 12.dp, horizontal = 6.dp)
+                            }
+                            .padding(vertical = 12.dp, horizontal = 6.dp)
                     )
                 }
 
