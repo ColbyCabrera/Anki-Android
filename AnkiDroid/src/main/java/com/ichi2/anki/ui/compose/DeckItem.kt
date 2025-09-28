@@ -3,16 +3,17 @@ package com.ichi2.anki.ui.compose
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -48,7 +49,6 @@ fun DeckItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = (deck.depth * 8).dp)
                 .padding(vertical = 12.dp, horizontal = 8.dp)
                 .pointerInput(Unit) {
                     detectTapGestures(
@@ -58,23 +58,6 @@ fun DeckItem(
                 },
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (deck.canCollapse) {
-                Icon(
-                    painter = painterResource(
-                        if (deck.collapsed) R.drawable.ic_expand_more_black_24dp else R.drawable.ic_expand_less_black_24dp,
-                    ),
-                    contentDescription = if (deck.collapsed) stringResource(R.string.expand) else stringResource(
-                        R.string.collapse
-                    ),
-                    modifier = Modifier
-                        .pointerInput(Unit) {
-                            detectTapGestures(onTap = { onExpandClick() })
-                        }
-                        .padding(end = 4.dp),
-                )
-            } else {
-                Spacer(modifier = Modifier.width(28.dp))
-            }
             Text(
                 text = deck.lastDeckNameComponent,
                 modifier = Modifier
@@ -100,6 +83,28 @@ fun DeckItem(
                 modifier = Modifier.padding(horizontal = 4.dp),
                 style = MaterialTheme.typography.bodyMedium,
             )
+            if (deck.canCollapse) {
+                Surface(
+                    modifier = Modifier.height(44.dp).padding(start = 8.dp),
+                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                    color = MaterialTheme.colorScheme.tertiaryContainer,
+                    shape = MaterialTheme.shapes.extraLarge,
+                    ) {
+                    Icon(
+                        painter = painterResource(
+                            if (deck.collapsed) R.drawable.ic_expand_more_black_24dp else R.drawable.ic_expand_less_black_24dp,
+                        ),
+                        contentDescription = if (deck.collapsed) stringResource(R.string.expand) else stringResource(
+                            R.string.collapse
+                        ),
+                        modifier = Modifier
+                            .pointerInput(Unit) {
+                                detectTapGestures(onTap = { onExpandClick() })
+                            }.padding(vertical = 12.dp, horizontal = 6.dp)
+                    )
+                }
+
+            }
             DropdownMenu(
                 expanded = isContextMenuOpen,
                 onDismissRequest = { isContextMenuOpen = false },
@@ -173,9 +178,11 @@ fun DeckItem(
         }
 
         else -> {
-            Box(modifier = modifier
-                .fillMaxWidth()
-                .padding(start = 8.dp)) {
+            Box(
+                modifier = modifier
+                    .fillMaxWidth()
+                    .padding(start = 8.dp)
+            ) {
                 content()
             }
         }

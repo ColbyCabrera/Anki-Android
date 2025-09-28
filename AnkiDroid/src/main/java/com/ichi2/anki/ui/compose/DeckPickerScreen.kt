@@ -93,7 +93,7 @@ fun DeckPickerContent(
                             contentColor = MaterialTheme.colorScheme.onSurface
                         )
                     ) {
-                        Column {
+                        Column (modifier = Modifier.padding(8.dp)) {
                             // Render the parent deck
                             DeckItem(
                                 deck = rootDeck,
