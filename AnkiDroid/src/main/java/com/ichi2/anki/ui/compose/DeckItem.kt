@@ -67,7 +67,7 @@ fun DeckItem(
                 }
                 Text(
                     text = deck.lastDeckNameComponent,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).padding(end = 4.dp),
                     style = MaterialTheme.typography.titleLarge,
                 )
                 Text(
