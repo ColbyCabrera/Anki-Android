@@ -44,6 +44,7 @@ import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Shapes
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -185,10 +186,6 @@ fun AnkiDroidApp(
         typography = AppTypography, // Apply expressive typography
         shapes = AppShapes, // Apply expressive shapes
     ) {
-        SnackbarDefaults.colors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
-        )
         if (fragmented) {
             var isSearchOpen by remember { mutableStateOf(false) }
             var isStudyOptionsMenuOpen by remember { mutableStateOf(false) }
@@ -197,7 +194,15 @@ fun AnkiDroidApp(
             // Tablet layout
             Scaffold(
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-                snackbarHost = { SnackbarHost(snackbarHostState) },
+                snackbarHost = {
+                    SnackbarHost(snackbarHostState) { snackbarData ->
+                        Snackbar(
+                            snackbarData = snackbarData,
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                        )
+                    }
+                },
                 topBar = {
                     LargeTopAppBar(
                         title = {
@@ -327,7 +332,7 @@ fun AnkiDroidApp(
                                 }
                             }
                         },
-                        colors = TopAppBarDefaults.largeTopAppBarColors(
+                        colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = MaterialTheme.colorScheme.surface,
                             scrolledContainerColor = MaterialTheme.colorScheme.surface,
                         ),
