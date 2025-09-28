@@ -23,7 +23,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
@@ -40,6 +40,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Shapes
@@ -48,7 +49,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
@@ -78,52 +78,46 @@ import com.ichi2.anki.deckpicker.DisplayDeckNode
 import com.ichi2.themes.Themes
 
 // Define Expressive Typography
-val AppTypography =
-    Typography(
-        displayLarge =
-            TextStyle(
-                fontFamily = FontFamily.Default,
-                fontWeight = FontWeight.Bold, // Expressive: Bolder
-                fontSize = 57.sp,
-                lineHeight = 64.sp,
-                letterSpacing = (-0.25).sp,
-            ),
-        headlineLarge =
-            TextStyle(
-                fontFamily = FontFamily.Default,
-                fontWeight = FontWeight.SemiBold, // Expressive: Bolder
-                fontSize = 32.sp,
-                lineHeight = 40.sp,
-                letterSpacing = 0.sp,
-            ),
-        titleLarge =
-            TextStyle(
-                fontFamily = FontFamily.Default,
-                fontWeight = FontWeight.Medium, // Expressive: Slightly bolder/more prominent
-                fontSize = 24.sp, // Expressive: Slightly larger
-                lineHeight = 28.sp,
-                letterSpacing = 0.sp,
-            ),
-        bodyLarge =
-            TextStyle(
-                fontFamily = FontFamily.Default,
-                fontWeight = FontWeight.Normal,
-                fontSize = 16.sp,
-                lineHeight = 24.sp,
-                letterSpacing = 0.5.sp,
-            ),
-        // Add other text styles as needed, inheriting from M3 defaults or customizing
-    )
+val AppTypography = Typography(
+    displayLarge = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Bold,
+        fontSize = 57.sp,
+        lineHeight = 64.sp,
+        letterSpacing = (-0.25).sp,
+    ),
+    headlineLarge = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 32.sp,
+        lineHeight = 40.sp,
+        letterSpacing = 0.sp,
+    ),
+    titleLarge = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Medium,
+        fontSize = 24.sp,
+        lineHeight = 28.sp,
+        letterSpacing = 0.sp,
+    ),
+    bodyLarge = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Normal,
+        fontSize = 16.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.5.sp,
+    ),
+    // Add other text styles as needed, inheriting from M3 defaults or customizing
+)
 
 // Define Expressive Shapes
-val AppShapes =
-    Shapes(
-        extraSmall = RoundedCornerShape(4.dp), // Default M3
-        small = RoundedCornerShape(8.dp), // Expressive: Slightly more rounded
-        medium = RoundedCornerShape(16.dp), // Expressive: More pronounced rounding for cards/buttons
-        large = RoundedCornerShape(24.dp), // Expressive: Very rounded for larger elements like dialogs
-        extraLarge = RoundedCornerShape(32.dp), // Expressive: For prominent elements like FABs or hero containers
-    )
+val AppShapes = Shapes(
+    extraSmall = RoundedCornerShape(4.dp), // Default M3
+    small = RoundedCornerShape(8.dp), // Expressive: Slightly more rounded
+    medium = RoundedCornerShape(16.dp), // Expressive: More pronounced rounding for cards/buttons
+    large = RoundedCornerShape(24.dp), // Expressive: Very rounded for larger elements like dialogs
+    extraLarge = RoundedCornerShape(32.dp), // Expressive: For prominent elements like FABs or hero containers
+)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -159,11 +153,9 @@ fun AnkiDroidApp(
     onSearchFocusRequested: () -> Unit,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
-    val searchFocusRequester =
-        remember {
-            androidx.compose.ui.focus
-                .FocusRequester()
-        }
+    val searchFocusRequester = remember {
+        androidx.compose.ui.focus.FocusRequester()
+    }
 
     LaunchedEffect(requestSearchFocus) {
         if (requestSearchFocus) {
@@ -174,31 +166,29 @@ fun AnkiDroidApp(
 
     val context = LocalContext.current
     val currentAnkiTheme = Themes.currentTheme
-    val colorScheme =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (currentAnkiTheme.isNightMode) {
-                dynamicDarkColorScheme(context)
-            } else {
-                dynamicLightColorScheme(context)
-            }
+    val colorScheme = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        if (currentAnkiTheme.isNightMode) {
+            dynamicDarkColorScheme(context)
         } else {
-            if (currentAnkiTheme.isNightMode) {
-                darkColorScheme()
-            } else {
-                lightColorScheme()
-            }
+            dynamicLightColorScheme(context)
         }
+    } else {
+        if (currentAnkiTheme.isNightMode) {
+            darkColorScheme()
+        } else {
+            lightColorScheme()
+        }
+    }
 
     MaterialTheme(
         colorScheme = colorScheme,
         typography = AppTypography, // Apply expressive typography
         shapes = AppShapes, // Apply expressive shapes
     ) {
-        val snackbarDefaults =
-            SnackbarDefaults.colors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-            )
+        SnackbarDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+        )
         if (fragmented) {
             var isSearchOpen by remember { mutableStateOf(false) }
             var isStudyOptionsMenuOpen by remember { mutableStateOf(false) }
@@ -211,7 +201,10 @@ fun AnkiDroidApp(
                 topBar = {
                     LargeTopAppBar(
                         title = {
-                            if (!isSearchOpen) Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge)
+                            if (!isSearchOpen) Text(
+                                stringResource(R.string.app_name),
+                                style = MaterialTheme.typography.titleLarge
+                            )
                         }, // Expressive TopAppBar Title
                         navigationIcon = {
                             IconButton(onClick = onNavigationIconClick) {
@@ -226,8 +219,7 @@ fun AnkiDroidApp(
                                 TextField(
                                     value = searchQuery,
                                     onValueChange = onSearchQueryChanged,
-                                    modifier =
-                                    Modifier
+                                    modifier = Modifier
                                         .weight(1f)
                                         .focusRequester(searchFocusRequester),
                                     placeholder = { Text(stringResource(R.string.search_decks)) },
@@ -419,7 +411,7 @@ fun AnkiDroidApp(
             DeckPickerScreen(
                 decks = decks,
                 isRefreshing = isRefreshing,
-                searchFocusRequester = searchFocusRequester, // Typo: searchFocusR                               equester
+                searchFocusRequester = searchFocusRequester,
                 snackbarHostState = snackbarHostState,
                 onRefresh = onRefresh,
                 searchQuery = searchQuery,
