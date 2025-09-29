@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -80,13 +81,10 @@ import com.ichi2.anki.R
 import com.ichi2.anki.deckpicker.DisplayDeckNode
 
 private class MorphShape(
-    private val morph: Morph,
-    private val percentage: Float
+    private val morph: Morph, private val percentage: Float
 ) : Shape {
     override fun createOutline(
-        size: Size,
-        layoutDirection: LayoutDirection,
-        density: Density
+        size: Size, layoutDirection: LayoutDirection, density: Density
     ): Outline {
         // To draw the morph, we need to scale the path to the component size.
         // We could also do that in a Modifier, but doing it here makes it more reusable.
@@ -121,8 +119,7 @@ fun DeckPickerContent(
             morph = Morph(
                 start = MaterialShapes.Pentagon,
                 end = MaterialShapes.Cookie12Sided,
-            ),
-            percentage = state.distanceFraction
+            ), percentage = state.distanceFraction
         )
     }
 
@@ -157,12 +154,10 @@ fun DeckPickerContent(
                             translationY = (state.distanceFraction * 120) - 30
                         }
                         .clip(morphingShape)
-                        .background(MaterialTheme.colorScheme.primary)
-                ) {
+                        .background(MaterialTheme.colorScheme.primary)) {
                     Box(modifier = Modifier.padding(16.dp))
                 }
-            }
-        ) {
+            }) {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 // Group decks by their parent
                 val groupedDecks = mutableMapOf<DisplayDeckNode, MutableList<DisplayDeckNode>>()
@@ -180,11 +175,16 @@ fun DeckPickerContent(
                 }
 
                 items(rootDecks) { rootDeck ->
+                    val shape = if (rootDeck.canCollapse) {
+                        MaterialTheme.shapes.medium
+                    } else {
+                        CircleShape
+                    }
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 8.dp, vertical = 2.dp),
-
+                        shape = shape,
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainer,
                             contentColor = MaterialTheme.colorScheme.onSurface
