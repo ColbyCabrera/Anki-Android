@@ -24,7 +24,7 @@
         <item name="popupMenuStyle">@style/PopupMenuStyle</item>
         <item name="spinnerStyle">@style/SpinnerStyle</item>
         <!-- Action bar styles -->
-        <item name="appBarColor">?attr/colorPrimary</item>
+        <item name="appBarColor">?attr/colorSurface</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="windowActionModeOverlay">true</item>
@@ -110,7 +110,7 @@
         <item name="popupBackgroundColor">?attr/colorSurface</item>
         <item name="overflowAndPopupMenuIconColor">?attr/colorOnSurfaceVariant</item>
         <!-- StatusBar and Navbar for Edge-to-Edge -->
-        <item name="android:statusBarColor" tools:targetApi="l">@android:color/transparent</item>
+        <item name="android:statusBarColor" tools:targetApi="l">?attr/appBarColor</item>
         <item name="android:navigationBarColor" tools:targetApi="l">@android:color/transparent</item>
         <item name="android:enforceNavigationBarContrast" tools:targetApi="q">false</item>
         <item name="android:enforceStatusBarContrast" tools:targetApi="q">false</item>
