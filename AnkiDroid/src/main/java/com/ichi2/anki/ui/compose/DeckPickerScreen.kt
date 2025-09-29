@@ -17,14 +17,15 @@
  ****************************************************************************************/
 package com.ichi2.anki.ui.compose
 
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -52,27 +53,52 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.asComposePath
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.graphics.shapes.Morph
-import com.google.android.material.math.MathUtils.lerp
+import androidx.graphics.shapes.toPath
 import com.ichi2.anki.R
 import com.ichi2.anki.deckpicker.DisplayDeckNode
 
-@OptIn(ExperimentalMaterial3Api::class)
+private class MorphShape(
+    private val morph: Morph,
+    private val percentage: Float
+) : Shape {
+    override fun createOutline(
+        size: Size,
+        layoutDirection: LayoutDirection,
+        density: Density
+    ): Outline {
+        // To draw the morph, we need to scale the path to the component size.
+        // We could also do that in a Modifier, but doing it here makes it more reusable.
+        val matrix = android.graphics.Matrix()
+        matrix.setScale(size.width, size.height)
+        val androidPath = morph.toPath(progress = percentage.coerceIn(0f, 1f))
+        androidPath.transform(matrix)
+        return Outline.Generic(androidPath.asComposePath())
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun DeckPickerContent(
     decks: List<DisplayDeckNode>,
@@ -89,6 +115,17 @@ fun DeckPickerContent(
     onRebuild: (DisplayDeckNode) -> Unit,
     onEmpty: (DisplayDeckNode) -> Unit,
 ) {
+    val state = rememberPullToRefreshState()
+    val morphingShape = remember(state.distanceFraction) {
+        MorphShape(
+            morph = Morph(
+                start = MaterialShapes.Pentagon,
+                end = MaterialShapes.Cookie12Sided,
+            ),
+            percentage = state.distanceFraction
+        )
+    }
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -105,7 +142,26 @@ fun DeckPickerContent(
         PullToRefreshBox(
             isRefreshing = isRefreshing,
             onRefresh = onRefresh,
-            modifier = Modifier.fillMaxSize()
+            state = state,
+            modifier = Modifier.fillMaxSize(),
+            indicator = {
+                Box(
+                    modifier = Modifier
+                        .padding(top = 16.dp)
+                        .align(androidx.compose.ui.Alignment.TopCenter)
+                        .width(42.dp)
+                        .height(42.dp)
+                        .graphicsLayer {
+                            alpha = state.distanceFraction
+                            rotationZ = state.distanceFraction * 360
+
+                        }
+                        .clip(morphingShape)
+                        .background(MaterialTheme.colorScheme.primary)
+                ) {
+                    Box(modifier = Modifier.padding(16.dp))
+                }
+            }
         ) {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 // Group decks by their parent
@@ -124,21 +180,15 @@ fun DeckPickerContent(
                 }
 
                 items(rootDecks) { rootDeck ->
-                    val shape = if (rootDeck.canCollapse) {
-                        MaterialTheme.shapes.medium
-                    } else {
-                        CircleShape
-                    }
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 8.dp, vertical = 2.dp),
-                        shape = shape,
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainer,
                             contentColor = MaterialTheme.colorScheme.onSurface
-                        ),
-                        elevation = CardDefaults.cardElevation(0.dp)
+                        )
                     ) {
                         Column(modifier = Modifier.padding(8.dp)) {
                             // Render the parent deck
