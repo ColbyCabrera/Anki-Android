@@ -330,7 +330,7 @@ open class AnkiDroidJsAPI(
                 convertToByteArray(apiContract, true)
             }
             "showNavigationDrawer" -> {
-                activity.onNavigationPressed()
+                activity.onNavigationIconClicked()
                 convertToByteArray(apiContract, true)
             }
             "showOptionsMenu" -> {

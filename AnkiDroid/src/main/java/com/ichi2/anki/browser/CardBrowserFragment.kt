@@ -226,7 +226,7 @@ class CardBrowserFragment :
         searchBar =
             view.findViewById<SearchBar>(R.id.search_bar)?.apply {
                 setNavigationOnClickListener {
-                    requireNavigationDrawerActivity().onNavigationPressed()
+                    requireNavigationDrawerActivity().onNavigationIconClicked()
                 }
             }
         searchView = view.findViewById<SearchView>(R.id.search_view)

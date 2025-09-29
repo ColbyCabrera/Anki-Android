@@ -937,11 +937,11 @@ open class CardBrowser :
         }
     }
 
-    override fun onNavigationPressed() {
+    override fun onNavigationIconClicked() {
         if (viewModel.isInMultiSelectMode) {
             viewModel.endMultiSelectMode(SingleSelectCause.NavigateBack)
         } else {
-            super.onNavigationPressed()
+            super.onNavigationIconClicked()
         }
     }
 

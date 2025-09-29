@@ -115,9 +115,9 @@
     <!-- Action bar. Currently all action bar text is white in every theme. -->
     <style name="ActionBarStyle" parent="Base.ThemeOverlay.AppCompat.ActionBar">
         <!-- Colors: hamburger, title text, overflow icon -->
-        <item name="android:textColorPrimary">@color/white</item>
+        <item name="android:textColorPrimary">?attr/colorOnPrimary</item>
         <!-- Colors: subtitle text -->
-        <item name="android:textColorSecondary">@color/white</item>
+        <item name="android:textColorSecondary">?attr/colorOnPrimary</item>
         <!-- Overflow menu style -->
         <item name="popupTheme">@style/ActionBar.Popup</item>
     </style>

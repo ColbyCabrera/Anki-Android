@@ -150,7 +150,7 @@ abstract class NavigationDrawerActivity :
             supportActionBar!!.setHomeButtonEnabled(true)
 
             // Decide which action to take when the navigation button is tapped.
-            toolbar.setNavigationOnClickListener { onNavigationPressed() }
+            toolbar.setNavigationOnClickListener { onNavigationIconClicked() }
         }
         setupBackPressedCallbacks()
         // ActionBarDrawerToggle ties together the the proper interactions
@@ -296,7 +296,7 @@ abstract class NavigationDrawerActivity :
      * Called, when navigation button of the action bar is pressed.
      * Design pattern: template method. Subclasses can override this to define their own behaviour.
      */
-    open fun onNavigationPressed() {
+    open fun onNavigationIconClicked() {
         if (navButtonGoesBack) {
             finish()
         } else {
