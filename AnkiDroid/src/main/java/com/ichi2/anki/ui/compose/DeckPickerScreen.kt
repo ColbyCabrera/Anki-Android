@@ -18,8 +18,11 @@
 package com.ichi2.anki.ui.compose
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -231,18 +234,22 @@ fun DeckPickerContent(
                                 onEmpty = { onEmpty(rootDeck) },
                             )
                             // Render the sub-decks
-                            groupedDecks[rootDeck]?.forEach { subDeck ->
-                                DeckItem(
-                                    deck = subDeck,
-                                    onDeckClick = { onDeckClick(subDeck) },
-                                    onExpandClick = { onExpandClick(subDeck) },
-                                    onDeckOptions = { onDeckOptions(subDeck) },
-                                    onRename = { onRename(subDeck) },
-                                    onExport = { onExport(subDeck) },
-                                    onDelete = { onDelete(subDeck) },
-                                    onRebuild = { onRebuild(subDeck) },
-                                    onEmpty = { onEmpty(subDeck) },
-                                )
+                            AnimatedVisibility(visible = rootDeck.isExpanded, enter = expandVertically(), exit = shrinkVertically()) {
+                                Column {
+                                    groupedDecks[rootDeck]?.forEach { subDeck ->
+                                        DeckItem(
+                                            deck = subDeck,
+                                            onDeckClick = { onDeckClick(subDeck) },
+                                            onExpandClick = { onExpandClick(subDeck) },
+                                            onDeckOptions = { onDeckOptions(subDeck) },
+                                            onRename = { onRename(subDeck) },
+                                            onExport = { onExport(subDeck) },
+                                            onDelete = { onDelete(subDeck) },
+                                            onRebuild = { onRebuild(subDeck) },
+                                            onEmpty = { onEmpty(subDeck) },
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
