@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.NoteAdd
@@ -56,18 +57,23 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.ToggleFloatingActionButton
+import androidx.compose.material3.ToggleFloatingActionButtonDefaults.animateIcon
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Outline
@@ -75,9 +81,14 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -151,7 +162,7 @@ fun DeckPickerContent(
                 Box(
                     modifier = Modifier
                         .padding(top = 16.dp)
-                        .align(androidx.compose.ui.Alignment.TopCenter)
+                        .align(Alignment.TopCenter)
                         .width(42.dp)
                         .height(42.dp)
                         .graphicsLayer {
@@ -254,12 +265,15 @@ fun DeckPickerScreen(
     onRebuild: (DisplayDeckNode) -> Unit,
     onEmpty: (DisplayDeckNode) -> Unit,
     onNavigationIconClick: () -> Unit,
-    searchFocusRequester: androidx.compose.ui.focus.FocusRequester = androidx.compose.ui.focus.FocusRequester(),
+    searchFocusRequester: FocusRequester = FocusRequester(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     var fabMenuExpanded by rememberSaveable { mutableStateOf(false) }
     var isSearchOpen by remember { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val listState = rememberLazyListState()
+    val fabVisible by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
+    val focusRequester = remember { FocusRequester() }
 
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -333,13 +347,28 @@ fun DeckPickerScreen(
             FloatingActionButtonMenu(
                 expanded = fabMenuExpanded,
                 button = {
-                    ToggleFloatingActionButton(
+                    ToggleFloatingActionButton(modifier = Modifier
+                        .semantics {
+                            traversalIndex = -1f
+                            stateDescription = if (fabMenuExpanded) "Expanded" else "Collapsed"
+                            contentDescription = "Toggle menu"
+                        }
+                        .animateFloatingActionButton(
+                            visible = fabVisible || fabMenuExpanded,
+                            alignment = Alignment.BottomStart,
+                        )
+                        .focusRequester(focusRequester),
                         checked = fabMenuExpanded,
-                        onCheckedChange = { fabMenuExpanded = !fabMenuExpanded },
-                    ) {
+                        onCheckedChange = { fabMenuExpanded = !fabMenuExpanded }) {
+                        val imageVector by remember {
+                            derivedStateOf {
+                                if (checkedProgress > 0.5f) Icons.Filled.Close else Icons.Filled.Add
+                            }
+                        }
                         Icon(
-                            imageVector = if (fabMenuExpanded) Icons.Filled.Close else Icons.Filled.Add,
+                            painter = rememberVectorPainter(imageVector),
                             contentDescription = null,
+                            modifier = Modifier.animateIcon({ checkedProgress }),
                         )
                     }
                 },
