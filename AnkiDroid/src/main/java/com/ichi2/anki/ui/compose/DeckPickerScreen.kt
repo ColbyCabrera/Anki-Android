@@ -18,6 +18,7 @@
 package com.ichi2.anki.ui.compose
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -79,6 +80,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asComposePath
@@ -281,6 +283,10 @@ fun DeckPickerScreen(
     val listState = rememberLazyListState()
     val fabVisible by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
     val focusRequester = remember { FocusRequester() }
+    val scrimColor by animateColorAsState(
+        targetValue = if (fabMenuExpanded) MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f) else Color.Transparent,
+        label = "Scrim"
+    )
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -371,7 +377,7 @@ fun DeckPickerScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f))
+                    .background(scrimColor)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
