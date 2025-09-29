@@ -19,6 +19,7 @@ package com.ichi2.anki.ui.compose
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -285,6 +286,7 @@ fun DeckPickerScreen(
     val focusRequester = remember { FocusRequester() }
     val scrimColor by animateColorAsState(
         targetValue = if (fabMenuExpanded) MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f) else Color.Transparent,
+        animationSpec = tween(500),
         label = "Scrim"
     )
 
