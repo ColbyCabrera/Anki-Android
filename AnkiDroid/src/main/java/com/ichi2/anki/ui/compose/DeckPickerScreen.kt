@@ -234,7 +234,11 @@ fun DeckPickerContent(
                                 onEmpty = { onEmpty(rootDeck) },
                             )
                             // Render the sub-decks
-                            AnimatedVisibility(visible = rootDeck.isExpanded, enter = expandVertically(), exit = shrinkVertically()) {
+                            AnimatedVisibility(
+                                visible = !rootDeck.collapsed,
+                                enter = expandVertically(),
+                                exit = shrinkVertically()
+                            ) {
                                 Column {
                                     groupedDecks[rootDeck]?.forEach { subDeck ->
                                         DeckItem(
@@ -414,18 +418,19 @@ fun DeckPickerScreen(
                     val fabMenuCollapsedStateDescription =
                         stringResource(R.string.fab_menu_collapsed)
                     val fabMenuToggleContentDescription = stringResource(R.string.fab_menu_toggle)
-                    ToggleFloatingActionButton(modifier = Modifier
-                        .semantics {
-                            traversalIndex = -1f
-                            stateDescription =
-                                if (fabMenuExpanded) fabMenuExpandedStateDescription else fabMenuCollapsedStateDescription
-                            contentDescription = fabMenuToggleContentDescription
-                        }
-                        .animateFloatingActionButton(
-                            visible = fabVisible || fabMenuExpanded,
-                            alignment = Alignment.BottomEnd,
-                        )
-                        .focusRequester(focusRequester),
+                    ToggleFloatingActionButton(
+                        modifier = Modifier
+                            .semantics {
+                                traversalIndex = -1f
+                                stateDescription =
+                                    if (fabMenuExpanded) fabMenuExpandedStateDescription else fabMenuCollapsedStateDescription
+                                contentDescription = fabMenuToggleContentDescription
+                            }
+                            .animateFloatingActionButton(
+                                visible = fabVisible || fabMenuExpanded,
+                                alignment = Alignment.BottomEnd,
+                            )
+                            .focusRequester(focusRequester),
                         checked = fabMenuExpanded,
                         onCheckedChange = { fabMenuExpanded = !fabMenuExpanded }) {
                         val imageVector by remember {
