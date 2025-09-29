@@ -154,7 +154,7 @@ fun DeckPickerContent(
                         .graphicsLayer {
                             alpha = state.distanceFraction
                             rotationZ = state.distanceFraction * 360
-
+                            translationY = state.distanceFraction * 100
                         }
                         .clip(morphingShape)
                         .background(MaterialTheme.colorScheme.primary)
