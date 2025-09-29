@@ -1,3 +1,4 @@
+
 /*
  *  Copyright (c) 2022 Brayan Oliveira <brayandso.dev@gmail.com>
  *
@@ -6,7 +7,7 @@
  *  Foundation; either version 3 of the License, or (at your option) any later
  *  version.
  *
- *  This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ *  This program is distributed in the hope that it is useful, but WITHOUT ANY
  *  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
  *  PARTICULAR PURPOSE. See the GNU General Public License for more details.
  *
@@ -29,6 +30,8 @@ enum class Theme(
     PLAIN("2", R.style.Theme_Light_Plain, false),
     BLACK("3", R.style.Theme_Dark_Black, true),
     DARK("4", R.style.Theme_Dark, true),
+    LIGHT_DYNAMIC("5", R.style.Theme_Dynamic_Light, false),
+    DARK_DYNAMIC("6", R.style.Theme_Dynamic_Dark, true),
     ;
 
     companion object {

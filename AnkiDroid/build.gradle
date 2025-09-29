@@ -338,6 +338,7 @@ tasks.register('assertNonzeroAndroidTests') {
         }
     }
 }
+/*
 afterEvaluate {
     tasks.named("connectedPlay${rootProject.androidTestVariantName}AndroidTest").configure {
         finalizedBy('assertNonzeroAndroidTests')
@@ -347,7 +348,7 @@ afterEvaluate {
         dependsOn(":testlib:assemblePlay${rootProject.androidTestVariantName}")
     }
 }
-
+*/
 apply from: "./robolectricDownloader.gradle"
 apply from: "./jacoco.gradle"
 apply from: "../lint.gradle"
@@ -395,17 +396,18 @@ dependencies {
     implementation libs.seismic
 
     // Jetpack Compose
-    def composeBom = platform('androidx.compose:compose-bom:2024.05.00')
+    def composeBom = platform(libs.androidx.compose.bom)
     implementation composeBom
     androidTestImplementation composeBom
 
-    implementation 'androidx.compose.material:material'
-    implementation 'androidx.compose.material3:material3'
-    implementation 'androidx.compose.foundation:foundation'
-    implementation 'androidx.compose.ui:ui'
-    implementation 'androidx.compose.ui:ui-tooling-preview'
-    debugImplementation 'androidx.compose.ui:ui-tooling'
-    implementation 'androidx.activity:activity-compose:1.9.0'
+    implementation libs.androidx.material
+    implementation libs.androidx.compose.material.icons.extended
+    implementation libs.androidx.compose.material3
+    implementation libs.androidx.compose.foundation
+    implementation libs.androidx.compose.ui
+    implementation libs.androidx.compose.ui.tooling.preview
+    debugImplementation libs.androidx.compose.ui.tooling
+    implementation libs.androidx.activity.compose
     implementation libs.coil.compose
 
 

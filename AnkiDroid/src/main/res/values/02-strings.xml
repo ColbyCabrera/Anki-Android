@@ -448,5 +448,8 @@ opening the system text to speech settings fails">Failed to open text to speech 
 
     <!-- Browser Options -->
     <string name="ignore_accents_in_search">Ignore accents in search</string>
-</resources>
 
+    <!-- Themes -->
+    <string name="day_theme_light_dynamic">Light (dynamic)</string>
+    <string name="night_theme_dark_dynamic">Dark (dynamic)</string>
+</resources>

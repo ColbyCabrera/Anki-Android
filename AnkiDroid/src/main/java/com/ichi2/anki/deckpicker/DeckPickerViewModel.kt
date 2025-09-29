@@ -121,6 +121,8 @@ class DeckPickerViewModel :
     val deckDeletedNotification = MutableSharedFlow<DeckDeletionResult>()
     val emptyCardsNotification = MutableSharedFlow<EmptyCardsResult>()
     val flowOfDestination = MutableSharedFlow<Destination>()
+    val snackbarMessage = MutableSharedFlow<String>()
+
     override val onError = MutableSharedFlow<String>()
 
     /**

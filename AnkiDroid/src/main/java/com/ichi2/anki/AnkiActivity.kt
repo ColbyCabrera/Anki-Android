@@ -78,7 +78,6 @@ import com.ichi2.anki.libanki.Collection
 import com.ichi2.anki.preferences.sharedPrefs
 import com.ichi2.anki.receiver.SdCardReceiver
 import com.ichi2.anki.settings.Prefs
-import com.ichi2.anki.snackbar.showSnackbar
 import com.ichi2.anki.utils.ext.showDialogFragment
 import com.ichi2.anki.workarounds.AppLoadedFromBackupWorkaround.showedActivityFailedScreen
 import com.ichi2.async.CollectionLoader
@@ -365,7 +364,7 @@ open class AnkiActivity :
             )
         } catch (e: ActivityNotFoundException) {
             Timber.w(e)
-            this.showSnackbar(R.string.activity_start_failed)
+            postSnackbar(R.string.activity_start_failed)
         }
     }
 
@@ -484,7 +483,7 @@ open class AnkiActivity :
      */
     open fun openUrl(url: Uri) {
         if (!AdaptionUtil.hasWebBrowser(this)) {
-            showSnackbar(getString(R.string.no_browser_msg, url.toString()))
+            postSnackbar(getString(R.string.no_browser_msg, url.toString()))
             return
         }
         val toolbarColor = MaterialColors.getColor(this, R.attr.appBarColor, 0)
@@ -836,7 +835,7 @@ open class AnkiActivity :
             startActivity(shareFileIntent)
         } else {
             // Try to save it?
-            showSnackbar(R.string.export_send_no_handlers)
+            postSnackbar(R.string.export_send_no_handlers)
             saveExportFile(path)
         }
     }
@@ -846,7 +845,7 @@ open class AnkiActivity :
         val attachment = File(exportPath)
         if (!attachment.exists()) {
             Timber.e("saveExportFile() Specified apkg file %s does not exist", exportPath)
-            showSnackbar(R.string.export_save_apkg_unsuccessful)
+            postSnackbar(R.string.export_save_apkg_unsuccessful)
             return
         }
 
@@ -866,7 +865,7 @@ open class AnkiActivity :
             saveFileLauncher.launch(saveIntent)
         } catch (ex: ActivityNotFoundException) {
             Timber.w("No activity found to handle saveExportFile request")
-            showSnackbar(R.string.activity_start_failed)
+            postSnackbar(R.string.activity_start_failed)
         }
     }
 
@@ -879,9 +878,9 @@ open class AnkiActivity :
                     }
 
                 if (isSuccessful) {
-                    showSnackbar(R.string.export_save_apkg_successful, Snackbar.LENGTH_SHORT)
+                    postSnackbar(R.string.export_save_apkg_successful)
                 } else {
-                    showSnackbar(R.string.export_save_apkg_unsuccessful)
+                    postSnackbar(R.string.export_save_apkg_unsuccessful)
                 }
             }
         }
@@ -919,6 +918,14 @@ open class AnkiActivity :
             return false
         }
         return true
+    }
+
+    private fun postSnackbar(@StringRes text: Int) {
+        (this as? DeckPicker)?.viewModel?.snackbarMessage?.tryEmit(getString(text))
+    }
+
+    private fun postSnackbar(text: String) {
+        (this as? DeckPicker)?.viewModel?.snackbarMessage?.tryEmit(text)
     }
 
     companion object {

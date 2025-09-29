@@ -7,7 +7,7 @@
 ~ Foundation; either version 3 of the License, or (at your option) any later
 ~ version.
 ~
-~ This program is distributed in the hope that it will be useful, but WITHOUT ANY
+~ This program is distributed in the hope that it is useful, but WITHOUT ANY
 ~ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 ~ PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ~
@@ -77,10 +77,12 @@
     <string-array name="day_theme_labels">
         <item>@string/day_theme_light</item>
         <item>@string/day_theme_plain</item>
+        <item>@string/day_theme_light_dynamic</item>
     </string-array>
     <string-array name="night_theme_labels">
         <item>@string/night_theme_black</item>
         <item>@string/night_theme_dark</item>
+        <item>@string/night_theme_dark_dynamic</item>
     </string-array>
     <string-array name="html_size_code_labels">
         <item>@string/html_size_code_xx_small</item>
@@ -171,6 +173,8 @@
         <item>@string/day_theme_plain</item>
         <item>@string/night_theme_black</item>
         <item>@string/night_theme_dark</item>
+        <item>@string/day_theme_light_dynamic</item>
+        <item>@string/night_theme_dark_dynamic</item>
     </string-array>
     <string-array name="app_theme_values">
         <item>0</item> <!-- Follow system -->
@@ -178,15 +182,19 @@
         <item>2</item> <!-- Plain -->
         <item>3</item> <!-- Black -->
         <item>4</item> <!-- Dark -->
+        <item>5</item> <!-- Light Dynamic -->
+        <item>6</item> <!-- Dark Dynamic -->
     </string-array>
     <!-- Day and night values should be the same as their App theme equivalent -->
     <string-array name="day_theme_values">
         <item>1</item>
         <item>2</item>
+        <item>5</item>
     </string-array>
     <string-array name="night_theme_values">
         <item>3</item>
         <item>4</item>
+        <item>6</item>
     </string-array>
 
     <string-array name="sync_media_entries">
