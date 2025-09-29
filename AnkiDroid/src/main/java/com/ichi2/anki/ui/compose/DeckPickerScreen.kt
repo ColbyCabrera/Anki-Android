@@ -355,7 +355,7 @@ fun DeckPickerScreen(
                         }
                         .animateFloatingActionButton(
                             visible = fabVisible || fabMenuExpanded,
-                            alignment = Alignment.BottomStart,
+                            alignment = Alignment.BottomEnd,
                         )
                         .focusRequester(focusRequester),
                         checked = fabMenuExpanded,
