@@ -154,7 +154,7 @@ fun DeckPickerContent(
                         .graphicsLayer {
                             alpha = state.distanceFraction
                             rotationZ = state.distanceFraction * 360
-                            translationY = state.distanceFraction * 100
+                            translationY = (state.distanceFraction * 120) - 30
                         }
                         .clip(morphingShape)
                         .background(MaterialTheme.colorScheme.primary)
@@ -183,7 +183,7 @@ fun DeckPickerContent(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                            .padding(horizontal = 8.dp, vertical = 2.dp),
 
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainer,
