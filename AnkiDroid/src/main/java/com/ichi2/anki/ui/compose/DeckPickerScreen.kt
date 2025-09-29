@@ -26,18 +26,34 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.pullrefresh.PullRefreshIndicator
-import androidx.compose.material.pullrefresh.pullRefresh
-import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.painter.Painter
@@ -48,7 +64,7 @@ import androidx.compose.ui.unit.dp
 import com.ichi2.anki.R
 import com.ichi2.anki.deckpicker.DisplayDeckNode
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeckPickerContent(
     decks: List<DisplayDeckNode>,
@@ -65,11 +81,8 @@ fun DeckPickerContent(
     onRebuild: (DisplayDeckNode) -> Unit,
     onEmpty: (DisplayDeckNode) -> Unit,
 ) {
-    val pullRefreshState = rememberPullRefreshState(refreshing = isRefreshing, onRefresh = onRefresh)
-
     Box(
-        modifier =
-        modifier
+        modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
     ) {
@@ -81,7 +94,11 @@ fun DeckPickerContent(
                 contentScale = ContentScale.Crop,
             )
         }
-        Box(modifier = Modifier.fillMaxSize().pullRefresh(pullRefreshState)) {
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = onRefresh,
+            modifier = Modifier.fillMaxSize()
+        ) {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 // Group decks by their parent
                 val groupedDecks = mutableMapOf<DisplayDeckNode, MutableList<DisplayDeckNode>>()
@@ -100,8 +117,7 @@ fun DeckPickerContent(
 
                 items(rootDecks) { rootDeck ->
                     Card(
-                        modifier =
-                        Modifier
+                        modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 8.dp, vertical = 4.dp),
 
@@ -110,7 +126,7 @@ fun DeckPickerContent(
                             contentColor = MaterialTheme.colorScheme.onSurface
                         )
                     ) {
-                        Column (modifier = Modifier.padding(8.dp)) {
+                        Column(modifier = Modifier.padding(8.dp)) {
                             // Render the parent deck
                             DeckItem(
                                 deck = rootDeck,
@@ -141,11 +157,6 @@ fun DeckPickerContent(
                     }
                 }
             }
-            PullRefreshIndicator(
-                refreshing = isRefreshing,
-                state = pullRefreshState,
-                modifier = Modifier.align(Alignment.TopCenter),
-            )
         }
     }
 }
@@ -173,9 +184,7 @@ fun DeckPickerScreen(
     onRebuild: (DisplayDeckNode) -> Unit,
     onEmpty: (DisplayDeckNode) -> Unit,
     onNavigationIconClick: () -> Unit,
-    searchFocusRequester: androidx.compose.ui.focus.FocusRequester =
-        androidx.compose.ui.focus
-            .FocusRequester(),
+    searchFocusRequester: androidx.compose.ui.focus.FocusRequester = androidx.compose.ui.focus.FocusRequester(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     var isFabMenuOpen by remember { mutableStateOf(false) }
@@ -198,11 +207,17 @@ fun DeckPickerScreen(
         topBar = {
             LargeTopAppBar(
                 title = {
-                    if (!isSearchOpen) Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge)
+                    if (!isSearchOpen) Text(
+                        stringResource(R.string.app_name),
+                        style = MaterialTheme.typography.titleLarge
+                    )
                 }, // Expressive TopAppBar Title
                 navigationIcon = {
                     IconButton(onClick = onNavigationIconClick) {
-                        Icon(Icons.Default.Menu, contentDescription = stringResource(R.string.navigation_drawer_open))
+                        Icon(
+                            Icons.Default.Menu,
+                            contentDescription = stringResource(R.string.navigation_drawer_open)
+                        )
                     }
                 },
                 actions = {
@@ -210,25 +225,32 @@ fun DeckPickerScreen(
                         TextField(
                             value = searchQuery,
                             onValueChange = onSearchQueryChanged,
-                            modifier = Modifier.weight(1f).focusRequester(searchFocusRequester),
+                            modifier = Modifier
+                                .weight(1f)
+                                .focusRequester(searchFocusRequester),
                             placeholder = { Text(stringResource(R.string.search_decks)) },
                             trailingIcon = {
                                 IconButton(onClick = {
                                     onSearchQueryChanged("")
                                     isSearchOpen = false
                                 }) {
-                                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.close))
+                                    Icon(
+                                        Icons.Default.Close,
+                                        contentDescription = stringResource(R.string.close)
+                                    )
                                 }
                             },
                         )
                     } else {
                         IconButton(onClick = { isSearchOpen = true }) {
-                            Icon(Icons.Default.Search, contentDescription = stringResource(R.string.search_decks))
+                            Icon(
+                                Icons.Default.Search,
+                                contentDescription = stringResource(R.string.search_decks)
+                            )
                         }
                     }
                 },
-                colors =
-                TopAppBarDefaults.topAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     scrolledContainerColor = MaterialTheme.colorScheme.surface,
                 ),
