@@ -135,6 +135,7 @@ import com.ichi2.anki.pages.PostRequestHandler
 import com.ichi2.anki.preferences.AccessibilitySettingsFragment
 import com.ichi2.anki.preferences.PreferencesActivity
 import com.ichi2.anki.preferences.sharedPrefs
+import com.ichi2.anki.predictiveBackCallback
 import com.ichi2.anki.reviewer.AutomaticAnswer
 import com.ichi2.anki.reviewer.AutomaticAnswer.AutomaticallyAnswered
 import com.ichi2.anki.reviewer.AutomaticAnswerAction
@@ -340,13 +341,10 @@ abstract class AbstractFlashcardViewer :
             },
         )
 
-    private val defaultOnBackCallback =
-        object : OnBackPressedCallback(enabled = true) {
-            override fun handleOnBackPressed() {
-                // TODO: This should be improved now we're using callbacks
-                closeReviewer(RESULT_DEFAULT)
-            }
-        }
+    private val defaultOnBackCallback = predictiveBackCallback(this) {
+        // TODO: This should be improved now we're using callbacks
+        closeReviewer(RESULT_DEFAULT)
+    }
 
     protected inner class FlashCardViewerResultCallback(
         private val callback: (result: ActivityResult, reloadRequired: Boolean) -> Unit = { _, _ -> },

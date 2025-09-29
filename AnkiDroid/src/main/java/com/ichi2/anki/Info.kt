@@ -28,6 +28,7 @@ import android.webkit.WebViewClient
 import androidx.activity.OnBackPressedCallback
 import com.google.android.material.button.MaterialButton
 import com.ichi2.anki.preferences.sharedPrefs
+import com.ichi2.anki.predictiveBackCallback
 import com.ichi2.anki.snackbar.BaseSnackbarBuilderProvider
 import com.ichi2.anki.snackbar.SnackbarBuilder
 import com.ichi2.themes.Themes
@@ -49,6 +50,10 @@ class Info :
     BaseSnackbarBuilderProvider {
     private lateinit var webView: WebView
 
+    override val predictiveBackCallback: OnBackPressedCallback by lazy {
+        predictiveBackCallback(this) { close() }
+    }
+
     override val baseSnackbarBuilder: SnackbarBuilder = {
         anchorView = findViewById(R.id.info_buttons)
     }
@@ -59,6 +64,7 @@ class Info :
             return
         }
         super.onCreate(savedInstanceState)
+        onBackPressedDispatcher.addCallback(this, predictiveBackCallback)
         val res = resources
         val type = intent.getIntExtra(TYPE_EXTRA, TYPE_NEW_VERSION)
         // If the page crashes, we do not want to display it again (#7135 maybe)

@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.*
 import com.ichi2.anki.dialogs.customstudy.CustomStudyDialog
+import com.ichi2.anki.predictiveBackCallback
 import com.ichi2.anki.ui.compose.StudyOptionsData
 import com.ichi2.anki.ui.compose.StudyOptionsScreen
 import com.ichi2.anki.utils.ext.showDialogFragment
@@ -13,6 +14,7 @@ import kotlinx.coroutines.withContext
 class StudyOptionsComposeActivity : AnkiActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        onBackPressedDispatcher.addCallback(this, predictiveBackCallback)
         setContent {
             var studyOptionsData by remember { mutableStateOf<StudyOptionsData?>(null) }
 

@@ -36,6 +36,7 @@ import androidx.annotation.StringRes
 import androidx.annotation.UiThread
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.Toolbar
 import androidx.browser.customtabs.CustomTabColorSchemeParams
@@ -76,6 +77,7 @@ import com.ichi2.anki.dialogs.ExportReadyDialog.Companion.REQUEST_EXPORT_SHARE
 import com.ichi2.anki.dialogs.SimpleMessageDialog
 import com.ichi2.anki.libanki.Collection
 import com.ichi2.anki.preferences.sharedPrefs
+import com.ichi2.anki.predictiveBackCallback
 import com.ichi2.anki.receiver.SdCardReceiver
 import com.ichi2.anki.settings.Prefs
 import com.ichi2.anki.utils.ext.showDialogFragment
@@ -122,6 +124,14 @@ open class AnkiActivity :
     override val ankiActivity = this
 
     private val customTabActivityHelper: CustomTabActivityHelper = CustomTabActivityHelper()
+
+    /**
+     * A callback for handling predictive back gestures.
+     * This can be overridden by subclasses to provide custom back-press behavior.
+     */
+    protected open val predictiveBackCallback: OnBackPressedCallback by lazy {
+        predictiveBackCallback(this) { finish() }
+    }
 
     private lateinit var fileExportPath: String
     private val saveFileLauncher: ActivityResultLauncher<Intent> =

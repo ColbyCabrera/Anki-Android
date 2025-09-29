@@ -25,6 +25,7 @@ import androidx.fragment.app.commit
 import com.ichi2.anki.android.input.ShortcutGroup
 import com.ichi2.anki.android.input.ShortcutGroupProvider
 import com.ichi2.anki.dialogs.customstudy.CustomStudyDialog.CustomStudyAction
+import com.ichi2.anki.predictiveBackCallback
 import com.ichi2.anki.ui.windows.managespace.ManageSpaceActivity
 import com.ichi2.anki.utils.ext.setFragmentResultListener
 import com.ichi2.themes.setTransparentStatusBar
@@ -49,6 +50,7 @@ open class SingleFragmentActivity : AnkiActivity() {
         }
 
         super.onCreate(savedInstanceState)
+        onBackPressedDispatcher.addCallback(this, predictiveBackCallback)
         if (!ensureStoragePermissions()) {
             return
         }

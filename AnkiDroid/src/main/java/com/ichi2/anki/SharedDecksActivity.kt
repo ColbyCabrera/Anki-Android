@@ -36,6 +36,7 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.commit
 import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_INDEFINITE
 import com.ichi2.anki.common.annotations.NeedsTest
+import com.ichi2.anki.predictiveBackCallback
 import com.ichi2.anki.snackbar.showSnackbar
 import com.ichi2.ui.AccessibleSearchView
 import com.ichi2.utils.FileNameAndExtension
@@ -215,6 +216,7 @@ class SharedDecksActivity : AnkiActivity() {
         }
 
         super.onCreate(savedInstanceState)
+        onBackPressedDispatcher.addCallback(this, predictiveBackCallback)
         setContentView(R.layout.activity_shared_decks)
         setTitle(R.string.download_deck)
 

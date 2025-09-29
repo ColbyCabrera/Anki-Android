@@ -40,6 +40,7 @@ import com.ichi2.anki.dialogs.help.HelpDialog
 import com.ichi2.anki.pages.RemoveAccountFragment
 import com.ichi2.anki.settings.Prefs
 import com.ichi2.anki.utils.ext.removeFragmentFromContainer
+import com.ichi2.anki.predictiveBackCallback
 import com.ichi2.anki.utils.ext.showDialogFragment
 import com.ichi2.ui.TextInputEditField
 import com.ichi2.utils.AdaptionUtil.isUserATestClient
@@ -126,6 +127,7 @@ open class MyAccount : AnkiActivity() {
             loginLogo.visibility = View.VISIBLE
             loggedInLogo.visibility = View.VISIBLE
         }
+        onBackPressedDispatcher.addCallback(this, predictiveBackCallback)
         onBackPressedDispatcher.addCallback(this, onRemoveAccountBackCallback)
     }
 

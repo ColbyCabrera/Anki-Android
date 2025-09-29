@@ -60,6 +60,7 @@ class NoteEditorActivity :
         }
 
         setContentView(R.layout.note_editor)
+        onBackPressedDispatcher.addCallback(this, predictiveBackCallback)
 
         /**
          * The [NoteEditorActivity] activity supports multiple note editing workflows using fragments.

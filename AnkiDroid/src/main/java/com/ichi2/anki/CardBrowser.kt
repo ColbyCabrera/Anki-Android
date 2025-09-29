@@ -93,6 +93,7 @@ import com.ichi2.anki.model.SelectableDeck
 import com.ichi2.anki.noteeditor.NoteEditorLauncher
 import com.ichi2.anki.observability.ChangeManager
 import com.ichi2.anki.preferences.sharedPrefs
+import com.ichi2.anki.predictiveBackCallback
 import com.ichi2.anki.previewer.PreviewerFragment
 import com.ichi2.anki.scheduling.registerOnForgetHandler
 import com.ichi2.anki.settings.Prefs
@@ -273,6 +274,11 @@ open class CardBrowser :
                 )
             }
         }
+    }
+
+    override fun setupBackPressedCallbacks() {
+        onBackPressedDispatcher.addCallback(this, predictiveBackCallback)
+        onBackPressedDispatcher.addCallback(this, multiSelectOnBackPressedCallback)
     }
 
     private val multiSelectOnBackPressedCallback =

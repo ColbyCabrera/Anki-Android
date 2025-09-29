@@ -145,6 +145,7 @@ import com.ichi2.anki.pages.CongratsPage.Companion.onDeckCompleted
 import com.ichi2.anki.preferences.AdvancedSettingsFragment
 import com.ichi2.anki.preferences.PreferencesActivity
 import com.ichi2.anki.preferences.sharedPrefs
+import com.ichi2.anki.predictiveBackCallback
 import com.ichi2.anki.receiver.SdCardReceiver
 import com.ichi2.anki.servicelayer.ScopedStorageService
 import com.ichi2.anki.settings.Prefs
@@ -336,15 +337,14 @@ open class DeckPicker :
             },
         )
 
-    private val exitAndSyncBackCallback =
-        object : OnBackPressedCallback(enabled = true) {
-            override fun handleOnBackPressed() {
-                lifecycleScope.launch {
-                    automaticSync(runInBackground = true)
-                    finish()
-                }
+    override val predictiveBackCallback: OnBackPressedCallback by lazy {
+        predictiveBackCallback(this) {
+            lifecycleScope.launch {
+                automaticSync(runInBackground = true)
+                finish()
             }
         }
+    }
 
     private inner class DeckPickerActivityResultCallback(
         private val callback: (result: ActivityResult) -> Unit,
@@ -391,6 +391,7 @@ open class DeckPicker :
 
         // Then set theme and content view
         super.onCreate(savedInstanceState)
+        onBackPressedDispatcher.addCallback(this, predictiveBackCallback)
 
         // handle the first load: display the app introduction
         if (!hasShownAppIntro()) {
