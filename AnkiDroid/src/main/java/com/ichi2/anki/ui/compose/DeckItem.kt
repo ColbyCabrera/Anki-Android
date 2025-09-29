@@ -104,8 +104,8 @@ fun DeckItem(
                     modifier = Modifier
                         .height(44.dp)
                         .padding(start = 8.dp),
-                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                    color = MaterialTheme.colorScheme.tertiaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.surfaceDim,
                     shape = MaterialTheme.shapes.extraLarge,
                 ) {
                     Icon(
