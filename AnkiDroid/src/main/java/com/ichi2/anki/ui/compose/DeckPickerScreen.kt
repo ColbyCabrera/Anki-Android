@@ -20,6 +20,8 @@ package com.ichi2.anki.ui.compose
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -235,9 +237,9 @@ fun DeckPickerContent(
                             )
                             // Render the sub-decks
                             AnimatedVisibility(
-                                visible = !rootDeck.collapsed,
-                                enter = expandVertically(),
-                                exit = shrinkVertically()
+                                visible = rootDeck.isExpanded,
+                                enter = expandVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessLow)),
+                                exit = shrinkVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessLow))
                             ) {
                                 Column {
                                     groupedDecks[rootDeck]?.forEach { subDeck ->
@@ -418,19 +420,18 @@ fun DeckPickerScreen(
                     val fabMenuCollapsedStateDescription =
                         stringResource(R.string.fab_menu_collapsed)
                     val fabMenuToggleContentDescription = stringResource(R.string.fab_menu_toggle)
-                    ToggleFloatingActionButton(
-                        modifier = Modifier
-                            .semantics {
-                                traversalIndex = -1f
-                                stateDescription =
-                                    if (fabMenuExpanded) fabMenuExpandedStateDescription else fabMenuCollapsedStateDescription
-                                contentDescription = fabMenuToggleContentDescription
-                            }
-                            .animateFloatingActionButton(
-                                visible = fabVisible || fabMenuExpanded,
-                                alignment = Alignment.BottomEnd,
-                            )
-                            .focusRequester(focusRequester),
+                    ToggleFloatingActionButton(modifier = Modifier
+                        .semantics {
+                            traversalIndex = -1f
+                            stateDescription =
+                                if (fabMenuExpanded) fabMenuExpandedStateDescription else fabMenuCollapsedStateDescription
+                            contentDescription = fabMenuToggleContentDescription
+                        }
+                        .animateFloatingActionButton(
+                            visible = fabVisible || fabMenuExpanded,
+                            alignment = Alignment.BottomEnd,
+                        )
+                        .focusRequester(focusRequester),
                         checked = fabMenuExpanded,
                         onCheckedChange = { fabMenuExpanded = !fabMenuExpanded }) {
                         val imageVector by remember {
