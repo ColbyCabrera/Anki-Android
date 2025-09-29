@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -91,6 +92,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.traversalIndex
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -122,6 +124,7 @@ fun DeckPickerContent(
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
     backgroundImage: Painter?,
+    listState: LazyListState,
     modifier: Modifier = Modifier,
     onDeckClick: (DisplayDeckNode) -> Unit,
     onExpandClick: (DisplayDeckNode) -> Unit,
@@ -177,7 +180,9 @@ fun DeckPickerContent(
                     Box(modifier = Modifier.padding(16.dp))
                 }
             }) {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(), state = listState
+            ) {
                 // Group decks by their parent
                 val groupedDecks = mutableMapOf<DisplayDeckNode, MutableList<DisplayDeckNode>>()
                 val rootDecks = mutableListOf<DisplayDeckNode>()
@@ -346,14 +351,26 @@ fun DeckPickerScreen(
         floatingActionButton = {
             BackHandler(fabMenuExpanded) { fabMenuExpanded = false }
 
+            val onMenuItemClick = { action: () -> Unit ->
+                {
+                    action()
+                    fabMenuExpanded = false
+                }
+            }
+
             FloatingActionButtonMenu(
                 expanded = fabMenuExpanded,
                 button = {
+                    val fabMenuExpandedStateDescription = stringResource(R.string.fab_menu_expanded)
+                    val fabMenuCollapsedStateDescription =
+                        stringResource(R.string.fab_menu_collapsed)
+                    val fabMenuToggleContentDescription = stringResource(R.string.fab_menu_toggle)
                     ToggleFloatingActionButton(modifier = Modifier
                         .semantics {
                             traversalIndex = -1f
-                            stateDescription = if (fabMenuExpanded) "Expanded" else "Collapsed"
-                            contentDescription = "Toggle menu"
+                            stateDescription =
+                                if (fabMenuExpanded) fabMenuExpandedStateDescription else fabMenuCollapsedStateDescription
+                            contentDescription = fabMenuToggleContentDescription
                         }
                         .animateFloatingActionButton(
                             visible = fabVisible || fabMenuExpanded,
@@ -376,34 +393,22 @@ fun DeckPickerScreen(
                 },
             ) {
                 FloatingActionButtonMenuItem(
-                    onClick = {
-                        onAddNote()
-                        fabMenuExpanded = false
-                    },
+                    onClick = onMenuItemClick(onAddNote),
                     icon = { Icon(Icons.AutoMirrored.Filled.NoteAdd, contentDescription = null) },
                     text = { Text(text = stringResource(R.string.add_note)) },
                 )
                 FloatingActionButtonMenuItem(
-                    onClick = {
-                        onAddDeck()
-                        fabMenuExpanded = false
-                    },
+                    onClick = onMenuItemClick(onAddDeck),
                     icon = { Icon(Icons.Filled.CreateNewFolder, contentDescription = null) },
                     text = { Text(text = stringResource(R.string.new_deck)) },
                 )
                 FloatingActionButtonMenuItem(
-                    onClick = {
-                        onAddSharedDeck()
-                        fabMenuExpanded = false
-                    },
+                    onClick = onMenuItemClick(onAddSharedDeck),
                     icon = { Icon(Icons.Filled.Download, contentDescription = null) },
                     text = { Text(text = stringResource(R.string.get_shared)) },
                 )
                 FloatingActionButtonMenuItem(
-                    onClick = {
-                        onAddFilteredDeck()
-                        fabMenuExpanded = false
-                    },
+                    onClick = onMenuItemClick(onAddFilteredDeck),
                     icon = { Icon(Icons.Filled.FilterAlt, contentDescription = null) },
                     text = { Text(text = stringResource(R.string.new_dynamic_deck)) },
                 )
@@ -424,6 +429,7 @@ fun DeckPickerScreen(
                 onDelete = onDelete,
                 onRebuild = onRebuild,
                 onEmpty = onEmpty,
+                listState = listState,
             )
             if (fabMenuExpanded) {
                 Box(
@@ -439,4 +445,49 @@ fun DeckPickerScreen(
             }
         }
     }
+}
+
+@Preview
+@Composable
+fun DeckPickerContentPreview() {
+    DeckPickerContent(
+        decks = emptyList(),
+        isRefreshing = false,
+        onRefresh = {},
+        backgroundImage = null,
+        onDeckClick = {},
+        onExpandClick = {},
+        onDeckOptions = {},
+        onRename = {},
+        onExport = {},
+        onDelete = {},
+        onRebuild = {},
+        onEmpty = {},
+        listState = rememberLazyListState()
+    )
+}
+
+@Preview
+@Composable
+fun DeckPickerScreenPreview() {
+    DeckPickerScreen(
+        decks = emptyList(),
+        isRefreshing = false,
+        onRefresh = {},
+        searchQuery = "",
+        onSearchQueryChanged = {},
+        backgroundImage = null,
+        onDeckClick = {},
+        onExpandClick = {},
+        onAddNote = {},
+        onAddDeck = {},
+        onAddSharedDeck = {},
+        onAddFilteredDeck = {},
+        onDeckOptions = {},
+        onRename = {},
+        onExport = {},
+        onDelete = {},
+        onRebuild = {},
+        onEmpty = {},
+        onNavigationIconClick = {})
 }

@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -42,6 +43,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Snackbar
@@ -184,12 +186,14 @@ fun AnkiDroidApp(
         colorScheme = colorScheme,
         typography = AppTypography, // Apply expressive typography
         shapes = AppShapes, // Apply expressive shapes
+        motionScheme = MotionScheme.expressive()
     ) {
         if (fragmented) {
             var isSearchOpen by remember { mutableStateOf(false) }
             var isStudyOptionsMenuOpen by remember { mutableStateOf(false) }
             var isFabMenuOpen by remember { mutableStateOf(false) }
             val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+            val listState = rememberLazyListState()
             // Tablet layout
             Scaffold(
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -237,6 +241,7 @@ fun AnkiDroidApp(
                                                 contentDescription = stringResource(R.string.close),
                                             )
                                         }
+
                                     },
                                 )
                             } else {
@@ -399,6 +404,7 @@ fun AnkiDroidApp(
                             onDelete = onDelete,
                             onRebuild = onRebuild,
                             onEmpty = onEmpty,
+                            listState = listState
                         )
                     }
                     Box(modifier = Modifier.weight(1f)) {
