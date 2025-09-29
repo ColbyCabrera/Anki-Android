@@ -20,6 +20,8 @@ package com.ichi2.anki.ui.compose
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -408,20 +410,33 @@ fun DeckPickerScreen(
             }
         },
     ) { paddingValues ->
-        DeckPickerContent(
-            decks = decks,
-            isRefreshing = isRefreshing,
-            onRefresh = onRefresh,
-            backgroundImage = backgroundImage,
-            modifier = Modifier.padding(paddingValues),
-            onDeckClick = onDeckClick,
-            onExpandClick = onExpandClick,
-            onDeckOptions = onDeckOptions,
-            onRename = onRename,
-            onExport = onExport,
-            onDelete = onDelete,
-            onRebuild = onRebuild,
-            onEmpty = onEmpty,
-        )
+        Box(modifier = Modifier.padding(paddingValues)) {
+            DeckPickerContent(
+                decks = decks,
+                isRefreshing = isRefreshing,
+                onRefresh = onRefresh,
+                backgroundImage = backgroundImage,
+                onDeckClick = onDeckClick,
+                onExpandClick = onExpandClick,
+                onDeckOptions = onDeckOptions,
+                onRename = onRename,
+                onExport = onExport,
+                onDelete = onDelete,
+                onRebuild = onRebuild,
+                onEmpty = onEmpty,
+            )
+            if (fabMenuExpanded) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = { fabMenuExpanded = false }
+                        )
+                )
+            }
+        }
     }
 }
