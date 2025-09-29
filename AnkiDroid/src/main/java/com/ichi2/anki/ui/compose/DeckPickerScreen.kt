@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
@@ -86,7 +87,7 @@ fun DeckPickerContent(
                     val shape = if (rootDeck.canCollapse) {
                         MaterialTheme.shapes.medium
                     } else {
-                        RoundedCornerShape(percent = 50)
+                        CircleShape
                     }
                     Card(
                         modifier =
