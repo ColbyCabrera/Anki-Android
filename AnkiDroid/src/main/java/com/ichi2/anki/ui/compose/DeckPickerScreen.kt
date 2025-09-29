@@ -282,82 +282,116 @@ fun DeckPickerScreen(
     val fabVisible by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
     val focusRequester = remember { FocusRequester() }
 
-    Scaffold(
-        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        snackbarHost = {
-            SnackbarHost(snackbarHostState) { data ->
-                Snackbar(
-                    snackbarData = data,
-                    containerColor = MaterialTheme.colorScheme.secondary,
-                    contentColor = MaterialTheme.colorScheme.onSecondary,
-                    actionColor = MaterialTheme.colorScheme.primary,
-                    dismissActionContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                )
-            }
-        },
-        topBar = {
-            LargeTopAppBar(
-                title = {
-                    if (!isSearchOpen) Text(
-                        stringResource(R.string.app_name),
-                        style = MaterialTheme.typography.titleLarge
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            snackbarHost = {
+                SnackbarHost(snackbarHostState) { data ->
+                    Snackbar(
+                        snackbarData = data,
+                        containerColor = MaterialTheme.colorScheme.secondary,
+                        contentColor = MaterialTheme.colorScheme.onSecondary,
+                        actionColor = MaterialTheme.colorScheme.primary,
+                        dismissActionContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
-                }, // Expressive TopAppBar Title
-                navigationIcon = {
-                    IconButton(onClick = onNavigationIconClick) {
-                        Icon(
-                            Icons.Default.Menu,
-                            contentDescription = stringResource(R.string.navigation_drawer_open)
+                }
+            },
+            topBar = {
+                LargeTopAppBar(
+                    title = {
+                        if (!isSearchOpen) Text(
+                            stringResource(R.string.app_name),
+                            style = MaterialTheme.typography.titleLarge
                         )
-                    }
-                },
-                actions = {
-                    if (isSearchOpen) {
-                        TextField(
-                            value = searchQuery,
-                            onValueChange = onSearchQueryChanged,
-                            modifier = Modifier
-                                .weight(1f)
-                                .focusRequester(searchFocusRequester),
-                            placeholder = { Text(stringResource(R.string.search_decks)) },
-                            trailingIcon = {
-                                IconButton(onClick = {
-                                    onSearchQueryChanged("")
-                                    isSearchOpen = false
-                                }) {
-                                    Icon(
-                                        Icons.Default.Close,
-                                        contentDescription = stringResource(R.string.close)
-                                    )
-                                }
-                            },
-                        )
-                    } else {
-                        IconButton(onClick = { isSearchOpen = true }) {
+                    }, // Expressive TopAppBar Title
+                    navigationIcon = {
+                        IconButton(onClick = onNavigationIconClick) {
                             Icon(
-                                Icons.Default.Search,
-                                contentDescription = stringResource(R.string.search_decks)
+                                Icons.Default.Menu,
+                                contentDescription = stringResource(R.string.navigation_drawer_open)
                             )
                         }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface,
-                ),
-                scrollBehavior = scrollBehavior,
+                    },
+                    actions = {
+                        if (isSearchOpen) {
+                            TextField(
+                                value = searchQuery,
+                                onValueChange = onSearchQueryChanged,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .focusRequester(searchFocusRequester),
+                                placeholder = { Text(stringResource(R.string.search_decks)) },
+                                trailingIcon = {
+                                    IconButton(onClick = {
+                                        onSearchQueryChanged("")
+                                        isSearchOpen = false
+                                    }) {
+                                        Icon(
+                                            Icons.Default.Close,
+                                            contentDescription = stringResource(R.string.close)
+                                        )
+                                    }
+                                },
+                            )
+                        } else {
+                            IconButton(onClick = { isSearchOpen = true }) {
+                                Icon(
+                                    Icons.Default.Search,
+                                    contentDescription = stringResource(R.string.search_decks)
+                                )
+                            }
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        scrolledContainerColor = MaterialTheme.colorScheme.surface,
+                    ),
+                    scrollBehavior = scrollBehavior,
+                )
+            },
+        ) { paddingValues ->
+            DeckPickerContent(
+                decks = decks,
+                isRefreshing = isRefreshing,
+                onRefresh = onRefresh,
+                backgroundImage = backgroundImage,
+                onDeckClick = onDeckClick,
+                onExpandClick = onExpandClick,
+                onDeckOptions = onDeckOptions,
+                onRename = onRename,
+                onExport = onExport,
+                onDelete = onDelete,
+                onRebuild = onRebuild,
+                onEmpty = onEmpty,
+                listState = listState,
+                modifier = Modifier.padding(paddingValues)
             )
-        },
-        floatingActionButton = {
-            BackHandler(fabMenuExpanded) { fabMenuExpanded = false }
+        }
+        if (fabMenuExpanded) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f))
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = { fabMenuExpanded = false }
+                    )
+            )
+        }
+        BackHandler(fabMenuExpanded) { fabMenuExpanded = false }
 
-            val onMenuItemClick = { action: () -> Unit ->
-                {
-                    action()
-                    fabMenuExpanded = false
-                }
+        val onMenuItemClick = { action: () -> Unit ->
+            {
+                action()
+                fabMenuExpanded = false
             }
+        }
 
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.BottomEnd
+        ) {
             FloatingActionButtonMenu(
                 expanded = fabMenuExpanded,
                 button = {
@@ -411,36 +445,6 @@ fun DeckPickerScreen(
                     onClick = onMenuItemClick(onAddFilteredDeck),
                     icon = { Icon(Icons.Filled.FilterAlt, contentDescription = null) },
                     text = { Text(text = stringResource(R.string.new_dynamic_deck)) },
-                )
-            }
-        },
-    ) { paddingValues ->
-        Box(modifier = Modifier.padding(paddingValues)) {
-            DeckPickerContent(
-                decks = decks,
-                isRefreshing = isRefreshing,
-                onRefresh = onRefresh,
-                backgroundImage = backgroundImage,
-                onDeckClick = onDeckClick,
-                onExpandClick = onExpandClick,
-                onDeckOptions = onDeckOptions,
-                onRename = onRename,
-                onExport = onExport,
-                onDelete = onDelete,
-                onRebuild = onRebuild,
-                onEmpty = onEmpty,
-                listState = listState,
-            )
-            if (fabMenuExpanded) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f))
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = { fabMenuExpanded = false }
-                        )
                 )
             }
         }
