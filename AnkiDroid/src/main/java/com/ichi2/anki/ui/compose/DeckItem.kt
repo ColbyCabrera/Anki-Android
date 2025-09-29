@@ -48,7 +48,7 @@ fun DeckItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 12.dp, horizontal = 12.dp)
+                .padding(vertical = 12.dp, horizontal = 8.dp)
                 .pointerInput(Unit) {
                     detectTapGestures(
                         onTap = { onDeckClick() },
@@ -174,6 +174,8 @@ fun DeckItem(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 ),
+                shape = MaterialTheme.shapes.medium,
+                elevation = CardDefaults.cardElevation(0.dp)
             ) {
                 content()
             }
