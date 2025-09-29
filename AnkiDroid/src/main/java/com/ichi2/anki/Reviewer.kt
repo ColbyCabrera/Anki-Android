@@ -228,6 +228,7 @@ open class Reviewer :
             return
         }
         super.onCreate(savedInstanceState)
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
         if (!ensureStoragePermissions()) {
             return
         }

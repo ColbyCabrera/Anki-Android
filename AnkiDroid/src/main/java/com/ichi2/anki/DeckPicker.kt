@@ -391,6 +391,7 @@ open class DeckPicker :
 
         // Then set theme and content view
         super.onCreate(savedInstanceState)
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
 
         // handle the first load: display the app introduction
         if (!hasShownAppIntro()) {

@@ -104,6 +104,7 @@ fun DeckPickerContent(
     onRefresh: () -> Unit,
     backgroundImage: Painter?,
     modifier: Modifier = Modifier,
+    contentPadding: androidx.compose.foundation.layout.PaddingValues = androidx.compose.foundation.layout.PaddingValues(0.dp),
     onDeckClick: (DisplayDeckNode) -> Unit,
     onExpandClick: (DisplayDeckNode) -> Unit,
     onDeckOptions: (DisplayDeckNode) -> Unit,
@@ -158,7 +159,10 @@ fun DeckPickerContent(
                     Box(modifier = Modifier.padding(16.dp))
                 }
             }) {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = contentPadding,
+            ) {
                 // Group decks by their parent
                 val groupedDecks = mutableMapOf<DisplayDeckNode, MutableList<DisplayDeckNode>>()
                 val rootDecks = mutableListOf<DisplayDeckNode>()
@@ -368,7 +372,7 @@ fun DeckPickerScreen(
             isRefreshing = isRefreshing,
             onRefresh = onRefresh,
             backgroundImage = backgroundImage,
-            modifier = Modifier.padding(paddingValues),
+            contentPadding = paddingValues,
             onDeckClick = onDeckClick,
             onExpandClick = onExpandClick,
             onDeckOptions = onDeckOptions,
