@@ -20,6 +20,7 @@ package com.ichi2.anki.ui.compose
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -41,7 +42,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material.icons.filled.Add
@@ -193,7 +194,7 @@ fun DeckPickerContent(
             }) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = contentPadding, 
+                contentPadding = contentPadding,
                 state = listState
             ) {
                 // Group decks by their parent
@@ -212,16 +213,15 @@ fun DeckPickerContent(
                 }
 
                 items(rootDecks) { rootDeck ->
-                    val shape = if (!rootDeck.collapsed && rootDeck.canCollapse) {
-                        MaterialTheme.shapes.medium
-                    } else {
-                        CircleShape
-                    }
+                    val cornerRadius by animateDpAsState(
+                        targetValue = if (!rootDeck.collapsed && rootDeck.canCollapse) 24.dp else 70.dp,
+                        animationSpec = motionScheme.defaultSpatialSpec()
+                    )
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 8.dp, vertical = 2.dp),
-                        shape = shape,
+                        shape = RoundedCornerShape(cornerRadius),
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainer,
                             contentColor = MaterialTheme.colorScheme.onSurface
@@ -417,7 +417,8 @@ fun DeckPickerScreen(
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
-                        onClick = { fabMenuExpanded = false }))
+                        onClick = { fabMenuExpanded = false })
+            )
         }
         BackHandler(fabMenuExpanded) { fabMenuExpanded = false }
 
