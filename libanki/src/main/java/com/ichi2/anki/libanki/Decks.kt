@@ -175,12 +175,13 @@ class Decks(
     @Suppress("unused")
     fun have(id: DeckId): Boolean = getLegacy(id) != null
 
-    @RustCleanup("implement and make public")
     @LibAnkiAlias("get_all_legacy")
-    @Suppress("unused")
-    private fun getAllLegacy(): List<Deck> {
-        TODO()
-    }
+    fun getAllLegacy(): List<Deck> =
+        BackendUtils
+            .jsonToArray(col.backend.allDecksLegacy())
+            .jsonObjectIterable()
+            .map { Deck(it) }
+            .toList()
 
     /** Return a new normal deck. It must be added with [addDeck] after a name assigned. */
     @LibAnkiAlias("new_deck")
@@ -209,12 +210,8 @@ class Decks(
         )
     }
 
-    @RustCleanup("implement and make public")
     @LibAnkiAlias("deck_tree")
-    @Suppress("unused")
-    private fun deckTree(): DeckTreeNode {
-        TODO()
-    }
+    fun deckTree(): DeckTreeNode = col.backend.deckTree()
 
     @LibAnkiAlias("find_deck_in_tree")
     fun findDeckInTree(
@@ -229,23 +226,21 @@ class Decks(
         return null
     }
 
-    @RustCleanup("implement and make public")
-    @Suppress("unused")
     /** "All decks. Expensive; prefer [allNamesAndIds] */
-    private fun all(): List<Deck> {
-        TODO()
-    }
+    fun all(): List<Deck> = getAllLegacy()
 
-    @RustCleanup("implement and make public")
     @LibAnkiAlias("set_collapsed")
-    @Suppress("unused", "unused_parameter")
-    private fun setCollapsed(
+    fun setCollapsed(
         deckId: DeckId,
         collapsed: Boolean,
         scope: SetDeckCollapsedRequest.Scope,
-    ): OpChanges {
-        TODO()
-    }
+    ): OpChanges = col.backend.setDeckCollapsed(
+        SetDeckCollapsedRequest.newBuilder().apply {
+            setDeckId(deckId)
+            setCollapsed(collapsed)
+            setScope(scope)
+        }.build()
+    )
 
     fun collapse(did: DeckId) {
         val deck = this.getLegacy(did) ?: return
@@ -253,11 +248,10 @@ class Decks(
         this.save(deck)
     }
 
-    @RustCleanup("implement and make public")
     @LibAnkiAlias("collapse_browser")
-    @Suppress("unused", "unused_parameter")
-    private fun collapseBrowser(deckId: DeckId) {
-        TODO()
+    fun collapseBrowser(deckId: DeckId) {
+        val deck = getLegacy(deckId) ?: return
+        setCollapsed(deckId, !deck.optBoolean("browserCollapsed"), SetDeckCollapsedRequest.Scope.BROWSER)
     }
 
     fun count(): Int = len(this.allNamesAndIds())
@@ -355,12 +349,9 @@ class Decks(
     @Suppress("unused")
     fun getDeckConfigsForUpdate(deckId: DeckId): DeckConfigsForUpdate = col.backend.getDeckConfigsForUpdate(deckId)
 
-    @RustCleanup("implement and make public")
     @LibAnkiAlias("update_deck_configs")
-    @Suppress("unused", "unused_parameter")
-    private fun updateDeckConfigs(input: UpdateDeckConfigs): DeckConfigsForUpdate {
-        TODO()
-    }
+    fun updateDeckConfigs(input: UpdateDeckConfigs): DeckConfigsForUpdate =
+        col.backend.updateDeckConfigs(input)
 
     /** A list of all deck config. */
     @LibAnkiAlias("all_config")
@@ -382,15 +373,12 @@ class Decks(
     @LibAnkiAlias("get_config")
     fun getConfig(confId: DeckConfigId): DeckConfig = DeckConfig(BackendUtils.fromJsonBytes(col.backend.getDeckConfigLegacy(confId)))
 
-    @RustCleanup("implement and make public")
     @LibAnkiAlias("update_config")
-    @Suppress("unused", "unused_parameter")
-    private fun updateConfig(
+    @Suppress("unused_parameter")
+    fun updateConfig(
         config: DeckConfig,
         preserveUsn: Boolean = false,
-    ) {
-        TODO()
-    }
+    ): OpChanges = col.backend.updateDeckConfigLegacy(toJsonBytes(config))
 
     @LibAnkiAlias("add_config")
     private fun addConfig(name: String): DeckConfig {
@@ -403,12 +391,8 @@ class Decks(
     @LibAnkiAlias("add_config_returning_id")
     fun addConfigReturningId(name: String): Long = addConfig(name).id
 
-    @RustCleanup("implement and make public")
     @LibAnkiAlias("remove_config")
-    @Suppress("unused", "unused_parameter")
-    private fun removeConfig(id: DeckConfigId) {
-        TODO()
-    }
+    fun removeConfig(id: DeckConfigId): OpChanges = col.backend.removeDeckConfig(id)
 
     @LibAnkiAlias("set_config_id_for_deck_dict")
     fun setConfigIdForDeckDict(
@@ -423,19 +407,12 @@ class Decks(
     @RustCleanup("inline")
     private fun newDeckConfigLegacy(): DeckConfig = DeckConfig(BackendUtils.fromJsonBytes(col.backend.newDeckConfigLegacy()))
 
-    @RustCleanup("implement and make public")
     @LibAnkiAlias("decks_using_config")
-    @Suppress("unused", "unused_parameter")
-    private fun decksUsingConfig(config: DeckConfig): List<DeckId> {
-        TODO()
-    }
+    fun decksUsingConfig(config: DeckConfig): List<DeckId> = col.backend.decksUsingConfig(config.id)
 
-    @RustCleanup("implement and make public")
     @LibAnkiAlias("restore_to_default")
-    @Suppress("unused", "unused_parameter")
-    private fun restoreToDefault(config: DeckConfig) {
-        TODO()
-    }
+    fun restoreToDefault(config: DeckConfig): OpChanges =
+        col.backend.restoreLegacyDeckConfig(config.id)
 
     /*
      * Deck utils
@@ -444,27 +421,30 @@ class Decks(
 
     fun name(did: DeckId): String = getLegacy(did)?.name ?: col.backend.tr.decksNoDeck()
 
-    @RustCleanup("implement and make public")
     @LibAnkiAlias("name_if_exists")
-    @Suppress("unused", "unused_parameter")
-    private fun nameIfExists(did: DeckId): String? {
-        TODO()
-    }
+    fun nameIfExists(did: DeckId): String? = getLegacy(did)?.name
 
-    @RustCleanup("implement and make public")
-    @Suppress("unused", "unused_parameter")
-    private fun cids(
+    fun cids(
         did: DeckId,
         children: Boolean,
     ): List<CardId> {
-        TODO()
+        val dids = if (children) {
+            deckAndChildIds(did)
+        } else {
+            listOf(did)
+        }
+        if (dids.isEmpty()) {
+            return emptyList()
+        }
+        return col.db.queryCol("select id from cards where did in ${Utils.ids2str(dids)}")
     }
 
-    @RustCleanup("implement and make public")
     @LibAnkiAlias("for_card_ids")
-    @Suppress("unused", "unused_parameter")
-    private fun forCardIds(cids: List<CardId>): List<DeckId> {
-        TODO()
+    fun forCardIds(cids: List<CardId>): List<DeckId> {
+        if (cids.isEmpty()) {
+            return emptyList()
+        }
+        return col.db.queryCol("select distinct did from cards where id in ${Utils.ids2str(cids)}")
     }
 
     /*
