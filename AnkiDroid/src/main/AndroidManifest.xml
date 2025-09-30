@@ -223,7 +223,7 @@
                 <data
                     android:host="*"
                     android:mimeType="*/*"
-                    android.pathPattern=".*\\.csv"
+                    android:pathPattern=".*\\.csv"
                     android:scheme="content"
                     />
                 <data
@@ -413,6 +413,12 @@
             android:name="com.ichi2.anki.Info"
             android:label="@string/pref_cat_about_title"
             android:exported="false"
+            />
+        <activity
+            android:name="com.ichi2.anki.HelpActivity"
+            android:label="@string/help"
+            android:exported="false"
+            android:configChanges="keyboardHidden|orientation|screenSize"
             />
 
         <activity-alias
