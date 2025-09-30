@@ -20,10 +20,10 @@ package com.ichi2.anki.ui.compose
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -239,7 +239,11 @@ fun DeckPickerContent(
 
                             // Create a remembered state for sub-decks to handle exit animation correctly
                             val subDecks = groupedDecks[rootDeck]
-                            var rememberedSubDecks by remember { mutableStateOf<List<DisplayDeckNode>?>(null) }
+                            var rememberedSubDecks by remember {
+                                mutableStateOf<List<DisplayDeckNode>?>(
+                                    null
+                                )
+                            }
                             if (!rootDeck.collapsed) {
                                 rememberedSubDecks = subDecks
                             }
@@ -247,8 +251,12 @@ fun DeckPickerContent(
                             // Render the sub-decks
                             AnimatedVisibility(
                                 visible = !rootDeck.collapsed,
-                                enter = expandVertically(animationSpec = motionScheme.fastSpatialSpec()),
-                                exit = shrinkVertically(animationSpec = motionScheme.fastSpatialSpec()),
+                                enter = expandVertically(motionScheme.defaultSpatialSpec()) + fadeIn(
+                                    motionScheme.defaultEffectsSpec()
+                                ),
+                                exit = shrinkVertically(motionScheme.fastSpatialSpec()) + fadeOut(
+                                    motionScheme.defaultEffectsSpec()
+                                ),
                             ) {
                                 Column {
                                     (rememberedSubDecks ?: emptyList()).forEach { subDeck ->
@@ -405,9 +413,7 @@ fun DeckPickerScreen(
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
-                        onClick = { fabMenuExpanded = false }
-                    )
-            )
+                        onClick = { fabMenuExpanded = false }))
         }
         BackHandler(fabMenuExpanded) { fabMenuExpanded = false }
 
@@ -419,8 +425,7 @@ fun DeckPickerScreen(
         }
 
         Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.BottomEnd
+            modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomEnd
         ) {
             FloatingActionButtonMenu(
                 expanded = fabMenuExpanded,
