@@ -55,6 +55,9 @@ import androidx.appcompat.widget.Toolbar
 import androidx.appcompat.widget.TooltipCompat
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isGone
 import androidx.lifecycle.lifecycleScope
 import anki.frontend.SetSchedulingStatesRequest
@@ -145,9 +148,7 @@ import kotlin.coroutines.resume
 
 @Suppress("LeakingThis")
 @NeedsTest("#14709: Timebox shouldn't appear instantly when the Reviewer is opened")
-open class Reviewer :
-    AbstractFlashcardViewer(),
-    ReviewerUi,
+open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
     BindingProcessor<ReviewerBinding, ViewerCommand> {
     private var queueState: CurrentQueueState? = null
     private val customSchedulingKey = TimeManager.time.intTimeMS().toString()
@@ -215,11 +216,10 @@ open class Reviewer :
     @VisibleForTesting
     protected open lateinit var processor: BindingMap<ReviewerBinding, ViewerCommand>
 
-    private val addNoteLauncher =
-        registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult(),
-            FlashCardViewerResultCallback(),
-        )
+    private val addNoteLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+        FlashCardViewerResultCallback(),
+    )
 
     private val flagItemIds = mutableSetOf<Int>()
 
@@ -228,6 +228,13 @@ open class Reviewer :
             return
         }
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        val root = findViewById<View>(R.id.root_layout)
+        ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
         if (!ensureStoragePermissions()) {
             return
         }
@@ -239,7 +246,11 @@ open class Reviewer :
         toolbar = findViewById(R.id.toolbar)
         micToolBarLayer = findViewById(R.id.mic_tool_bar_layer)
         processor = BindingMap(sharedPrefs(), ViewerCommand.entries, this)
-        if (sharedPrefs().getString("answerButtonPosition", "bottom") == "bottom" && !navBarNeedsScrim) {
+        if (sharedPrefs().getString(
+                "answerButtonPosition",
+                "bottom"
+            ) == "bottom" && !navBarNeedsScrim
+        ) {
             setNavigationBarColor(R.attr.showAnswerColor)
         }
         if (!sharedPrefs().getBoolean("showDeckTitle", false)) {
@@ -290,7 +301,8 @@ open class Reviewer :
         }
 
         // If we don't know: assume it's not shown
-        val shownAsToolbarButton = actionButtons.findMenuItem(ActionButtons.RES_MARK)?.isActionButton == true
+        val shownAsToolbarButton =
+            actionButtons.findMenuItem(ActionButtons.RES_MARK)?.isActionButton == true
         return !shownAsToolbarButton || prefFullscreenReview
     }
 
@@ -354,12 +366,11 @@ open class Reviewer :
         getColUnsafe.decks.select(did)
     }
 
-    override fun getContentViewAttr(fullscreenMode: FullScreenMode): Int =
-        when (fullscreenMode) {
-            FullScreenMode.BUTTONS_ONLY -> R.layout.reviewer_fullscreen
-            FullScreenMode.FULLSCREEN_ALL_GONE -> R.layout.reviewer_fullscreen_noanswers
-            FullScreenMode.BUTTONS_AND_MENU -> R.layout.reviewer
-        }
+    override fun getContentViewAttr(fullscreenMode: FullScreenMode): Int = when (fullscreenMode) {
+        FullScreenMode.BUTTONS_ONLY -> R.layout.reviewer_fullscreen
+        FullScreenMode.FULLSCREEN_ALL_GONE -> R.layout.reviewer_fullscreen_noanswers
+        FullScreenMode.BUTTONS_AND_MENU -> R.layout.reviewer
+    }
 
     public override fun fitsSystemWindows(): Boolean = !fullscreenMode.isFullScreenReview()
 
@@ -422,6 +433,7 @@ open class Reviewer :
                 Timber.i("Reviewer:: Home button pressed")
                 closeReviewer(RESULT_OK)
             }
+
             R.id.action_undo -> {
                 Timber.i("Reviewer:: Undo button pressed")
                 if (showWhiteboard && whiteboard != null && !whiteboard!!.undoEmpty()) {
@@ -430,78 +442,103 @@ open class Reviewer :
                     undo()
                 }
             }
+
             R.id.action_redo -> {
                 Timber.i("Reviewer:: Redo button pressed")
                 redo()
             }
+
             R.id.action_reset_card_progress -> {
                 Timber.i("Reviewer:: Reset progress button pressed")
                 showResetCardDialog()
             }
+
             R.id.action_mark_card -> {
                 Timber.i("Reviewer:: Mark button pressed")
                 onMark(currentCard)
             }
+
             R.id.action_replay -> {
                 Timber.i("Reviewer:: Replay media button pressed (from menu)")
                 playMedia(doMediaReplay = true)
             }
+
             R.id.action_toggle_mic_tool_bar -> {
                 Timber.i("Reviewer:: Voice playback visibility set to %b", !isMicToolBarVisible)
                 // Check permission to record and request if not granted
                 openOrToggleMicToolbar()
             }
+
             R.id.action_tag -> {
                 Timber.i("Reviewer:: Tag button pressed")
                 showTagsDialog()
             }
+
             R.id.action_edit -> {
                 Timber.i("Reviewer:: Edit note button pressed")
                 editCard()
             }
+
             R.id.action_bury_card -> buryCard()
             R.id.action_bury_note -> buryNote()
             R.id.action_suspend_card -> suspendCard()
             R.id.action_suspend_note -> suspendNote()
             R.id.action_reschedule_card -> showDueDateDialog()
-            R.id.action_reset_card_progress -> showResetCardDialog()
             R.id.action_delete -> {
                 Timber.i("Reviewer:: Delete note button pressed")
                 showDeleteNoteDialog()
             }
+
             R.id.action_toggle_auto_advance -> {
                 Timber.i("Reviewer:: Toggle Auto Advance button pressed")
                 toggleAutoAdvance()
             }
+
             R.id.action_change_whiteboard_pen_color -> {
                 Timber.i("Reviewer:: Pen Color button pressed")
                 changeWhiteboardPenColor()
             }
+
             R.id.action_save_whiteboard -> {
                 Timber.i("Reviewer:: Save whiteboard button pressed")
                 if (whiteboard != null) {
                     try {
-                        val savedWhiteboardFileName = whiteboard!!.saveWhiteboard(TimeManager.time).path
-                        showSnackbar(getString(R.string.white_board_image_saved, savedWhiteboardFileName), Snackbar.LENGTH_SHORT)
+                        val savedWhiteboardFileName =
+                            whiteboard!!.saveWhiteboard(TimeManager.time).path
+                        showSnackbar(
+                            getString(
+                                R.string.white_board_image_saved,
+                                savedWhiteboardFileName
+                            ), Snackbar.LENGTH_SHORT
+                        )
                     } catch (e: Exception) {
                         Timber.w(e)
-                        showSnackbar(getString(R.string.white_board_image_save_failed, e.localizedMessage), Snackbar.LENGTH_SHORT)
+                        showSnackbar(
+                            getString(
+                                R.string.white_board_image_save_failed,
+                                e.localizedMessage
+                            ), Snackbar.LENGTH_SHORT
+                        )
                     }
                 }
             }
+
             R.id.action_clear_whiteboard -> {
                 Timber.i("Reviewer:: Clear whiteboard button pressed")
                 clearWhiteboard()
             }
+
             R.id.action_hide_whiteboard -> { // toggle whiteboard visibility
                 Timber.i("Reviewer:: Whiteboard visibility set to %b", !showWhiteboard)
                 setWhiteboardVisibility(!showWhiteboard)
                 refreshActionBar()
             }
+
             R.id.action_toggle_eraser -> { // toggle eraser mode
                 Timber.i("Reviewer:: Eraser button pressed")
                 toggleEraser()
             }
+
             R.id.action_toggle_stylus -> { // toggle stylus mode
                 Timber.i("Reviewer:: Stylus set to %b", !toggleStylus)
                 toggleStylus = !toggleStylus
@@ -509,28 +546,35 @@ open class Reviewer :
                 MetaDB.storeWhiteboardStylusState(this, parentDid, toggleStylus)
                 refreshActionBar()
             }
+
             R.id.action_toggle_whiteboard -> {
                 toggleWhiteboard()
             }
+
             R.id.action_open_deck_options -> {
                 Timber.i("Reviewer:: Opening deck options")
-                val i =
-                    com.ichi2.anki.pages.DeckOptions
-                        .getIntent(this, getColUnsafe.decks.current().id)
+                val i = com.ichi2.anki.pages.DeckOptions.getIntent(
+                        this,
+                        getColUnsafe.decks.current().id
+                    )
                 deckOptionsLauncher.launch(i)
             }
+
             R.id.action_select_tts -> {
                 Timber.i("Reviewer:: Select TTS button pressed")
                 showSelectTtsDialogue()
             }
+
             R.id.action_add_note_reviewer -> {
                 Timber.i("Reviewer:: Add note button pressed")
                 addNote()
             }
+
             R.id.action_card_info -> {
                 Timber.i("Card Viewer:: Card Info")
                 openCardInfo()
             }
+
             R.id.user_action_1 -> userAction(1)
             R.id.user_action_2 -> userAction(2)
             R.id.user_action_3 -> userAction(3)
@@ -598,18 +642,17 @@ open class Reviewer :
      *        when the button is long-pressed)
      * In such timings, this function re-press the button to re-display the ripple.
      */
-    private val checkEraserButtonRippleRunnable =
-        object : Runnable {
-            override fun run() {
-                val eraserButtonView = toolbar.findViewById<View>(R.id.action_toggle_eraser)
-                if (isEraserMode && eraserButtonView?.isPressed == false) {
-                    Timber.d("eraser button ripple monitoring: unpressed status detected, and re-pressed")
-                    eraserButtonView.isPressed = true
-                    eraserButtonView.isActivated = true
-                }
-                handler.postDelayed(this, 100) // monitor every 100ms
+    private val checkEraserButtonRippleRunnable = object : Runnable {
+        override fun run() {
+            val eraserButtonView = toolbar.findViewById<View>(R.id.action_toggle_eraser)
+            if (isEraserMode && eraserButtonView?.isPressed == false) {
+                Timber.d("eraser button ripple monitoring: unpressed status detected, and re-pressed")
+                eraserButtonView.isPressed = true
+                eraserButtonView.isActivated = true
             }
+            handler.postDelayed(this, 100) // monitor every 100ms
         }
+    }
 
     private fun startMonitoringEraserButtonRipple() {
         Timber.d("eraser button ripple monitoring: started")
@@ -739,7 +782,8 @@ open class Reviewer :
                     CrashReportService.sendExceptionReport(e, "Unable to create recorder tool bar")
                     showThemedToast(
                         this,
-                        this.getText(R.string.multimedia_editor_audio_view_create_failed).toString(),
+                        this.getText(R.string.multimedia_editor_audio_view_create_failed)
+                            .toString(),
                         true,
                     )
                 }
@@ -760,21 +804,17 @@ open class Reviewer :
         grantResults: IntArray,
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_AUDIO_PERMISSION &&
-            permissions.isNotEmpty() &&
-            grantResults[0] == PackageManager.PERMISSION_GRANTED
-        ) {
+        if (requestCode == REQUEST_AUDIO_PERMISSION && permissions.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             // Get get audio record permission, so we can create the record tool bar
             toggleMicToolBar()
         }
     }
 
-    private fun showDueDateDialog() =
-        launchCatchingTask {
-            Timber.i("showing due date dialog")
-            val dialog = SetDueDateDialog.newInstance(listOf(currentCardId!!))
-            showDialogFragment(dialog)
-        }
+    private fun showDueDateDialog() = launchCatchingTask {
+        Timber.i("showing due date dialog")
+        val dialog = SetDueDateDialog.newInstance(listOf(currentCardId!!))
+        showDialogFragment(dialog)
+    }
 
     private fun showResetCardDialog() {
         Timber.i("showResetCardDialog() Reset progress button pressed")
@@ -792,11 +832,17 @@ open class Reviewer :
     @NeedsTest("Starting animation from swipe is inverse to the finishing one")
     protected fun openCardInfo(fromGesture: Gesture? = null) {
         if (currentCard == null) {
-            showSnackbar(getString(R.string.multimedia_editor_something_wrong), Snackbar.LENGTH_SHORT)
+            showSnackbar(
+                getString(R.string.multimedia_editor_something_wrong),
+                Snackbar.LENGTH_SHORT
+            )
             return
         }
         Timber.i("opening card info")
-        val intent = CardInfoDestination(currentCard!!.id, TR.cardStatsCurrentCard(TR.decksStudy())).toIntent(this)
+        val intent = CardInfoDestination(
+            currentCard!!.id,
+            TR.cardStatsCurrentCard(TR.decksStudy())
+        ).toIntent(this)
         val animation = getAnimationTransitionFromGesture(fromGesture)
         intent.putExtra(FINISH_ANIMATION_EXTRA, getInverseTransition(animation) as Parcelable)
         startActivityWithAnimation(intent, animation)
@@ -826,15 +872,16 @@ open class Reviewer :
                 val flag = currentCard!!.flag
                 flagIcon.setIcon(flag.drawableRes)
                 if (flag == Flag.NONE && actionButtons.status.flagsIsOverflown()) {
-                    val flagColor = ThemeUtils.getThemeAttrColor(this, android.R.attr.colorControlNormal)
+                    val flagColor =
+                        ThemeUtils.getThemeAttrColor(this, android.R.attr.colorControlNormal)
                     flagIcon.icon?.mutate()?.setTint(flagColor)
                 }
             }
         }
 
         // Anki Desktop Translations
-        menu.findItem(R.id.action_reschedule_card).title =
-            CollectionManager.TR.actionsSetDueDate().toSentenceCase(this, R.string.sentence_set_due_date)
+        menu.findItem(R.id.action_reschedule_card).title = TR.actionsSetDueDate()
+            .toSentenceCase(this, R.string.sentence_set_due_date)
 
         // Undo button
         @DrawableRes val undoIconId: Int
@@ -866,7 +913,7 @@ open class Reviewer :
             } else {
                 // Disable whiteboard eraser action button
                 isEraserMode = false
-                whiteboard?.reviewerEraserModeIsToggledOn = isEraserMode
+                whiteboard?.reviewerEraserModeIsToggledOn = false
 
                 if (getColUnsafe.undoAvailable()) {
                     // set the undo title to a named action ('Undo Answer Card' etc...)
@@ -929,10 +976,16 @@ open class Reviewer :
             if (!actionButtons.status.whiteboardPenColorIsDisabled()) {
                 changePenColorIcon.isVisible = true
             }
-            val whiteboardIcon = ContextCompat.getDrawable(applicationContext, R.drawable.ic_gesture_white)!!.mutate()
-            val stylusIcon = ContextCompat.getDrawable(this, R.drawable.ic_gesture_stylus)!!.mutate()
-            val whiteboardColorPaletteIcon = ContextCompat.getDrawable(applicationContext, R.drawable.ic_color_lens_white_24dp)!!.mutate()
-            val eraserIcon = ContextCompat.getDrawable(applicationContext, R.drawable.ic_eraser)!!.mutate()
+            val whiteboardIcon =
+                ContextCompat.getDrawable(applicationContext, R.drawable.ic_gesture_white)!!
+                    .mutate()
+            val stylusIcon =
+                ContextCompat.getDrawable(this, R.drawable.ic_gesture_stylus)!!.mutate()
+            val whiteboardColorPaletteIcon =
+                ContextCompat.getDrawable(applicationContext, R.drawable.ic_color_lens_white_24dp)!!
+                    .mutate()
+            val eraserIcon =
+                ContextCompat.getDrawable(applicationContext, R.drawable.ic_eraser)!!.mutate()
             if (showWhiteboard) {
                 // "hide whiteboard" icon
                 whiteboardIcon.alpha = Themes.ALPHA_ICON_ENABLED_LIGHT
@@ -1004,7 +1057,7 @@ open class Reviewer :
     private fun setupFlags(subMenu: SubMenu) {
         lifecycleScope.launch {
             for ((flag, displayName) in Flag.queryDisplayNames()) {
-                subMenu.findItem(flag.id).setTitle(displayName)
+                subMenu.findItem(flag.id).title = displayName
                 flagItemIds.add(flag.id)
             }
         }
@@ -1104,10 +1157,7 @@ open class Reviewer :
     }
 
     private fun updateWhiteboardEditorPosition() {
-        answerButtonsPosition =
-            this
-                .sharedPrefs()
-                .getString("answerButtonPosition", "bottom")
+        answerButtonsPosition = this.sharedPrefs().getString("answerButtonPosition", "bottom")
         val layoutParams: RelativeLayout.LayoutParams
         when (answerButtonsPosition) {
             "none", "top" -> {
@@ -1176,12 +1226,11 @@ open class Reviewer :
     }
 
     override suspend fun updateCurrentCard() {
-        val state =
-            withCol {
-                sched.currentQueueState()?.apply {
-                    topCard.renderOutput(this@withCol, reload = true)
-                }
+        val state = withCol {
+            sched.currentQueueState()?.apply {
+                topCard.renderOutput(this@withCol, reload = true)
             }
+        }
         state?.timeboxReached?.let { dealWithTimeBox(it) }
         currentCard = state?.topCard
         queueState = state
@@ -1198,12 +1247,11 @@ open class Reviewer :
         }.also {
             if (rating == Rating.AGAIN && wasLeech) {
                 state.topCard.load(getColUnsafe)
-                val leechMessage: String =
-                    if (state.topCard.queue.buriedOrSuspended()) {
-                        resources.getString(R.string.leech_suspend_notification)
-                    } else {
-                        resources.getString(R.string.leech_notification)
-                    }
+                val leechMessage: String = if (state.topCard.queue.buriedOrSuspended()) {
+                    resources.getString(R.string.leech_suspend_notification)
+                } else {
+                    resources.getString(R.string.leech_notification)
+                }
                 showSnackbar(leechMessage, Snackbar.LENGTH_SHORT)
             }
         }
@@ -1213,7 +1261,8 @@ open class Reviewer :
         val nCards = timebox.reps
         val nMins = timebox.secs / 60
         val mins = resources.getQuantityString(R.plurals.in_minutes, nMins, nMins)
-        val timeboxMessage = resources.getQuantityString(R.plurals.timebox_reached, nCards, nCards, mins)
+        val timeboxMessage =
+            resources.getQuantityString(R.plurals.timebox_reached, nCards, nCards, mins)
         suspendCancellableCoroutine { coroutines ->
             Timber.i("Showing timebox reached dialog")
             AlertDialog.Builder(this).show {
@@ -1222,7 +1271,7 @@ open class Reviewer :
                 positiveButton(R.string.dialog_continue) {
                     coroutines.resume(Unit)
                 }
-                negativeButton(text = CollectionManager.TR.studyingFinish()) {
+                negativeButton(text = TR.studyingFinish()) {
                     coroutines.resume(Unit)
                     finish()
                 }
@@ -1338,94 +1387,117 @@ open class Reviewer :
                 toggleFlag(Flag.RED)
                 return true
             }
+
             ViewerCommand.TOGGLE_FLAG_ORANGE -> {
                 toggleFlag(Flag.ORANGE)
                 return true
             }
+
             ViewerCommand.TOGGLE_FLAG_GREEN -> {
                 toggleFlag(Flag.GREEN)
                 return true
             }
+
             ViewerCommand.TOGGLE_FLAG_BLUE -> {
                 toggleFlag(Flag.BLUE)
                 return true
             }
+
             ViewerCommand.TOGGLE_FLAG_PINK -> {
                 toggleFlag(Flag.PINK)
                 return true
             }
+
             ViewerCommand.TOGGLE_FLAG_TURQUOISE -> {
                 toggleFlag(Flag.TURQUOISE)
                 return true
             }
+
             ViewerCommand.TOGGLE_FLAG_PURPLE -> {
                 toggleFlag(Flag.PURPLE)
                 return true
             }
+
             ViewerCommand.UNSET_FLAG -> {
                 onFlag(currentCard, Flag.NONE)
                 return true
             }
+
             ViewerCommand.MARK -> {
                 onMark(currentCard)
                 return true
             }
+
             ViewerCommand.REDO -> {
                 redo()
                 return true
             }
+
             ViewerCommand.ADD_NOTE -> {
                 addNote(fromGesture)
                 return true
             }
+
             ViewerCommand.CARD_INFO -> {
                 openCardInfo(fromGesture)
                 return true
             }
+
             ViewerCommand.RESCHEDULE_NOTE -> {
                 showDueDateDialog()
                 return true
             }
+
             ViewerCommand.TOGGLE_AUTO_ADVANCE -> {
                 toggleAutoAdvance()
                 return true
             }
+
             ViewerCommand.USER_ACTION_1 -> {
                 userAction(1)
                 return true
             }
+
             ViewerCommand.USER_ACTION_2 -> {
                 userAction(2)
                 return true
             }
+
             ViewerCommand.USER_ACTION_3 -> {
                 userAction(3)
                 return true
             }
+
             ViewerCommand.USER_ACTION_4 -> {
                 userAction(4)
                 return true
             }
+
             ViewerCommand.USER_ACTION_5 -> {
                 userAction(5)
                 return true
             }
+
             ViewerCommand.USER_ACTION_6 -> {
                 userAction(6)
                 return true
             }
+
             ViewerCommand.USER_ACTION_7 -> {
                 userAction(7)
                 return true
             }
+
             ViewerCommand.USER_ACTION_8 -> {
                 userAction(8)
                 return true
             }
+
             ViewerCommand.USER_ACTION_9 -> {
                 userAction(9)
                 return true
             }
+
             else -> return super.executeCommand(which, fromGesture)
         }
     }
@@ -1483,14 +1555,13 @@ open class Reviewer :
         }
     }
 
-    private val fullScreenHandler: Handler =
-        object : Handler(getDefaultLooper()) {
-            override fun handleMessage(msg: Message) {
-                if (prefFullscreenReview) {
-                    setFullScreen(this@Reviewer)
-                }
+    private val fullScreenHandler: Handler = object : Handler(getDefaultLooper()) {
+        override fun handleMessage(msg: Message) {
+            if (prefFullscreenReview) {
+                setFullScreen(this@Reviewer)
             }
         }
+    }
 
     /** Hide the navigation if in full-screen mode after a given period of time  */
     protected open fun delayedHide(delayMillis: Int) {
@@ -1510,14 +1581,9 @@ open class Reviewer :
     @Suppress("deprecation") // #9332: UI Visibility -> Insets
     private fun setFullScreen(a: AbstractFlashcardViewer) {
         // Set appropriate flags to enable Sticky Immersive mode.
-        a.window.decorView.systemUiVisibility = (
-            View.SYSTEM_UI_FLAG_LAYOUT_STABLE // | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION // temporarily disabled due to #5245
-                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_FULLSCREEN
-                or View.SYSTEM_UI_FLAG_LOW_PROFILE
-                or View.SYSTEM_UI_FLAG_IMMERSIVE
-        )
+        a.window.decorView.systemUiVisibility =
+            (View.SYSTEM_UI_FLAG_LAYOUT_STABLE // | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION // temporarily disabled due to #5245
+                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_LOW_PROFILE or View.SYSTEM_UI_FLAG_IMMERSIVE)
         // Show / hide the Action bar together with the status bar
         val prefs = a.sharedPrefs()
         val fullscreenMode = fromPreference(prefs)
@@ -1553,19 +1619,12 @@ open class Reviewer :
     private fun showViewWithAnimation(view: View) {
         view.alpha = 0.0f
         view.visibility = View.VISIBLE
-        view
-            .animate()
-            .alpha(TRANSPARENCY)
-            .setDuration(ANIMATION_DURATION.toLong())
+        view.animate().alpha(TRANSPARENCY).setDuration(ANIMATION_DURATION.toLong())
             .setListener(null)
     }
 
     private fun hideViewWithAnimation(view: View) {
-        view
-            .animate()
-            .alpha(0f)
-            .setDuration(ANIMATION_DURATION.toLong())
-            .setListener(
+        view.animate().alpha(0f).setDuration(ANIMATION_DURATION.toLong()).setListener(
                 object : AnimatorListenerAdapter() {
                     override fun onAnimationEnd(animation: Animator) {
                         view.visibility = View.GONE
@@ -1577,45 +1636,37 @@ open class Reviewer :
     @Suppress("deprecation") // #9332: UI Visibility -> Insets
     private fun isImmersiveSystemUiVisible(
         activity: AnkiActivity,
-    ): Boolean = activity.window.decorView.systemUiVisibility and View.SYSTEM_UI_FLAG_HIDE_NAVIGATION == 0
+    ): Boolean =
+        activity.window.decorView.systemUiVisibility and View.SYSTEM_UI_FLAG_HIDE_NAVIGATION == 0
 
     override suspend fun handlePostRequest(
         uri: String,
         bytes: ByteArray,
-    ): ByteArray =
-        if (uri.startsWith(ANKI_PREFIX)) {
-            when (val methodName = uri.substring(ANKI_PREFIX.length)) {
-                "getSchedulingStatesWithContext" -> getSchedulingStatesWithContext()
-                "setSchedulingStates" -> setSchedulingStates(bytes)
-                "i18nResources" -> withCol { i18nResourcesRaw(bytes) }
-                else -> throw IllegalArgumentException("unhandled request: $methodName")
-            }
-        } else if (uri.startsWith(ANKIDROID_JS_PREFIX)) {
-            jsApi.handleJsApiRequest(
-                uri.substring(ANKIDROID_JS_PREFIX.length),
-                bytes,
-                returnDefaultValues = false,
-            )
-        } else {
-            throw IllegalArgumentException("unhandled request: $uri")
+    ): ByteArray = if (uri.startsWith(ANKI_PREFIX)) {
+        when (val methodName = uri.substring(ANKI_PREFIX.length)) {
+            "getSchedulingStatesWithContext" -> getSchedulingStatesWithContext()
+            "setSchedulingStates" -> setSchedulingStates(bytes)
+            "i18nResources" -> withCol { i18nResourcesRaw(bytes) }
+            else -> throw IllegalArgumentException("unhandled request: $methodName")
         }
+    } else if (uri.startsWith(ANKIDROID_JS_PREFIX)) {
+        jsApi.handleJsApiRequest(
+            uri.substring(ANKIDROID_JS_PREFIX.length),
+            bytes,
+            returnDefaultValues = false,
+        )
+    } else {
+        throw IllegalArgumentException("unhandled request: $uri")
+    }
 
     private fun getSchedulingStatesWithContext(): ByteArray {
         val state = queueState ?: return ByteArray(0)
-        return state
-            .schedulingStatesWithContext()
-            .toBuilder()
-            .mergeStates(
-                state.states
-                    .toBuilder()
-                    .mergeCurrent(
-                        state.states.current
-                            .toBuilder()
-                            .setCustomData(state.topCard.customData)
+        return state.schedulingStatesWithContext().toBuilder().mergeStates(
+                state.states.toBuilder().mergeCurrent(
+                        state.states.current.toBuilder().setCustomData(state.topCard.customData)
                             .build(),
                     ).build(),
-            ).build()
-            .toByteArray()
+            ).build().toByteArray()
     }
 
     private fun setSchedulingStates(bytes: ByteArray): ByteArray {
@@ -1633,10 +1684,9 @@ open class Reviewer :
     }
 
     private fun createWhiteboard() {
-        val whiteboard =
-            createInstance(this, true, this).also { whiteboard ->
-                this.whiteboard = whiteboard
-            }
+        val whiteboard = createInstance(this, true, this).also { whiteboard ->
+            this.whiteboard = whiteboard
+        }
 
         // We use the pen color of the selected deck at the time the whiteboard is enabled.
         // This is how all other whiteboard settings are
@@ -1644,21 +1694,20 @@ open class Reviewer :
         if (whiteboardPenColor != null) {
             whiteboard.penColor = whiteboardPenColor
         }
-        whiteboard.onPaintColorChangeListener =
-            OnPaintColorChangeListener { color ->
-                MetaDB.storeWhiteboardPenColor(this@Reviewer, parentDid, !currentTheme.isNightMode, color)
-            }
+        whiteboard.onPaintColorChangeListener = OnPaintColorChangeListener { color ->
+            MetaDB.storeWhiteboardPenColor(
+                this@Reviewer,
+                parentDid,
+                !currentTheme.isNightMode,
+                color
+            )
+        }
         whiteboard.setOnTouchListener { v: View, event: MotionEvent? ->
             if (event == null) return@setOnTouchListener false
             // If the whiteboard is currently drawing, and triggers the system UI to show, we want to continue drawing.
-            if (!whiteboard.isCurrentlyDrawing &&
-                (
-                    !showWhiteboard ||
-                        (
-                            prefFullscreenReview &&
-                                isImmersiveSystemUiVisible(this@Reviewer)
-                        )
-                )
+            if (!whiteboard.isCurrentlyDrawing && (!showWhiteboard || (prefFullscreenReview && isImmersiveSystemUiVisible(
+                    this@Reviewer
+                )))
             ) {
                 // Bypass whiteboard listener when it's hidden or fullscreen immersive mode is temporarily suspended
                 v.performClick()
@@ -1749,17 +1798,16 @@ open class Reviewer :
     fun hasDrawerSwipeConflicts(): Boolean = hasDrawerSwipeConflicts
 
     override fun getCardDataForJsApi(): AnkiDroidJsAPI.CardDataForJsApi {
-        val cardDataForJsAPI =
-            AnkiDroidJsAPI.CardDataForJsApi().apply {
-                newCardCount = queueState?.counts?.new ?: -1
-                lrnCardCount = queueState?.counts?.lrn ?: -1
-                revCardCount = queueState?.counts?.rev ?: -1
-                nextTime1 = easeButton1!!.nextTime
-                nextTime2 = easeButton2!!.nextTime
-                nextTime3 = easeButton3!!.nextTime
-                nextTime4 = easeButton4!!.nextTime
-                eta = this@Reviewer.eta
-            }
+        val cardDataForJsAPI = AnkiDroidJsAPI.CardDataForJsApi().apply {
+            newCardCount = queueState?.counts?.new ?: -1
+            lrnCardCount = queueState?.counts?.lrn ?: -1
+            revCardCount = queueState?.counts?.rev ?: -1
+            nextTime1 = easeButton1!!.nextTime
+            nextTime2 = easeButton2!!.nextTime
+            nextTime3 = easeButton3!!.nextTime
+            nextTime4 = easeButton4!!.nextTime
+            eta = this@Reviewer.eta
+        }
         return cardDataForJsAPI
     }
 
@@ -1776,12 +1824,11 @@ open class Reviewer :
         /** Default (500ms) time for action snackbars, such as undo, bury and suspend */
         const val ACTION_SNACKBAR_TIME = 500
 
-        fun getIntent(context: Context): Intent =
-            if (Prefs.isNewStudyScreenEnabled) {
-                ReviewerFragment.getIntent(context)
-            } else {
-                Intent(context, Reviewer::class.java)
-            }
+        fun getIntent(context: Context): Intent = if (Prefs.isNewStudyScreenEnabled) {
+            ReviewerFragment.getIntent(context)
+        } else {
+            Intent(context, Reviewer::class.java)
+        }
     }
 
     override fun processAction(
