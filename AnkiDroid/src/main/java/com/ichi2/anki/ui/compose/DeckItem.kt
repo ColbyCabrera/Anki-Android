@@ -21,8 +21,9 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -38,13 +39,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.ichi2.anki.R
 import com.ichi2.anki.deckpicker.DisplayDeckNode
+
+private val SubDeckCardRadius = 14.dp
 
 @Composable
 fun DeckItem(
@@ -65,7 +72,7 @@ fun DeckItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 12.dp, horizontal = 8.dp)
+                .padding(horizontal = 8.dp)
                 .pointerInput(Unit) {
                     detectTapGestures(
                         onTap = { onDeckClick() },
@@ -78,7 +85,7 @@ fun DeckItem(
                 text = deck.lastDeckNameComponent,
                 modifier = Modifier
                     .weight(1f)
-                    .padding(end = 8.dp),
+                    .padding(vertical = 12.dp, horizontal = 8.dp),
                 style = if (deck.depth == 0) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium,
             )
             Text(
@@ -102,25 +109,26 @@ fun DeckItem(
             if (deck.canCollapse) {
                 Surface(
                     modifier = Modifier
-                        .height(44.dp)
-                        .padding(start = 8.dp),
+                        .padding(start = 8.dp)
+                        .size(30.dp)
+                        .clipToBounds()
+                        .pointerInput(Unit) {
+                            detectTapGestures(onTap = { onExpandClick() })
+                        },
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     color = MaterialTheme.colorScheme.surfaceDim,
                     shape = MaterialTheme.shapes.extraLarge,
                 ) {
-                    Icon(
-                        painter = painterResource(
-                            if (deck.collapsed) R.drawable.ic_expand_more_black_24dp else R.drawable.ic_expand_less_black_24dp,
-                        ),
-                        contentDescription = if (deck.collapsed) stringResource(R.string.expand) else stringResource(
-                            R.string.collapse
-                        ),
-                        modifier = Modifier
-                            .pointerInput(Unit) {
-                                detectTapGestures(onTap = { onExpandClick() })
-                            }
-                            .padding(vertical = 12.dp, horizontal = 6.dp)
-                    )
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            painter = painterResource(
+                                if (deck.collapsed) R.drawable.ic_expand_more_black_24dp else R.drawable.ic_expand_less_black_24dp,
+                            ),
+                            contentDescription = if (deck.collapsed) stringResource(R.string.expand) else stringResource(
+                                R.string.collapse
+                            ),
+                        )
+                    }
                 }
 
             }
@@ -186,12 +194,12 @@ fun DeckItem(
             Card(
                 modifier = modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 2.dp),
+                    .padding(horizontal = 2.dp, vertical = 2.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 ),
-                shape = MaterialTheme.shapes.medium,
+                shape = RoundedCornerShape(SubDeckCardRadius),
                 elevation = CardDefaults.cardElevation(0.dp)
             ) {
                 content()

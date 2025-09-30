@@ -72,6 +72,7 @@ import androidx.core.util.component2
 import androidx.core.view.MenuItemCompat
 import androidx.core.view.OnReceiveContentListener
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -391,6 +392,7 @@ open class DeckPicker :
 
         // Then set theme and content view
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         // handle the first load: display the app introduction
         if (!hasShownAppIntro()) {
@@ -1000,7 +1002,10 @@ open class DeckPicker :
                 SyncStatusResponse.Required.NO_CHANGES -> SyncIconState.Normal
                 SyncStatusResponse.Required.NORMAL_SYNC -> SyncIconState.PendingChanges
                 SyncStatusResponse.Required.FULL_SYNC -> SyncIconState.OneWay
-                SyncStatusResponse.Required.UNRECOGNIZED, null -> TODO("unexpected required response")
+                SyncStatusResponse.Required.UNRECOGNIZED -> {
+                    Timber.w("Unexpected sync status response: UNRECOGNIZED. Defaulting to Normal.")
+                    SyncIconState.Normal
+                }
             }
         } catch (_: BackendNetworkException) {
             SyncIconState.Normal
