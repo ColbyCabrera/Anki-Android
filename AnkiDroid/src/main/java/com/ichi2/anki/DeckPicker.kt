@@ -54,23 +54,16 @@ import androidx.appcompat.app.AlertDialog
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Help
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Assessment
-import androidx.compose.material.icons.filled.Help
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Sync
-import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
@@ -92,7 +85,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback
@@ -486,28 +479,28 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
             val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
             data class DrawerItem(
-                val icon: ImageVector,
+                val icon: Int,
                 @StringRes val labelResId: Int,
                 val action: (() -> Unit)? = null
             )
 
             val items = listOf(
-                DrawerItem(Icons.Filled.Home, R.string.decks) {
+                DrawerItem(R.drawable.ic_list_black, R.string.decks) {
                     coroutineScope.launch { drawerState.close() }
                 },
-                DrawerItem(Icons.AutoMirrored.Filled.List, R.string.card_browser) {
+                DrawerItem(R.drawable.ic_flashcard_black, R.string.card_browser) {
                     startActivity(Intent(this@DeckPicker, CardBrowser::class.java))
                 },
-                DrawerItem(Icons.Filled.Assessment, R.string.statistics) {
+                DrawerItem(R.drawable.ic_bar_chart_black, R.string.statistics) {
                     startActivity(Intent(this@DeckPicker, Statistics::class.java))
                 },
-                DrawerItem(Icons.Filled.Settings, R.string.settings) {
+                DrawerItem(R.drawable.ic_settings_black, R.string.settings) {
                     startActivity(Intent(this@DeckPicker, PreferencesActivity::class.java))
                 },
-                DrawerItem(Icons.AutoMirrored.Filled.Help, R.string.help) {
+                DrawerItem(R.drawable.ic_help_black, R.string.help) {
                     startActivity(Intent(this@DeckPicker, HelpActivity::class.java))
                 },
-                DrawerItem(Icons.Filled.VolunteerActivism, R.string.help_title_support_ankidroid) {
+                DrawerItem(R.drawable.ic_support_ankidroid, R.string.help_title_support_ankidroid) {
                     val uri =
                         "https://github.com/ankidroid/Anki-Android/wiki/Contributing".toUri()
                     startActivity(Intent(Intent.ACTION_VIEW, uri))
@@ -631,25 +624,34 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                 }
             } else {
                 ModalNavigationDrawer(
-                    drawerState = drawerState, drawerContent = {
-                        ModalDrawerSheet(drawerState) {
-                            Column(Modifier.verticalScroll(rememberScrollState())) {
-                             //   Spacer(Modifier.height(12.dp))
+                    drawerState = drawerState,
+                    drawerContent = {
+                        ModalDrawerSheet {
+                            Column(
+                                Modifier.verticalScroll(rememberScrollState())
+                                    .padding(WindowInsets.statusBars.asPaddingValues())
+                                    .padding(NavigationDrawerItemDefaults.ItemPadding)
+                            ) {
+                                Spacer(Modifier.height(12.dp))
                                 items.forEachIndexed { index, item ->
                                     NavigationDrawerItem(
-                                        icon = { Icon(item.icon, contentDescription = null) },
+                                        icon = { Icon(painterResource(item.icon), contentDescription = null) },
                                         label = { Text(stringResource(item.labelResId)) },
                                         selected = selectedNavigationItem == index,
                                         onClick = {
                                             selectedNavigationItem = index
                                             item.action?.invoke()
                                         },
-                                        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
+                                        colors = NavigationDrawerItemDefaults.colors(
+                                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
                                     )
                                 }
                             }
                         }
-                    }) {
+                    }
+                ) {
                     AnkiDroidApp(
                         fragmented = fragmented,
                         decks = deckList.data,
