@@ -504,8 +504,12 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                     DrawerItem(R.drawable.ic_help_black, R.string.help) {
                         startActivity(Intent(this@DeckPicker, HelpActivity::class.java))
                     },
-                    DrawerItem(R.drawable.ic_support_ankidroid, R.string.help_title_support_ankidroid) {
-                        val uri = "https://github.com/ankidroid/Anki-Android/wiki/Contributing".toUri()
+                    DrawerItem(
+                        R.drawable.ic_support_ankidroid,
+                        R.string.help_title_support_ankidroid
+                    ) {
+                        val uri =
+                            "https://github.com/ankidroid/Anki-Android/wiki/Contributing".toUri()
                         startActivity(Intent(Intent.ACTION_VIEW, uri))
                     },
                 )
@@ -557,7 +561,9 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                         NavigationRail {
                             NavigationRailItem(
                                 selected = selectedNavigationItem == 0,
-                                onClick = { selectedNavigationItem = 0 /* TODO: Navigate to decks */ },
+                                onClick = {
+                                    selectedNavigationItem = 0 /* TODO: Navigate to decks */
+                                },
                                 icon = { Icon(Icons.Filled.Home, contentDescription = "Decks") },
                                 label = { Text("Decks") })
                             NavigationRailItem(
@@ -579,7 +585,12 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                     )
                                 )
                                 },
-                                icon = { Icon(Icons.Filled.Settings, contentDescription = "Settings") },
+                                icon = {
+                                    Icon(
+                                        Icons.Filled.Settings,
+                                        contentDescription = "Settings"
+                                    )
+                                },
                                 label = { Text("Settings") })
                         }
                         AnkiDroidApp(
@@ -647,8 +658,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                             onClick = {
                                                 selectedNavigationItem = index
                                                 item.action?.invoke()
-                                            }
-                                        )
+                                            })
                                     }
                                 }
                             }
