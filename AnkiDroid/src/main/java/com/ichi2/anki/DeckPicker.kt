@@ -504,12 +504,8 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                     DrawerItem(R.drawable.ic_help_black, R.string.help) {
                         startActivity(Intent(this@DeckPicker, HelpActivity::class.java))
                     },
-                    DrawerItem(
-                        R.drawable.ic_support_ankidroid,
-                        R.string.help_title_support_ankidroid
-                    ) {
-                        val uri =
-                            "https://github.com/ankidroid/Anki-Android/wiki/Contributing".toUri()
+                    DrawerItem(R.drawable.ic_support_ankidroid, R.string.help_title_support_ankidroid) {
+                        val uri = "https://github.com/ankidroid/Anki-Android/wiki/Contributing".toUri()
                         startActivity(Intent(Intent.ACTION_VIEW, uri))
                     },
                 )
@@ -583,12 +579,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                     )
                                 )
                                 },
-                                icon = {
-                                    Icon(
-                                        Icons.Filled.Settings,
-                                        contentDescription = "Settings"
-                                    )
-                                },
+                                icon = { Icon(Icons.Filled.Settings, contentDescription = "Settings") },
                                 label = { Text("Settings") })
                         }
                         AnkiDroidApp(
@@ -625,11 +616,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                             onRebuildDeck = { deckId -> rebuildFiltered(deckId) },
                             onEmptyDeck = { deckId -> emptyFiltered(deckId) },
                             onCustomStudy = { deckId -> showCustomStudyDialog(deckId) },
-                            onDeckOptionsItemSelected = { deckId ->
-                                viewModel.openDeckOptions(
-                                    deckId
-                                )
-                            },
+                            onDeckOptionsItemSelected = { deckId -> viewModel.openDeckOptions(deckId) },
                             onUnbury = { deckId -> viewModel.unburyDeck(deckId) },
                             requestSearchFocus = requestSearchFocus,
                             onSearchFocusRequested = { requestSearchFocus = false },
@@ -650,18 +637,18 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                     items.forEachIndexed { index, item ->
                                         NavigationDrawerItem(
                                             icon = {
-                                                Icon(
-                                                    painterResource(item.icon),
-                                                    contentDescription = null
-                                                )
-                                            },
+                                            Icon(
+                                                painterResource(item.icon),
+                                                contentDescription = null
+                                            )
+                                        },
                                             label = { Text(stringResource(item.labelResId)) },
                                             selected = selectedNavigationItem == index,
-                                        onClick = {
-                                            selectedNavigationItem = index
-                                            item.action?.invoke()
-                                        }
-                                    )
+                                            onClick = {
+                                                selectedNavigationItem = index
+                                                item.action?.invoke()
+                                            }
+                                        )
                                     }
                                 }
                             }
@@ -704,11 +691,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                             onRebuildDeck = { deckId -> rebuildFiltered(deckId) },
                             onEmptyDeck = { deckId -> emptyFiltered(deckId) },
                             onCustomStudy = { deckId -> showCustomStudyDialog(deckId) },
-                            onDeckOptionsItemSelected = { deckId ->
-                                viewModel.openDeckOptions(
-                                    deckId
-                                )
-                            },
+                            onDeckOptionsItemSelected = { deckId -> viewModel.openDeckOptions(deckId) },
                             onUnbury = { deckId -> viewModel.unburyDeck(deckId) },
                             requestSearchFocus = requestSearchFocus,
                             onSearchFocusRequested = { requestSearchFocus = false },
