@@ -236,14 +236,22 @@ fun DeckPickerContent(
                                 onRebuild = { onRebuild(rootDeck) },
                                 onEmpty = { onEmpty(rootDeck) },
                             )
+
+                            // Create a remembered state for sub-decks to handle exit animation correctly
+                            val subDecks = groupedDecks[rootDeck]
+                            var rememberedSubDecks by remember { mutableStateOf<List<DisplayDeckNode>?>(null) }
+                            if (!rootDeck.collapsed) {
+                                rememberedSubDecks = subDecks
+                            }
+
                             // Render the sub-decks
                             AnimatedVisibility(
                                 visible = !rootDeck.collapsed,
-                                enter = expandVertically(animationSpec = motionScheme.defaultSpatialSpec()),
-                                exit = shrinkVertically(animationSpec = motionScheme.defaultSpatialSpec()),
+                                enter = expandVertically(animationSpec = motionScheme.fastSpatialSpec()),
+                                exit = shrinkVertically(animationSpec = motionScheme.fastSpatialSpec()),
                             ) {
                                 Column {
-                                    groupedDecks[rootDeck]?.forEach { subDeck ->
+                                    (rememberedSubDecks ?: emptyList()).forEach { subDeck ->
                                         DeckItem(
                                             deck = subDeck,
                                             onDeckClick = { onDeckClick(subDeck) },
