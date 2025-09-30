@@ -18,15 +18,15 @@ fun AnkiDroidTheme(
 ) {
     val context = LocalContext.current
     val currentAnkiTheme = Themes.currentTheme
-    val colorScheme = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        if (currentAnkiTheme.isNightMode) {
+    val colorScheme = if (currentAnkiTheme.isNightMode) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             dynamicDarkColorScheme(context)
         } else {
-            dynamicLightColorScheme(context)
+            darkColorScheme()
         }
     } else {
-        if (currentAnkiTheme.isNightMode) {
-            darkColorScheme()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            dynamicLightColorScheme(context)
         } else {
             lightColorScheme()
         }
