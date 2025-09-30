@@ -67,7 +67,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
@@ -184,6 +183,7 @@ import com.ichi2.anki.receiver.SdCardReceiver
 import com.ichi2.anki.servicelayer.ScopedStorageService
 import com.ichi2.anki.settings.Prefs
 import com.ichi2.anki.ui.compose.AnkiDroidApp
+import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import com.ichi2.anki.ui.windows.permissions.PermissionsActivity
 import com.ichi2.anki.utils.Destination
 import com.ichi2.anki.utils.ext.dismissAllDialogFragments
@@ -466,312 +466,327 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
         setupFlows()
 
         setContent {
-            val snackbarHostState = remember { SnackbarHostState() }
-            val coroutineScope = rememberCoroutineScope()
-            val deckList by viewModel.flowOfDeckList.collectAsState(
-                initial = FlattenedDeckList(emptyList(), false),
-            )
-            val isRefreshing by viewModel.isSyncing.collectAsState(initial = false)
-            var searchQuery by remember { mutableStateOf("") }
-            var requestSearchFocus by remember { mutableStateOf(false) }
-            val focusedDeckId by viewModel.flowOfFocusedDeck.collectAsState()
-            var studyOptionsData by remember {
-                mutableStateOf<com.ichi2.anki.ui.compose.StudyOptionsData?>(
-                    null
+            AnkiDroidTheme {
+                val snackbarHostState = remember { SnackbarHostState() }
+                val coroutineScope = rememberCoroutineScope()
+                val deckList by viewModel.flowOfDeckList.collectAsState(
+                    initial = FlattenedDeckList(emptyList(), false),
                 )
-            }
-            var selectedNavigationItem by remember { mutableIntStateOf(0) } // For NavigationRail
-            val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-
-            data class DrawerItem(
-                val icon: Int, @StringRes val labelResId: Int, val action: (() -> Unit)? = null
-            )
-
-            val items = listOf(
-                DrawerItem(R.drawable.ic_list_black, R.string.decks) {
-                    coroutineScope.launch { drawerState.close() }
-                },
-                DrawerItem(R.drawable.ic_flashcard_black, R.string.card_browser) {
-                    startActivity(Intent(this@DeckPicker, CardBrowser::class.java))
-                },
-                DrawerItem(R.drawable.ic_bar_chart_black, R.string.statistics) {
-                    startActivity(Intent(this@DeckPicker, Statistics::class.java))
-                },
-                DrawerItem(R.drawable.ic_settings_black, R.string.settings) {
-                    startActivity(Intent(this@DeckPicker, PreferencesActivity::class.java))
-                },
-                DrawerItem(R.drawable.ic_help_black, R.string.help) {
-                    startActivity(Intent(this@DeckPicker, HelpActivity::class.java))
-                },
-                DrawerItem(R.drawable.ic_support_ankidroid, R.string.help_title_support_ankidroid) {
-                    val uri = "https://github.com/ankidroid/Anki-Android/wiki/Contributing".toUri()
-                    startActivity(Intent(Intent.ACTION_VIEW, uri))
-                },
-            )
-
-
-            LaunchedEffect(focusedDeckId) {
-                val currentFocusedDeck = focusedDeckId
-                if (currentFocusedDeck != null) {
-                    studyOptionsData = withContext(Dispatchers.IO) {
-                        withCol {
-                            decks.select(currentFocusedDeck)
-                            val deck = decks.current()
-                            val counts = sched.counts()
-                            var buriedNew = 0
-                            var buriedLearning = 0
-                            var buriedReview = 0
-                            val tree = sched.deckDueTree(currentFocusedDeck)
-                            if (tree != null) {
-                                buriedNew = tree.newCount - counts.new
-                                buriedLearning = tree.learnCount - counts.lrn
-                                buriedReview = tree.reviewCount - counts.rev
-                            }
-                            com.ichi2.anki.ui.compose.StudyOptionsData(
-                                deckId = currentFocusedDeck,
-                                deckName = deck.getString("name"),
-                                deckDescription = deck.description,
-                                newCount = counts.new,
-                                lrnCount = counts.lrn,
-                                revCount = counts.rev,
-                                buriedNew = buriedNew,
-                                buriedLrn = buriedLearning,
-                                buriedRev = buriedReview,
-                                totalNewCards = sched.totalNewForCurrentDeck(),
-                                totalCards = decks.cardCount(
-                                    currentFocusedDeck, includeSubdecks = true
-                                ),
-                                isFiltered = deck.isFiltered,
-                                haveBuried = sched.haveBuried(),
-                            )
-                        }
-                    }
-                } else {
-                    studyOptionsData = null
-                }
-            }
-
-            if (fragmented) {
-                Row {
-                    NavigationRail {
-                        NavigationRailItem(
-                            selected = selectedNavigationItem == 0,
-                            onClick = { selectedNavigationItem = 0 /* TODO: Navigate to decks */ },
-                            icon = { Icon(Icons.Filled.Home, contentDescription = "Decks") },
-                            label = { Text("Decks") })
-                        NavigationRailItem(
-                            selected = selectedNavigationItem == 1,
-                            onClick = { selectedNavigationItem = 1; addNote() },
-                            icon = { Icon(Icons.Filled.Add, contentDescription = "Add Note") },
-                            label = { Text("Add Note") })
-                        NavigationRailItem(
-                            selected = selectedNavigationItem == 2,
-                            onClick = { selectedNavigationItem = 2; sync() },
-                            icon = { Icon(Icons.Filled.Sync, contentDescription = "Sync") },
-                            label = { Text("Sync") })
-                        NavigationRailItem(
-                            selected = selectedNavigationItem == 3,
-                            onClick = {
-                                selectedNavigationItem = 3; startActivity(
-                                Intent(
-                                    this@DeckPicker, PreferencesActivity::class.java
-                                )
-                            )
-                            },
-                            icon = { Icon(Icons.Filled.Settings, contentDescription = "Settings") },
-                            label = { Text("Settings") })
-                    }
-                    AnkiDroidApp(
-                        fragmented = fragmented,
-                        decks = deckList.data,
-                        isRefreshing = isRefreshing,
-                        onRefresh = { sync() },
-                        searchQuery = searchQuery,
-                        onSearchQueryChanged = {
-                            searchQuery = it
-                            viewModel.updateDeckFilter(it)
-                        },
-                        backgroundImage = deckPickerPainter(),
-                        onDeckClick = { deck ->
-                            viewModel.onDeckSelected(
-                                deck.did,
-                                DeckSelectionType.DEFAULT,
-                            )
-                        },
-                        onExpandClick = { deck -> viewModel.toggleDeckExpand(deck.did) },
-                        onAddNote = { addNote() },
-                        onAddDeck = { showCreateDeckDialog() },
-                        onAddSharedDeck = { openAnkiWebSharedDecks() },
-                        onAddFilteredDeck = { showCreateFilteredDeckDialog() },
-                        onDeckOptions = { deck -> viewModel.openDeckOptions(deck.did) },
-                        onRename = { deck -> renameDeckDialog(deck.did) },
-                        onExport = { deck -> exportDeck(deck.did) },
-                        onDelete = { deck -> deleteDeck(deck.did) },
-                        onRebuild = { deck -> rebuildFiltered(deck.did) },
-                        onEmpty = { deck -> emptyFiltered(deck.did) },
-                        onNavigationIconClick = { /* Navigation handled by NavigationRail when fragmented */ },
-                        studyOptionsData = studyOptionsData,
-                        onStartStudy = { openReviewer() },
-                        onRebuildDeck = { deckId -> rebuildFiltered(deckId) },
-                        onEmptyDeck = { deckId -> emptyFiltered(deckId) },
-                        onCustomStudy = { deckId -> showCustomStudyDialog(deckId) },
-                        onDeckOptionsItemSelected = { deckId -> viewModel.openDeckOptions(deckId) },
-                        onUnbury = { deckId -> viewModel.unburyDeck(deckId) },
-                        requestSearchFocus = requestSearchFocus,
-                        onSearchFocusRequested = { requestSearchFocus = false },
-                        snackbarHostState = snackbarHostState,
+                val isRefreshing by viewModel.isSyncing.collectAsState(initial = false)
+                var searchQuery by remember { mutableStateOf("") }
+                var requestSearchFocus by remember { mutableStateOf(false) }
+                val focusedDeckId by viewModel.flowOfFocusedDeck.collectAsState()
+                var studyOptionsData by remember {
+                    mutableStateOf<com.ichi2.anki.ui.compose.StudyOptionsData?>(
+                        null
                     )
                 }
-            } else {
-                ModalNavigationDrawer(
-                    drawerState = drawerState, drawerContent = {
-                        ModalDrawerSheet {
-                            Column(
-                                Modifier
-                                    .verticalScroll(rememberScrollState())
-                                    .padding(WindowInsets.statusBars.asPaddingValues())
-                                    .padding(NavigationDrawerItemDefaults.ItemPadding)
-                            ) {
-                                Spacer(Modifier.height(12.dp))
-                                items.forEachIndexed { index, item ->
-                                    NavigationDrawerItem(
-                                        icon = {
-                                        Icon(
-                                            painterResource(item.icon),
-                                            contentDescription = null
-                                        )
-                                    },
-                                        label = { Text(stringResource(item.labelResId)) },
-                                        selected = selectedNavigationItem == index,
+                var selectedNavigationItem by remember { mutableIntStateOf(0) } // For NavigationRail
+                val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+
+                data class DrawerItem(
+                    val icon: Int, @StringRes val labelResId: Int, val action: (() -> Unit)? = null
+                )
+
+                val items = listOf(
+                    DrawerItem(R.drawable.ic_list_black, R.string.decks) {
+                        coroutineScope.launch { drawerState.close() }
+                    },
+                    DrawerItem(R.drawable.ic_flashcard_black, R.string.card_browser) {
+                        startActivity(Intent(this@DeckPicker, CardBrowser::class.java))
+                    },
+                    DrawerItem(R.drawable.ic_bar_chart_black, R.string.statistics) {
+                        startActivity(Intent(this@DeckPicker, Statistics::class.java))
+                    },
+                    DrawerItem(R.drawable.ic_settings_black, R.string.settings) {
+                        startActivity(Intent(this@DeckPicker, PreferencesActivity::class.java))
+                    },
+                    DrawerItem(R.drawable.ic_help_black, R.string.help) {
+                        startActivity(Intent(this@DeckPicker, HelpActivity::class.java))
+                    },
+                    DrawerItem(
+                        R.drawable.ic_support_ankidroid,
+                        R.string.help_title_support_ankidroid
+                    ) {
+                        val uri =
+                            "https://github.com/ankidroid/Anki-Android/wiki/Contributing".toUri()
+                        startActivity(Intent(Intent.ACTION_VIEW, uri))
+                    },
+                )
+
+
+                LaunchedEffect(focusedDeckId) {
+                    val currentFocusedDeck = focusedDeckId
+                    if (currentFocusedDeck != null) {
+                        studyOptionsData = withContext(Dispatchers.IO) {
+                            withCol {
+                                decks.select(currentFocusedDeck)
+                                val deck = decks.current()
+                                val counts = sched.counts()
+                                var buriedNew = 0
+                                var buriedLearning = 0
+                                var buriedReview = 0
+                                val tree = sched.deckDueTree(currentFocusedDeck)
+                                if (tree != null) {
+                                    buriedNew = tree.newCount - counts.new
+                                    buriedLearning = tree.learnCount - counts.lrn
+                                    buriedReview = tree.reviewCount - counts.rev
+                                }
+                                com.ichi2.anki.ui.compose.StudyOptionsData(
+                                    deckId = currentFocusedDeck,
+                                    deckName = deck.getString("name"),
+                                    deckDescription = deck.description,
+                                    newCount = counts.new,
+                                    lrnCount = counts.lrn,
+                                    revCount = counts.rev,
+                                    buriedNew = buriedNew,
+                                    buriedLrn = buriedLearning,
+                                    buriedRev = buriedReview,
+                                    totalNewCards = sched.totalNewForCurrentDeck(),
+                                    totalCards = decks.cardCount(
+                                        currentFocusedDeck, includeSubdecks = true
+                                    ),
+                                    isFiltered = deck.isFiltered,
+                                    haveBuried = sched.haveBuried(),
+                                )
+                            }
+                        }
+                    } else {
+                        studyOptionsData = null
+                    }
+                }
+
+                if (fragmented) {
+                    Row {
+                        NavigationRail {
+                            NavigationRailItem(
+                                selected = selectedNavigationItem == 0,
+                                onClick = { selectedNavigationItem = 0 /* TODO: Navigate to decks */ },
+                                icon = { Icon(Icons.Filled.Home, contentDescription = "Decks") },
+                                label = { Text("Decks") })
+                            NavigationRailItem(
+                                selected = selectedNavigationItem == 1,
+                                onClick = { selectedNavigationItem = 1; addNote() },
+                                icon = { Icon(Icons.Filled.Add, contentDescription = "Add Note") },
+                                label = { Text("Add Note") })
+                            NavigationRailItem(
+                                selected = selectedNavigationItem == 2,
+                                onClick = { selectedNavigationItem = 2; sync() },
+                                icon = { Icon(Icons.Filled.Sync, contentDescription = "Sync") },
+                                label = { Text("Sync") })
+                            NavigationRailItem(
+                                selected = selectedNavigationItem == 3,
+                                onClick = {
+                                    selectedNavigationItem = 3; startActivity(
+                                    Intent(
+                                        this@DeckPicker, PreferencesActivity::class.java
+                                    )
+                                )
+                                },
+                                icon = {
+                                    Icon(
+                                        Icons.Filled.Settings,
+                                        contentDescription = "Settings"
+                                    )
+                                },
+                                label = { Text("Settings") })
+                        }
+                        AnkiDroidApp(
+                            fragmented = fragmented,
+                            decks = deckList.data,
+                            isRefreshing = isRefreshing,
+                            onRefresh = { sync() },
+                            searchQuery = searchQuery,
+                            onSearchQueryChanged = {
+                                searchQuery = it
+                                viewModel.updateDeckFilter(it)
+                            },
+                            backgroundImage = deckPickerPainter(),
+                            onDeckClick = { deck ->
+                                viewModel.onDeckSelected(
+                                    deck.did,
+                                    DeckSelectionType.DEFAULT,
+                                )
+                            },
+                            onExpandClick = { deck -> viewModel.toggleDeckExpand(deck.did) },
+                            onAddNote = { addNote() },
+                            onAddDeck = { showCreateDeckDialog() },
+                            onAddSharedDeck = { openAnkiWebSharedDecks() },
+                            onAddFilteredDeck = { showCreateFilteredDeckDialog() },
+                            onDeckOptions = { deck -> viewModel.openDeckOptions(deck.did) },
+                            onRename = { deck -> renameDeckDialog(deck.did) },
+                            onExport = { deck -> exportDeck(deck.did) },
+                            onDelete = { deck -> deleteDeck(deck.did) },
+                            onRebuild = { deck -> rebuildFiltered(deck.did) },
+                            onEmpty = { deck -> emptyFiltered(deck.did) },
+                            onNavigationIconClick = { /* Navigation handled by NavigationRail when fragmented */ },
+                            studyOptionsData = studyOptionsData,
+                            onStartStudy = { openReviewer() },
+                            onRebuildDeck = { deckId -> rebuildFiltered(deckId) },
+                            onEmptyDeck = { deckId -> emptyFiltered(deckId) },
+                            onCustomStudy = { deckId -> showCustomStudyDialog(deckId) },
+                            onDeckOptionsItemSelected = { deckId ->
+                                viewModel.openDeckOptions(
+                                    deckId
+                                )
+                            },
+                            onUnbury = { deckId -> viewModel.unburyDeck(deckId) },
+                            requestSearchFocus = requestSearchFocus,
+                            onSearchFocusRequested = { requestSearchFocus = false },
+                            snackbarHostState = snackbarHostState,
+                        )
+                    }
+                } else {
+                    ModalNavigationDrawer(
+                        drawerState = drawerState, drawerContent = {
+                            ModalDrawerSheet {
+                                Column(
+                                    Modifier
+                                        .verticalScroll(rememberScrollState())
+                                        .padding(WindowInsets.statusBars.asPaddingValues())
+                                        .padding(NavigationDrawerItemDefaults.ItemPadding)
+                                ) {
+                                    Spacer(Modifier.height(12.dp))
+                                    items.forEachIndexed { index, item ->
+                                        NavigationDrawerItem(
+                                            icon = {
+                                                Icon(
+                                                    painterResource(item.icon),
+                                                    contentDescription = null
+                                                )
+                                            },
+                                            label = { Text(stringResource(item.labelResId)) },
+                                            selected = selectedNavigationItem == index,
                                         onClick = {
                                             selectedNavigationItem = index
                                             item.action?.invoke()
-                                        },
-                                        colors = NavigationDrawerItemDefaults.colors(
-                                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
+                                        }
                                     )
+                                    }
                                 }
                             }
+                        }) {
+                        AnkiDroidApp(
+                            fragmented = fragmented,
+                            decks = deckList.data,
+                            isRefreshing = isRefreshing,
+                            onRefresh = { sync() },
+                            searchQuery = searchQuery,
+                            onSearchQueryChanged = {
+                                searchQuery = it
+                                viewModel.updateDeckFilter(it)
+                            },
+                            backgroundImage = deckPickerPainter(),
+                            onDeckClick = { deck ->
+                                viewModel.onDeckSelected(
+                                    deck.did,
+                                    DeckSelectionType.DEFAULT,
+                                )
+                            },
+                            onExpandClick = { deck -> viewModel.toggleDeckExpand(deck.did) },
+                            onAddNote = { addNote() },
+                            onAddDeck = { showCreateDeckDialog() },
+                            onAddSharedDeck = { openAnkiWebSharedDecks() },
+                            onAddFilteredDeck = { showCreateFilteredDeckDialog() },
+                            onDeckOptions = { deck -> viewModel.openDeckOptions(deck.did) },
+                            onRename = { deck -> renameDeckDialog(deck.did) },
+                            onExport = { deck -> exportDeck(deck.did) },
+                            onDelete = { deck -> deleteDeck(deck.did) },
+                            onRebuild = { deck -> rebuildFiltered(deck.did) },
+                            onEmpty = { deck -> emptyFiltered(deck.did) },
+                            onNavigationIconClick = {
+                                coroutineScope.launch {
+                                    drawerState.open()
+                                }
+                            },
+                            studyOptionsData = studyOptionsData,
+                            onStartStudy = { openReviewer() },
+                            onRebuildDeck = { deckId -> rebuildFiltered(deckId) },
+                            onEmptyDeck = { deckId -> emptyFiltered(deckId) },
+                            onCustomStudy = { deckId -> showCustomStudyDialog(deckId) },
+                            onDeckOptionsItemSelected = { deckId ->
+                                viewModel.openDeckOptions(
+                                    deckId
+                                )
+                            },
+                            onUnbury = { deckId -> viewModel.unburyDeck(deckId) },
+                            requestSearchFocus = requestSearchFocus,
+                            onSearchFocusRequested = { requestSearchFocus = false },
+                            snackbarHostState = snackbarHostState,
+                        )
+                    }
+                }
+
+                LaunchedEffect(Unit) {
+                    viewModel.deckDeletedNotification.flowWithLifecycle(lifecycle).collect {
+                        val snackbarResult = snackbarHostState.showSnackbar(
+                            message = it.toHumanReadableString(),
+                            actionLabel = getString(R.string.undo),
+                        )
+                        if (snackbarResult == SnackbarResult.ActionPerformed) {
+                            undo()
                         }
-                    }) {
-                    AnkiDroidApp(
-                        fragmented = fragmented,
-                        decks = deckList.data,
-                        isRefreshing = isRefreshing,
-                        onRefresh = { sync() },
-                        searchQuery = searchQuery,
-                        onSearchQueryChanged = {
-                            searchQuery = it
-                            viewModel.updateDeckFilter(it)
-                        },
-                        backgroundImage = deckPickerPainter(),
-                        onDeckClick = { deck ->
-                            viewModel.onDeckSelected(
-                                deck.did,
-                                DeckSelectionType.DEFAULT,
-                            )
-                        },
-                        onExpandClick = { deck -> viewModel.toggleDeckExpand(deck.did) },
-                        onAddNote = { addNote() },
-                        onAddDeck = { showCreateDeckDialog() },
-                        onAddSharedDeck = { openAnkiWebSharedDecks() },
-                        onAddFilteredDeck = { showCreateFilteredDeckDialog() },
-                        onDeckOptions = { deck -> viewModel.openDeckOptions(deck.did) },
-                        onRename = { deck -> renameDeckDialog(deck.did) },
-                        onExport = { deck -> exportDeck(deck.did) },
-                        onDelete = { deck -> deleteDeck(deck.did) },
-                        onRebuild = { deck -> rebuildFiltered(deck.did) },
-                        onEmpty = { deck -> emptyFiltered(deck.did) },
-                        onNavigationIconClick = {
-                            coroutineScope.launch {
-                                drawerState.open()
-                            }
-                        },
-                        studyOptionsData = studyOptionsData,
-                        onStartStudy = { openReviewer() },
-                        onRebuildDeck = { deckId -> rebuildFiltered(deckId) },
-                        onEmptyDeck = { deckId -> emptyFiltered(deckId) },
-                        onCustomStudy = { deckId -> showCustomStudyDialog(deckId) },
-                        onDeckOptionsItemSelected = { deckId -> viewModel.openDeckOptions(deckId) },
-                        onUnbury = { deckId -> viewModel.unburyDeck(deckId) },
-                        requestSearchFocus = requestSearchFocus,
-                        onSearchFocusRequested = { requestSearchFocus = false },
-                        snackbarHostState = snackbarHostState,
-                    )
-                }
-            }
-
-            LaunchedEffect(Unit) {
-                viewModel.deckDeletedNotification.flowWithLifecycle(lifecycle).collect {
-                    val snackbarResult = snackbarHostState.showSnackbar(
-                        message = it.toHumanReadableString(),
-                        actionLabel = getString(R.string.undo),
-                    )
-                    if (snackbarResult == SnackbarResult.ActionPerformed) {
-                        undo()
                     }
                 }
-            }
 
-            LaunchedEffect(Unit) {
-                viewModel.emptyCardsNotification.flowWithLifecycle(lifecycle).collect {
-                    val snackbarResult = snackbarHostState.showSnackbar(
-                        message = it.toHumanReadableString(),
-                        actionLabel = getString(R.string.undo),
-                    )
-                    if (snackbarResult == SnackbarResult.ActionPerformed) {
-                        undo()
+                LaunchedEffect(Unit) {
+                    viewModel.emptyCardsNotification.flowWithLifecycle(lifecycle).collect {
+                        val snackbarResult = snackbarHostState.showSnackbar(
+                            message = it.toHumanReadableString(),
+                            actionLabel = getString(R.string.undo),
+                        )
+                        if (snackbarResult == SnackbarResult.ActionPerformed) {
+                            undo()
+                        }
                     }
                 }
-            }
 
-            LaunchedEffect(Unit) {
-                viewModel.deckSelectionResult.flowWithLifecycle(lifecycle).collect { result ->
-                    when (result) {
-                        is DeckSelectionResult.HasCardsToStudy -> {
-                            when (result.selectionType) {
-                                DeckSelectionType.DEFAULT -> {
-                                    if (!fragmented) {
+                LaunchedEffect(Unit) {
+                    viewModel.deckSelectionResult.flowWithLifecycle(lifecycle).collect { result ->
+                        when (result) {
+                            is DeckSelectionResult.HasCardsToStudy -> {
+                                when (result.selectionType) {
+                                    DeckSelectionType.DEFAULT -> {
+                                        if (!fragmented) {
+                                            openReviewer()
+                                        }
+                                    }
+
+                                    DeckSelectionType.SHOW_STUDY_OPTIONS -> {
+                                        if (!fragmented) {
+                                            openStudyOptionsActivity(false)
+                                        }
+                                    }
+
+                                    DeckSelectionType.SKIP_STUDY_OPTIONS -> {
                                         openReviewer()
                                     }
                                 }
+                            }
 
-                                DeckSelectionType.SHOW_STUDY_OPTIONS -> {
-                                    if (!fragmented) {
-                                        openStudyOptionsActivity(false)
+                            is DeckSelectionResult.Empty -> {
+                                coroutineScope.launch {
+                                    val snackbarResult = snackbarHostState.showSnackbar(
+                                        message = getString(R.string.empty_deck),
+                                        actionLabel = getString(R.string.menu_add),
+                                    )
+                                    if (snackbarResult == SnackbarResult.ActionPerformed) {
+                                        viewModel.addNote(result.deckId, true)
                                     }
                                 }
-
-                                DeckSelectionType.SKIP_STUDY_OPTIONS -> {
-                                    openReviewer()
-                                }
                             }
-                        }
 
-                        is DeckSelectionResult.Empty -> {
-                            coroutineScope.launch {
-                                val snackbarResult = snackbarHostState.showSnackbar(
-                                    message = getString(R.string.empty_deck),
-                                    actionLabel = getString(R.string.menu_add),
-                                )
-                                if (snackbarResult == SnackbarResult.ActionPerformed) {
-                                    viewModel.addNote(result.deckId, true)
-                                }
+                            is DeckSelectionResult.NoCardsToStudy -> {
+                                onDeckCompleted()
                             }
-                        }
-
-                        is DeckSelectionResult.NoCardsToStudy -> {
-                            onDeckCompleted()
                         }
                     }
                 }
-            }
 
-            LaunchedEffect(Unit) {
-                viewModel.snackbarMessage.flowWithLifecycle(lifecycle).collect { message ->
-                    snackbarHostState.showSnackbar(message)
+                LaunchedEffect(Unit) {
+                    viewModel.snackbarMessage.flowWithLifecycle(lifecycle).collect { message ->
+                        snackbarHostState.showSnackbar(message)
+                    }
                 }
             }
         }
