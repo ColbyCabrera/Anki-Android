@@ -212,7 +212,7 @@ fun DeckPickerContent(
                 }
 
                 items(rootDecks) { rootDeck ->
-                    val shape = if (rootDeck.canCollapse) {
+                    val shape = if (!rootDeck.collapsed && rootDeck.canCollapse) {
                         MaterialTheme.shapes.medium
                     } else {
                         CircleShape
