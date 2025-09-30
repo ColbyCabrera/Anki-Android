@@ -121,6 +121,8 @@ timber = "5.0.1"
 # In the past, releases have been published before the changelog
 triplet = "3.12.1"
 turbine = "1.2.1"
+foundationLayout = "1.9.2"
+foundation = "1.9.2"
 
 [libraries]
 acra-limiter = { module = "ch.acra:acra-limiter", version.ref = "acra" }
@@ -221,6 +223,8 @@ mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 cashapp-turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
+androidx-compose-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" }
+androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 
 [plugins]
 
