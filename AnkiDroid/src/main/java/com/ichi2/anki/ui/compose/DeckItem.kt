@@ -51,6 +51,8 @@ import androidx.compose.ui.unit.dp
 import com.ichi2.anki.R
 import com.ichi2.anki.deckpicker.DisplayDeckNode
 
+private val SubDeckCardRadius = 14.dp
+
 @Composable
 fun DeckItem(
     deck: DisplayDeckNode,
@@ -197,7 +199,7 @@ fun DeckItem(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 ),
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(SubDeckCardRadius),
                 elevation = CardDefaults.cardElevation(0.dp)
             ) {
                 content()

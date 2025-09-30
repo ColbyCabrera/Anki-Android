@@ -112,6 +112,9 @@ import androidx.graphics.shapes.toPath
 import com.ichi2.anki.R
 import com.ichi2.anki.deckpicker.DisplayDeckNode
 
+private val expandedDeckCardRadius = 24.dp
+private val collapsedDeckCardRadius = 70.dp
+
 private class MorphShape(
     private val morph: Morph, private val percentage: Float
 ) : Shape {
@@ -214,8 +217,8 @@ fun DeckPickerContent(
 
                 items(rootDecks) { rootDeck ->
                     val cornerRadius by animateDpAsState(
-                        targetValue = if (!rootDeck.collapsed && rootDeck.canCollapse) 24.dp else 70.dp,
-                        animationSpec = motionScheme.defaultSpatialSpec()
+                        targetValue = if (!rootDeck.collapsed && rootDeck.canCollapse) expandedDeckCardRadius else collapsedDeckCardRadius,
+                        animationSpec = motionScheme.defaultEffectsSpec()
                     )
                     Card(
                         modifier = Modifier
