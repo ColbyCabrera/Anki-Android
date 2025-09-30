@@ -18,14 +18,21 @@
 package com.ichi2.anki.ui.compose
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,7 +42,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -53,6 +60,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.motionScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
@@ -102,6 +110,9 @@ import androidx.graphics.shapes.toPath
 import com.ichi2.anki.R
 import com.ichi2.anki.deckpicker.DisplayDeckNode
 
+private val expandedDeckCardRadius = 24.dp
+private val collapsedDeckCardRadius = 70.dp
+
 private class MorphShape(
     private val morph: Morph, private val percentage: Float
 ) : Shape {
@@ -127,6 +138,7 @@ fun DeckPickerContent(
     backgroundImage: Painter?,
     listState: LazyListState,
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
     onDeckClick: (DisplayDeckNode) -> Unit,
     onExpandClick: (DisplayDeckNode) -> Unit,
     onDeckOptions: (DisplayDeckNode) -> Unit,
@@ -182,7 +194,9 @@ fun DeckPickerContent(
                 }
             }) {
             LazyColumn(
-                modifier = Modifier.fillMaxSize(), state = listState
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = contentPadding,
+                state = listState
             ) {
                 // Group decks by their parent
                 val groupedDecks = mutableMapOf<DisplayDeckNode, MutableList<DisplayDeckNode>>()
@@ -200,16 +214,15 @@ fun DeckPickerContent(
                 }
 
                 items(rootDecks) { rootDeck ->
-                    val shape = if (rootDeck.canCollapse) {
-                        MaterialTheme.shapes.medium
-                    } else {
-                        CircleShape
-                    }
+                    val cornerRadius by animateDpAsState(
+                        targetValue = if (!rootDeck.collapsed && rootDeck.canCollapse) expandedDeckCardRadius else collapsedDeckCardRadius,
+                        animationSpec = motionScheme.defaultEffectsSpec()
+                    )
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 8.dp, vertical = 2.dp),
-                        shape = shape,
+                        shape = RoundedCornerShape(cornerRadius),
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainer,
                             contentColor = MaterialTheme.colorScheme.onSurface
@@ -228,19 +241,43 @@ fun DeckPickerContent(
                                 onRebuild = { onRebuild(rootDeck) },
                                 onEmpty = { onEmpty(rootDeck) },
                             )
-                            // Render the sub-decks
-                            groupedDecks[rootDeck]?.forEach { subDeck ->
-                                DeckItem(
-                                    deck = subDeck,
-                                    onDeckClick = { onDeckClick(subDeck) },
-                                    onExpandClick = { onExpandClick(subDeck) },
-                                    onDeckOptions = { onDeckOptions(subDeck) },
-                                    onRename = { onRename(subDeck) },
-                                    onExport = { onExport(subDeck) },
-                                    onDelete = { onDelete(subDeck) },
-                                    onRebuild = { onRebuild(subDeck) },
-                                    onEmpty = { onEmpty(subDeck) },
+
+                            // Create a remembered state for sub-decks to handle exit animation correctly
+                            val subDecks = groupedDecks[rootDeck]
+                            var rememberedSubDecks by remember {
+                                mutableStateOf<List<DisplayDeckNode>?>(
+                                    null
                                 )
+                            }
+                            if (!rootDeck.collapsed) {
+                                rememberedSubDecks = subDecks
+                            }
+
+                            // Render the sub-decks
+                            AnimatedVisibility(
+                                visible = !rootDeck.collapsed,
+                                enter = expandVertically(motionScheme.defaultSpatialSpec()) + fadeIn(
+                                    motionScheme.defaultEffectsSpec()
+                                ),
+                                exit = shrinkVertically(motionScheme.fastSpatialSpec()) + fadeOut(
+                                    motionScheme.defaultEffectsSpec()
+                                ),
+                            ) {
+                                Column {
+                                    (rememberedSubDecks ?: emptyList()).forEach { subDeck ->
+                                        DeckItem(
+                                            deck = subDeck,
+                                            onDeckClick = { onDeckClick(subDeck) },
+                                            onExpandClick = { onExpandClick(subDeck) },
+                                            onDeckOptions = { onDeckOptions(subDeck) },
+                                            onRename = { onRename(subDeck) },
+                                            onExport = { onExport(subDeck) },
+                                            onDelete = { onDelete(subDeck) },
+                                            onRebuild = { onRebuild(subDeck) },
+                                            onEmpty = { onEmpty(subDeck) },
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -394,7 +431,10 @@ fun DeckPickerScreen(
         }
 
         Box(
-            modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomEnd
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(end = 8.dp, bottom = 32.dp),
+            contentAlignment = Alignment.BottomEnd
         ) {
             FloatingActionButtonMenu(
                 expanded = fabMenuExpanded,
@@ -466,6 +506,7 @@ fun DeckPickerScreen(
                     text = { Text(text = stringResource(R.string.add_card)) },
                 )
             }
+
         }
     }
 }
