@@ -1,7 +1,9 @@
 package com.ichi2.anki.ui.compose.theme
 
 import android.os.Build
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -12,6 +14,7 @@ import com.ichi2.anki.ui.compose.AppShapes
 import com.ichi2.anki.ui.compose.AppTypography
 import com.ichi2.themes.Themes
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AnkiDroidTheme(
     content: @Composable () -> Unit
@@ -36,6 +39,7 @@ fun AnkiDroidTheme(
         colorScheme = colorScheme,
         typography = AppTypography,
         shapes = AppShapes,
+        motionScheme = MotionScheme.expressive(),
         content = content
     )
 }
