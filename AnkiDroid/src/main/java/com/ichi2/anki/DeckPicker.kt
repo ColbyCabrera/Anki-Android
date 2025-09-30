@@ -26,7 +26,6 @@
 package com.ichi2.anki
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.Configuration
@@ -40,7 +39,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.TextView
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultCallback
@@ -127,7 +125,6 @@ import com.ichi2.anki.InitialActivity.StartupFailure.DiskFull
 import com.ichi2.anki.InitialActivity.StartupFailure.FutureAnkidroidVersion
 import com.ichi2.anki.InitialActivity.StartupFailure.SDCardNotMounted
 import com.ichi2.anki.InitialActivity.StartupFailure.WebviewFailed
-import com.ichi2.anki.IntentHandler.Companion.intentToReviewDeckFromShortcuts
 import com.ichi2.anki.analytics.UsageAnalytics
 import com.ichi2.anki.android.input.ShortcutGroup
 import com.ichi2.anki.android.input.shortcut
@@ -167,7 +164,6 @@ import com.ichi2.anki.export.ExportDialogFragment
 import com.ichi2.anki.introduction.CollectionPermissionScreenLauncher
 import com.ichi2.anki.introduction.hasCollectionStoragePermissions
 import com.ichi2.anki.libanki.DeckId
-import com.ichi2.anki.libanki.Decks
 import com.ichi2.anki.libanki.exception.ConfirmModSchemaException
 import com.ichi2.anki.libanki.sched.DeckNode
 import com.ichi2.anki.libanki.undoAvailable
@@ -196,7 +192,6 @@ import com.ichi2.anki.worker.SyncWorker
 import com.ichi2.anki.worker.UniqueWorkNames
 import com.ichi2.compat.CompatHelper.Companion.getSerializableCompat
 import com.ichi2.ui.BadgeDrawableBuilder
-import com.ichi2.utils.AdaptionUtil
 import com.ichi2.utils.ClipboardUtil.IMPORT_MIME_TYPES
 import com.ichi2.utils.ImportUtils
 import com.ichi2.utils.ImportUtils.ImportResult
@@ -247,9 +242,9 @@ private fun DeckPicker.deckPickerPainter(): Painter? {
 /**
  * The current entry point for AnkiDroid. Displays decks, allowing users to study. Many other functions.
  *
- * On a tablet, this is a fragmented view, with [StudyOptionsFragment] to the right: [loadStudyOptionsFragment]
+ * On a tablet, this is a fragmented view, with study options to the right.
  *
- * Often used as navigation to: [Reviewer], [NoteEditorFragment] (adding notes), [StudyOptionsFragment] [SharedDecksDownloadFragment]
+ * Often used as navigation to: [Reviewer], [NoteEditorFragment] (adding notes), [SharedDecksDownloadFragment]
  *
  * Responsibilities:
  * * Setup/upgrades of the application: [handleStartup]
@@ -258,16 +253,16 @@ private fun DeckPicker.deckPickerPainter(): Painter? {
  *   * Allows users to study the decks
  *   * Displays deck progress
  *   * A long press opens a menu allowing modification of the deck
- *   * Filtering decks (if more than 10) [toolbarSearchView]
+ *   * Filtering decks (if more than 10)
  * * Controlling syncs
- *   * A user may [pull down][pullToSyncWrapper] on the 'tree view' to sync
+ *   * A user may pull down on the 'tree view' to sync
  *   * A [button][updateSyncIconFromState] which relies on [SyncIconState] to display whether a sync is needed
  *   * Blocks the UI and displays sync progress when syncing
  * * Displaying 'General' AnkiDroid options: backups, import, 'check media' etc...
  *   * General handler for error/global dialogs (search for 'as DeckPicker')
  *   * Such as import: [ImportDialogListener]
- * * A Floating Action Button [floatingActionMenu] allowing the user to quickly add notes/cards.
- * * A custom image as a background can be added: [applyDeckPickerBackground]
+ * * A Floating Action Button allowing the user to quickly add notes/cards.
+ * * A custom image as a background can be added.
  */
 @KotlinCleanup("lots to do")
 @NeedsTest("If the collection has been created, the app intro is not displayed")
@@ -361,15 +356,6 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
         },
     )
 
-    private val exitAndSyncBackCallback = object : OnBackPressedCallback(enabled = true) {
-        override fun handleOnBackPressed() {
-            lifecycleScope.launch {
-                automaticSync(runInBackground = true)
-                finish()
-            }
-        }
-    }
-
     private inner class DeckPickerActivityResultCallback(
         private val callback: (result: ActivityResult) -> Unit,
     ) : ActivityResultCallback<ActivityResult> {
@@ -448,7 +434,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                     Timber.d("Custom study created")
                     updateDeckList()
                     if (!fragmented) {
-                        openStudyOptionsActivity(false)
+                        openStudyOptionsActivity()
                     }
                 }
 
@@ -751,10 +737,9 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                         }
                                     }
 
-                                    DeckSelectionType.SHOW_STUDY_OPTIONS -> {
-                                        if (!fragmented) {
-                                            openStudyOptionsActivity(false)
-                                        }
+                                DeckSelectionType.SHOW_STUDY_OPTIONS -> {
+                                    if (!fragmented) {
+                                        openStudyOptionsActivity()
                                     }
 
                                     DeckSelectionType.SKIP_STUDY_OPTIONS -> {
@@ -1617,7 +1602,6 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
     /**
      * Perform the following tasks:
      * Automatic backup
-     * loadStudyOptionsFragment() if tablet
      * Automatic sync
      */
     private fun onFinishedStartup() {
@@ -1725,7 +1709,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                     val notetypes = getColUnsafe.notetypes
                     for (noteType in notetypes.all()) {
                         val css = noteType.css
-                        @Suppress("SpellCheckingInspection") if (css.contains("font-familiy")) {
+                        if (css.contains("font-familiy")) {
                             noteType.css = css.replace("font-familiy", "font-family")
                             notetypes.save(noteType)
                         }
@@ -2037,9 +2021,9 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
         startActivity(intent)
     }
 
-    private fun openStudyOptionsActivity(withDeckOptions: Boolean) {
+    private fun openStudyOptionsActivity() {
         val intent = Intent(this, StudyOptionsComposeActivity::class.java)
-        intent.putExtra("withDeckOptions", withDeckOptions)
+        intent.putExtra("withDeckOptions", false)
         reviewLauncher.launch(intent)
     }
 
@@ -2175,22 +2159,6 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
         reviewLauncher.launch(intent)
     }
 
-    private fun createSubDeckDialog(did: DeckId) {
-        val createDeckDialog = CreateDeckDialog(
-            this@DeckPicker,
-            R.string.create_subdeck,
-            CreateDeckDialog.DeckDialogType.SUB_DECK,
-            did,
-        )
-        createDeckDialog.onNewDeckCreated = {
-            // a deck was created
-            dismissAllDialogFragments()
-            viewModel.updateDeckList()
-            invalidateOptionsMenu()
-        }
-        createDeckDialog.showDialog()
-    }
-
     override val shortcuts
         get() = ShortcutGroup(
             listOfNotNull(
@@ -2254,10 +2222,6 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
         // For automatic syncing
         // 10 minutes in milliseconds..
         private const val AUTOMATIC_SYNC_MINIMAL_INTERVAL_IN_MINUTES: Long = 10
-        private const val SWIPE_TO_SYNC_TRIGGER_DISTANCE = 400
-
-        private const val PREF_DECK_PICKER_PANE_WEIGHT = "deckPickerPaneWeight"
-        private const val PREF_STUDY_OPTIONS_PANE_WEIGHT = "studyOptionsPaneWeight"
     }
 
     override fun opExecuted(
