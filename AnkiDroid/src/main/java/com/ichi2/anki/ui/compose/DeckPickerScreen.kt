@@ -61,6 +61,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.motionScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
@@ -237,9 +238,9 @@ fun DeckPickerContent(
                             )
                             // Render the sub-decks
                             AnimatedVisibility(
-                                visible = rootDeck.isExpanded,
-                                enter = expandVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessLow)),
-                                exit = shrinkVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessLow))
+                                visible = !rootDeck.collapsed,
+                                enter = expandVertically(animationSpec = motionScheme.defaultSpatialSpec()),
+                                exit = shrinkVertically(animationSpec = motionScheme.defaultSpatialSpec()),
                             ) {
                                 Column {
                                     groupedDecks[rootDeck]?.forEach { subDeck ->
