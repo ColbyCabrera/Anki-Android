@@ -32,7 +32,6 @@ import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.database.SQLException
 import android.graphics.PixelFormat
-import android.net.Uri
 import android.os.Bundle
 import android.os.Message
 import android.text.util.Linkify
@@ -61,6 +60,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -87,12 +91,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback
 import androidx.core.content.edit
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
+import androidx.core.net.toUri
 import androidx.core.os.bundleOf
 import androidx.core.util.component1
 import androidx.core.util.component2
@@ -199,7 +205,6 @@ import com.ichi2.utils.cancelable
 import com.ichi2.utils.checkBoxPrompt
 import com.ichi2.utils.checkWebviewVersion
 import com.ichi2.utils.customView
-import com.ichi2.utils.dp
 import com.ichi2.utils.message
 import com.ichi2.utils.negativeButton
 import com.ichi2.utils.positiveButton
@@ -217,7 +222,7 @@ import net.ankiweb.rsdroid.exceptions.BackendNetworkException
 import org.json.JSONException
 import timber.log.Timber
 import java.io.File
-import androidx.core.net.toUri
+import com.ichi2.utils.dp as viewDp
 
 @Composable
 private fun DeckPicker.deckPickerPainter(): Painter? {
@@ -479,9 +484,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
             val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
             data class DrawerItem(
-                val icon: Int,
-                @StringRes val labelResId: Int,
-                val action: (() -> Unit)? = null
+                val icon: Int, @StringRes val labelResId: Int, val action: (() -> Unit)? = null
             )
 
             val items = listOf(
@@ -501,8 +504,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                     startActivity(Intent(this@DeckPicker, HelpActivity::class.java))
                 },
                 DrawerItem(R.drawable.ic_support_ankidroid, R.string.help_title_support_ankidroid) {
-                    val uri =
-                        "https://github.com/ankidroid/Anki-Android/wiki/Contributing".toUri()
+                    val uri = "https://github.com/ankidroid/Anki-Android/wiki/Contributing".toUri()
                     startActivity(Intent(Intent.ACTION_VIEW, uri))
                 },
             )
@@ -537,8 +539,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                 buriedRev = buriedReview,
                                 totalNewCards = sched.totalNewForCurrentDeck(),
                                 totalCards = decks.cardCount(
-                                    currentFocusedDeck,
-                                    includeSubdecks = true
+                                    currentFocusedDeck, includeSubdecks = true
                                 ),
                                 isFiltered = deck.isFiltered,
                                 haveBuried = sched.haveBuried(),
@@ -573,8 +574,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                             onClick = {
                                 selectedNavigationItem = 3; startActivity(
                                 Intent(
-                                    this@DeckPicker,
-                                    PreferencesActivity::class.java
+                                    this@DeckPicker, PreferencesActivity::class.java
                                 )
                             )
                             },
@@ -624,18 +624,23 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                 }
             } else {
                 ModalNavigationDrawer(
-                    drawerState = drawerState,
-                    drawerContent = {
+                    drawerState = drawerState, drawerContent = {
                         ModalDrawerSheet {
                             Column(
-                                Modifier.verticalScroll(rememberScrollState())
+                                Modifier
+                                    .verticalScroll(rememberScrollState())
                                     .padding(WindowInsets.statusBars.asPaddingValues())
                                     .padding(NavigationDrawerItemDefaults.ItemPadding)
                             ) {
                                 Spacer(Modifier.height(12.dp))
                                 items.forEachIndexed { index, item ->
                                     NavigationDrawerItem(
-                                        icon = { Icon(painterResource(item.icon), contentDescription = null) },
+                                        icon = {
+                                        Icon(
+                                            painterResource(item.icon),
+                                            contentDescription = null
+                                        )
+                                    },
                                         label = { Text(stringResource(item.labelResId)) },
                                         selected = selectedNavigationItem == index,
                                         onClick = {
@@ -650,8 +655,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                 }
                             }
                         }
-                    }
-                ) {
+                    }) {
                     AnkiDroidApp(
                         fragmented = fragmented,
                         decks = deckList.data,
@@ -965,9 +969,9 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
             title(R.string.directory_inaccessible)
             customView(
                 contentView,
-                paddingTop = 16.dp.toPx(this@DeckPicker),
-                paddingStart = 32.dp.toPx(this@DeckPicker),
-                paddingEnd = 32.dp.toPx(this@DeckPicker),
+                paddingTop = 16.viewDp.toPx(this@DeckPicker),
+                paddingStart = 32.viewDp.toPx(this@DeckPicker),
+                paddingEnd = 32.viewDp.toPx(this@DeckPicker),
             )
             positiveButton(R.string.open_settings) {
                 val settingsIntent =
@@ -2045,8 +2049,8 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
     ) {
         // This code should not be reachable with lower versions
         val shortcut = ShortcutInfoCompat.Builder(this, did.toString()).setIntent(
-                intentToReviewDeckFromShortcuts(context, did),
-            ).setIcon(IconCompat.createWithResource(context, R.mipmap.ic_launcher))
+            intentToReviewDeckFromShortcuts(context, did),
+        ).setIcon(IconCompat.createWithResource(context, R.mipmap.ic_launcher))
             .setShortLabel(Decks.basename(getColUnsafe.decks.name(did)))
             .setLongLabel(getColUnsafe.decks.name(did)).build()
         try {
