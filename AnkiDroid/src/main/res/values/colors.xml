@@ -20,6 +20,8 @@
     <color name="white">#ffffff</color>
     <color name="black">#000000</color>
     <color name="semi_transparent_black">#80000000</color>
+    <color name="statusBarScrim">#33000000</color>
+
 
     <color name="answer_buttons_highlight_color">#66FFFFFF</color>
     <color name="whiteboard_eraser">#80808080</color>
@@ -150,4 +152,3 @@
     <color name="drag_divider_color">#1A90FF</color>
     <color name="divider_handle_color">#4D4D4D</color>
 </resources>
-

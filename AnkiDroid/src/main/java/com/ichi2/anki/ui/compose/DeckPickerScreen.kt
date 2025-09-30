@@ -26,6 +26,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -129,6 +130,7 @@ fun DeckPickerContent(
     backgroundImage: Painter?,
     listState: LazyListState,
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
     onDeckClick: (DisplayDeckNode) -> Unit,
     onExpandClick: (DisplayDeckNode) -> Unit,
     onDeckOptions: (DisplayDeckNode) -> Unit,
@@ -184,7 +186,9 @@ fun DeckPickerContent(
                 }
             }) {
             LazyColumn(
-                modifier = Modifier.fillMaxSize(), state = listState
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = contentPadding, 
+                state = listState
             ) {
                 // Group decks by their parent
                 val groupedDecks = mutableMapOf<DisplayDeckNode, MutableList<DisplayDeckNode>>()
@@ -455,6 +459,7 @@ fun DeckPickerScreen(
                     text = { Text(text = stringResource(R.string.new_dynamic_deck)) },
                 )
             }
+
         }
     }
 }
