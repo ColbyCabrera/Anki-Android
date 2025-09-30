@@ -5,8 +5,8 @@
     <string name="rebuild">Rebuild</string>
     <string name="empty_cards_action">Empty</string>
     <string name="deck_options">Deck options</string>
-    <string name="add_note">Add Card</string>
-    <string name="get_shared">Get Shared</string>
+    <string name="add_card">Add card</string>
+    <string name="get_shared">Get shared decks</string>
     <string name="search_decks">Search decks</string>
     <string name="close">Close</string>
     <string name="more_options">More options</string>

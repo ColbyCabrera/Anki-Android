@@ -383,8 +383,7 @@ fun DeckPickerScreen(
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
-                        onClick = { fabMenuExpanded = false }
-                    )
+                        onClick = { fabMenuExpanded = false })
             )
         }
         BackHandler(fabMenuExpanded) { fabMenuExpanded = false }
@@ -397,8 +396,7 @@ fun DeckPickerScreen(
         }
 
         Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.BottomEnd
+            modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomEnd
         ) {
             FloatingActionButtonMenu(
                 expanded = fabMenuExpanded,
@@ -435,16 +433,6 @@ fun DeckPickerScreen(
                 },
             ) {
                 FloatingActionButtonMenuItem(
-                    onClick = onMenuItemClick(onAddNote),
-                    icon = { Icon(Icons.AutoMirrored.Filled.NoteAdd, contentDescription = null) },
-                    text = { Text(text = stringResource(R.string.add_note)) },
-                )
-                FloatingActionButtonMenuItem(
-                    onClick = onMenuItemClick(onAddDeck),
-                    icon = { Icon(Icons.Filled.CreateNewFolder, contentDescription = null) },
-                    text = { Text(text = stringResource(R.string.new_deck)) },
-                )
-                FloatingActionButtonMenuItem(
                     onClick = onMenuItemClick(onAddSharedDeck),
                     icon = { Icon(Icons.Filled.Download, contentDescription = null) },
                     text = { Text(text = stringResource(R.string.get_shared)) },
@@ -453,6 +441,16 @@ fun DeckPickerScreen(
                     onClick = onMenuItemClick(onAddFilteredDeck),
                     icon = { Icon(Icons.Filled.FilterAlt, contentDescription = null) },
                     text = { Text(text = stringResource(R.string.new_dynamic_deck)) },
+                )
+                FloatingActionButtonMenuItem(
+                    onClick = onMenuItemClick(onAddDeck),
+                    icon = { Icon(Icons.Filled.CreateNewFolder, contentDescription = null) },
+                    text = { Text(text = stringResource(R.string.new_deck)) },
+                )
+                FloatingActionButtonMenuItem(
+                    onClick = onMenuItemClick(onAddNote),
+                    icon = { Icon(Icons.AutoMirrored.Filled.NoteAdd, contentDescription = null) },
+                    text = { Text(text = stringResource(R.string.add_card)) },
                 )
             }
         }
