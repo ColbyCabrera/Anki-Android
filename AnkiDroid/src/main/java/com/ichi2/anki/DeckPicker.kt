@@ -1002,7 +1002,10 @@ open class DeckPicker :
                 SyncStatusResponse.Required.NO_CHANGES -> SyncIconState.Normal
                 SyncStatusResponse.Required.NORMAL_SYNC -> SyncIconState.PendingChanges
                 SyncStatusResponse.Required.FULL_SYNC -> SyncIconState.OneWay
-                SyncStatusResponse.Required.UNRECOGNIZED, null -> TODO("unexpected required response")
+                SyncStatusResponse.Required.UNRECOGNIZED -> {
+                    Timber.w("Unexpected sync status response: UNRECOGNIZED. Defaulting to Normal.")
+                    SyncIconState.Normal
+                }
             }
         } catch (_: BackendNetworkException) {
             SyncIconState.Normal
