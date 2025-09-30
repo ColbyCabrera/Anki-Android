@@ -401,7 +401,9 @@ fun DeckPickerScreen(
         }
 
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(end = 8.dp, bottom = 32.dp),
             contentAlignment = Alignment.BottomEnd
         ) {
             FloatingActionButtonMenu(
