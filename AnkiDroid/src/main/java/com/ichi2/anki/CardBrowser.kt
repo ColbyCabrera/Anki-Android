@@ -113,7 +113,7 @@ import timber.log.Timber
 // The class is only 'open' due to testing
 @KotlinCleanup("scan through this class and add attributes - in process")
 open class CardBrowser :
-    NavigationDrawerActivity(),
+    AnkiActivity(),
     DeckDropDownAdapter.SubtitleProvider,
     DeckSelectionListener,
     TagsDialogListener,
@@ -317,7 +317,6 @@ open class CardBrowser :
         val launchOptions = intent?.toCardBrowserLaunchOptions() // must be called after super.onCreate()
 
         setContentView(layout)
-        initNavigationDrawer()
 
         noteEditorFrame = findViewById(R.id.note_editor_frame)
 
@@ -787,7 +786,6 @@ open class CardBrowser :
 
     override fun onResume() {
         super.onResume()
-        selectNavigationItem(R.id.nav_browser)
         searchView?.post {
             hideKeyboard()
         }
@@ -937,13 +935,6 @@ open class CardBrowser :
         }
     }
 
-    override fun onNavigationPressed() {
-        if (viewModel.isInMultiSelectMode) {
-            viewModel.endMultiSelectMode(SingleSelectCause.NavigateBack)
-        } else {
-            super.onNavigationPressed()
-        }
-    }
 
     private fun refreshMenuItems() {
         previewItem?.isVisible = !fragmented && viewModel.rowCount > 0

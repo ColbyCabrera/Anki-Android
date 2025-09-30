@@ -56,6 +56,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -102,6 +105,7 @@ import com.ichi2.anki.common.time.TimeManager
 import com.ichi2.anki.common.utils.annotation.KotlinCleanup
 import com.ichi2.anki.deckpicker.BackgroundImage
 import com.ichi2.anki.deckpicker.DeckPickerViewModel
+import com.ichi2.anki.deckpicker.AppNavigationDrawer
 import com.ichi2.anki.deckpicker.DeckPickerViewModel.AnkiDroidEnvironment
 import com.ichi2.anki.deckpicker.DeckPickerViewModel.FlattenedDeckList
 import com.ichi2.anki.deckpicker.DeckPickerViewModel.StartupResponse
@@ -447,6 +451,7 @@ open class DeckPicker :
         setContent {
             val snackbarHostState = remember { SnackbarHostState() }
             val coroutineScope = rememberCoroutineScope()
+            val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
             val deckList by viewModel.flowOfDeckList.collectAsState(
                 initial = FlattenedDeckList(emptyList(), false),
             )
@@ -496,46 +501,65 @@ open class DeckPicker :
                 }
             }
 
-            AnkiDroidApp(
-                fragmented = fragmented,
-                decks = deckList.data,
-                isRefreshing = isRefreshing,
-                onRefresh = { sync() },
-                searchQuery = searchQuery,
-                onSearchQueryChanged = {
-                    searchQuery = it
-                    viewModel.updateDeckFilter(it)
-                },
-                backgroundImage = deckPickerPainter(),
-                onDeckClick = { deck ->
-                    viewModel.onDeckSelected(
-                        deck.did,
-                        DeckSelectionType.DEFAULT,
-                    )
-                },
-                onExpandClick = { deck -> viewModel.toggleDeckExpand(deck.did) },
-                onAddNote = { addNote() },
-                onAddDeck = { showCreateDeckDialog() },
-                onAddSharedDeck = { openAnkiWebSharedDecks() },
-                onAddFilteredDeck = { showCreateFilteredDeckDialog() },
-                onDeckOptions = { deck -> viewModel.openDeckOptions(deck.did) },
-                onRename = { deck -> renameDeckDialog(deck.did) },
-                onExport = { deck -> exportDeck(deck.did) },
-                onDelete = { deck -> deleteDeck(deck.did) },
-                onRebuild = { deck -> rebuildFiltered(deck.did) },
-                onEmpty = { deck -> emptyFiltered(deck.did) },
-                onNavigationIconClick = { /* TODO: Implement Compose navigation drawer */ },
-                studyOptionsData = studyOptionsData,
-                onStartStudy = { openReviewer() },
-                onRebuildDeck = { deckId -> rebuildFiltered(deckId) },
-                onEmptyDeck = { deckId -> emptyFiltered(deckId) },
-                onCustomStudy = { deckId -> showCustomStudyDialog(deckId) },
-                onDeckOptionsItemSelected = { deckId -> viewModel.openDeckOptions(deckId) },
-                onUnbury = { deckId -> viewModel.unburyDeck(deckId) },
-                requestSearchFocus = requestSearchFocus,
-                onSearchFocusRequested = { requestSearchFocus = false },
-                snackbarHostState = snackbarHostState,
-            )
+            ModalNavigationDrawer(
+                drawerState = drawerState,
+                drawerContent = {
+                    AppNavigationDrawer(drawerState = drawerState) {
+                        coroutineScope.launch {
+                            drawerState.close()
+                        }
+                    }
+                }
+            ) {
+                AnkiDroidApp(
+                    fragmented = fragmented,
+                    decks = deckList.data,
+                    isRefreshing = isRefreshing,
+                    onRefresh = { sync() },
+                    searchQuery = searchQuery,
+                    onSearchQueryChanged = {
+                        searchQuery = it
+                        viewModel.updateDeckFilter(it)
+                    },
+                    backgroundImage = deckPickerPainter(),
+                    onDeckClick = { deck ->
+                        viewModel.onDeckSelected(
+                            deck.did,
+                            DeckSelectionType.DEFAULT,
+                        )
+                    },
+                    onExpandClick = { deck -> viewModel.toggleDeckExpand(deck.did) },
+                    onAddNote = { addNote() },
+                    onAddDeck = { showCreateDeckDialog() },
+                    onAddSharedDeck = { openAnkiWebSharedDecks() },
+                    onAddFilteredDeck = { showCreateFilteredDeckDialog() },
+                    onDeckOptions = { deck -> viewModel.openDeckOptions(deck.did) },
+                    onRename = { deck -> renameDeckDialog(deck.did) },
+                    onExport = { deck -> exportDeck(deck.did) },
+                    onDelete = { deck -> deleteDeck(deck.did) },
+                    onRebuild = { deck -> rebuildFiltered(deck.did) },
+                    onEmpty = { deck -> emptyFiltered(deck.did) },
+                    onNavigationIconClick = {
+                        coroutineScope.launch {
+                            if (drawerState.isClosed) {
+                                drawerState.open()
+                            } else {
+                                drawerState.close()
+                            }
+                        }
+                    },
+                    studyOptionsData = studyOptionsData,
+                    onStartStudy = { openReviewer() },
+                    onRebuildDeck = { deckId -> rebuildFiltered(deckId) },
+                    onEmptyDeck = { deckId -> emptyFiltered(deckId) },
+                    onCustomStudy = { deckId -> showCustomStudyDialog(deckId) },
+                    onDeckOptionsItemSelected = { deckId -> viewModel.openDeckOptions(deckId) },
+                    onUnbury = { deckId -> viewModel.unburyDeck(deckId) },
+                    requestSearchFocus = requestSearchFocus,
+                    onSearchFocusRequested = { requestSearchFocus = false },
+                    snackbarHostState = snackbarHostState,
+                )
+            }
 
             LaunchedEffect(Unit) {
                 viewModel.deckDeletedNotification.flowWithLifecycle(lifecycle).collect {

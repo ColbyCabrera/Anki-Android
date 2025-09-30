@@ -184,7 +184,7 @@ import java.util.function.Function
 import kotlin.math.abs
 
 abstract class AbstractFlashcardViewer :
-    NavigationDrawerActivity(),
+    AnkiActivity(),
     ViewerCommand.CommandProcessor,
     TagsDialogListener,
     WhiteboardMultiTouchMethods,
@@ -567,7 +567,6 @@ abstract class AbstractFlashcardViewer :
         // Make ACTION_PROCESS_TEXT for in-app searching possible on > Android 4.0
         delegate.isHandleNativeActionModesEnabled = true
 
-        initNavigationDrawer()
         previousAnswerIndicator = PreviousAnswerIndicator(findViewById(R.id.chosen_answer))
         shortAnimDuration = resources.getInteger(android.R.integer.config_shortAnimTime)
         gestureDetectorImpl = LinkDetectingGestureDetector()
@@ -631,7 +630,6 @@ abstract class AbstractFlashcardViewer :
         }
         // Reset the activity title
         updateActionBar()
-        selectNavigationItem(-1)
         refreshIfRequired(isResuming = true)
     }
 
