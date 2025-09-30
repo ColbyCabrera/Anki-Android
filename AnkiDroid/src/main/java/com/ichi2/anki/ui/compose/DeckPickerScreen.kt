@@ -18,8 +18,13 @@
 package com.ichi2.anki.ui.compose
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -57,6 +62,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.motionScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
@@ -234,19 +240,43 @@ fun DeckPickerContent(
                                 onRebuild = { onRebuild(rootDeck) },
                                 onEmpty = { onEmpty(rootDeck) },
                             )
-                            // Render the sub-decks
-                            groupedDecks[rootDeck]?.forEach { subDeck ->
-                                DeckItem(
-                                    deck = subDeck,
-                                    onDeckClick = { onDeckClick(subDeck) },
-                                    onExpandClick = { onExpandClick(subDeck) },
-                                    onDeckOptions = { onDeckOptions(subDeck) },
-                                    onRename = { onRename(subDeck) },
-                                    onExport = { onExport(subDeck) },
-                                    onDelete = { onDelete(subDeck) },
-                                    onRebuild = { onRebuild(subDeck) },
-                                    onEmpty = { onEmpty(subDeck) },
+
+                            // Create a remembered state for sub-decks to handle exit animation correctly
+                            val subDecks = groupedDecks[rootDeck]
+                            var rememberedSubDecks by remember {
+                                mutableStateOf<List<DisplayDeckNode>?>(
+                                    null
                                 )
+                            }
+                            if (!rootDeck.collapsed) {
+                                rememberedSubDecks = subDecks
+                            }
+
+                            // Render the sub-decks
+                            AnimatedVisibility(
+                                visible = !rootDeck.collapsed,
+                                enter = expandVertically(motionScheme.defaultSpatialSpec()) + fadeIn(
+                                    motionScheme.defaultEffectsSpec()
+                                ),
+                                exit = shrinkVertically(motionScheme.fastSpatialSpec()) + fadeOut(
+                                    motionScheme.defaultEffectsSpec()
+                                ),
+                            ) {
+                                Column {
+                                    (rememberedSubDecks ?: emptyList()).forEach { subDeck ->
+                                        DeckItem(
+                                            deck = subDeck,
+                                            onDeckClick = { onDeckClick(subDeck) },
+                                            onExpandClick = { onExpandClick(subDeck) },
+                                            onDeckOptions = { onDeckOptions(subDeck) },
+                                            onRename = { onRename(subDeck) },
+                                            onExport = { onExport(subDeck) },
+                                            onDelete = { onDelete(subDeck) },
+                                            onRebuild = { onRebuild(subDeck) },
+                                            onEmpty = { onEmpty(subDeck) },
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -387,9 +417,7 @@ fun DeckPickerScreen(
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
-                        onClick = { fabMenuExpanded = false }
-                    )
-            )
+                        onClick = { fabMenuExpanded = false }))
         }
         BackHandler(fabMenuExpanded) { fabMenuExpanded = false }
 
