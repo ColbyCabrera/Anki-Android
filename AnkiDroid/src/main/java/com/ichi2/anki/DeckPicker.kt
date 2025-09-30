@@ -67,10 +67,12 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
+import androidx.compose.material3.NavigationDrawerItemDefaults.colors
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.SnackbarHostState
@@ -505,8 +507,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                         startActivity(Intent(this@DeckPicker, HelpActivity::class.java))
                     },
                     DrawerItem(
-                        R.drawable.ic_support_ankidroid,
-                        R.string.help_title_support_ankidroid
+                        R.drawable.ic_support_ankidroid, R.string.help_title_support_ankidroid
                     ) {
                         val uri =
                             "https://github.com/ankidroid/Anki-Android/wiki/Contributing".toUri()
@@ -576,22 +577,17 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                 onClick = { selectedNavigationItem = 2; sync() },
                                 icon = { Icon(Icons.Filled.Sync, contentDescription = "Sync") },
                                 label = { Text("Sync") })
-                            NavigationRailItem(
-                                selected = selectedNavigationItem == 3,
-                                onClick = {
-                                    selectedNavigationItem = 3; startActivity(
-                                    Intent(
-                                        this@DeckPicker, PreferencesActivity::class.java
-                                    )
+                            NavigationRailItem(selected = selectedNavigationItem == 3, onClick = {
+                                selectedNavigationItem = 3; startActivity(
+                                Intent(
+                                    this@DeckPicker, PreferencesActivity::class.java
                                 )
-                                },
-                                icon = {
-                                    Icon(
-                                        Icons.Filled.Settings,
-                                        contentDescription = "Settings"
-                                    )
-                                },
-                                label = { Text("Settings") })
+                            )
+                            }, icon = {
+                                Icon(
+                                    Icons.Filled.Settings, contentDescription = "Settings"
+                                )
+                            }, label = { Text("Settings") })
                         }
                         AnkiDroidApp(
                             fragmented = fragmented,
@@ -637,7 +633,10 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                 } else {
                     ModalNavigationDrawer(
                         drawerState = drawerState, drawerContent = {
-                            ModalDrawerSheet {
+                            ModalDrawerSheet(
+                                drawerContainerColor = MaterialTheme.colorScheme.surface,
+                                drawerContentColor = MaterialTheme.colorScheme.onSurface
+                            ) {
                                 Column(
                                     Modifier
                                         .verticalScroll(rememberScrollState())
@@ -647,12 +646,19 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                     Spacer(Modifier.height(12.dp))
                                     items.forEachIndexed { index, item ->
                                         NavigationDrawerItem(
+                                            colors = colors(
+                                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                                selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                unselectedTextColor = MaterialTheme.colorScheme.onSurface,
+                                                unselectedIconColor = MaterialTheme.colorScheme.onSurface,
+                                            ),
                                             icon = {
-                                            Icon(
-                                                painterResource(item.icon),
-                                                contentDescription = null
-                                            )
-                                        },
+                                                Icon(
+                                                    painterResource(item.icon),
+                                                    contentDescription = null
+                                                )
+                                            },
                                             label = { Text(stringResource(item.labelResId)) },
                                             selected = selectedNavigationItem == index,
                                             onClick = {
