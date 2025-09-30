@@ -44,12 +44,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.CreateNewFolder
 import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
@@ -98,6 +95,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -473,24 +471,39 @@ fun DeckPickerScreen(
                 },
             ) {
                 FloatingActionButtonMenuItem(
-                    onClick = onMenuItemClick(onAddNote),
-                    icon = { Icon(Icons.AutoMirrored.Filled.NoteAdd, contentDescription = null) },
-                    text = { Text(text = stringResource(R.string.add_note)) },
-                )
-                FloatingActionButtonMenuItem(
-                    onClick = onMenuItemClick(onAddDeck),
-                    icon = { Icon(Icons.Filled.CreateNewFolder, contentDescription = null) },
-                    text = { Text(text = stringResource(R.string.new_deck)) },
-                )
-                FloatingActionButtonMenuItem(
                     onClick = onMenuItemClick(onAddSharedDeck),
                     icon = { Icon(Icons.Filled.Download, contentDescription = null) },
                     text = { Text(text = stringResource(R.string.get_shared)) },
                 )
                 FloatingActionButtonMenuItem(
                     onClick = onMenuItemClick(onAddFilteredDeck),
-                    icon = { Icon(Icons.Filled.FilterAlt, contentDescription = null) },
+                    icon = {
+                        Icon(
+                            painterResource(id = R.drawable.ic_add_filtered_deck),
+                            contentDescription = null
+                        )
+                    },
                     text = { Text(text = stringResource(R.string.new_dynamic_deck)) },
+                )
+                FloatingActionButtonMenuItem(
+                    onClick = onMenuItemClick(onAddDeck),
+                    icon = {
+                        Icon(
+                            painterResource(id = R.drawable.ic_add_deck_filled),
+                            contentDescription = null
+                        )
+                    },
+                    text = { Text(text = stringResource(R.string.new_deck)) },
+                )
+                FloatingActionButtonMenuItem(
+                    onClick = onMenuItemClick(onAddNote),
+                    icon = {
+                        Icon(
+                            painterResource(id = R.drawable.ic_add_note),
+                            contentDescription = null
+                        )
+                    },
+                    text = { Text(text = stringResource(R.string.add_card)) },
                 )
             }
 

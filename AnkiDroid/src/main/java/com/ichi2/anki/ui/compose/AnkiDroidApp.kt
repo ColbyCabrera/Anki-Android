@@ -354,7 +354,7 @@ fun AnkiDroidApp(
                             onDismissRequest = { isFabMenuOpen = false },
                         ) {
                             DropdownMenuItem(
-                                text = { Text(stringResource(R.string.add_note)) },
+                                text = { Text(stringResource(R.string.add_card)) },
                                 onClick = {
                                     onAddNote()
                                     isFabMenuOpen = false
