@@ -72,6 +72,9 @@ import androidx.compose.ui.unit.sp
 import com.ichi2.anki.R
 import com.ichi2.anki.deckpicker.DisplayDeckNode
 
+private val FabPaddingEnd = 8.dp
+private val FabPaddingBottom = 32.dp
+
 // Define Expressive Typography
 val AppTypography = Typography(
     displayLarge = TextStyle(
@@ -351,7 +354,7 @@ fun AnkiDroidApp(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(end = 16.dp, bottom = 16.dp),
+                    .padding(end = FabPaddingEnd, bottom = FabPaddingBottom),
                 contentAlignment = Alignment.BottomEnd
             ) {
                 ExpandableFab(

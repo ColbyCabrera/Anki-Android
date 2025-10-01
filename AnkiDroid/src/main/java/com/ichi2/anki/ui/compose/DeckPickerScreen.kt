@@ -92,6 +92,8 @@ import com.ichi2.anki.deckpicker.DisplayDeckNode
 
 private val expandedDeckCardRadius = 24.dp
 private val collapsedDeckCardRadius = 70.dp
+private val FabPaddingEnd = 8.dp
+private val FabPaddingBottom = 32.dp
 
 private class MorphShape(
     private val morph: Morph, private val percentage: Float
@@ -391,7 +393,7 @@ fun DeckPickerScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(end = 16.dp, bottom = 16.dp),
+                .padding(end = FabPaddingEnd, bottom = FabPaddingBottom),
             contentAlignment = Alignment.BottomEnd
         ) {
             ExpandableFab(
@@ -416,6 +418,7 @@ fun DeckPickerContentPreview() {
         onRefresh = {},
         backgroundImage = null,
         onDeckClick = {},
+        .
         onExpandClick = {},
         onDeckOptions = {},
         onRename = {},
