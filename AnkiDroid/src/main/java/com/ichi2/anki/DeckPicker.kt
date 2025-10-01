@@ -64,6 +64,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
@@ -628,14 +629,17 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                 ) {
                                     Spacer(Modifier.height(12.dp))
                                     items.forEachIndexed { index, item ->
+                                        if (item.labelResId == R.string.settings) {
+                                            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+                                        }
                                         NavigationDrawerItem(
                                             colors = colors(
-                                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                            selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            unselectedTextColor = MaterialTheme.colorScheme.onSurface,
-                                            unselectedIconColor = MaterialTheme.colorScheme.onSurface,
-                                        ),
+                                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                                selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                unselectedTextColor = MaterialTheme.colorScheme.onSurface,
+                                                unselectedIconColor = MaterialTheme.colorScheme.onSurface,
+                                            ),
                                             icon = {
                                                 Icon(
                                                     painterResource(item.icon),
@@ -647,7 +651,8 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                             onClick = {
                                                 selectedNavigationItem = index
                                                 item.action?.invoke()
-                                            })
+                                            }
+                                        )
                                     }
                                 }
                             }
