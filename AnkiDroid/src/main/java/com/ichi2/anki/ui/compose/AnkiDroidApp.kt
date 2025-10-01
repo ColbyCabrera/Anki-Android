@@ -57,7 +57,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.painter.Painter
@@ -71,9 +70,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ichi2.anki.R
 import com.ichi2.anki.deckpicker.DisplayDeckNode
-
-private val FabPaddingEnd = 8.dp
-private val FabPaddingBottom = 32.dp
 
 // Define Expressive Typography
 val AppTypography = Typography(
@@ -351,12 +347,7 @@ fun AnkiDroidApp(
             }
             Scrim(
                 visible = fabMenuExpanded, onDismiss = { fabMenuExpanded = false })
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(end = FabPaddingEnd, bottom = FabPaddingBottom),
-                contentAlignment = Alignment.BottomEnd
-            ) {
+            ExpandableFabContainer {
                 ExpandableFab(
                     expanded = fabMenuExpanded,
                     onExpandedChange = { fabMenuExpanded = it },
