@@ -44,7 +44,9 @@ import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.annotation.CheckResult
+import androidx.compose.ui.platform.ComposeView
 import androidx.annotation.DrawableRes
 import androidx.annotation.IntDef
 import androidx.annotation.VisibleForTesting
@@ -223,6 +225,8 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
 
     private val flagItemIds = mutableSetOf<Int>()
 
+    private val viewModel: ReviewerViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         if (showedActivityFailedScreen(savedInstanceState)) {
             return
@@ -238,6 +242,18 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
         if (!ensureStoragePermissions()) {
             return
         }
+
+        findViewById<ComposeView>(R.id.compose_reviewer).setContent {
+            com.ichi2.anki.ui.compose.theme.AnkiDroidTheme {
+                com.ichi2.anki.reviewer.compose.ReviewerContent(viewModel)
+            }
+        }
+
+        // Hide the old views that are replaced by Compose
+        findViewById<View>(R.id.flashcard).visibility = View.GONE
+        findViewById<View>(R.id.touch_layer).visibility = View.GONE
+        findViewById<View>(R.id.bottom_area_layout).visibility = View.GONE
+
         colorPalette = findViewById(R.id.whiteboard_editor)
         answerTimer = AnswerTimer(findViewById(R.id.card_time))
         textBarNew = findViewById(R.id.new_number)
