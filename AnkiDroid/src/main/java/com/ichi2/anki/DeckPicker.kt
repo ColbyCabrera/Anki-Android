@@ -50,16 +50,15 @@ import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -387,6 +386,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
     // ----------------------------------------------------------------------------
 
     /** Called when the activity is first created.  */
+    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     @Throws(SQLException::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         if (showedActivityFailedScreen(savedInstanceState)) {
@@ -612,7 +612,16 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                         .padding(WindowInsets.statusBars.asPaddingValues())
                                         .padding(NavigationDrawerItemDefaults.ItemPadding)
                                 ) {
-                                    Spacer(Modifier.height(12.dp))
+                                    Text(
+                                        "AnkiDroid",
+                                        style = MaterialTheme.typography.titleLargeEmphasized,
+                                        modifier = Modifier.padding(
+                                            top = 0.dp,
+                                            start = 8.dp,
+                                            end= 0.dp,
+                                            bottom = 24.dp,
+                                        )
+                                    )
                                     items.forEachIndexed { index, item ->
                                         if (item.labelResId == R.string.settings) {
                                             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
