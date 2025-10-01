@@ -26,7 +26,6 @@
 package com.ichi2.anki
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.Configuration
@@ -57,7 +56,6 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -96,9 +94,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback
 import androidx.core.content.edit
-import androidx.core.content.pm.ShortcutInfoCompat
-import androidx.core.content.pm.ShortcutManagerCompat
-import androidx.core.graphics.drawable.IconCompat
 import androidx.core.net.toUri
 import androidx.core.os.bundleOf
 import androidx.core.util.component1
@@ -127,7 +122,6 @@ import com.ichi2.anki.InitialActivity.StartupFailure.DiskFull
 import com.ichi2.anki.InitialActivity.StartupFailure.FutureAnkidroidVersion
 import com.ichi2.anki.InitialActivity.StartupFailure.SDCardNotMounted
 import com.ichi2.anki.InitialActivity.StartupFailure.WebviewFailed
-import com.ichi2.anki.IntentHandler.Companion.intentToReviewDeckFromShortcuts
 import com.ichi2.anki.analytics.UsageAnalytics
 import com.ichi2.anki.android.input.ShortcutGroup
 import com.ichi2.anki.android.input.shortcut
@@ -167,7 +161,6 @@ import com.ichi2.anki.export.ExportDialogFragment
 import com.ichi2.anki.introduction.CollectionPermissionScreenLauncher
 import com.ichi2.anki.introduction.hasCollectionStoragePermissions
 import com.ichi2.anki.libanki.DeckId
-import com.ichi2.anki.libanki.Decks
 import com.ichi2.anki.libanki.exception.ConfirmModSchemaException
 import com.ichi2.anki.libanki.sched.DeckNode
 import com.ichi2.anki.libanki.undoAvailable
@@ -196,7 +189,6 @@ import com.ichi2.anki.worker.SyncWorker
 import com.ichi2.anki.worker.UniqueWorkNames
 import com.ichi2.compat.CompatHelper.Companion.getSerializableCompat
 import com.ichi2.ui.BadgeDrawableBuilder
-import com.ichi2.utils.AdaptionUtil
 import com.ichi2.utils.ClipboardUtil.IMPORT_MIME_TYPES
 import com.ichi2.utils.ImportUtils
 import com.ichi2.utils.ImportUtils.ImportResult
@@ -638,12 +630,12 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                     items.forEachIndexed { index, item ->
                                         NavigationDrawerItem(
                                             colors = colors(
-                                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                                selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                                selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                                unselectedTextColor = MaterialTheme.colorScheme.onSurface,
-                                                unselectedIconColor = MaterialTheme.colorScheme.onSurface,
-                                            ),
+                                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                            selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            unselectedTextColor = MaterialTheme.colorScheme.onSurface,
+                                            unselectedIconColor = MaterialTheme.colorScheme.onSurface,
+                                        ),
                                             icon = {
                                                 Icon(
                                                     painterResource(item.icon),
@@ -1715,7 +1707,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                     val notetypes = getColUnsafe.notetypes
                     for (noteType in notetypes.all()) {
                         val css = noteType.css
-                        @Suppress("SpellCheckingInspection") if (css.contains("font-familiy")) {
+                        if (css.contains("font-familiy")) {
                             noteType.css = css.replace("font-familiy", "font-family")
                             notetypes.save(noteType)
                         }
@@ -2043,45 +2035,6 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
 
     fun exportDeck(did: DeckId) {
         ExportDialogFragment.newInstance(did).show(supportFragmentManager, "exportOptions")
-    }
-
-    private fun createIcon(
-        context: Context,
-        did: DeckId,
-    ) {
-        // This code should not be reachable with lower versions
-        val shortcut = ShortcutInfoCompat.Builder(this, did.toString()).setIntent(
-            intentToReviewDeckFromShortcuts(context, did),
-        ).setIcon(IconCompat.createWithResource(context, R.mipmap.ic_launcher))
-            .setShortLabel(Decks.basename(getColUnsafe.decks.name(did)))
-            .setLongLabel(getColUnsafe.decks.name(did)).build()
-        try {
-            val success = ShortcutManagerCompat.requestPinShortcut(this, shortcut, null)
-
-            // User report: "success" is true even if Vivo does not have permission
-            if (AdaptionUtil.isVivo) {
-                showThemedToast(this, getString(R.string.create_shortcut_error_vivo), false)
-            }
-            if (!success) {
-                showThemedToast(this, getString(R.string.create_shortcut_failed), false)
-            }
-        } catch (e: Exception) {
-            Timber.w(e)
-            showThemedToast(
-                this,
-                getString(R.string.create_shortcut_error, e.localizedMessage),
-                false,
-            )
-        }
-    }
-
-    /** Disables the shortcut of the deck and the children belonging to it.*/
-    @NeedsTest("ensure collapsed decks are also deleted")
-    private fun disableDeckAndChildrenShortcuts(did: DeckId) {
-        // Get the DeckId and all child DeckIds
-        val deckTreeDids = dueTree?.find(did)?.map { it.did.toString() } ?: listOf()
-        val errorMessage: CharSequence = getString(R.string.deck_shortcut_doesnt_exist)
-        ShortcutManagerCompat.disableShortcuts(this, deckTreeDids, errorMessage)
     }
 
     fun renameDeckDialog(did: DeckId) {
