@@ -9,6 +9,8 @@ import com.ichi2.anki.cardviewer.TypeAnswer
 import com.ichi2.anki.libanki.Card
 import com.ichi2.anki.libanki.sched.CurrentQueueState
 import com.ichi2.anki.preferences.sharedPrefs
+import com.ichi2.anki.servicelayer.NoteService
+import com.ichi2.anki.utils.ext.setFlagForCards
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -77,18 +79,19 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
             val (card, queue) = cardAndQueueState
             currentCard = card
             queueState = queue
+            val col = CollectionManager.getColUnsafe()
             val note = withContext(Dispatchers.IO) {
-                card.note(CollectionManager.getColUnsafe())
+                card.note(col)
             }
             withContext(Dispatchers.IO) {
-                typeAnswer.updateInfo(CollectionManager.getColUnsafe(), card, getApplication<Application>().resources)
+                typeAnswer.updateInfo(col, card, getApplication<Application>().resources)
             }
             _state.update {
                 it.copy(
                     newCount = queue.counts.new,
                     learnCount = queue.counts.lrn,
                     reviewCount = queue.counts.rev,
-                    html = card.q(),
+                    html = card.question(),
                     isAnswerShown = false,
                     showTypeInAnswer = typeAnswer.correct != null,
                     nextTimes = List(4) { "" },
@@ -96,7 +99,7 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
                     typedAnswer = "",
                     timer = "0.0s",
                     isMarked = note.hasTag("marked"),
-                    flag = card.flag
+                    flag = card.flag()
                 )
             }
             startTimer()
@@ -124,14 +127,14 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
             }
             typeAnswer.input = _state.value.typedAnswer
             val answerHtml = withContext(Dispatchers.IO) {
-                typeAnswer.filterAnswer(card.a())
+                typeAnswer.filterAnswer(card.answer())
             }
 
             _state.update {
                 it.copy(
                     html = answerHtml,
                     isAnswerShown = true,
-                    nextTimes = if (labels.size >= 4) labels else List(4) { "" }
+                    nextTimes = if (labels.isNotEmpty()) labels else List(4) { "" }
                 )
             }
         }
@@ -154,9 +157,9 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
         timerJob = viewModelScope.launch {
             var seconds = 0
             while (true) {
-                delay(1000)
+                delay(100)
                 seconds++
-                _state.update { it.copy(timer = "${seconds}s") }
+                _state.update { it.copy(timer = "${seconds / 10.0}s") }
             }
         }
     }
@@ -171,10 +174,9 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
             val card = currentCard ?: return@launch
             val col = CollectionManager.getColUnsafe()
             val note = card.note(col)
-            note.toggleTag("marked")
-            note.flush()
+            NoteService.toggleMark(note)
             withContext(Dispatchers.Main) {
-                _state.update { it.copy(isMarked = !it.isMarked) }
+                _state.update { it.copy(isMarked = !_state.value.isMarked) }
             }
         }
     }

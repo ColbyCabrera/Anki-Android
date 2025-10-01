@@ -98,6 +98,7 @@ import com.ichi2.anki.pages.AnkiServer.Companion.ANKIDROID_JS_PREFIX
 import com.ichi2.anki.pages.AnkiServer.Companion.ANKI_PREFIX
 import com.ichi2.anki.pages.CardInfoDestination
 import com.ichi2.anki.preferences.sharedPrefs
+import com.ichi2.anki.reviewer.ReviewerViewModel
 import com.ichi2.anki.reviewer.ActionButtons
 import com.ichi2.anki.reviewer.AnswerButtons.Companion.getBackgroundColors
 import com.ichi2.anki.reviewer.AnswerButtons.Companion.getTextColors

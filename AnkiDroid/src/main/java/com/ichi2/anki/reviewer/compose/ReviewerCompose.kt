@@ -16,6 +16,17 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
     val state by viewModel.state.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
+        ReviewerTopBar(
+            newCount = state.newCount,
+            learnCount = state.learnCount,
+            reviewCount = state.reviewCount,
+            timer = state.timer,
+            chosenAnswer = state.chosenAnswer,
+            isMarked = state.isMarked,
+            flag = state.flag,
+            onToggleMark = { viewModel.onEvent(ReviewerEvent.ToggleMark) },
+            onSetFlag = { viewModel.onEvent(ReviewerEvent.SetFlag(it)) }
+        )
         Box(modifier = Modifier.weight(1f)) {
             Flashcard(
                 html = state.html,

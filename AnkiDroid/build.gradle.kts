@@ -87,7 +87,9 @@ android {
 
 dependencies {
     implementation(project(":AnkiDroidApi"))
+    implementation(project(":libanki"))
     implementation(project(":lint-rules"))
+    implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
     implementation(libs.acra.mail)
     implementation(libs.acra.dialog)
     implementation(libs.acra.toast)
