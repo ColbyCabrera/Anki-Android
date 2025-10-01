@@ -388,12 +388,7 @@ fun DeckPickerScreen(
         }
         Scrim(
             visible = fabMenuExpanded, onDismiss = { onFabMenuExpandedChange(false) })
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(end = 8.dp, bottom = 32.dp),
-            contentAlignment = Alignment.BottomEnd
-        ) {
+        ExpandableFabContainer {
             ExpandableFab(
                 expanded = fabMenuExpanded,
                 onExpandedChange = onFabMenuExpandedChange,

@@ -57,7 +57,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.painter.Painter
@@ -348,12 +347,7 @@ fun AnkiDroidApp(
             }
             Scrim(
                 visible = fabMenuExpanded, onDismiss = { fabMenuExpanded = false })
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(end = 8.dp, bottom = 32.dp),
-                contentAlignment = Alignment.BottomEnd
-            ) {
+            ExpandableFabContainer {
                 ExpandableFab(
                     expanded = fabMenuExpanded,
                     onExpandedChange = { fabMenuExpanded = it },
