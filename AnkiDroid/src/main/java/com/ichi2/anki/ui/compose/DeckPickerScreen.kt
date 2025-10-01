@@ -418,7 +418,6 @@ fun DeckPickerContentPreview() {
         onRefresh = {},
         backgroundImage = null,
         onDeckClick = {},
-        .
         onExpandClick = {},
         onDeckOptions = {},
         onRename = {},
