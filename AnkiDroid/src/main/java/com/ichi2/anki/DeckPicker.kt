@@ -57,6 +57,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -438,7 +439,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                     Timber.d("Custom study created")
                     updateDeckList()
                     if (!fragmented) {
-                        openStudyOptionsActivity(false)
+                        openStudyOptionsActivity()
                     }
                 }
 
@@ -743,7 +744,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
 
                                     DeckSelectionType.SHOW_STUDY_OPTIONS -> {
                                         if (!fragmented) {
-                                            openStudyOptionsActivity(false)
+                                            openStudyOptionsActivity()
                                         }
                                     }
 
@@ -2003,8 +2004,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
     }
 
     /**
-     * Load a new studyOptionsFragment. If withDeckOptions is true, the deck options activity will
-     * be loaded on top of it. Use this flag when creating a new filtered deck to allow the user to
+     * Load a new studyOptionsFragment. Use this flag when creating a new filtered deck to allow the user to
      * modify the filter settings before being shown the fragment. The fragment itself will handle
      * rebuilding the deck if the settings change.
      */
@@ -2026,9 +2026,8 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
         startActivity(intent)
     }
 
-    private fun openStudyOptionsActivity(withDeckOptions: Boolean) {
+    private fun openStudyOptionsActivity() {
         val intent = Intent(this, StudyOptionsComposeActivity::class.java)
-        intent.putExtra("withDeckOptions", withDeckOptions)
         reviewLauncher.launch(intent)
     }
 
