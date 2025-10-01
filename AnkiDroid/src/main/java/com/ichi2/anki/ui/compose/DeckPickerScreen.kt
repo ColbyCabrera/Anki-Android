@@ -17,6 +17,7 @@
  ****************************************************************************************/
 package com.ichi2.anki.ui.compose
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.expandVertically
@@ -291,104 +292,118 @@ fun DeckPickerScreen(
     onNavigationIconClick: () -> Unit,
     searchFocusRequester: FocusRequester = FocusRequester(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    fabMenuExpanded: Boolean,
+    onFabMenuExpandedChange: (Boolean) -> Unit
 ) {
     var isSearchOpen by remember { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val listState = rememberLazyListState()
 
-    Scaffold(
-        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        snackbarHost = {
-            SnackbarHost(snackbarHostState) { data ->
-                Snackbar(
-                    snackbarData = data,
-                    containerColor = MaterialTheme.colorScheme.secondary,
-                    contentColor = MaterialTheme.colorScheme.onSecondary,
-                    actionColor = MaterialTheme.colorScheme.primary,
-                    dismissActionContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                )
-            }
-        },
-        topBar = {
-            LargeTopAppBar(
-                title = {
-                    if (!isSearchOpen) Text(
-                        stringResource(R.string.app_name),
-                        style = MaterialTheme.typography.titleLarge
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            snackbarHost = {
+                SnackbarHost(snackbarHostState) { data ->
+                    Snackbar(
+                        snackbarData = data,
+                        containerColor = MaterialTheme.colorScheme.secondary,
+                        contentColor = MaterialTheme.colorScheme.onSecondary,
+                        actionColor = MaterialTheme.colorScheme.primary,
+                        dismissActionContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
-                }, // Expressive TopAppBar Title
-                navigationIcon = {
-                    IconButton(onClick = onNavigationIconClick) {
-                        Icon(
-                            Icons.Default.Menu,
-                            contentDescription = stringResource(R.string.navigation_drawer_open)
+                }
+            },
+            topBar = {
+                LargeTopAppBar(
+                    title = {
+                        if (!isSearchOpen) Text(
+                            stringResource(R.string.app_name),
+                            style = MaterialTheme.typography.titleLarge
                         )
-                    }
-                },
-                actions = {
-                    if (isSearchOpen) {
-                        TextField(
-                            value = searchQuery,
-                            onValueChange = onSearchQueryChanged,
-                            modifier = Modifier
-                                .weight(1f)
-                                .focusRequester(searchFocusRequester),
-                            placeholder = { Text(stringResource(R.string.search_decks)) },
-                            trailingIcon = {
-                                IconButton(onClick = {
-                                    onSearchQueryChanged("")
-                                    isSearchOpen = false
-                                }) {
-                                    Icon(
-                                        Icons.Default.Close,
-                                        contentDescription = stringResource(R.string.close)
-                                    )
-                                }
-                            },
-                        )
-                    } else {
-                        IconButton(onClick = { isSearchOpen = true }) {
+                    }, // Expressive TopAppBar Title
+                    navigationIcon = {
+                        IconButton(onClick = onNavigationIconClick) {
                             Icon(
-                                Icons.Default.Search,
-                                contentDescription = stringResource(R.string.search_decks)
+                                Icons.Default.Menu,
+                                contentDescription = stringResource(R.string.navigation_drawer_open)
                             )
                         }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                ),
-                scrollBehavior = scrollBehavior,
+                    },
+                    actions = {
+                        if (isSearchOpen) {
+                            TextField(
+                                value = searchQuery,
+                                onValueChange = onSearchQueryChanged,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .focusRequester(searchFocusRequester),
+                                placeholder = { Text(stringResource(R.string.search_decks)) },
+                                trailingIcon = {
+                                    IconButton(onClick = {
+                                        onSearchQueryChanged("")
+                                        isSearchOpen = false
+                                    }) {
+                                        Icon(
+                                            Icons.Default.Close,
+                                            contentDescription = stringResource(R.string.close)
+                                        )
+                                    }
+                                },
+                            )
+                        } else {
+                            IconButton(onClick = { isSearchOpen = true }) {
+                                Icon(
+                                    Icons.Default.Search,
+                                    contentDescription = stringResource(R.string.search_decks)
+                                )
+                            }
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        scrolledContainerColor = MaterialTheme.colorScheme.surface,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    ),
+                    scrollBehavior = scrollBehavior,
+                )
+            },
+        ) { paddingValues ->
+            DeckPickerContent(
+                decks = decks,
+                isRefreshing = isRefreshing,
+                onRefresh = onRefresh,
+                backgroundImage = backgroundImage,
+                onDeckClick = onDeckClick,
+                onExpandClick = onExpandClick,
+                onDeckOptions = onDeckOptions,
+                onRename = onRename,
+                onExport = onExport,
+                onDelete = onDelete,
+                onRebuild = onRebuild,
+                onEmpty = onEmpty,
+                listState = listState,
+                modifier = Modifier.padding(paddingValues)
             )
-        },
-        floatingActionButton = {
+        }
+        Scrim(
+            visible = fabMenuExpanded, onDismiss = { onFabMenuExpandedChange(false) })
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(end = 8.dp, bottom = 32.dp),
+            contentAlignment = Alignment.BottomEnd
+        ) {
             ExpandableFab(
+                expanded = fabMenuExpanded,
+                onExpandedChange = onFabMenuExpandedChange,
                 onAddNote = onAddNote,
                 onAddDeck = onAddDeck,
                 onAddSharedDeck = onAddSharedDeck,
                 onAddFilteredDeck = onAddFilteredDeck
             )
         }
-    ) { paddingValues ->
-        DeckPickerContent(
-            decks = decks,
-            isRefreshing = isRefreshing,
-            onRefresh = onRefresh,
-            backgroundImage = backgroundImage,
-            onDeckClick = onDeckClick,
-            onExpandClick = onExpandClick,
-            onDeckOptions = onDeckOptions,
-            onRename = onRename,
-            onExport = onExport,
-            onDelete = onDelete,
-            onRebuild = onRebuild,
-            onEmpty = onEmpty,
-            listState = listState,
-            modifier = Modifier.padding(paddingValues)
-        )
+        BackHandler(fabMenuExpanded) { onFabMenuExpandedChange(false) }
     }
 }
 
@@ -434,5 +449,7 @@ fun DeckPickerScreenPreview() {
         onDelete = {},
         onRebuild = {},
         onEmpty = {},
-        onNavigationIconClick = {})
+        onNavigationIconClick = {},
+        fabMenuExpanded = false,
+        onFabMenuExpandedChange = {})
 }
