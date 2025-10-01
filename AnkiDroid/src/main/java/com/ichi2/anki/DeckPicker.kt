@@ -613,12 +613,10 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                         .padding(NavigationDrawerItemDefaults.ItemPadding)
                                 ) {
                                     Text(
-                                        "AnkiDroid",
+                                        text = stringResource(R.string.app_name),
                                         style = MaterialTheme.typography.titleLargeEmphasized,
                                         modifier = Modifier.padding(
-                                            top = 0.dp,
                                             start = 8.dp,
-                                            end= 0.dp,
                                             bottom = 24.dp,
                                         )
                                     )
