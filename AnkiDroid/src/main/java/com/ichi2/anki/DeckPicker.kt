@@ -56,6 +56,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -83,6 +84,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -622,7 +624,15 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                     )
                                     items.forEachIndexed { index, item ->
                                         if (item.labelResId == R.string.settings) {
-                                            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+                                            HorizontalDivider(
+                                                modifier = Modifier
+                                                    .padding(vertical = 12.dp)
+                                                    .clip(RoundedCornerShape(12.dp)),
+                                                thickness = 3.dp,
+                                                color = MaterialTheme.colorScheme.onSurface.copy(
+                                                    alpha = 0.1f
+                                                )
+                                            )
                                         }
                                         NavigationDrawerItem(
                                             colors = colors(
