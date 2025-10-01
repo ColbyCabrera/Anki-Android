@@ -351,7 +351,7 @@ fun AnkiDroidApp(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(end = 8.dp, bottom = 32.dp),
+                    .padding(end = 16.dp, bottom = 16.dp),
                 contentAlignment = Alignment.BottomEnd
             ) {
                 ExpandableFab(

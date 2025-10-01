@@ -79,7 +79,7 @@ fun ExpandableFab(
                 }
                 .focusRequester(focusRequester),
                 checked = expanded,
-                onCheckedChange = { onExpandedChange(!expanded) }) {
+                onCheckedChange = { onExpandedChange(it) }) {
                 val imageVector by remember {
                     derivedStateOf {
                         if (checkedProgress > 0.5f) Icons.Filled.Close else Icons.Filled.Add
