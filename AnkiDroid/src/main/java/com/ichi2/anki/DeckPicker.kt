@@ -551,34 +551,22 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                 if (fragmented) {
                     Row {
                         NavigationRail {
-                            NavigationRailItem(
-                                selected = selectedNavigationItem == 0,
-                                onClick = {
-                                    selectedNavigationItem = 0 /* TODO: Navigate to decks */
-                                },
-                                icon = { Icon(Icons.Filled.Home, contentDescription = "Decks") },
-                                label = { Text("Decks") })
-                            NavigationRailItem(
-                                selected = selectedNavigationItem == 1,
-                                onClick = { selectedNavigationItem = 1; addNote() },
-                                icon = { Icon(Icons.Filled.Add, contentDescription = "Add Note") },
-                                label = { Text("Add Note") })
-                            NavigationRailItem(
-                                selected = selectedNavigationItem == 2,
-                                onClick = { selectedNavigationItem = 2; sync() },
-                                icon = { Icon(Icons.Filled.Sync, contentDescription = "Sync") },
-                                label = { Text("Sync") })
-                            NavigationRailItem(selected = selectedNavigationItem == 3, onClick = {
-                                selectedNavigationItem = 3; startActivity(
-                                Intent(
-                                    this@DeckPicker, PreferencesActivity::class.java
+                            items.forEachIndexed { index, item ->
+                                NavigationRailItem(
+                                    icon = {
+                                        Icon(
+                                            painter = painterResource(item.icon),
+                                            contentDescription = stringResource(item.labelResId),
+                                        )
+                                    },
+                                    label = { Text(stringResource(item.labelResId)) },
+                                    selected = selectedNavigationItem == index,
+                                    onClick = {
+                                        selectedNavigationItem = index
+                                        item.action?.invoke()
+                                    },
                                 )
-                            )
-                            }, icon = {
-                                Icon(
-                                    Icons.Filled.Settings, contentDescription = "Settings"
-                                )
-                            }, label = { Text("Settings") })
+                            }
                         }
                         AnkiDroidApp(
                             fragmented = fragmented,
