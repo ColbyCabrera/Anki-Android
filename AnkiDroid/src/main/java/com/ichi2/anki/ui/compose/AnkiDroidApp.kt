@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
@@ -37,7 +36,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
@@ -161,7 +159,6 @@ fun AnkiDroidApp(
     if (fragmented) {
         var isSearchOpen by remember { mutableStateOf(false) }
         var isStudyOptionsMenuOpen by remember { mutableStateOf(false) }
-        var isFabMenuOpen by remember { mutableStateOf(false) }
         val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
         val listState = rememberLazyListState()
         // Tablet layout
@@ -313,45 +310,12 @@ fun AnkiDroidApp(
                 )
             },
             floatingActionButton = {
-                FloatingActionButton(
-                    onClick = { isFabMenuOpen = !isFabMenuOpen },
-                    shape = MaterialTheme.shapes.extraLarge, // Apply expressive shape
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add))
-                    DropdownMenu(
-                        expanded = isFabMenuOpen,
-                        onDismissRequest = { isFabMenuOpen = false },
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.add_card)) },
-                            onClick = {
-                                onAddNote()
-                                isFabMenuOpen = false
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.new_deck)) },
-                            onClick = {
-                                onAddDeck()
-                                isFabMenuOpen = false
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.get_shared)) },
-                            onClick = {
-                                onAddSharedDeck()
-                                isFabMenuOpen = false
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.new_dynamic_deck)) },
-                            onClick = {
-                                onAddFilteredDeck()
-                                isFabMenuOpen = false
-                            },
-                        )
-                    }
-                }
+                ExpandableFab(
+                    onAddNote = onAddNote,
+                    onAddDeck = onAddDeck,
+                    onAddSharedDeck = onAddSharedDeck,
+                    onAddFilteredDeck = onAddFilteredDeck
+                )
             },
         ) { paddingValues ->
             Row(
