@@ -108,21 +108,30 @@ fun MarkIcon(isMarked: Boolean, onToggleMark: () -> Unit) {
 @Composable
 fun FlagIcon(currentFlag: Int, onSetFlag: (Int) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
-    val flagColors = listOf(Color.Transparent, Color.Red, Color.Green, Color.Blue) // Simplified
+    val flagColors = listOf(
+        Color.Transparent, // 0: no flag
+        Color.Red,         // 1: Red
+        Color(0xFFFFA500), // 2: Orange
+        Color.Green,       // 3: Green
+        Color.Blue,        // 4: Blue
+        Color.Magenta,     // 5: Pink
+        Color.Cyan,        // 6: Turquoise
+        Color(0xFF9400D3)  // 7: Purple
+    )
 
     Box {
         IconButton(onClick = { expanded = true }) {
             Icon(
                 imageVector = Icons.Default.Flag,
                 contentDescription = "Set Flag",
-                tint = if (currentFlag > 0) flagColors[currentFlag] else Color.Gray
+                tint = if (currentFlag in flagColors.indices && currentFlag != 0) flagColors[currentFlag] else Color.Gray
             )
         }
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            (0..3).forEach { flag ->
+            (0..7).forEach { flag ->
                 DropdownMenuItem(
                     text = { Text("Flag $flag") },
                     onClick = {

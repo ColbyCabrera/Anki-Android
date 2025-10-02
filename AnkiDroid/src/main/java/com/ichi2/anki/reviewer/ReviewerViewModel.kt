@@ -79,30 +79,35 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
             val (card, queue) = cardAndQueueState
             currentCard = card
             queueState = queue
-            val col = CollectionManager.getColUnsafe()
-            val note = withContext(Dispatchers.IO) {
-                card.note(col)
-            }
             withContext(Dispatchers.IO) {
+                val col = CollectionManager.getColUnsafe()
+                val note = card.note(col)
                 typeAnswer.updateInfo(col, card, getApplication<Application>().resources)
+                val isMarked = note.hasTag("marked")
+                val showTypeInAnswer = typeAnswer.correct != null
+                val questionHtml = card.question()
+                val flag = card.flag()
+
+                withContext(Dispatchers.Main) {
+                    _state.update {
+                        it.copy(
+                            newCount = queue.counts.new,
+                            learnCount = queue.counts.lrn,
+                            reviewCount = queue.counts.rev,
+                            html = questionHtml,
+                            isAnswerShown = false,
+                            showTypeInAnswer = showTypeInAnswer,
+                            nextTimes = List(4) { "" },
+                            chosenAnswer = "",
+                            typedAnswer = "",
+                            timer = "0.0s",
+                            isMarked = isMarked,
+                            flag = flag
+                        )
+                    }
+                    startTimer()
+                }
             }
-            _state.update {
-                it.copy(
-                    newCount = queue.counts.new,
-                    learnCount = queue.counts.lrn,
-                    reviewCount = queue.counts.rev,
-                    html = card.question(),
-                    isAnswerShown = false,
-                    showTypeInAnswer = typeAnswer.correct != null,
-                    nextTimes = List(4) { "" },
-                    chosenAnswer = "",
-                    typedAnswer = "",
-                    timer = "0.0s",
-                    isMarked = note.hasTag("marked"),
-                    flag = card.flag()
-                )
-            }
-            startTimer()
         }
     }
 
@@ -130,11 +135,13 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
                 typeAnswer.filterAnswer(card.answer())
             }
 
+            val paddedLabels = (labels + List(4) { "" }).take(4)
+
             _state.update {
                 it.copy(
                     html = answerHtml,
                     isAnswerShown = true,
-                    nextTimes = if (labels.isNotEmpty()) labels else List(4) { "" }
+                    nextTimes = paddedLabels
                 )
             }
         }
