@@ -1,6 +1,8 @@
 package com.ichi2.anki.reviewer
 
 import android.app.Application
+import android.content.Intent
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import anki.scheduler.CardAnswer.Rating
@@ -20,6 +22,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 
 data class ReviewerState(
     val newCount: Int = 0,
@@ -33,7 +36,8 @@ data class ReviewerState(
     val showTypeInAnswer: Boolean = false,
     val typedAnswer: String = "",
     val isMarked: Boolean = false,
-    val flag: Int = 0
+    val flag: Int = 0,
+    val mediaDirectory: File? = null
 )
 
 sealed class ReviewerEvent {
@@ -43,6 +47,7 @@ sealed class ReviewerEvent {
     data class OnTypedAnswerChanged(val newText: String) : ReviewerEvent()
     object ToggleMark : ReviewerEvent()
     data class SetFlag(val flag: Int) : ReviewerEvent()
+    data class LinkClicked(val url: String) : ReviewerEvent()
 }
 
 class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
@@ -62,7 +67,14 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
             is ReviewerEvent.OnTypedAnswerChanged -> onTypedAnswerChanged(event.newText)
             is ReviewerEvent.ToggleMark -> toggleMark()
             is ReviewerEvent.SetFlag -> setFlag(event.flag)
+            is ReviewerEvent.LinkClicked -> linkClicked(event.url)
         }
+    }
+
+    private fun linkClicked(url: String) {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        getApplication<Application>().startActivity(intent)
     }
 
     private fun onTypedAnswerChanged(newText: String) {
@@ -87,6 +99,7 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
                 val showTypeInAnswer = typeAnswer.correct != null
                 val questionHtml = card.question()
                 val flag = card.flag()
+                val mediaDirectory = col.media.dir()
 
                 withContext(Dispatchers.Main) {
                     _state.update {
@@ -102,7 +115,8 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
                             typedAnswer = "",
                             timer = "0.0s",
                             isMarked = isMarked,
-                            flag = flag
+                            flag = flag,
+                            mediaDirectory = mediaDirectory
                         )
                     }
                     startTimer()

@@ -98,7 +98,6 @@ import com.ichi2.anki.pages.AnkiServer.Companion.ANKIDROID_JS_PREFIX
 import com.ichi2.anki.pages.AnkiServer.Companion.ANKI_PREFIX
 import com.ichi2.anki.pages.CardInfoDestination
 import com.ichi2.anki.preferences.sharedPrefs
-import com.ichi2.anki.reviewer.ReviewerViewModel
 import com.ichi2.anki.reviewer.ActionButtons
 import com.ichi2.anki.reviewer.AnswerButtons.Companion.getBackgroundColors
 import com.ichi2.anki.reviewer.AnswerButtons.Companion.getTextColors
@@ -114,6 +113,7 @@ import com.ichi2.anki.reviewer.FullScreenMode.Companion.fromPreference
 import com.ichi2.anki.reviewer.FullScreenMode.Companion.isFullScreenReview
 import com.ichi2.anki.reviewer.ReviewerBinding
 import com.ichi2.anki.reviewer.ReviewerUi
+import com.ichi2.anki.reviewer.ReviewerViewModel
 import com.ichi2.anki.scheduling.ForgetCardsDialog
 import com.ichi2.anki.scheduling.SetDueDateDialog
 import com.ichi2.anki.scheduling.registerOnForgetHandler
