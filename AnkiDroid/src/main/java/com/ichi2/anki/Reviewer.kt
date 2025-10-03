@@ -32,6 +32,7 @@ import android.os.Message
 import android.os.Parcelable
 import android.view.Menu
 import android.view.MenuItem
+import android.view.MotionEvent
 import android.view.SubMenu
 import android.view.View
 import android.webkit.WebView
