@@ -238,7 +238,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
 
         composeView.setContent {
             com.ichi2.anki.ui.compose.theme.AnkiDroidTheme {
-                com.ichi2.anki.reviewer.compose.ReviewerContent(viewModel)
+                com.ichi2.anki.reviewer.compose.ReviewerScreen(viewModel)
             }
         }
     }

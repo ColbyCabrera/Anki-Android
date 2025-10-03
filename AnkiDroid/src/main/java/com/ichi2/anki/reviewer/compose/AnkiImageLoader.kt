@@ -21,7 +21,7 @@ import android.content.Context
 import coil.ImageLoader
 import java.io.File
 
-fun AnkiImageLoader(
+fun ankiImageLoader(
     context: Context,
     mediaDirectory: File?
 ): ImageLoader {

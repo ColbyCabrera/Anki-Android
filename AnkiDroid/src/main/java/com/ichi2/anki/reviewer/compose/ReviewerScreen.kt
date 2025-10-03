@@ -49,7 +49,7 @@ fun ReviewerScreen(
             html = state.html,
             onTap = { viewModel.onEvent(ReviewerEvent.ShowAnswer) },
             onLinkClick = { url -> viewModel.onEvent(ReviewerEvent.LinkClicked(url)) },
-            imageLoader = AnkiImageLoader(context, state.mediaDirectory),
+            imageLoader = ankiImageLoader(context, state.mediaDirectory),
             mediaDirectory = state.mediaDirectory
         )
     }

@@ -32,7 +32,7 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
     val imageLoader = remember(state.mediaDirectory) {
-        AnkiImageLoader(context, state.mediaDirectory)
+        ankiImageLoader(context, state.mediaDirectory)
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
