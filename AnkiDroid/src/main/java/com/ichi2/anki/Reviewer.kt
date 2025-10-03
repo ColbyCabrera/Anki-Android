@@ -30,8 +30,6 @@ import android.os.Handler
 import android.os.Looper
 import android.os.Message
 import android.os.Parcelable
-import android.text.SpannableString
-import android.text.style.UnderlineSpan
 import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
@@ -39,14 +37,10 @@ import android.view.MotionEvent
 import android.view.SubMenu
 import android.view.View
 import android.webkit.WebView
-import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.RelativeLayout
-import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.CheckResult
-import androidx.compose.ui.platform.ComposeView
 import androidx.annotation.DrawableRes
 import androidx.annotation.IntDef
 import androidx.annotation.VisibleForTesting
@@ -55,12 +49,12 @@ import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.widget.ThemeUtils
 import androidx.appcompat.widget.Toolbar
 import androidx.appcompat.widget.TooltipCompat
+import androidx.compose.ui.platform.ComposeView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.isGone
 import androidx.lifecycle.lifecycleScope
 import anki.frontend.SetSchedulingStatesRequest
 import anki.scheduler.CardAnswer.Rating
@@ -81,7 +75,6 @@ import com.ichi2.anki.libanki.Collection
 import com.ichi2.anki.libanki.QueueType
 import com.ichi2.anki.libanki.redoAvailable
 import com.ichi2.anki.libanki.redoLabel
-import com.ichi2.anki.libanki.sched.Counts
 import com.ichi2.anki.libanki.sched.CurrentQueueState
 import com.ichi2.anki.libanki.undoAvailable
 import com.ichi2.anki.libanki.undoLabel
@@ -105,7 +98,6 @@ import com.ichi2.anki.reviewer.AutomaticAnswerAction
 import com.ichi2.anki.reviewer.Binding
 import com.ichi2.anki.reviewer.BindingMap
 import com.ichi2.anki.reviewer.BindingProcessor
-import com.ichi2.anki.reviewer.CardMarker
 import com.ichi2.anki.reviewer.CardSide
 import com.ichi2.anki.reviewer.FullScreenMode
 import com.ichi2.anki.reviewer.FullScreenMode.Companion.fromPreference
@@ -115,7 +107,6 @@ import com.ichi2.anki.reviewer.ReviewerUi
 import com.ichi2.anki.reviewer.ReviewerViewModel
 import com.ichi2.anki.scheduling.ForgetCardsDialog
 import com.ichi2.anki.scheduling.SetDueDateDialog
-import com.ichi2.anki.scheduling.registerOnForgetHandler
 import com.ichi2.anki.servicelayer.NoteService.isMarked
 import com.ichi2.anki.servicelayer.NoteService.toggleMark
 import com.ichi2.anki.settings.Prefs
@@ -125,8 +116,6 @@ import com.ichi2.anki.ui.windows.reviewer.ReviewerFragment
 import com.ichi2.anki.utils.ext.flag
 import com.ichi2.anki.utils.ext.setUserFlagForCards
 import com.ichi2.anki.utils.ext.showDialogFragment
-import com.ichi2.anki.utils.navBarNeedsScrim
-import com.ichi2.anki.utils.remainingTime
 import com.ichi2.themes.Themes
 import com.ichi2.themes.Themes.currentTheme
 import com.ichi2.utils.HandlerUtils.executeFunctionWithDelay
@@ -477,16 +466,14 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
                             whiteboard!!.saveWhiteboard(TimeManager.time).path
                         showSnackbar(
                             getString(
-                                R.string.white_board_image_saved,
-                                savedWhiteboardFileName
+                                R.string.white_board_image_saved, savedWhiteboardFileName
                             ), Snackbar.LENGTH_SHORT
                         )
                     } catch (e: Exception) {
                         Timber.w(e)
                         showSnackbar(
                             getString(
-                                R.string.white_board_image_save_failed,
-                                e.localizedMessage
+                                R.string.white_board_image_save_failed, e.localizedMessage
                             ), Snackbar.LENGTH_SHORT
                         )
                     }
@@ -524,9 +511,8 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
             R.id.action_open_deck_options -> {
                 Timber.i("Reviewer:: Opening deck options")
                 val i = com.ichi2.anki.pages.DeckOptions.getIntent(
-                        this,
-                        getColUnsafe.decks.current().id
-                    )
+                    this, getColUnsafe.decks.current().id
+                )
                 deckOptionsLauncher.launch(i)
             }
 
@@ -796,15 +782,13 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
     protected fun openCardInfo(fromGesture: Gesture? = null) {
         if (currentCard == null) {
             showSnackbar(
-                getString(R.string.multimedia_editor_something_wrong),
-                Snackbar.LENGTH_SHORT
+                getString(R.string.multimedia_editor_something_wrong), Snackbar.LENGTH_SHORT
             )
             return
         }
         Timber.i("opening card info")
         val intent = CardInfoDestination(
-            currentCard!!.id,
-            TR.cardStatsCurrentCard(TR.decksStudy())
+            currentCard!!.id, TR.cardStatsCurrentCard(TR.decksStudy())
         ).toIntent(this)
         val animation = getAnimationTransitionFromGesture(fromGesture)
         intent.putExtra(FINISH_ANIMATION_EXTRA, getInverseTransition(animation) as Parcelable)
@@ -843,8 +827,8 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
         }
 
         // Anki Desktop Translations
-        menu.findItem(R.id.action_reschedule_card).title = TR.actionsSetDueDate()
-            .toSentenceCase(this, R.string.sentence_set_due_date)
+        menu.findItem(R.id.action_reschedule_card).title =
+            TR.actionsSetDueDate().toSentenceCase(this, R.string.sentence_set_due_date)
 
         // Undo button
         @DrawableRes val undoIconId: Int
@@ -1112,10 +1096,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
         return preferences
     }
 
-    override fun updateActionBar() {
-        super.updateActionBar()
-    }
-
     override fun fillFlashcard() {
         super.fillFlashcard()
         if (!isDisplayingAnswer && showWhiteboard && whiteboard != null) {
@@ -1238,20 +1218,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
     override fun onStateMutationError() {
         super.onStateMutationError()
         statesMutated = true
-    }
-
-    override fun initLayout() {
-        super.initLayout()
-        if (!showRemainingCardCount) {
-        }
-
-        // can't move this into onCreate due to mTopBarLayout
-        val mark = topBarLayout!!.findViewById<ImageView>(R.id.mark_icon)
-        val flag = topBarLayout!!.findViewById<ImageView>(R.id.flag_icon)
-    }
-
-    override fun switchTopBarVisibility(visible: Int) {
-        super.switchTopBarVisibility(visible)
     }
 
     override fun onStop() {
@@ -1517,12 +1483,12 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
 
     private fun hideViewWithAnimation(view: View) {
         view.animate().alpha(0f).setDuration(ANIMATION_DURATION.toLong()).setListener(
-                object : AnimatorListenerAdapter() {
-                    override fun onAnimationEnd(animation: Animator) {
-                        view.visibility = View.GONE
-                    }
-                },
-            )
+            object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    view.visibility = View.GONE
+                }
+            },
+        )
     }
 
     @Suppress("deprecation") // #9332: UI Visibility -> Insets
@@ -1554,11 +1520,10 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
     private fun getSchedulingStatesWithContext(): ByteArray {
         val state = queueState ?: return ByteArray(0)
         return state.schedulingStatesWithContext().toBuilder().mergeStates(
-                state.states.toBuilder().mergeCurrent(
-                        state.states.current.toBuilder().setCustomData(state.topCard.customData)
-                            .build(),
-                    ).build(),
-            ).build().toByteArray()
+            state.states.toBuilder().mergeCurrent(
+                state.states.current.toBuilder().setCustomData(state.topCard.customData).build(),
+            ).build(),
+        ).build().toByteArray()
     }
 
     private fun setSchedulingStates(bytes: ByteArray): ByteArray {
@@ -1588,10 +1553,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
         }
         whiteboard.onPaintColorChangeListener = OnPaintColorChangeListener { color ->
             MetaDB.storeWhiteboardPenColor(
-                this@Reviewer,
-                parentDid,
-                !currentTheme.isNightMode,
-                color
+                this@Reviewer, parentDid, !currentTheme.isNightMode, color
             )
         }
         whiteboard.setOnTouchListener { v: View, event: MotionEvent? ->

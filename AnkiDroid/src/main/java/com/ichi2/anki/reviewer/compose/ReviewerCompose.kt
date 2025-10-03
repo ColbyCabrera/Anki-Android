@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import anki.scheduler.CardAnswer.Rating
 import com.ichi2.anki.reviewer.ReviewerEvent
 import com.ichi2.anki.reviewer.ReviewerViewModel
@@ -30,7 +29,6 @@ import com.ichi2.anki.reviewer.ReviewerViewModel
 @Composable
 fun ReviewerContent(viewModel: ReviewerViewModel) {
     val state by viewModel.state.collectAsState()
-    val context = LocalContext.current
 
     Column(modifier = Modifier.fillMaxSize()) {
         ReviewerTopBar(
