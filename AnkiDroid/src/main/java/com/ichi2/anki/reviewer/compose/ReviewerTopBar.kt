@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2024 Brayan Oliveira <brayandso.dev@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package com.ichi2.anki.reviewer.compose
 
 import androidx.compose.foundation.layout.Box
@@ -13,6 +28,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor // Import LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -48,31 +64,25 @@ fun ReviewerTopBar(
     modifier: Modifier = Modifier
 ) {
     CenterAlignedTopAppBar(
-        modifier = modifier,
-        title = { Text(chosenAnswer) },
-        navigationIcon = {
-            Counts(
-                newCount = newCount,
-                learnCount = learnCount,
-                reviewCount = reviewCount,
-                modifier = Modifier.padding(start = 8.dp)
-            )
-        },
-        actions = {
-            MarkIcon(isMarked = isMarked, onToggleMark = onToggleMark)
-            FlagIcon(currentFlag = flag, onSetFlag = onSetFlag)
-            Text(
-                text = timer,
-                fontSize = 14.sp,
-                modifier = Modifier.padding(end = 8.dp)
-            )
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            titleContentColor = MaterialTheme.colorScheme.onSurface,
-            actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+        modifier = modifier, title = { Text(chosenAnswer) }, navigationIcon = {
+        Counts(
+            newCount = newCount,
+            learnCount = learnCount,
+            reviewCount = reviewCount,
+            modifier = Modifier.padding(start = 8.dp)
         )
+    }, actions = {
+        MarkIcon(isMarked = isMarked, onToggleMark = onToggleMark)
+        FlagIcon(currentFlag = flag, onSetFlag = onSetFlag)
+        Text(
+            text = timer, fontSize = 14.sp, modifier = Modifier.padding(end = 8.dp)
+        )
+    }, colors = TopAppBarDefaults.topAppBarColors(
+        containerColor = MaterialTheme.colorScheme.surface,
+        navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+    )
     )
 }
 
@@ -82,7 +92,7 @@ fun MarkIcon(isMarked: Boolean, onToggleMark: () -> Unit) {
         Icon(
             imageVector = if (isMarked) Icons.Filled.Star else Icons.Outlined.StarOutline,
             contentDescription = "Mark Note",
-            tint = if (isMarked) Color.Yellow else Color.Gray
+            tint = if (isMarked) Color.Yellow else LocalContentColor.current
         )
     }
 }
@@ -106,21 +116,16 @@ fun FlagIcon(currentFlag: Int, onSetFlag: (Int) -> Unit) {
             Icon(
                 imageVector = Icons.Default.Flag,
                 contentDescription = "Set Flag",
-                tint = if (currentFlag in flagColors.indices && currentFlag != 0) flagColors[currentFlag] else Color.Gray
+                tint = if (currentFlag in flagColors.indices && currentFlag != 0) flagColors[currentFlag] else LocalContentColor.current // Use LocalContentColor.current
             )
         }
         DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
+            expanded = expanded, onDismissRequest = { expanded = false }) {
             (0..7).forEach { flag ->
-                DropdownMenuItem(
-                    text = { Text("Flag $flag") },
-                    onClick = {
-                        onSetFlag(flag)
-                        expanded = false
-                    }
-                )
+                DropdownMenuItem(text = { Text("Flag $flag") }, onClick = {
+                    onSetFlag(flag)
+                    expanded = false
+                })
             }
         }
     }
@@ -132,19 +137,33 @@ fun Counts(newCount: Int, learnCount: Int, reviewCount: Int, modifier: Modifier 
     Row(modifier = modifier) {
         Text(
             buildAnnotatedString {
-                withStyle(style = SpanStyle(color = ankiColors.newCount, fontWeight = FontWeight.Bold)) {
+                withStyle(
+                    style = SpanStyle(
+                        color = ankiColors.newCount,
+                        fontWeight = FontWeight.Bold
+                    )
+                ) {
                     append("$newCount")
                 }
                 append(" ")
-                withStyle(style = SpanStyle(color = ankiColors.learnCount, fontWeight = FontWeight.Bold)) {
+                withStyle(
+                    style = SpanStyle(
+                        color = ankiColors.learnCount,
+                        fontWeight = FontWeight.Bold
+                    )
+                ) {
                     append("$learnCount")
                 }
                 append(" ")
-                withStyle(style = SpanStyle(color = ankiColors.reviewCount, fontWeight = FontWeight.Bold)) {
+                withStyle(
+                    style = SpanStyle(
+                        color = ankiColors.reviewCount,
+                        fontWeight = FontWeight.Bold
+                    )
+                ) {
                     append("$reviewCount")
                 }
-            },
-            fontSize = 14.sp
+            }, fontSize = 14.sp
         )
     }
 }
@@ -162,7 +181,6 @@ fun ReviewerTopBarPreview() {
             isMarked = true,
             flag = 1,
             onToggleMark = {},
-            onSetFlag = {}
-        )
+            onSetFlag = {})
     }
 }
