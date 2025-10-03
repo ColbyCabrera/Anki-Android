@@ -87,7 +87,9 @@ android {
 
 dependencies {
     implementation(project(":AnkiDroidApi"))
+    implementation(project(":libanki"))
     implementation(project(":lint-rules"))
+    implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
     implementation(libs.acra.mail)
     implementation(libs.acra.dialog)
     implementation(libs.acra.toast)
@@ -120,6 +122,7 @@ dependencies {
     implementation(libs.compose.runtime)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.ui.tooling)
+    implementation("io.coil-kt:coil-compose:2.5.0")
     implementation(libs.google.android.material)
     implementation(libs.google.code.gson)
     implementation(libs.google.dagger)

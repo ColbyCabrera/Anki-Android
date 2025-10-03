@@ -30,20 +30,15 @@ import android.os.Handler
 import android.os.Looper
 import android.os.Message
 import android.os.Parcelable
-import android.text.SpannableString
-import android.text.style.UnderlineSpan
-import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
 import android.view.MotionEvent
 import android.view.SubMenu
 import android.view.View
 import android.webkit.WebView
-import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.RelativeLayout
-import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.annotation.CheckResult
 import androidx.annotation.DrawableRes
 import androidx.annotation.IntDef
@@ -53,12 +48,12 @@ import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.widget.ThemeUtils
 import androidx.appcompat.widget.Toolbar
 import androidx.appcompat.widget.TooltipCompat
+import androidx.compose.ui.platform.ComposeView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.isGone
 import androidx.lifecycle.lifecycleScope
 import anki.frontend.SetSchedulingStatesRequest
 import anki.scheduler.CardAnswer.Rating
@@ -79,7 +74,6 @@ import com.ichi2.anki.libanki.Collection
 import com.ichi2.anki.libanki.QueueType
 import com.ichi2.anki.libanki.redoAvailable
 import com.ichi2.anki.libanki.redoLabel
-import com.ichi2.anki.libanki.sched.Counts
 import com.ichi2.anki.libanki.sched.CurrentQueueState
 import com.ichi2.anki.libanki.undoAvailable
 import com.ichi2.anki.libanki.undoLabel
@@ -99,21 +93,13 @@ import com.ichi2.anki.preferences.sharedPrefs
 import com.ichi2.anki.reviewer.ActionButtons
 import com.ichi2.anki.reviewer.AnswerButtons.Companion.getBackgroundColors
 import com.ichi2.anki.reviewer.AnswerButtons.Companion.getTextColors
-import com.ichi2.anki.reviewer.AnswerTimer
 import com.ichi2.anki.reviewer.AutomaticAnswerAction
-import com.ichi2.anki.reviewer.Binding
-import com.ichi2.anki.reviewer.BindingMap
-import com.ichi2.anki.reviewer.BindingProcessor
-import com.ichi2.anki.reviewer.CardMarker
-import com.ichi2.anki.reviewer.CardSide
-import com.ichi2.anki.reviewer.FullScreenMode
 import com.ichi2.anki.reviewer.FullScreenMode.Companion.fromPreference
 import com.ichi2.anki.reviewer.FullScreenMode.Companion.isFullScreenReview
-import com.ichi2.anki.reviewer.ReviewerBinding
 import com.ichi2.anki.reviewer.ReviewerUi
+import com.ichi2.anki.reviewer.ReviewerViewModel
 import com.ichi2.anki.scheduling.ForgetCardsDialog
 import com.ichi2.anki.scheduling.SetDueDateDialog
-import com.ichi2.anki.scheduling.registerOnForgetHandler
 import com.ichi2.anki.servicelayer.NoteService.isMarked
 import com.ichi2.anki.servicelayer.NoteService.toggleMark
 import com.ichi2.anki.settings.Prefs
@@ -123,8 +109,6 @@ import com.ichi2.anki.ui.windows.reviewer.ReviewerFragment
 import com.ichi2.anki.utils.ext.flag
 import com.ichi2.anki.utils.ext.setUserFlagForCards
 import com.ichi2.anki.utils.ext.showDialogFragment
-import com.ichi2.anki.utils.navBarNeedsScrim
-import com.ichi2.anki.utils.remainingTime
 import com.ichi2.themes.Themes
 import com.ichi2.themes.Themes.currentTheme
 import com.ichi2.utils.HandlerUtils.executeFunctionWithDelay
@@ -141,21 +125,21 @@ import com.ichi2.utils.show
 import com.ichi2.utils.tintOverflowMenuIcons
 import com.ichi2.utils.title
 import com.ichi2.widget.WidgetStatus.updateInBackground
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import kotlin.coroutines.resume
 
 @Suppress("LeakingThis")
 @NeedsTest("#14709: Timebox shouldn't appear instantly when the Reviewer is opened")
-open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
-    BindingProcessor<ReviewerBinding, ViewerCommand> {
+open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     private var queueState: CurrentQueueState? = null
     private val customSchedulingKey = TimeManager.time.intTimeMS().toString()
     private var hasDrawerSwipeConflicts = false
     private var showWhiteboard = true
     private var prefFullscreenReview = false
-    private lateinit var colorPalette: LinearLayout
     private var toggleStylus = false
     private var isEraserMode = false
 
@@ -171,17 +155,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
     // execution, or set to true immediately if the custom scheduler has not
     // been configured
     private var statesMutated = false
-
-    // TODO: Consider extracting to ViewModel
-    // Card counts
-    private var newCount: SpannableString? = null
-    private var lrnCount: SpannableString? = null
-    private var revCount: SpannableString? = null
-    private lateinit var textBarNew: TextView
-    private lateinit var textBarLearn: TextView
-    private lateinit var textBarReview: TextView
-    private lateinit var answerTimer: AnswerTimer
-    private var prefHideDueCount = false
 
     // Whiteboard
     var prefWhiteboard = false
@@ -203,18 +176,12 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
     private var eta = 0
     private var prefShowETA = false
 
-    /** Handle Mark/Flag state of cards  */
-    @VisibleForTesting
-    internal var cardMarker: CardMarker? = null
-
     // Preferences from the collection
     private var showRemainingCardCount = false
     private var stopTimerOnAnswer = false
     private val actionButtons = ActionButtons()
     private lateinit var toolbar: Toolbar
 
-    @VisibleForTesting
-    protected open lateinit var processor: BindingMap<ReviewerBinding, ViewerCommand>
 
     private val addNoteLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult(),
@@ -223,68 +190,45 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
 
     private val flagItemIds = mutableSetOf<Int>()
 
+    private val viewModel: ReviewerViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         if (showedActivityFailedScreen(savedInstanceState)) {
             return
         }
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        val root = findViewById<View>(R.id.root_layout)
-        ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
+
+        val composeView = ComposeView(this)
+        setContentView(composeView)
+
+        ViewCompat.setOnApplyWindowInsetsListener(composeView) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+
         if (!ensureStoragePermissions()) {
             return
         }
-        colorPalette = findViewById(R.id.whiteboard_editor)
-        answerTimer = AnswerTimer(findViewById(R.id.card_time))
-        textBarNew = findViewById(R.id.new_number)
-        textBarLearn = findViewById(R.id.learn_number)
-        textBarReview = findViewById(R.id.review_number)
-        toolbar = findViewById(R.id.toolbar)
-        micToolBarLayer = findViewById(R.id.mic_tool_bar_layer)
-        processor = BindingMap(sharedPrefs(), ViewerCommand.entries, this)
-        if (sharedPrefs().getString(
-                "answerButtonPosition",
-                "bottom"
-            ) == "bottom" && !navBarNeedsScrim
-        ) {
-            setNavigationBarColor(R.attr.showAnswerColor)
+
+        composeView.setContent {
+            com.ichi2.anki.ui.compose.theme.AnkiDroidTheme {
+                com.ichi2.anki.reviewer.compose.ReviewerContent(viewModel)
+            }
         }
-        if (!sharedPrefs().getBoolean("showDeckTitle", false)) {
-            // avoid showing "AnkiDroid"
-            supportActionBar?.title = ""
-        }
-        startLoadingCollection()
-        registerOnForgetHandler { listOf(currentCardId!!) }
     }
 
     override fun onPause() {
-        answerTimer.pause()
         super.onPause()
     }
 
     override fun onResume() {
-        when {
-            stopTimerOnAnswer && isDisplayingAnswer -> {}
-            else -> launchCatchingTask { answerTimer.resume() }
-        }
         super.onResume()
         if (typeAnswer?.autoFocusEditText() == true) {
             answerField?.focusWithKeyboard()
         }
     }
-
-    protected val flagToDisplay: Flag
-        get() {
-            return FlagToDisplay(
-                currentCard!!.flag,
-                actionButtons.findMenuItem(ActionButtons.RES_FLAG)?.isActionButton ?: true,
-                prefFullscreenReview,
-            ).get()
-        }
 
     override fun recreateWebView() {
         super.recreateWebView()
@@ -321,7 +265,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
         if (currentCard == null) {
             return
         }
-        cardMarker!!.displayMark(shouldDisplayMark())
     }
 
     protected open fun onFlag(
@@ -345,7 +288,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
         if (currentCard == null) {
             return
         }
-        cardMarker!!.displayFlag(flagToDisplay)
     }
 
     private fun selectDeckFromExtra() {
@@ -366,11 +308,12 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
         getColUnsafe.decks.select(did)
     }
 
-    override fun getContentViewAttr(fullscreenMode: FullScreenMode): Int = when (fullscreenMode) {
-        FullScreenMode.BUTTONS_ONLY -> R.layout.reviewer_fullscreen
-        FullScreenMode.FULLSCREEN_ALL_GONE -> R.layout.reviewer_fullscreen_noanswers
-        FullScreenMode.BUTTONS_AND_MENU -> R.layout.reviewer
-    }
+    override fun getContentViewAttr(fullscreenMode: com.ichi2.anki.reviewer.FullScreenMode): Int =
+        when (fullscreenMode) {
+            com.ichi2.anki.reviewer.FullScreenMode.BUTTONS_ONLY -> R.layout.reviewer_fullscreen
+            com.ichi2.anki.reviewer.FullScreenMode.FULLSCREEN_ALL_GONE -> R.layout.reviewer_fullscreen_noanswers
+            com.ichi2.anki.reviewer.FullScreenMode.BUTTONS_AND_MENU -> R.layout.reviewer
+        }
 
     public override fun fitsSystemWindows(): Boolean = !fullscreenMode.isFullScreenReview()
 
@@ -383,22 +326,34 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
         // Load the first card and start reviewing. Uses the answer card
         // task to load a card, but since we send null
         // as the card to answer, no card will be answered.
-        prefWhiteboard = MetaDB.getWhiteboardState(this, parentDid)
-        if (prefWhiteboard) {
-            // DEFECT: Slight inefficiency here, as we set the database using these methods
-            val whiteboardVisibility = MetaDB.getWhiteboardVisibility(this, parentDid)
-            setWhiteboardEnabledState(true)
-            setWhiteboardVisibility(whiteboardVisibility)
-            toggleStylus = MetaDB.getWhiteboardStylusState(this, parentDid)
-            whiteboard!!.toggleStylus = toggleStylus
-        }
+        lifecycleScope.launch {
+            prefWhiteboard =
+                withContext(Dispatchers.IO) { MetaDB.getWhiteboardState(this@Reviewer, parentDid) }
+            if (prefWhiteboard) {
+                // DEFECT: Slight inefficiency here, as we set the database using these methods
+                val whiteboardVisibility = withContext(Dispatchers.IO) {
+                    MetaDB.getWhiteboardVisibility(
+                        this@Reviewer,
+                        parentDid
+                    )
+                }
+                setWhiteboardEnabledState(true)
+                setWhiteboardVisibility(whiteboardVisibility)
+                toggleStylus = withContext(Dispatchers.IO) {
+                    MetaDB.getWhiteboardStylusState(
+                        this@Reviewer,
+                        parentDid
+                    )
+                }
+                whiteboard!!.toggleStylus = toggleStylus
+            }
 
-        val isMicToolbarEnabled = MetaDB.getMicToolbarState(this, parentDid)
-        if (isMicToolbarEnabled) {
-            openMicToolbar()
-        }
+            val isMicToolbarEnabled =
+                withContext(Dispatchers.IO) { MetaDB.getMicToolbarState(this@Reviewer, parentDid) }
+            if (isMicToolbarEnabled) {
+                openMicToolbar()
+            }
 
-        launchCatchingTask {
             withCol { startTimebox() }
             updateCardAndRedraw()
         }
@@ -507,16 +462,14 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
                             whiteboard!!.saveWhiteboard(TimeManager.time).path
                         showSnackbar(
                             getString(
-                                R.string.white_board_image_saved,
-                                savedWhiteboardFileName
+                                R.string.white_board_image_saved, savedWhiteboardFileName
                             ), Snackbar.LENGTH_SHORT
                         )
                     } catch (e: Exception) {
                         Timber.w(e)
                         showSnackbar(
                             getString(
-                                R.string.white_board_image_save_failed,
-                                e.localizedMessage
+                                R.string.white_board_image_save_failed, e.localizedMessage
                             ), Snackbar.LENGTH_SHORT
                         )
                     }
@@ -543,7 +496,9 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
                 Timber.i("Reviewer:: Stylus set to %b", !toggleStylus)
                 toggleStylus = !toggleStylus
                 whiteboard!!.toggleStylus = toggleStylus
-                MetaDB.storeWhiteboardStylusState(this, parentDid, toggleStylus)
+                lifecycleScope.launch(Dispatchers.IO) {
+                    MetaDB.storeWhiteboardStylusState(this@Reviewer, parentDid, toggleStylus)
+                }
                 refreshActionBar()
             }
 
@@ -554,9 +509,8 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
             R.id.action_open_deck_options -> {
                 Timber.i("Reviewer:: Opening deck options")
                 val i = com.ichi2.anki.pages.DeckOptions.getIntent(
-                        this,
-                        getColUnsafe.decks.current().id
-                    )
+                    this, getColUnsafe.decks.current().id
+                )
                 deckOptionsLauncher.launch(i)
             }
 
@@ -598,9 +552,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
         // on the enabled status
         setWhiteboardEnabledState(prefWhiteboard)
         setWhiteboardVisibility(prefWhiteboard)
-        if (!prefWhiteboard) {
-            colorPalette.visibility = View.GONE
-        }
         refreshActionBar()
     }
 
@@ -671,12 +622,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
     }
 
     public override fun changeWhiteboardPenColor() {
-        if (colorPalette.isGone) {
-            colorPalette.visibility = View.VISIBLE
-        } else {
-            colorPalette.visibility = View.GONE
-        }
-        updateWhiteboardEditorPosition()
     }
 
     override fun replayVoice() {
@@ -793,7 +738,9 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
         }
         isMicToolBarVisible = !isMicToolBarVisible
 
-        MetaDB.storeMicToolbarState(this, parentDid, isMicToolBarVisible)
+        lifecycleScope.launch(Dispatchers.IO) {
+            MetaDB.storeMicToolbarState(this@Reviewer, parentDid, isMicToolBarVisible)
+        }
 
         refreshActionBar()
     }
@@ -833,15 +780,13 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
     protected fun openCardInfo(fromGesture: Gesture? = null) {
         if (currentCard == null) {
             showSnackbar(
-                getString(R.string.multimedia_editor_something_wrong),
-                Snackbar.LENGTH_SHORT
+                getString(R.string.multimedia_editor_something_wrong), Snackbar.LENGTH_SHORT
             )
             return
         }
         Timber.i("opening card info")
         val intent = CardInfoDestination(
-            currentCard!!.id,
-            TR.cardStatsCurrentCard(TR.decksStudy())
+            currentCard!!.id, TR.cardStatsCurrentCard(TR.decksStudy())
         ).toIntent(this)
         val animation = getAnimationTransitionFromGesture(fromGesture)
         intent.putExtra(FINISH_ANIMATION_EXTRA, getInverseTransition(animation) as Parcelable)
@@ -880,8 +825,8 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
         }
 
         // Anki Desktop Translations
-        menu.findItem(R.id.action_reschedule_card).title = TR.actionsSetDueDate()
-            .toSentenceCase(this, R.string.sentence_set_due_date)
+        menu.findItem(R.id.action_reschedule_card).title =
+            TR.actionsSetDueDate().toSentenceCase(this, R.string.sentence_set_due_date)
 
         // Undo button
         @DrawableRes val undoIconId: Int
@@ -1019,7 +964,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
                 toggleStylusIcon.icon = stylusIcon
                 changePenColorIcon.isEnabled = false
                 changePenColorIcon.icon = whiteboardColorPaletteIcon
-                colorPalette.visibility = View.GONE
             }
         } else {
             toggleWhiteboardIcon.setTitle(R.string.enable_whiteboard)
@@ -1078,25 +1022,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
 
     private fun isFlagItem(menuItem: MenuItem): Boolean = flagItemIds.contains(menuItem.itemId)
 
-    override fun onKeyDown(
-        keyCode: Int,
-        event: KeyEvent,
-    ): Boolean {
-        if (answerFieldIsFocused()) {
-            return super.onKeyDown(keyCode, event)
-        }
-        if (processor.onKeyDown(event) || super.onKeyDown(keyCode, event)) {
-            return true
-        }
-        return false
-    }
-
-    override fun onGenericMotionEvent(event: MotionEvent?): Boolean {
-        if (processor.onGenericMotionEvent(event)) {
-            return true
-        }
-        return super.onGenericMotionEvent(event)
-    }
 
     override fun canAccessScheduler(): Boolean = true
 
@@ -1144,69 +1069,10 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
 
     override fun restorePreferences(): SharedPreferences {
         val preferences = super.restorePreferences()
-        prefHideDueCount = preferences.getBoolean("hideDueCount", false)
         prefShowETA = preferences.getBoolean("showETA", false)
         prefFullscreenReview = isFullScreenReview(preferences)
         actionButtons.setup(preferences)
         return preferences
-    }
-
-    override fun updateActionBar() {
-        super.updateActionBar()
-        updateScreenCounts()
-    }
-
-    private fun updateWhiteboardEditorPosition() {
-        answerButtonsPosition = this.sharedPrefs().getString("answerButtonPosition", "bottom")
-        val layoutParams: RelativeLayout.LayoutParams
-        when (answerButtonsPosition) {
-            "none", "top" -> {
-                layoutParams = colorPalette.layoutParams as RelativeLayout.LayoutParams
-                layoutParams.removeRule(RelativeLayout.ABOVE)
-                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
-                colorPalette.layoutParams = layoutParams
-            }
-
-            "bottom" -> {
-                layoutParams = colorPalette.layoutParams as RelativeLayout.LayoutParams
-                layoutParams.removeRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
-                layoutParams.addRule(RelativeLayout.ABOVE, R.id.bottom_area_layout)
-                colorPalette.layoutParams = layoutParams
-            }
-        }
-    }
-
-    private fun updateScreenCounts() {
-        val queue = queueState ?: return
-        super.updateActionBar()
-        val actionBar = supportActionBar
-        val counts = queue.counts
-        if (actionBar != null) {
-            if (prefShowETA) {
-                launchCatchingTask {
-                    eta = withCol { sched.eta(counts, false) }
-                    actionBar.subtitle = remainingTime(this@Reviewer, (eta * 60).toLong())
-                }
-            }
-        }
-        newCount = SpannableString(counts.new.toString())
-        lrnCount = SpannableString(counts.lrn.toString())
-        revCount = SpannableString(counts.rev.toString())
-        if (prefHideDueCount) {
-            revCount = SpannableString("???")
-        }
-        // if this code is run as a card is being answered, currentCard may be non-null but
-        // the queues may be empty - we can't call countIdx() in such a case
-        if (counts.count() != 0) {
-            when (queue.countsIndex) {
-                Counts.Queue.NEW -> newCount!!.setSpan(UnderlineSpan(), 0, newCount!!.length, 0)
-                Counts.Queue.LRN -> lrnCount!!.setSpan(UnderlineSpan(), 0, lrnCount!!.length, 0)
-                Counts.Queue.REV -> revCount!!.setSpan(UnderlineSpan(), 0, revCount!!.length, 0)
-            }
-        }
-        textBarNew.text = newCount
-        textBarLearn.text = lrnCount
-        textBarReview.text = revCount
     }
 
     override fun fillFlashcard() {
@@ -1286,7 +1152,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
     override fun displayCardQuestion() {
         statesMutated = false
         // show timer, if activated in the deck's preferences
-        answerTimer.setupForCard(getColUnsafe, currentCard!!)
         delayedHide(100)
         super.displayCardQuestion()
     }
@@ -1303,7 +1168,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
 
         delayedHide(100)
         if (stopTimerOnAnswer) {
-            answerTimer.pause()
+            // Nothing to do
         }
         super.displayCardAnswer()
     }
@@ -1335,30 +1200,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
         statesMutated = true
     }
 
-    override fun initLayout() {
-        super.initLayout()
-        if (!showRemainingCardCount) {
-            textBarNew.visibility = View.GONE
-            textBarLearn.visibility = View.GONE
-            textBarReview.visibility = View.GONE
-        }
-
-        // can't move this into onCreate due to mTopBarLayout
-        val mark = topBarLayout!!.findViewById<ImageView>(R.id.mark_icon)
-        val flag = topBarLayout!!.findViewById<ImageView>(R.id.flag_icon)
-        cardMarker = CardMarker(mark, flag)
-    }
-
-    override fun switchTopBarVisibility(visible: Int) {
-        super.switchTopBarVisibility(visible)
-        answerTimer.setVisibility(visible)
-        if (showRemainingCardCount) {
-            textBarNew.visibility = visible
-            textBarLearn.visibility = visible
-            textBarReview.visibility = visible
-        }
-    }
-
     override fun onStop() {
         super.onStop()
         if (!isFinishing && colIsOpenUnsafe()) {
@@ -1372,9 +1213,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
             setWhiteboardVisibility(showWhiteboard)
         }
         if (showRemainingCardCount) {
-            textBarNew.visibility = View.VISIBLE
-            textBarLearn.visibility = View.VISIBLE
-            textBarReview.visibility = View.VISIBLE
+            // Nothing to do
         }
     }
 
@@ -1572,7 +1411,9 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
 
     private fun setWhiteboardEnabledState(state: Boolean) {
         prefWhiteboard = state
-        MetaDB.storeWhiteboardState(this, parentDid, state)
+        lifecycleScope.launch(Dispatchers.IO) {
+            MetaDB.storeWhiteboardState(this@Reviewer, parentDid, state)
+        }
         if (state && whiteboard == null) {
             createWhiteboard()
         }
@@ -1602,13 +1443,13 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
             Timber.d("System UI visibility change. Visible: %b", visible)
             if (visible) {
                 showViewWithAnimation(toolbar)
-                if (fullscreenMode == FullScreenMode.FULLSCREEN_ALL_GONE) {
+                if (fullscreenMode == com.ichi2.anki.reviewer.FullScreenMode.FULLSCREEN_ALL_GONE) {
                     showViewWithAnimation(topbar)
                     showViewWithAnimation(answerButtons)
                 }
             } else {
                 hideViewWithAnimation(toolbar)
-                if (fullscreenMode == FullScreenMode.FULLSCREEN_ALL_GONE) {
+                if (fullscreenMode == com.ichi2.anki.reviewer.FullScreenMode.FULLSCREEN_ALL_GONE) {
                     hideViewWithAnimation(topbar)
                     hideViewWithAnimation(answerButtons)
                 }
@@ -1625,12 +1466,12 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
 
     private fun hideViewWithAnimation(view: View) {
         view.animate().alpha(0f).setDuration(ANIMATION_DURATION.toLong()).setListener(
-                object : AnimatorListenerAdapter() {
-                    override fun onAnimationEnd(animation: Animator) {
-                        view.visibility = View.GONE
-                    }
-                },
-            )
+            object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    view.visibility = View.GONE
+                }
+            },
+        )
     }
 
     @Suppress("deprecation") // #9332: UI Visibility -> Insets
@@ -1662,11 +1503,10 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
     private fun getSchedulingStatesWithContext(): ByteArray {
         val state = queueState ?: return ByteArray(0)
         return state.schedulingStatesWithContext().toBuilder().mergeStates(
-                state.states.toBuilder().mergeCurrent(
-                        state.states.current.toBuilder().setCustomData(state.topCard.customData)
-                            .build(),
-                    ).build(),
-            ).build().toByteArray()
+            state.states.toBuilder().mergeCurrent(
+                state.states.current.toBuilder().setCustomData(state.topCard.customData).build(),
+            ).build(),
+        ).build().toByteArray()
     }
 
     private fun setSchedulingStates(bytes: ByteArray): ByteArray {
@@ -1690,17 +1530,20 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
 
         // We use the pen color of the selected deck at the time the whiteboard is enabled.
         // This is how all other whiteboard settings are
-        val whiteboardPenColor = MetaDB.getWhiteboardPenColor(this, parentDid).fromPreferences()
-        if (whiteboardPenColor != null) {
-            whiteboard.penColor = whiteboardPenColor
+        lifecycleScope.launch {
+            val whiteboardPenColor = withContext(Dispatchers.IO) {
+                MetaDB.getWhiteboardPenColor(this@Reviewer, parentDid).fromPreferences()
+            }
+            if (whiteboardPenColor != null) {
+                whiteboard.penColor = whiteboardPenColor
+            }
         }
         whiteboard.onPaintColorChangeListener = OnPaintColorChangeListener { color ->
-            MetaDB.storeWhiteboardPenColor(
-                this@Reviewer,
-                parentDid,
-                !currentTheme.isNightMode,
-                color
-            )
+            lifecycleScope.launch(Dispatchers.IO) {
+                MetaDB.storeWhiteboardPenColor(
+                    this@Reviewer, parentDid, !currentTheme.isNightMode, color
+                )
+            }
         }
         whiteboard.setOnTouchListener { v: View, event: MotionEvent? ->
             if (event == null) return@setOnTouchListener false
@@ -1720,7 +1563,9 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
     // Show or hide the whiteboard
     private fun setWhiteboardVisibility(state: Boolean) {
         showWhiteboard = state
-        MetaDB.storeWhiteboardVisibility(this, parentDid, state)
+        lifecycleScope.launch(Dispatchers.IO) {
+            MetaDB.storeWhiteboardVisibility(this@Reviewer, parentDid, state)
+        }
         if (state) {
             whiteboard!!.visibility = View.VISIBLE
             disableDrawerSwipe()
@@ -1831,12 +1676,4 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
         }
     }
 
-    override fun processAction(
-        action: ViewerCommand,
-        binding: ReviewerBinding,
-    ): Boolean {
-        if (binding.side != CardSide.BOTH && CardSide.fromAnswer(isDisplayingAnswer) != binding.side) return false
-        val gesture = (binding.binding as? Binding.GestureInput)?.gesture
-        return executeCommand(action, gesture)
-    }
 }
