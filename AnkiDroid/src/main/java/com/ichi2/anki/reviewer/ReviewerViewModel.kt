@@ -177,11 +177,11 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
     private fun startTimer() {
         stopTimer()
         timerJob = viewModelScope.launch {
-            var seconds = 0
+            val startTime = System.currentTimeMillis()
             while (true) {
                 delay(100)
-                seconds++
-                _state.update { it.copy(timer = "${seconds / 10.0}s") }
+                val elapsedTime = System.currentTimeMillis() - startTime
+                _state.update { it.copy(timer = "${elapsedTime / 1000.0}s") }
             }
         }
     }

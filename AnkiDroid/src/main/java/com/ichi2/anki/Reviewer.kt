@@ -30,10 +30,8 @@ import android.os.Handler
 import android.os.Looper
 import android.os.Message
 import android.os.Parcelable
-import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
-import android.view.MotionEvent
 import android.view.SubMenu
 import android.view.View
 import android.webkit.WebView
@@ -95,14 +93,10 @@ import com.ichi2.anki.reviewer.ActionButtons
 import com.ichi2.anki.reviewer.AnswerButtons.Companion.getBackgroundColors
 import com.ichi2.anki.reviewer.AnswerButtons.Companion.getTextColors
 import com.ichi2.anki.reviewer.AutomaticAnswerAction
-import com.ichi2.anki.reviewer.Binding
-import com.ichi2.anki.reviewer.BindingMap
-import com.ichi2.anki.reviewer.BindingProcessor
 import com.ichi2.anki.reviewer.CardSide
 import com.ichi2.anki.reviewer.FullScreenMode
 import com.ichi2.anki.reviewer.FullScreenMode.Companion.fromPreference
 import com.ichi2.anki.reviewer.FullScreenMode.Companion.isFullScreenReview
-import com.ichi2.anki.reviewer.ReviewerBinding
 import com.ichi2.anki.reviewer.ReviewerUi
 import com.ichi2.anki.reviewer.ReviewerViewModel
 import com.ichi2.anki.scheduling.ForgetCardsDialog
@@ -139,8 +133,7 @@ import kotlin.coroutines.resume
 
 @Suppress("LeakingThis")
 @NeedsTest("#14709: Timebox shouldn't appear instantly when the Reviewer is opened")
-open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
-    BindingProcessor<ReviewerBinding, ViewerCommand> {
+open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     private var queueState: CurrentQueueState? = null
     private val customSchedulingKey = TimeManager.time.intTimeMS().toString()
     private var hasDrawerSwipeConflicts = false
@@ -188,8 +181,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
     private val actionButtons = ActionButtons()
     private lateinit var toolbar: Toolbar
 
-    @VisibleForTesting
-    protected open lateinit var processor: BindingMap<ReviewerBinding, ViewerCommand>
 
     private val addNoteLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult(),
@@ -1024,25 +1015,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
 
     private fun isFlagItem(menuItem: MenuItem): Boolean = flagItemIds.contains(menuItem.itemId)
 
-    override fun onKeyDown(
-        keyCode: Int,
-        event: KeyEvent,
-    ): Boolean {
-        if (answerFieldIsFocused()) {
-            return super.onKeyDown(keyCode, event)
-        }
-        if (processor.onKeyDown(event) || super.onKeyDown(keyCode, event)) {
-            return true
-        }
-        return false
-    }
-
-    override fun onGenericMotionEvent(event: MotionEvent?): Boolean {
-        if (processor.onGenericMotionEvent(event)) {
-            return true
-        }
-        return super.onGenericMotionEvent(event)
-    }
 
     override fun canAccessScheduler(): Boolean = true
 
@@ -1685,12 +1657,4 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
         }
     }
 
-    override fun processAction(
-        action: ViewerCommand,
-        binding: ReviewerBinding,
-    ): Boolean {
-        if (binding.side != CardSide.BOTH && CardSide.fromAnswer(isDisplayingAnswer) != binding.side) return false
-        val gesture = (binding.binding as? Binding.GestureInput)?.gesture
-        return executeCommand(action, gesture)
-    }
 }

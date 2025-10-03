@@ -44,13 +44,6 @@
             tools:layout_height="wrap_content"
             tools:layout_alignParentBottom="true"/>
 
-        <androidx.compose.ui.platform.ComposeView
-            android:id="@+id/compose_reviewer"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_below="@id/mic_tool_bar_layer"
-            android:layout_above="@+id/bottom_area_layout"/>
-
     </RelativeLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
 <!-- Left navigation drawer -->
