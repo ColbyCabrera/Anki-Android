@@ -36,13 +36,6 @@ fun Flashcard(
                         return false
                     }
                 }
-                loadDataWithBaseURL(
-                    "file:///$mediaDirectory/",
-                    html,
-                    "text/html",
-                    "UTF-8",
-                    null
-                )
                 setOnTouchListener { _, event ->
                     if (event.action == MotionEvent.ACTION_UP) {
                         onTap()
@@ -50,6 +43,15 @@ fun Flashcard(
                     true
                 }
             }
+        },
+        update = { webView ->
+            webView.loadDataWithBaseURL(
+                "file:///$mediaDirectory/",
+                html,
+                "text/html",
+                "UTF-8",
+                null
+            )
         },
         modifier = modifier.fillMaxSize()
     )

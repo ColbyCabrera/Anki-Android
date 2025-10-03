@@ -73,6 +73,10 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
     private var timerJob: Job? = null
     private val typeAnswer = TypeAnswer.createInstance(app.sharedPrefs())
 
+    init {
+        onEvent(ReviewerEvent.LoadInitialCard)
+    }
+
     fun onEvent(event: ReviewerEvent) {
         when (event) {
             is ReviewerEvent.ShowAnswer -> showAnswer()
