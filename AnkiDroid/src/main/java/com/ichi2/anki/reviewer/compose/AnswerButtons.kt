@@ -86,10 +86,10 @@ fun EaseButtons(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        EaseButton(label = "Again", nextTime = nextTimes[0], onClick = onAgain, color = ankiColors.againButton, modifier = Modifier.weight(1f))
-        EaseButton(label = "Hard", nextTime = nextTimes[1], onClick = onHard, color = ankiColors.hardButton, modifier = Modifier.weight(1f))
-        EaseButton(label = "Good", nextTime = nextTimes[2], onClick = onGood, color = ankiColors.goodButton, modifier = Modifier.weight(1f))
-        EaseButton(label = "Easy", nextTime = nextTimes[3], onClick = onEasy, color = ankiColors.easyButton, modifier = Modifier.weight(1f))
+        EaseButton(label = "Again", nextTime = nextTimes.getOrNull(0) ?: "", onClick = onAgain, color = ankiColors.againButton, modifier = Modifier.weight(1f))
+        EaseButton(label = "Hard", nextTime = nextTimes.getOrNull(1) ?: "", onClick = onHard, color = ankiColors.hardButton, modifier = Modifier.weight(1f))
+        EaseButton(label = "Good", nextTime = nextTimes.getOrNull(2) ?: "", onClick = onGood, color = ankiColors.goodButton, modifier = Modifier.weight(1f))
+        EaseButton(label = "Easy", nextTime = nextTimes.getOrNull(3) ?: "", onClick = onEasy, color = ankiColors.easyButton, modifier = Modifier.weight(1f))
     }
 }
 
