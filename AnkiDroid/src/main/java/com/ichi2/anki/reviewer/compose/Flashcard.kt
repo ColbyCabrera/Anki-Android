@@ -1,6 +1,7 @@
 package com.ichi2.anki.reviewer.compose
 
 import android.annotation.SuppressLint
+import android.view.GestureDetector
 import android.view.MotionEvent
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -34,11 +35,18 @@ fun Flashcard(
                         return false
                     }
                 }
-                setOnTouchListener { _, event ->
-                    if (event.action == MotionEvent.ACTION_UP) {
-                        onTap()
+                val gestureDetector = GestureDetector(
+                    context,
+                    object : GestureDetector.SimpleOnGestureListener() {
+                        override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+                            onTap()
+                            return true
+                        }
                     }
-                    true
+                )
+                setOnTouchListener { _, event ->
+                    gestureDetector.onTouchEvent(event)
+                    false
                 }
             }
         },
