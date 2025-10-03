@@ -43,14 +43,17 @@ fun AnswerButtons(
     nextTimes: List<String>,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         if (showTypeInAnswer) {
             TextField(
                 value = typedAnswer,
                 onValueChange = onTypedAnswerChanged,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
+                modifier = Modifier.fillMaxWidth(),
                 label = { Text("Type in the answer") },
                 readOnly = isAnswerShown
             )
@@ -81,9 +84,12 @@ fun ShowAnswerButton(
         modifier = modifier
             .fillMaxWidth()
             .height(48.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = ankiColors.goodButton)
+        colors = ButtonDefaults.buttonColors(
+            containerColor = ankiColors.goodButton,
+            contentColor = Color.White
+        )
     ) {
-        Text("Show Answer", color = Color.White)
+        Text("Show Answer")
     }
 }
 
@@ -99,7 +105,7 @@ fun EaseButtons(
     val ankiColors = LocalAnkiColors.current
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         EaseButton(label = "Again", nextTime = nextTimes.getOrNull(0) ?: "", onClick = onAgain, color = ankiColors.againButton, modifier = Modifier.weight(1f))
         EaseButton(label = "Hard", nextTime = nextTimes.getOrNull(1) ?: "", onClick = onHard, color = ankiColors.hardButton, modifier = Modifier.weight(1f))
@@ -120,11 +126,14 @@ fun EaseButton(
         onClick = onClick,
         modifier = modifier
             .height(64.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = color)
+        colors = ButtonDefaults.buttonColors(
+            containerColor = color,
+            contentColor = Color.White
+        )
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(text = nextTime, color = Color.White)
-            Text(text = label, color = Color.White)
+            Text(text = nextTime)
+            Text(text = label)
         }
     }
 }

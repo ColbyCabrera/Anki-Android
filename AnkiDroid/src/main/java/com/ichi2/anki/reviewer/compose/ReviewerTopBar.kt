@@ -1,19 +1,21 @@
 package com.ichi2.anki.reviewer.compose
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,10 +30,10 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.constraintlayout.compose.ConstraintLayout
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import com.ichi2.anki.ui.compose.theme.LocalAnkiColors
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReviewerTopBar(
     newCount: Int,
@@ -45,53 +47,33 @@ fun ReviewerTopBar(
     onSetFlag: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val ankiColors = LocalAnkiColors.current
-    androidx.constraintlayout.compose.ConstraintLayout(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(ankiColors.topBar)
-            .padding(horizontal = 8.dp, vertical = 4.dp)
-    ) {
-        val (counts, answer, timerText, icons) = createRefs()
-
-        Counts(
-            newCount = newCount,
-            learnCount = learnCount,
-            reviewCount = reviewCount,
-            modifier = Modifier.constrainAs(counts) {
-                start.linkTo(parent.start)
-                centerVerticallyTo(parent)
-            }
-        )
-
-        Text(
-            text = chosenAnswer,
-            modifier = Modifier.constrainAs(answer) {
-                start.linkTo(parent.start)
-                end.linkTo(parent.end)
-                centerVerticallyTo(parent)
-            }
-        )
-
-        Row(
-            modifier = Modifier.constrainAs(icons) {
-                end.linkTo(timerText.start, margin = 8.dp)
-                centerVerticallyTo(parent)
-            }
-        ) {
+    CenterAlignedTopAppBar(
+        modifier = modifier,
+        title = { Text(chosenAnswer) },
+        navigationIcon = {
+            Counts(
+                newCount = newCount,
+                learnCount = learnCount,
+                reviewCount = reviewCount,
+                modifier = Modifier.padding(start = 8.dp)
+            )
+        },
+        actions = {
             MarkIcon(isMarked = isMarked, onToggleMark = onToggleMark)
             FlagIcon(currentFlag = flag, onSetFlag = onSetFlag)
-        }
-
-        Text(
-            text = timer,
-            fontSize = 14.sp,
-            modifier = Modifier.constrainAs(timerText) {
-                end.linkTo(parent.end)
-                centerVerticallyTo(parent)
-            }
+            Text(
+                text = timer,
+                fontSize = 14.sp,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+        },
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-    }
+    )
 }
 
 @Composable
