@@ -67,11 +67,11 @@ fun ReviewerTopBar(
                 modifier = Modifier.padding(end = 8.dp)
             )
         },
-        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+        colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.surface,
             navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             titleContentColor = MaterialTheme.colorScheme.onSurface,
-            actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
         )
     )
 }
