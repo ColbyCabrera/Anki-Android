@@ -92,7 +92,7 @@ fun MarkIcon(isMarked: Boolean, onToggleMark: () -> Unit) {
         Icon(
             imageVector = if (isMarked) Icons.Filled.Star else Icons.Outlined.StarOutline,
             contentDescription = "Mark Note",
-            tint = if (isMarked) Color.Yellow else LocalContentColor.current
+            tint = if (isMarked) MaterialTheme.colorScheme.tertiary else LocalContentColor.current
         )
     }
 }
