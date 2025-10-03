@@ -41,7 +41,8 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                 onLinkClick = {
                     viewModel.onEvent(ReviewerEvent.LinkClicked(it))
                 },
-                imageLoader = imageLoader
+                imageLoader = imageLoader,
+                mediaDirectory = state.mediaDirectory
             )
         }
         AnswerButtons(

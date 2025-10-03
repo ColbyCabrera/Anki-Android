@@ -1,35 +1,57 @@
 package com.ichi2.anki.reviewer.compose
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import android.annotation.SuppressLint
+import android.view.MotionEvent
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.malik.nativehtml.NativeHtml
-import com.malik.nativehtml.image.CoilImageLoader
-import com.malik.nativehtml.image.ImageLoader
+import androidx.compose.ui.viewinterop.AndroidView
+import coil.ImageLoader
+import java.io.File
 
+@SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun Flashcard(
     html: String,
     onTap: () -> Unit,
     onLinkClick: (String) -> Unit,
     imageLoader: ImageLoader,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    mediaDirectory: File?
 ) {
-    NativeHtml(
-        html = html,
-        modifier = modifier
-            .fillMaxSize()
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onTap
-            ),
-        imageLoader = imageLoader,
-        onLinkClick = onLinkClick
+    AndroidView(
+        factory = { context ->
+            WebView(context).apply {
+                settings.javaScriptEnabled = true
+                settings.allowFileAccess = true
+                webViewClient = object : WebViewClient() {
+                    override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                        if (url != null) {
+                            onLinkClick(url)
+                            return true
+                        }
+                        return false
+                    }
+                }
+                loadDataWithBaseURL(
+                    "file:///$mediaDirectory/",
+                    html,
+                    "text/html",
+                    "UTF-8",
+                    null
+                )
+                setOnTouchListener { _, event ->
+                    if (event.action == MotionEvent.ACTION_UP) {
+                        onTap()
+                    }
+                    true
+                }
+            }
+        },
+        modifier = modifier.fillMaxSize()
     )
 }
 
@@ -40,6 +62,7 @@ fun FlashcardPreview() {
         html = "<html><body><h1>Hello, World!</h1><a href=\"https://example.com\">A link</a></body></html>",
         onTap = {},
         onLinkClick = {},
-        imageLoader = CoilImageLoader()
+        imageLoader = ImageLoader.Builder(androidx.compose.ui.platform.LocalContext.current).build(),
+        mediaDirectory = null
     )
 }

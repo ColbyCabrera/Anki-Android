@@ -362,8 +362,6 @@ dependencies {
     }
     api project(":api")
     implementation libs.androidx.work.runtime
-    implementation libs.androidx.compose.foundation.layout
-    implementation libs.androidx.foundation
     lintChecks project(":lint-rules")
     coreLibraryDesugaring libs.desugar.jdk.libs.nio
 
@@ -402,7 +400,7 @@ dependencies {
     implementation composeBom
     androidTestImplementation composeBom
 
-    implementation libs.androidx.material
+    implementation libs.androidx.compose.material
     implementation libs.androidx.compose.material.icons.extended
     implementation libs.androidx.compose.material3
     implementation libs.androidx.compose.foundation
@@ -410,6 +408,8 @@ dependencies {
     implementation libs.androidx.compose.ui.tooling.preview
     debugImplementation libs.androidx.compose.ui.tooling
     implementation libs.androidx.activity.compose
+    implementation libs.androidx.lifecycle.viewmodel.compose
+    implementation libs.androidx.constraintlayout.compose
     implementation libs.coil.compose
 
 

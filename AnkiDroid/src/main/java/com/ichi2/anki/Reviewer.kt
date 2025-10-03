@@ -101,7 +101,6 @@ import com.ichi2.anki.preferences.sharedPrefs
 import com.ichi2.anki.reviewer.ActionButtons
 import com.ichi2.anki.reviewer.AnswerButtons.Companion.getBackgroundColors
 import com.ichi2.anki.reviewer.AnswerButtons.Companion.getTextColors
-import com.ichi2.anki.reviewer.AnswerTimer
 import com.ichi2.anki.reviewer.AutomaticAnswerAction
 import com.ichi2.anki.reviewer.Binding
 import com.ichi2.anki.reviewer.BindingMap
@@ -175,17 +174,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
     // been configured
     private var statesMutated = false
 
-    // TODO: Consider extracting to ViewModel
-    // Card counts
-    private var newCount: SpannableString? = null
-    private var lrnCount: SpannableString? = null
-    private var revCount: SpannableString? = null
-    private lateinit var textBarNew: TextView
-    private lateinit var textBarLearn: TextView
-    private lateinit var textBarReview: TextView
-    private lateinit var answerTimer: AnswerTimer
-    private var prefHideDueCount = false
-
     // Whiteboard
     var prefWhiteboard = false
 
@@ -234,60 +222,32 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
         }
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        val root = findViewById<View>(R.id.root_layout)
-        ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
+
+        val composeView = ComposeView(this)
+        setContentView(composeView)
+
+        ViewCompat.setOnApplyWindowInsetsListener(composeView) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+
         if (!ensureStoragePermissions()) {
             return
         }
 
-        findViewById<ComposeView>(R.id.compose_reviewer).setContent {
+        composeView.setContent {
             com.ichi2.anki.ui.compose.theme.AnkiDroidTheme {
                 com.ichi2.anki.reviewer.compose.ReviewerContent(viewModel)
             }
         }
-
-        // Hide the old views that are replaced by Compose
-        findViewById<View>(R.id.flashcard).visibility = View.GONE
-        findViewById<View>(R.id.touch_layer).visibility = View.GONE
-        findViewById<View>(R.id.bottom_area_layout).visibility = View.GONE
-
-        colorPalette = findViewById(R.id.whiteboard_editor)
-        answerTimer = AnswerTimer(findViewById(R.id.card_time))
-        textBarNew = findViewById(R.id.new_number)
-        textBarLearn = findViewById(R.id.learn_number)
-        textBarReview = findViewById(R.id.review_number)
-        toolbar = findViewById(R.id.toolbar)
-        micToolBarLayer = findViewById(R.id.mic_tool_bar_layer)
-        processor = BindingMap(sharedPrefs(), ViewerCommand.entries, this)
-        if (sharedPrefs().getString(
-                "answerButtonPosition",
-                "bottom"
-            ) == "bottom" && !navBarNeedsScrim
-        ) {
-            setNavigationBarColor(R.attr.showAnswerColor)
-        }
-        if (!sharedPrefs().getBoolean("showDeckTitle", false)) {
-            // avoid showing "AnkiDroid"
-            supportActionBar?.title = ""
-        }
-        startLoadingCollection()
-        registerOnForgetHandler { listOf(currentCardId!!) }
     }
 
     override fun onPause() {
-        answerTimer.pause()
         super.onPause()
     }
 
     override fun onResume() {
-        when {
-            stopTimerOnAnswer && isDisplayingAnswer -> {}
-            else -> launchCatchingTask { answerTimer.resume() }
-        }
         super.onResume()
         if (typeAnswer?.autoFocusEditText() == true) {
             answerField?.focusWithKeyboard()
@@ -1161,7 +1121,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
 
     override fun restorePreferences(): SharedPreferences {
         val preferences = super.restorePreferences()
-        prefHideDueCount = preferences.getBoolean("hideDueCount", false)
         prefShowETA = preferences.getBoolean("showETA", false)
         prefFullscreenReview = isFullScreenReview(preferences)
         actionButtons.setup(preferences)
@@ -1170,7 +1129,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
 
     override fun updateActionBar() {
         super.updateActionBar()
-        updateScreenCounts()
     }
 
     private fun updateWhiteboardEditorPosition() {
@@ -1191,39 +1149,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
                 colorPalette.layoutParams = layoutParams
             }
         }
-    }
-
-    private fun updateScreenCounts() {
-        val queue = queueState ?: return
-        super.updateActionBar()
-        val actionBar = supportActionBar
-        val counts = queue.counts
-        if (actionBar != null) {
-            if (prefShowETA) {
-                launchCatchingTask {
-                    eta = withCol { sched.eta(counts, false) }
-                    actionBar.subtitle = remainingTime(this@Reviewer, (eta * 60).toLong())
-                }
-            }
-        }
-        newCount = SpannableString(counts.new.toString())
-        lrnCount = SpannableString(counts.lrn.toString())
-        revCount = SpannableString(counts.rev.toString())
-        if (prefHideDueCount) {
-            revCount = SpannableString("???")
-        }
-        // if this code is run as a card is being answered, currentCard may be non-null but
-        // the queues may be empty - we can't call countIdx() in such a case
-        if (counts.count() != 0) {
-            when (queue.countsIndex) {
-                Counts.Queue.NEW -> newCount!!.setSpan(UnderlineSpan(), 0, newCount!!.length, 0)
-                Counts.Queue.LRN -> lrnCount!!.setSpan(UnderlineSpan(), 0, lrnCount!!.length, 0)
-                Counts.Queue.REV -> revCount!!.setSpan(UnderlineSpan(), 0, revCount!!.length, 0)
-            }
-        }
-        textBarNew.text = newCount
-        textBarLearn.text = lrnCount
-        textBarReview.text = revCount
     }
 
     override fun fillFlashcard() {
@@ -1303,7 +1228,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
     override fun displayCardQuestion() {
         statesMutated = false
         // show timer, if activated in the deck's preferences
-        answerTimer.setupForCard(getColUnsafe, currentCard!!)
         delayedHide(100)
         super.displayCardQuestion()
     }
@@ -1320,7 +1244,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
 
         delayedHide(100)
         if (stopTimerOnAnswer) {
-            answerTimer.pause()
         }
         super.displayCardAnswer()
     }
@@ -1355,9 +1278,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
     override fun initLayout() {
         super.initLayout()
         if (!showRemainingCardCount) {
-            textBarNew.visibility = View.GONE
-            textBarLearn.visibility = View.GONE
-            textBarReview.visibility = View.GONE
         }
 
         // can't move this into onCreate due to mTopBarLayout
@@ -1368,12 +1288,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
 
     override fun switchTopBarVisibility(visible: Int) {
         super.switchTopBarVisibility(visible)
-        answerTimer.setVisibility(visible)
-        if (showRemainingCardCount) {
-            textBarNew.visibility = visible
-            textBarLearn.visibility = visible
-            textBarReview.visibility = visible
-        }
     }
 
     override fun onStop() {
@@ -1389,9 +1303,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
             setWhiteboardVisibility(showWhiteboard)
         }
         if (showRemainingCardCount) {
-            textBarNew.visibility = View.VISIBLE
-            textBarLearn.visibility = View.VISIBLE
-            textBarReview.visibility = View.VISIBLE
         }
     }
 

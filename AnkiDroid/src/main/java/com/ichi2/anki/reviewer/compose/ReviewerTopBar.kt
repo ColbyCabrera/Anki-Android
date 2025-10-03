@@ -46,7 +46,7 @@ fun ReviewerTopBar(
     modifier: Modifier = Modifier
 ) {
     val ankiColors = LocalAnkiColors.current
-    ConstraintLayout(
+    androidx.constraintlayout.compose.ConstraintLayout(
         modifier = modifier
             .fillMaxWidth()
             .background(ankiColors.topBar)

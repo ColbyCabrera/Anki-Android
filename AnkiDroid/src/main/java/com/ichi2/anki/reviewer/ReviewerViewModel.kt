@@ -1,18 +1,33 @@
+/*
+ * Copyright (c) 2024 Brayan Oliveira <brayandso.dev@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package com.ichi2.anki.reviewer
 
 import android.app.Application
 import android.content.Intent
-import android.net.Uri
+import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import anki.scheduler.CardAnswer.Rating
+import anki.scheduler.CardAnswer
 import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.cardviewer.TypeAnswer
 import com.ichi2.anki.libanki.Card
 import com.ichi2.anki.libanki.sched.CurrentQueueState
 import com.ichi2.anki.preferences.sharedPrefs
 import com.ichi2.anki.servicelayer.NoteService
-import com.ichi2.anki.utils.ext.setFlagForCards
+import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -22,7 +37,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
 
 data class ReviewerState(
     val newCount: Int = 0,
@@ -42,7 +56,7 @@ data class ReviewerState(
 
 sealed class ReviewerEvent {
     object ShowAnswer : ReviewerEvent()
-    data class RateCard(val rating: Rating) : ReviewerEvent()
+    data class RateCard(val rating: CardAnswer.Rating) : ReviewerEvent()
     object LoadInitialCard : ReviewerEvent()
     data class OnTypedAnswerChanged(val newText: String) : ReviewerEvent()
     object ToggleMark : ReviewerEvent()
@@ -72,7 +86,7 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun linkClicked(url: String) {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        val intent = Intent(Intent.ACTION_VIEW, url.toUri())
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         getApplication<Application>().startActivity(intent)
     }
@@ -92,45 +106,35 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
             currentCard = card
             queueState = queue
             withContext(Dispatchers.IO) {
-                val col = CollectionManager.getColUnsafe()
-                val note = card.note(col)
-                typeAnswer.updateInfo(col, card, getApplication<Application>().resources)
-                val isMarked = note.hasTag("marked")
-                val showTypeInAnswer = typeAnswer.correct != null
-                val questionHtml = card.question()
-                val flag = card.flag()
-                val mediaDirectory = col.media.dir()
-
-                withContext(Dispatchers.Main) {
+                CollectionManager.withCol {
+                    val note = card.note(this)
+                    typeAnswer.updateInfo(this, card, getApplication<Application>().resources)
                     _state.update {
                         it.copy(
                             newCount = queue.counts.new,
                             learnCount = queue.counts.lrn,
                             reviewCount = queue.counts.rev,
-                            html = questionHtml,
+                            html = card.question(this),
                             isAnswerShown = false,
-                            showTypeInAnswer = showTypeInAnswer,
+                            showTypeInAnswer = typeAnswer.correct != null,
                             nextTimes = List(4) { "" },
                             chosenAnswer = "",
                             typedAnswer = "",
                             timer = "0.0s",
-                            isMarked = isMarked,
-                            flag = flag,
-                            mediaDirectory = mediaDirectory
+                            isMarked = note.hasTag(this, "marked"),
+                            flag = card.userFlag(),
+                            mediaDirectory = media.dir
                         )
                     }
-                    startTimer()
                 }
             }
+            startTimer()
         }
     }
 
-    private suspend fun getNextCard(): Pair<Card, CurrentQueueState>? = withContext(Dispatchers.IO) {
-        val col = CollectionManager.getCol() ?: return@withContext null
-        val state = col.sched.currentQueueState()?.apply {
-            topCard.renderOutput(col, reload = true)
-        }
-        state?.let {
+    private suspend fun getNextCard(): Pair<Card, CurrentQueueState>? = CollectionManager.withCol {
+        sched.currentQueueState()?.let {
+            it.topCard.renderOutput(this, reload = true)
             Pair(it.topCard, it)
         }
     }
@@ -141,35 +145,32 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
         val queue = queueState ?: return
 
         viewModelScope.launch {
-            val labels = withContext(Dispatchers.IO) {
-                CollectionManager.getCol()?.sched?.describeNextStates(queue.states) ?: emptyList()
-            }
-            typeAnswer.input = _state.value.typedAnswer
-            val answerHtml = withContext(Dispatchers.IO) {
-                typeAnswer.filterAnswer(card.answer())
-            }
+            CollectionManager.withCol {
+                val labels = sched.describeNextStates(queue.states)
+                typeAnswer.input = _state.value.typedAnswer
+                val answerHtml = typeAnswer.filterAnswer(card.answer(this))
 
-            val paddedLabels = (labels + List(4) { "" }).take(4)
+                val paddedLabels = (labels + List(4) { "" }).take(4)
 
-            _state.update {
-                it.copy(
-                    html = answerHtml,
-                    isAnswerShown = true,
-                    nextTimes = paddedLabels
-                )
+                _state.update {
+                    it.copy(
+                        html = answerHtml,
+                        isAnswerShown = true,
+                        nextTimes = paddedLabels
+                    )
+                }
             }
         }
     }
 
-    private fun rateCard(rating: Rating) {
+    private fun rateCard(rating: CardAnswer.Rating) {
         stopTimer()
         val queue = queueState ?: return
-        viewModelScope.launch(Dispatchers.IO) {
-            val col = CollectionManager.getCol() ?: return@launch
-            col.sched.answerCard(queue, rating)
-            withContext(Dispatchers.Main) {
-                loadCard()
+        viewModelScope.launch {
+            CollectionManager.withCol {
+                sched.answerCard(queue, rating)
             }
+            loadCard()
         }
     }
 
@@ -191,25 +192,23 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun toggleMark() {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             val card = currentCard ?: return@launch
-            val col = CollectionManager.getColUnsafe()
-            val note = card.note(col)
-            NoteService.toggleMark(note)
-            withContext(Dispatchers.Main) {
-                _state.update { it.copy(isMarked = !_state.value.isMarked) }
+            val note = CollectionManager.withCol {
+                card.note(this)
             }
+            NoteService.toggleMark(note)
+            _state.update { it.copy(isMarked = !_state.value.isMarked) }
         }
     }
 
     private fun setFlag(flag: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             val card = currentCard ?: return@launch
-            val col = CollectionManager.getColUnsafe()
-            col.setFlagForCards(listOf(card.id), flag)
-            withContext(Dispatchers.Main) {
-                _state.update { it.copy(flag = flag) }
+            CollectionManager.withCol {
+                setUserFlagForCards(listOf(card.id), flag)
             }
+            _state.update { it.copy(flag = flag) }
         }
     }
 }

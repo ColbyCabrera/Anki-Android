@@ -132,7 +132,6 @@ dependencies {
     implementation(libs.jetbrain.kotlinx.collections.immutable)
     implementation(libs.jetbrain.kotlinx.coroutines.android)
     implementation(libs.jetbrain.kotlinx.coroutines.core)
-    implementation("com.github.malikshairali:nativehtml:0.2.0")
     implementation(libs.jsoup)
     implementation(libs.legacy.support.v4)
     implementation(libs.mikepenz.aboutlibraries.core)
