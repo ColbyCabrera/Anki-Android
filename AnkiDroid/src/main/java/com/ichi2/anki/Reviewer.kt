@@ -157,7 +157,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
     private var hasDrawerSwipeConflicts = false
     private var showWhiteboard = true
     private var prefFullscreenReview = false
-    private lateinit var colorPalette: LinearLayout
     private var toggleStylus = false
     private var isEraserMode = false
 
@@ -193,10 +192,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
     // ETA
     private var eta = 0
     private var prefShowETA = false
-
-    /** Handle Mark/Flag state of cards  */
-    @VisibleForTesting
-    internal var cardMarker: CardMarker? = null
 
     // Preferences from the collection
     private var showRemainingCardCount = false
@@ -238,7 +233,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
 
         composeView.setContent {
             com.ichi2.anki.ui.compose.theme.AnkiDroidTheme {
-                com.ichi2.anki.reviewer.compose.ReviewerScreen(viewModel)
+                com.ichi2.anki.reviewer.compose.ReviewerContent(viewModel)
             }
         }
     }
@@ -298,7 +293,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
         if (currentCard == null) {
             return
         }
-        cardMarker!!.displayMark(shouldDisplayMark())
     }
 
     protected open fun onFlag(
@@ -322,7 +316,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
         if (currentCard == null) {
             return
         }
-        cardMarker!!.displayFlag(flagToDisplay)
     }
 
     private fun selectDeckFromExtra() {
@@ -576,7 +569,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
         setWhiteboardEnabledState(prefWhiteboard)
         setWhiteboardVisibility(prefWhiteboard)
         if (!prefWhiteboard) {
-            colorPalette.visibility = View.GONE
         }
         refreshActionBar()
     }
@@ -648,12 +640,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
     }
 
     public override fun changeWhiteboardPenColor() {
-        if (colorPalette.isGone) {
-            colorPalette.visibility = View.VISIBLE
-        } else {
-            colorPalette.visibility = View.GONE
-        }
-        updateWhiteboardEditorPosition()
     }
 
     override fun replayVoice() {
@@ -996,7 +982,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
                 toggleStylusIcon.icon = stylusIcon
                 changePenColorIcon.isEnabled = false
                 changePenColorIcon.icon = whiteboardColorPaletteIcon
-                colorPalette.visibility = View.GONE
             }
         } else {
             toggleWhiteboardIcon.setTitle(R.string.enable_whiteboard)
@@ -1131,26 +1116,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
         super.updateActionBar()
     }
 
-    private fun updateWhiteboardEditorPosition() {
-        answerButtonsPosition = this.sharedPrefs().getString("answerButtonPosition", "bottom")
-        val layoutParams: RelativeLayout.LayoutParams
-        when (answerButtonsPosition) {
-            "none", "top" -> {
-                layoutParams = colorPalette.layoutParams as RelativeLayout.LayoutParams
-                layoutParams.removeRule(RelativeLayout.ABOVE)
-                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
-                colorPalette.layoutParams = layoutParams
-            }
-
-            "bottom" -> {
-                layoutParams = colorPalette.layoutParams as RelativeLayout.LayoutParams
-                layoutParams.removeRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
-                layoutParams.addRule(RelativeLayout.ABOVE, R.id.bottom_area_layout)
-                colorPalette.layoutParams = layoutParams
-            }
-        }
-    }
-
     override fun fillFlashcard() {
         super.fillFlashcard()
         if (!isDisplayingAnswer && showWhiteboard && whiteboard != null) {
@@ -1283,7 +1248,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi,
         // can't move this into onCreate due to mTopBarLayout
         val mark = topBarLayout!!.findViewById<ImageView>(R.id.mark_icon)
         val flag = topBarLayout!!.findViewById<ImageView>(R.id.flag_icon)
-        cardMarker = CardMarker(mark, flag)
     }
 
     override fun switchTopBarVisibility(visible: Int) {

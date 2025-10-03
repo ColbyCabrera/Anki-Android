@@ -109,27 +109,25 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
             val (card, queue) = cardAndQueueState
             currentCard = card
             queueState = queue
-            withContext(Dispatchers.IO) {
-                CollectionManager.withCol {
-                    val note = card.note(this)
-                    typeAnswer.updateInfo(this, card, getApplication<Application>().resources)
-                    _state.update {
-                        it.copy(
-                            newCount = queue.counts.new,
-                            learnCount = queue.counts.lrn,
-                            reviewCount = queue.counts.rev,
-                            html = card.question(this),
-                            isAnswerShown = false,
-                            showTypeInAnswer = typeAnswer.correct != null,
-                            nextTimes = List(4) { "" },
-                            chosenAnswer = "",
-                            typedAnswer = "",
-                            timer = "0.0s",
-                            isMarked = note.hasTag(this, "marked"),
-                            flag = card.userFlag(),
-                            mediaDirectory = media.dir
-                        )
-                    }
+            CollectionManager.withCol {
+                val note = card.note(this)
+                typeAnswer.updateInfo(this, card, getApplication<Application>().resources)
+                _state.update {
+                    it.copy(
+                        newCount = queue.counts.new,
+                        learnCount = queue.counts.lrn,
+                        reviewCount = queue.counts.rev,
+                        html = card.question(this),
+                        isAnswerShown = false,
+                        showTypeInAnswer = typeAnswer.correct != null,
+                        nextTimes = List(4) { "" },
+                        chosenAnswer = "",
+                        typedAnswer = "",
+                        timer = "0.0s",
+                        isMarked = note.hasTag(this, "marked"),
+                        flag = card.userFlag(),
+                        mediaDirectory = media.dir
+                    )
                 }
             }
             startTimer()

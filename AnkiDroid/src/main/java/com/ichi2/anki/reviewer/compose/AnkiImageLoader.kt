@@ -22,8 +22,7 @@ import coil.ImageLoader
 import java.io.File
 
 fun ankiImageLoader(
-    context: Context,
-    mediaDirectory: File?
+    context: Context
 ): ImageLoader {
     return ImageLoader.Builder(context)
         .build()

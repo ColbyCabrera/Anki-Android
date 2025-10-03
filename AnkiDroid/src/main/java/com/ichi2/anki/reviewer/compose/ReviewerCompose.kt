@@ -31,9 +31,6 @@ import com.ichi2.anki.reviewer.ReviewerViewModel
 fun ReviewerContent(viewModel: ReviewerViewModel) {
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
-    val imageLoader = remember(state.mediaDirectory) {
-        ankiImageLoader(context, state.mediaDirectory)
-    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         ReviewerTopBar(
@@ -58,7 +55,6 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                 onLinkClick = {
                     viewModel.onEvent(ReviewerEvent.LinkClicked(it))
                 },
-                imageLoader = imageLoader,
                 mediaDirectory = state.mediaDirectory
             )
         }
