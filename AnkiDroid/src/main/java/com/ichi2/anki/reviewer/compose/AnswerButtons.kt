@@ -27,7 +27,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
-import com.ichi2.anki.ui.compose.theme.LocalAnkiColors
 
 @Composable
 fun AnswerButtons(
@@ -73,20 +72,21 @@ fun AnswerButtons(
     }
 }
 
+import androidx.compose.material3.MaterialTheme
+
 @Composable
 fun ShowAnswerButton(
     onShowAnswer: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val ankiColors = LocalAnkiColors.current
     Button(
         onClick = onShowAnswer,
         modifier = modifier
             .fillMaxWidth()
             .height(48.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = ankiColors.goodButton,
-            contentColor = Color.White
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary
         )
     ) {
         Text("Show Answer")
@@ -102,15 +102,42 @@ fun EaseButtons(
     nextTimes: List<String>,
     modifier: Modifier = Modifier
 ) {
-    val ankiColors = LocalAnkiColors.current
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        EaseButton(label = "Again", nextTime = nextTimes.getOrNull(0) ?: "", onClick = onAgain, color = ankiColors.againButton, modifier = Modifier.weight(1f))
-        EaseButton(label = "Hard", nextTime = nextTimes.getOrNull(1) ?: "", onClick = onHard, color = ankiColors.hardButton, modifier = Modifier.weight(1f))
-        EaseButton(label = "Good", nextTime = nextTimes.getOrNull(2) ?: "", onClick = onGood, color = ankiColors.goodButton, modifier = Modifier.weight(1f))
-        EaseButton(label = "Easy", nextTime = nextTimes.getOrNull(3) ?: "", onClick = onEasy, color = ankiColors.easyButton, modifier = Modifier.weight(1f))
+        EaseButton(
+            label = "Again",
+            nextTime = nextTimes.getOrNull(0) ?: "",
+            onClick = onAgain,
+            containerColor = MaterialTheme.colorScheme.errorContainer,
+            contentColor = MaterialTheme.colorScheme.onErrorContainer,
+            modifier = Modifier.weight(1f)
+        )
+        EaseButton(
+            label = "Hard",
+            nextTime = nextTimes.getOrNull(1) ?: "",
+            onClick = onHard,
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            modifier = Modifier.weight(1f)
+        )
+        EaseButton(
+            label = "Good",
+            nextTime = nextTimes.getOrNull(2) ?: "",
+            onClick = onGood,
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            modifier = Modifier.weight(1f)
+        )
+        EaseButton(
+            label = "Easy",
+            nextTime = nextTimes.getOrNull(3) ?: "",
+            onClick = onEasy,
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+            modifier = Modifier.weight(1f)
+        )
     }
 }
 
@@ -119,7 +146,8 @@ fun EaseButton(
     label: String,
     nextTime: String,
     onClick: () -> Unit,
-    color: Color,
+    containerColor: Color,
+    contentColor: Color,
     modifier: Modifier = Modifier
 ) {
     Button(
@@ -127,8 +155,8 @@ fun EaseButton(
         modifier = modifier
             .height(64.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = color,
-            contentColor = Color.White
+            containerColor = containerColor,
+            contentColor = contentColor
         )
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {

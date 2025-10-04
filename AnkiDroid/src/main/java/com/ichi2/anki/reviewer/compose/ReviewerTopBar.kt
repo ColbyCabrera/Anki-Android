@@ -47,7 +47,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
-import com.ichi2.anki.ui.compose.theme.LocalAnkiColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,7 +77,7 @@ fun ReviewerTopBar(
             text = timer, fontSize = 14.sp, modifier = Modifier.padding(end = 8.dp)
         )
     }, colors = TopAppBarDefaults.topAppBarColors(
-        containerColor = MaterialTheme.colorScheme.surface,
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
         navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         titleContentColor = MaterialTheme.colorScheme.onSurface,
         actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -133,13 +132,12 @@ fun FlagIcon(currentFlag: Int, onSetFlag: (Int) -> Unit) {
 
 @Composable
 fun Counts(newCount: Int, learnCount: Int, reviewCount: Int, modifier: Modifier = Modifier) {
-    val ankiColors = LocalAnkiColors.current
     Row(modifier = modifier) {
         Text(
             buildAnnotatedString {
                 withStyle(
                     style = SpanStyle(
-                        color = ankiColors.newCount,
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
                     )
                 ) {
@@ -148,7 +146,7 @@ fun Counts(newCount: Int, learnCount: Int, reviewCount: Int, modifier: Modifier 
                 append(" ")
                 withStyle(
                     style = SpanStyle(
-                        color = ankiColors.learnCount,
+                        color = MaterialTheme.colorScheme.error,
                         fontWeight = FontWeight.Bold
                     )
                 ) {
@@ -157,7 +155,7 @@ fun Counts(newCount: Int, learnCount: Int, reviewCount: Int, modifier: Modifier 
                 append(" ")
                 withStyle(
                     style = SpanStyle(
-                        color = ankiColors.reviewCount,
+                        color = MaterialTheme.colorScheme.secondary,
                         fontWeight = FontWeight.Bold
                     )
                 ) {

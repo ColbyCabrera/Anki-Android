@@ -104,6 +104,7 @@ import com.ichi2.anki.servicelayer.NoteService.isMarked
 import com.ichi2.anki.servicelayer.NoteService.toggleMark
 import com.ichi2.anki.settings.Prefs
 import com.ichi2.anki.snackbar.showSnackbar
+import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import com.ichi2.anki.ui.internationalization.toSentenceCase
 import com.ichi2.anki.ui.windows.reviewer.ReviewerFragment
 import com.ichi2.anki.utils.ext.flag
@@ -213,7 +214,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         }
 
         composeView.setContent {
-            com.ichi2.anki.ui.compose.theme.AnkiDroidTheme {
+            AnkiDroidTheme {
                 com.ichi2.anki.reviewer.compose.ReviewerContent(viewModel)
             }
         }
