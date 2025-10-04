@@ -318,9 +318,9 @@ fun DeckPickerScreen(
                     title = {
                         if (!isSearchOpen) Text(
                             stringResource(R.string.app_name),
-                            style = MaterialTheme.typography.titleLarge
+                            style = MaterialTheme.typography.headlineSmall
                         )
-                    }, // Expressive TopAppBar Title
+                    },
                     navigationIcon = {
                         IconButton(onClick = onNavigationIconClick) {
                             Icon(

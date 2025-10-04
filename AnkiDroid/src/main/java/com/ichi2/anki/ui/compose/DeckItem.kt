@@ -92,19 +92,19 @@ fun DeckItem(
                 text = deck.newCount.toString(),
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(horizontal = 4.dp),
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyLarge,
             )
             Text(
                 text = deck.lrnCount.toString(),
                 color = MaterialTheme.colorScheme.error,
                 modifier = Modifier.padding(horizontal = 4.dp),
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyLarge,
             )
             Text(
                 text = deck.revCount.toString(),
                 color = Color(0xFF006400),
                 modifier = Modifier.padding(horizontal = 4.dp),
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyLarge,
             )
             if (deck.canCollapse) {
                 Surface(
