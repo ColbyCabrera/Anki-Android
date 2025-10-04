@@ -683,6 +683,9 @@
         https://developer.android.com/guide/webapps/webview-privacy
          -->
         <meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true" />
+        <meta-data
+            android:name="preloaded_fonts"
+            android:resource="@array/preloaded_fonts" />
 
         <!--
         Transparent Single instance activity, and is cleared from recent tasks as we want to mimic
