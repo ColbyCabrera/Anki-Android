@@ -15,9 +15,15 @@
  */
 package com.ichi2.anki.reviewer.compose
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -72,12 +78,9 @@ fun AnswerButtons(
     }
 }
 
-import androidx.compose.material3.MaterialTheme
-
 @Composable
 fun ShowAnswerButton(
-    onShowAnswer: () -> Unit,
-    modifier: Modifier = Modifier
+    onShowAnswer: () -> Unit, modifier: Modifier = Modifier
 ) {
     Button(
         onClick = onShowAnswer,
@@ -103,8 +106,7 @@ fun EaseButtons(
     modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         EaseButton(
             label = "Again",
@@ -151,12 +153,8 @@ fun EaseButton(
     modifier: Modifier = Modifier
 ) {
     Button(
-        onClick = onClick,
-        modifier = modifier
-            .height(64.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = containerColor,
-            contentColor = contentColor
+        onClick = onClick, modifier = modifier.height(64.dp), colors = ButtonDefaults.buttonColors(
+            containerColor = containerColor, contentColor = contentColor
         )
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -180,8 +178,7 @@ fun AnswerButtonsPreview_ShowAnswer() {
             onEasy = {},
             nextTimes = emptyList(),
             typedAnswer = "Some answer",
-            onTypedAnswerChanged = {}
-        )
+            onTypedAnswerChanged = {})
     }
 }
 
@@ -199,7 +196,6 @@ fun AnswerButtonsPreview_EaseButtons() {
             onEasy = {},
             nextTimes = listOf("<10m", "2d", "3d", "4d"),
             typedAnswer = "",
-            onTypedAnswerChanged = {}
-        )
+            onTypedAnswerChanged = {})
     }
 }
