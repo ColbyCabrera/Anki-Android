@@ -605,8 +605,6 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                         drawerState = drawerState, drawerContent = {
                             ModalDrawerSheet(
                                 modifier = Modifier.width(310.dp),
-                                drawerContainerColor = MaterialTheme.colorScheme.surface,
-                                drawerContentColor = MaterialTheme.colorScheme.onSurface
                             ) {
                                 Column(
                                     Modifier
@@ -639,8 +637,6 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                                 selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                                                 selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
                                                 selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                                unselectedTextColor = MaterialTheme.colorScheme.onSurface,
-                                                unselectedIconColor = MaterialTheme.colorScheme.onSurface,
                                             ),
                                             icon = {
                                                 Icon(
