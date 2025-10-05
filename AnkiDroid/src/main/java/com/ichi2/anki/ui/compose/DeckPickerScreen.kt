@@ -159,13 +159,13 @@ fun DeckPickerContent(
             indicator = {
                 Box(
                     modifier = Modifier
-                        .padding(top = 16.dp)
+                        .padding(top = contentPadding.calculateTopPadding() + 16.dp)
                         .align(Alignment.TopCenter)
                         .width(42.dp)
                         .height(42.dp)
                         .graphicsLayer {
-                            alpha = state.distanceFraction
-                            rotationZ = state.distanceFraction * 360
+                            alpha = state.distanceFraction * 5
+                            rotationZ = state.distanceFraction * 180
                             translationY = (state.distanceFraction * 140) - 60
                         }
                         .clip(morphingShape)
@@ -383,7 +383,7 @@ fun DeckPickerScreen(
                 onRebuild = onRebuild,
                 onEmpty = onEmpty,
                 listState = listState,
-                contentPadding = paddingValues
+                contentPadding = paddingValues,
             )
         }
         Scrim(
