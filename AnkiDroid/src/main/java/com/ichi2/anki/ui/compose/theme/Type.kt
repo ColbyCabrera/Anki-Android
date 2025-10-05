@@ -37,8 +37,18 @@ val GoogleSansRounded = FontFamily(
     Font(R.font.google_sans_rounded_regular, FontWeight.Normal),
 )
 
+val GoogleSansFamily = FontFamily(
+    Font(R.font.google_sans_family, FontWeight.Normal),
+)
+
+val RobotoFlex = FontFamily(
+    Font(R.font.roboto_flex, FontWeight.Normal),
+)
+
+
+
 @OptIn(ExperimentalTextApi::class)
-val GoogleSansFlexFamily = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+val GoogleSansFlexLowWidth = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
     FontFamily(
         Font(
             R.font.google_sans_flex,
@@ -56,61 +66,61 @@ val GoogleSansFlexFamily = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 val AppTypography = Typography(
     displayLarge = TextStyle(
-        fontFamily = GoogleSansFlexFamily,
+        fontFamily = GoogleSansFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 57.sp,
         lineHeight = 64.sp,
         letterSpacing = (-0.25).sp
     ), displayLargeEmphasized = TextStyle(
-        fontFamily = GoogleSansFlexFamily,
+        fontFamily = GoogleSansFlexLowWidth,
         fontWeight = FontWeight.Thin,
         fontSize = 57.sp,
         lineHeight = 64.sp,
         letterSpacing = (-0.5).sp,
     ), displayMedium = TextStyle(
-        fontFamily = GoogleSansRounded,
+        fontFamily = GoogleSansFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 45.sp,
         lineHeight = 52.sp,
         letterSpacing = 0.sp
     ), displaySmall = TextStyle(
-        fontFamily = GoogleSansRounded,
+        fontFamily = GoogleSansFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 36.sp,
         lineHeight = 44.sp,
         letterSpacing = 0.sp
     ), headlineLarge = TextStyle(
-        fontFamily = GoogleSansRounded,
+        fontFamily = GoogleSansFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 32.sp,
         lineHeight = 40.sp,
         letterSpacing = 0.sp
     ), headlineMedium = TextStyle(
-        fontFamily = GoogleSansRounded,
+        fontFamily = GoogleSansFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 28.sp,
         lineHeight = 36.sp,
         letterSpacing = 0.sp
     ), headlineSmall = TextStyle(
-        fontFamily = GoogleSansRounded,
+        fontFamily = GoogleSansFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 24.sp,
         lineHeight = 32.sp,
         letterSpacing = 0.sp
     ), titleLarge = TextStyle(
-        fontFamily = GoogleSansRounded,
+        fontFamily = GoogleSansFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 22.sp,
         lineHeight = 28.sp,
         letterSpacing = 0.sp
     ), titleMedium = TextStyle(
-        fontFamily = GoogleSansRounded,
+        fontFamily = GoogleSansFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 16.sp,
         lineHeight = 24.sp,
         letterSpacing = 0.15.sp
     ), titleSmall = TextStyle(
-        fontFamily = GoogleSansRounded,
+        fontFamily = GoogleSansFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 14.sp,
         lineHeight = 20.sp,
