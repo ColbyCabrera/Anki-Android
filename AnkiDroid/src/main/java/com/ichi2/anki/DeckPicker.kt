@@ -616,7 +616,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                 ) {
                                     Text(
                                         text = stringResource(R.string.app_name),
-                                        style = MaterialTheme.typography.titleLargeEmphasized,
+                                        style = MaterialTheme.typography.displayLargeEmphasized,
                                         modifier = Modifier.padding(
                                             start = 8.dp,
                                             bottom = 24.dp,

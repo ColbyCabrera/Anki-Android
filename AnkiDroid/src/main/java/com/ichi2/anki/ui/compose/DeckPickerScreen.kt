@@ -159,13 +159,13 @@ fun DeckPickerContent(
             indicator = {
                 Box(
                     modifier = Modifier
-                        .padding(top = 16.dp)
+                        .padding(top = contentPadding.calculateTopPadding() + 16.dp)
                         .align(Alignment.TopCenter)
                         .width(42.dp)
                         .height(42.dp)
                         .graphicsLayer {
-                            alpha = state.distanceFraction
-                            rotationZ = state.distanceFraction * 360
+                            alpha = state.distanceFraction * 5
+                            rotationZ = state.distanceFraction * 180
                             translationY = (state.distanceFraction * 140) - 60
                         }
                         .clip(morphingShape)
@@ -318,9 +318,9 @@ fun DeckPickerScreen(
                     title = {
                         if (!isSearchOpen) Text(
                             stringResource(R.string.app_name),
-                            style = MaterialTheme.typography.titleLarge
+                            style = MaterialTheme.typography.displayMediumEmphasized
                         )
-                    }, // Expressive TopAppBar Title
+                    },
                     navigationIcon = {
                         IconButton(onClick = onNavigationIconClick) {
                             Icon(
@@ -383,7 +383,7 @@ fun DeckPickerScreen(
                 onRebuild = onRebuild,
                 onEmpty = onEmpty,
                 listState = listState,
-                modifier = Modifier.padding(paddingValues)
+                contentPadding = paddingValues,
             )
         }
         Scrim(
