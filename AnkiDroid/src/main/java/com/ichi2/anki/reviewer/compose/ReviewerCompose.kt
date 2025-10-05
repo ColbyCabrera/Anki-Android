@@ -25,7 +25,6 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -103,10 +102,6 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                     Button(onClick = { viewModel.onEvent(ReviewerEvent.ShowAnswer) }) {
                         Text("Show Answer")
                     }
-                } else {
-                    IconButton(onClick = { /* TODO: Maybe a different action? */ }) {
-                        Icon(Icons.Filled.Replay, contentDescription = "Flip Card")
-                    }
                 }
             },
             trailingContent = {
@@ -117,7 +112,9 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                 ) {
                     AppBarRow(
                         overflowIndicator = {
-                            IconButton(onClick = { /*TODO*/ }) {
+                            IconButton(onClick = {
+                                // TODO: Implement overflow menu state management
+                            }) {
                                 Icon(
                                     Icons.Default.MoreVert,
                                     contentDescription = "More Actions"
