@@ -67,7 +67,6 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
-import androidx.compose.material3.NavigationDrawerItemDefaults.colors
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.SnackbarHostState
@@ -605,8 +604,6 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                         drawerState = drawerState, drawerContent = {
                             ModalDrawerSheet(
                                 modifier = Modifier.width(310.dp),
-                                drawerContainerColor = MaterialTheme.colorScheme.surface,
-                                drawerContentColor = MaterialTheme.colorScheme.onSurface
                             ) {
                                 Column(
                                     Modifier
@@ -635,26 +632,18 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                             )
                                         }
                                         NavigationDrawerItem(
-                                            colors = colors(
-                                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                                selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                                selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                                unselectedTextColor = MaterialTheme.colorScheme.onSurface,
-                                                unselectedIconColor = MaterialTheme.colorScheme.onSurface,
-                                            ),
                                             icon = {
-                                                Icon(
-                                                    painterResource(item.icon),
-                                                    contentDescription = null
-                                                )
-                                            },
+                                            Icon(
+                                                painterResource(item.icon),
+                                                contentDescription = null
+                                            )
+                                        },
                                             label = { Text(stringResource(item.labelResId)) },
                                             selected = selectedNavigationItem == index,
                                             onClick = {
                                                 selectedNavigationItem = index
                                                 item.action?.invoke()
-                                            }
-                                        )
+                                            })
                                     }
                                 }
                             }
