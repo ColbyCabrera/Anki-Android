@@ -383,7 +383,7 @@ fun DeckPickerScreen(
                 onRebuild = onRebuild,
                 onEmpty = onEmpty,
                 listState = listState,
-                modifier = Modifier.padding(paddingValues)
+                contentPadding = paddingValues
             )
         }
         Scrim(
