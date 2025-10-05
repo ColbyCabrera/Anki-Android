@@ -43,8 +43,7 @@ val GoogleSansFlexFamily = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         Font(
             R.font.google_sans_flex,
             variationSettings = FontVariation.Settings(
-                FontVariation.weight(950),
-                FontVariation.width(30f),
+                FontVariation.width(3F),
                 FontVariation.slant(-6f),
             )
         )
@@ -65,7 +64,7 @@ val AppTypography = Typography(
     ), displayLargeEmphasized = TextStyle(
         fontFamily = GoogleSansFlexFamily,
         fontWeight = FontWeight.Thin,
-        fontSize = 100.sp,
+        fontSize = 57.sp,
         lineHeight = 64.sp,
         letterSpacing = (-0.5).sp,
     ), displayMedium = TextStyle(
