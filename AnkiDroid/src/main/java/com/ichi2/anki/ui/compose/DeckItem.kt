@@ -28,6 +28,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -50,6 +51,7 @@ import com.ichi2.anki.deckpicker.DisplayDeckNode
 
 private val SubDeckCardRadius = 14.dp
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun DeckItem(
     deck: DisplayDeckNode,
@@ -83,7 +85,7 @@ fun DeckItem(
                 modifier = Modifier
                     .weight(1f)
                     .padding(vertical = 12.dp, horizontal = 8.dp),
-                style = if (deck.depth == 0) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium,
+                style = if (deck.depth == 0) MaterialTheme.typography.titleLargeEmphasized else MaterialTheme.typography.titleMedium,
             )
             Text(
                 text = deck.newCount.toString(),

@@ -318,7 +318,7 @@ fun DeckPickerScreen(
                     title = {
                         if (!isSearchOpen) Text(
                             stringResource(R.string.app_name),
-                            style = MaterialTheme.typography.headlineSmall
+                            style = MaterialTheme.typography.displayMediumEmphasized
                         )
                     },
                     navigationIcon = {
