@@ -17,15 +17,23 @@
  ****************************************************************************************/
 package com.ichi2.anki.reviewer.compose
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FloatingToolbarHorizontalFabPosition
+import androidx.compose.material3.HorizontalFloatingToolbar
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -36,7 +44,7 @@ import anki.scheduler.CardAnswer
 import com.ichi2.anki.reviewer.ReviewerEvent
 import com.ichi2.anki.reviewer.ReviewerViewModel
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ReviewerContent(viewModel: ReviewerViewModel) {
     val state by viewModel.state.collectAsState()
@@ -95,24 +103,16 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Button(onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.AGAIN)) }) {
-                            Text("Again")
+                            Text("${state.nextTimes[0]}")
                         }
                         Button(onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.HARD)) }) {
-                            Text("Hard")
+                            Text("${state.nextTimes[1]}")
                         }
                         Button(onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.GOOD)) }) {
-                            Text("Good")
+                            Text("${state.nextTimes[2]}")
                         }
                         Button(onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.EASY)) }) {
-                            Text("Easy")
-                        }
-                        IconButton(onClick = {
-                            // TODO: Implement overflow menu state management
-                        }) {
-                            Icon(
-                                Icons.Default.MoreVert,
-                                contentDescription = "More Actions"
-                            )
+                            Text("${state.nextTimes[3]}")
                         }
                     }
                 }
