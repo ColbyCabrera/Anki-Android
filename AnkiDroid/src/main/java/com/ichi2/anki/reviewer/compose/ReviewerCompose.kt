@@ -36,20 +36,6 @@ import anki.scheduler.CardAnswer
 import com.ichi2.anki.reviewer.ReviewerEvent
 import com.ichi2.anki.reviewer.ReviewerViewModel
 
-@Composable
-fun AppBarRow(
-    overflowIndicator: @Composable () -> Unit,
-    content: @Composable RowScope.() -> Unit
-) {
-    Row(
-        horizontalArrangement = Arrangement.End,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        content()
-        overflowIndicator()
-    }
-}
-
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ReviewerContent(viewModel: ReviewerViewModel) {
@@ -90,37 +76,23 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                 .align(Alignment.BottomCenter)
                 .offset(y = (-16).dp),
             expanded = true, // Always expanded to show content
-            leadingContent = {
+            floatingActionButton = {
                 ExpandableReviewerFab(
                     onEdit = { viewModel.onEvent(ReviewerEvent.EditCard) },
                     onBury = { viewModel.onEvent(ReviewerEvent.BuryCard) },
                     onSuspend = { viewModel.onEvent(ReviewerEvent.SuspendCard) }
                 )
             },
+            floatingActionButtonPosition = FloatingToolbarHorizontalFabPosition.Start,
             content = {
                 if (!state.isAnswerShown) {
                     Button(onClick = { viewModel.onEvent(ReviewerEvent.ShowAnswer) }) {
                         Text("Show Answer")
                     }
-                }
-            },
-            trailingContent = {
-                AnimatedVisibility(
-                    visible = state.isAnswerShown,
-                    enter = slideInHorizontally(initialOffsetX = { it / 2 }) + fadeIn(),
-                    exit = slideOutHorizontally(targetOffsetX = { it / 2 }) + fadeOut()
-                ) {
-                    AppBarRow(
-                        overflowIndicator = {
-                            IconButton(onClick = {
-                                // TODO: Implement overflow menu state management
-                            }) {
-                                Icon(
-                                    Icons.Default.MoreVert,
-                                    contentDescription = "More Actions"
-                                )
-                            }
-                        }
+                } else {
+                    Row(
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Button(onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.AGAIN)) }) {
                             Text("Again")
@@ -133,6 +105,14 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                         }
                         Button(onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.EASY)) }) {
                             Text("Easy")
+                        }
+                        IconButton(onClick = {
+                            // TODO: Implement overflow menu state management
+                        }) {
+                            Icon(
+                                Icons.Default.MoreVert,
+                                contentDescription = "More Actions"
+                            )
                         }
                     }
                 }
