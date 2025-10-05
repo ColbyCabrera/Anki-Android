@@ -22,6 +22,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import anki.scheduler.CardAnswer
 import com.ichi2.anki.CollectionManager
+import com.ichi2.anki.Reviewer
 import com.ichi2.anki.cardviewer.TypeAnswer
 import com.ichi2.anki.libanki.Card
 import com.ichi2.anki.libanki.sched.CurrentQueueState
@@ -60,9 +61,12 @@ sealed class ReviewerEvent {
     object ToggleMark : ReviewerEvent()
     data class SetFlag(val flag: Int) : ReviewerEvent()
     data class LinkClicked(val url: String) : ReviewerEvent()
+    object EditCard : ReviewerEvent()
+    object BuryCard : ReviewerEvent()
+    object SuspendCard : ReviewerEvent()
 }
 
-class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
+class ReviewerViewModel(app: Application, private val reviewer: Reviewer) : AndroidViewModel(app) {
     private val _state = MutableStateFlow(ReviewerState())
     val state: StateFlow<ReviewerState> = _state.asStateFlow()
 
@@ -84,6 +88,9 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
             is ReviewerEvent.ToggleMark -> toggleMark()
             is ReviewerEvent.SetFlag -> setFlag(event.flag)
             is ReviewerEvent.LinkClicked -> linkClicked(event.url)
+            ReviewerEvent.BuryCard -> TODO()
+            ReviewerEvent.EditCard -> TODO()
+            ReviewerEvent.SuspendCard -> TODO()
         }
     }
 

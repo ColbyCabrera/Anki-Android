@@ -17,92 +17,129 @@
  ****************************************************************************************/
 package com.ichi2.anki.reviewer.compose
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.FloatingToolbarDefaults
-import androidx.compose.material3.HorizontalFloatingToolbar
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Replay
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import anki.scheduler.CardAnswer.Rating
+import anki.scheduler.CardAnswer
 import com.ichi2.anki.reviewer.ReviewerEvent
 import com.ichi2.anki.reviewer.ReviewerViewModel
+
+@Composable
+fun AppBarRow(
+    overflowIndicator: @Composable () -> Unit,
+    content: @Composable RowScope.() -> Unit
+) {
+    Row(
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        content()
+        overflowIndicator()
+    }
+}
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ReviewerContent(viewModel: ReviewerViewModel) {
     val state by viewModel.state.collectAsState()
-    Scaffold(
-        topBar = {
-            ReviewerTopBar(
-                newCount = state.newCount,
-                learnCount = state.learnCount,
-                reviewCount = state.reviewCount,
-                timer = state.timer,
-                chosenAnswer = state.chosenAnswer,
-                isMarked = state.isMarked,
-                flag = state.flag,
-                onToggleMark = { viewModel.onEvent(ReviewerEvent.ToggleMark) },
-                onSetFlag = { viewModel.onEvent(ReviewerEvent.SetFlag(it)) })
-        }) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            topBar = {
+                ReviewerTopBar(
+                    newCount = state.newCount,
+                    learnCount = state.learnCount,
+                    reviewCount = state.reviewCount,
+                    timer = state.timer,
+                    chosenAnswer = state.chosenAnswer,
+                    isMarked = state.isMarked,
+                    flag = state.flag,
+                    onToggleMark = { viewModel.onEvent(ReviewerEvent.ToggleMark) },
+                    onSetFlag = { viewModel.onEvent(ReviewerEvent.SetFlag(it)) }
+                )
+            }
+        ) { paddingValues ->
             Flashcard(
-                html = state.html, onTap = {
-                if (!state.isAnswerShown) {
-                    viewModel.onEvent(ReviewerEvent.ShowAnswer)
-                }
-            }, onLinkClick = {
-                viewModel.onEvent(ReviewerEvent.LinkClicked(it))
-            }, mediaDirectory = state.mediaDirectory
-            )
-            HorizontalFloatingToolbar(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .offset(y = (-16).dp),
-                expanded = true,
-                colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(),
-                leadingContent = {
-                    FilledIconButton(
-                        modifier = Modifier.width(64.dp),
-                        onClick = { /* doSomething() */ },
-                    ) {
-                        Icon(Icons.Filled.Add, contentDescription = "Localized description")
+                html = state.html,
+                onTap = {
+                    if (!state.isAnswerShown) {
+                        viewModel.onEvent(ReviewerEvent.ShowAnswer)
                     }
                 },
-                trailingContent = {
-                    AnswerButtons(
-                        isAnswerShown = state.isAnswerShown,
-                        showTypeInAnswer = state.showTypeInAnswer,
-                        onShowAnswer = { viewModel.onEvent(ReviewerEvent.ShowAnswer) },
-                        onAgain = { viewModel.onEvent(ReviewerEvent.RateCard(Rating.AGAIN)) },
-                        onHard = { viewModel.onEvent(ReviewerEvent.RateCard(Rating.HARD)) },
-                        onGood = { viewModel.onEvent(ReviewerEvent.RateCard(Rating.GOOD)) },
-                        onEasy = { viewModel.onEvent(ReviewerEvent.RateCard(Rating.EASY)) },
-                        nextTimes = state.nextTimes,
-                        typedAnswer = state.typedAnswer,
-                        onTypedAnswerChanged = { viewModel.onEvent(ReviewerEvent.OnTypedAnswerChanged(it)) }
-                    )
+                onLinkClick = {
+                    viewModel.onEvent(ReviewerEvent.LinkClicked(it))
                 },
-                content = {
-                   ShowAnswerButton(onShowAnswer = { viewModel.onEvent(ReviewerEvent.ShowAnswer) })
-                },
+                mediaDirectory = state.mediaDirectory,
+                modifier = Modifier.padding(paddingValues)
             )
         }
+        HorizontalFloatingToolbar(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .offset(y = (-16).dp),
+            expanded = true, // Always expanded to show content
+            leadingContent = {
+                ExpandableReviewerFab(
+                    onEdit = { viewModel.onEvent(ReviewerEvent.EditCard) },
+                    onBury = { viewModel.onEvent(ReviewerEvent.BuryCard) },
+                    onSuspend = { viewModel.onEvent(ReviewerEvent.SuspendCard) }
+                )
+            },
+            content = {
+                if (!state.isAnswerShown) {
+                    Button(onClick = { viewModel.onEvent(ReviewerEvent.ShowAnswer) }) {
+                        Text("Show Answer")
+                    }
+                } else {
+                    IconButton(onClick = { /* TODO: Maybe a different action? */ }) {
+                        Icon(Icons.Filled.Replay, contentDescription = "Flip Card")
+                    }
+                }
+            },
+            trailingContent = {
+                AnimatedVisibility(
+                    visible = state.isAnswerShown,
+                    enter = slideInHorizontally(initialOffsetX = { it / 2 }) + fadeIn(),
+                    exit = slideOutHorizontally(targetOffsetX = { it / 2 }) + fadeOut()
+                ) {
+                    AppBarRow(
+                        overflowIndicator = {
+                            IconButton(onClick = { /*TODO*/ }) {
+                                Icon(
+                                    Icons.Default.MoreVert,
+                                    contentDescription = "More Actions"
+                                )
+                            }
+                        }
+                    ) {
+                        Button(onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.AGAIN)) }) {
+                            Text("Again")
+                        }
+                        Button(onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.HARD)) }) {
+                            Text("Hard")
+                        }
+                        Button(onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.GOOD)) }) {
+                            Text("Good")
+                        }
+                        Button(onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.EASY)) }) {
+                            Text("Easy")
+                        }
+                    }
+                }
+            }
+        )
     }
 }
