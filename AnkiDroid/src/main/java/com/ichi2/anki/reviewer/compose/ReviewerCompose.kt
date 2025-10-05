@@ -17,16 +17,30 @@
  ****************************************************************************************/
 package com.ichi2.anki.reviewer.compose
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FloatingToolbarDefaults
+import androidx.compose.material3.HorizontalFloatingToolbar
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import anki.scheduler.CardAnswer.Rating
 import com.ichi2.anki.reviewer.ReviewerEvent
 import com.ichi2.anki.reviewer.ReviewerViewModel
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ReviewerContent(viewModel: ReviewerViewModel) {
     val state by viewModel.state.collectAsState()
@@ -41,36 +55,54 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                 isMarked = state.isMarked,
                 flag = state.flag,
                 onToggleMark = { viewModel.onEvent(ReviewerEvent.ToggleMark) },
-                onSetFlag = { viewModel.onEvent(ReviewerEvent.SetFlag(it)) }
-            )
-        },
-        bottomBar = {
-            AnswerButtons(
-                isAnswerShown = state.isAnswerShown,
-                showTypeInAnswer = state.showTypeInAnswer,
-                onShowAnswer = { viewModel.onEvent(ReviewerEvent.ShowAnswer) },
-                onAgain = { viewModel.onEvent(ReviewerEvent.RateCard(Rating.AGAIN)) },
-                onHard = { viewModel.onEvent(ReviewerEvent.RateCard(Rating.HARD)) },
-                onGood = { viewModel.onEvent(ReviewerEvent.RateCard(Rating.GOOD)) },
-                onEasy = { viewModel.onEvent(ReviewerEvent.RateCard(Rating.EASY)) },
-                nextTimes = state.nextTimes,
-                typedAnswer = state.typedAnswer,
-                onTypedAnswerChanged = { viewModel.onEvent(ReviewerEvent.OnTypedAnswerChanged(it)) }
-            )
-        }
-    ) { paddingValues ->
-        Flashcard(
-            html = state.html,
-            onTap = {
+                onSetFlag = { viewModel.onEvent(ReviewerEvent.SetFlag(it)) })
+        }) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            Flashcard(
+                html = state.html, onTap = {
                 if (!state.isAnswerShown) {
                     viewModel.onEvent(ReviewerEvent.ShowAnswer)
                 }
-            },
-            onLinkClick = {
+            }, onLinkClick = {
                 viewModel.onEvent(ReviewerEvent.LinkClicked(it))
-            },
-            mediaDirectory = state.mediaDirectory,
-            modifier = Modifier.padding(paddingValues)
-        )
+            }, mediaDirectory = state.mediaDirectory
+            )
+            HorizontalFloatingToolbar(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .offset(y = (-16).dp),
+                expanded = true,
+                colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(),
+                leadingContent = {
+                    FilledIconButton(
+                        modifier = Modifier.width(64.dp),
+                        onClick = { /* doSomething() */ },
+                    ) {
+                        Icon(Icons.Filled.Add, contentDescription = "Localized description")
+                    }
+                },
+                trailingContent = {
+                    AnswerButtons(
+                        isAnswerShown = state.isAnswerShown,
+                        showTypeInAnswer = state.showTypeInAnswer,
+                        onShowAnswer = { viewModel.onEvent(ReviewerEvent.ShowAnswer) },
+                        onAgain = { viewModel.onEvent(ReviewerEvent.RateCard(Rating.AGAIN)) },
+                        onHard = { viewModel.onEvent(ReviewerEvent.RateCard(Rating.HARD)) },
+                        onGood = { viewModel.onEvent(ReviewerEvent.RateCard(Rating.GOOD)) },
+                        onEasy = { viewModel.onEvent(ReviewerEvent.RateCard(Rating.EASY)) },
+                        nextTimes = state.nextTimes,
+                        typedAnswer = state.typedAnswer,
+                        onTypedAnswerChanged = { viewModel.onEvent(ReviewerEvent.OnTypedAnswerChanged(it)) }
+                    )
+                },
+                content = {
+                   ShowAnswerButton(onShowAnswer = { viewModel.onEvent(ReviewerEvent.ShowAnswer) })
+                },
+            )
+        }
     }
 }
