@@ -8,7 +8,7 @@
  * Foundation; either version 3 of the License, or (at your option) any later           *
  * version.                                                                             *
  *                                                                                      *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY      *
+ * This program is distributed in the hope that in editing this file it will be useful, but WITHOUT ANY      *
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A      *
  * PARTICULAR PURPOSE. See the GNU General Public License for more details.             *
  *                                                                                      *
@@ -25,32 +25,23 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ButtonGroup
-import androidx.compose.material3.ButtonGroupDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.FloatingToolbarDefaults
+import androidx.compose.material.icons.automirrored.filled.Label
+import androidx.compose.material.icons.automirrored.filled.Undo
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.material3.FloatingToolbarDefaults.ScreenOffset
-import androidx.compose.material3.HorizontalFloatingToolbar
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import anki.scheduler.CardAnswer
+import com.ichi2.anki.R
 import com.ichi2.anki.reviewer.ReviewerEvent
 import com.ichi2.anki.reviewer.ReviewerViewModel
 
@@ -120,12 +111,43 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                         "Easy" to CardAnswer.Rating.EASY
                     )
 
-                    customItem(buttonGroupContent = {
-                        IconButton(onClick = { /* doSomething() */ },
+                    customItem(
+                        buttonGroupContent = {
+                            var showMenu by remember { mutableStateOf(false) }
+                            IconButton(onClick = { showMenu = !showMenu }) {
+                                Icon(Icons.Filled.MoreVert, contentDescription = "More options")
+                            }
+                        },
+                        menuContent = {
+                            var showMenu by remember { mutableStateOf(false) }
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false }
                             ) {
-                            Icon(Icons.Filled.MoreVert, contentDescription = "More options")
+                                val menuOptions = listOf(
+                                    "Redo" to Icons.AutoMirrored.Filled.Undo,
+                                    "Enable whiteboard" to Icons.Filled.Edit,
+                                    "Edit note" to Icons.Filled.EditNote,
+                                    "Edit tags" to Icons.AutoMirrored.Filled.Label,
+                                    "Bury card" to Icons.Filled.VisibilityOff,
+                                    "Suspend card" to Icons.Filled.Pause,
+                                    "Delete note" to Icons.Filled.Delete,
+                                    "Mark note" to Icons.Filled.Star,
+                                    "Reschedule" to Icons.Filled.Schedule,
+                                    "Replay media" to Icons.Filled.Replay,
+                                    "Enable voice playback" to Icons.Filled.RecordVoiceOver,
+                                    "Deck options" to Icons.Filled.Tune
+                                )
+                                menuOptions.forEach { (text, icon) ->
+                                    DropdownMenuItem(
+                                        text = { Text(text) },
+                                        onClick = { /*TODO*/ },
+                                        leadingIcon = { Icon(icon, contentDescription = null) }
+                                    )
+                                }
+                            }
                         }
-                    }, menuContent = {})
+                    )
 
                     ratings.forEachIndexed { index, (_, rating) ->
                         customItem(
