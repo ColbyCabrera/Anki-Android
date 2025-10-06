@@ -1028,7 +1028,7 @@ abstract class AbstractFlashcardViewer : NavigationDrawerActivity(), ViewerComma
             isFocusableInTouchMode = typeAnswer!!.useInputTag
             isScrollbarFadingEnabled = true
             // Set transparent color to prevent flashing white when night mode enabled
-            setBackgroundColor(Color.argb(1, 0, 0, 0))
+            setBackgroundColor(Themes.getColorFromAttr(this@AbstractFlashcardViewer, R.attr.colorSurface))
             CardViewerWebClient(resourceHandler, this@AbstractFlashcardViewer).apply {
                 webViewClient = this
                 this@AbstractFlashcardViewer.webViewClient = this
