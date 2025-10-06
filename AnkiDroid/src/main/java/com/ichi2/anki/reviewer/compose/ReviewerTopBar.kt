@@ -16,9 +16,12 @@
 package com.ichi2.anki.reviewer.compose
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
@@ -46,6 +49,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ichi2.anki.R
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,13 +58,14 @@ fun ReviewerTopBar(
     newCount: Int,
     learnCount: Int,
     reviewCount: Int,
-    timer: String,
     chosenAnswer: String,
     isMarked: Boolean,
     flag: Int,
     onToggleMark: () -> Unit,
     onSetFlag: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isAnswerShown: Boolean,
+    onUnanswerCard: () -> Unit
 ) {
     CenterAlignedTopAppBar(
         modifier = modifier, title = { Text(chosenAnswer) }, navigationIcon = {
@@ -73,9 +78,14 @@ fun ReviewerTopBar(
     }, actions = {
         MarkIcon(isMarked = isMarked, onToggleMark = onToggleMark)
         FlagIcon(currentFlag = flag, onSetFlag = onSetFlag)
-        Text(
-            text = timer, fontSize = 14.sp, modifier = Modifier.padding(end = 8.dp)
-        )
+        AnimatedVisibility(visible = isAnswerShown) {
+            IconButton(onClick = onUnanswerCard) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Undo,
+                    contentDescription = stringResource(id = R.string.unanswer_card)
+                )
+            }
+        }
     }, colors = TopAppBarDefaults.topAppBarColors(
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
         navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -174,11 +184,13 @@ fun ReviewerTopBarPreview() {
             newCount = 13,
             learnCount = 3,
             reviewCount = 7,
-            timer = "0.5s",
             chosenAnswer = "Answer",
             isMarked = true,
             flag = 1,
             onToggleMark = {},
-            onSetFlag = {})
+            onSetFlag = {},
+            isAnswerShown = true,
+            onUnanswerCard = {}
+        )
     }
 }

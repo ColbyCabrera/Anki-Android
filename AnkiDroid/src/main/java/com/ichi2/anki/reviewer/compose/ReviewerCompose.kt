@@ -97,12 +97,13 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                 newCount = state.newCount,
                 learnCount = state.learnCount,
                 reviewCount = state.reviewCount,
-                timer = state.timer,
                 chosenAnswer = state.chosenAnswer,
                 isMarked = state.isMarked,
                 flag = state.flag,
                 onToggleMark = { viewModel.onEvent(ReviewerEvent.ToggleMark) },
-                onSetFlag = { viewModel.onEvent(ReviewerEvent.SetFlag(it)) })
+                onSetFlag = { viewModel.onEvent(ReviewerEvent.SetFlag(it)) },
+                isAnswerShown = state.isAnswerShown
+            ) { viewModel.onEvent(ReviewerEvent.UnanswerCard) }
         }) { paddingValues ->
             Flashcard(
                 modifier = Modifier
