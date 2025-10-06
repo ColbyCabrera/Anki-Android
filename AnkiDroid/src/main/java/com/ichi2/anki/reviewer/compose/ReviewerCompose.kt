@@ -20,17 +20,24 @@ package com.ichi2.anki.reviewer.compose
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroup
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.FloatingToolbarHorizontalFabPosition
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
@@ -42,6 +49,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import anki.scheduler.CardAnswer
 import com.ichi2.anki.reviewer.ReviewerEvent
@@ -80,13 +88,14 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .offset(y = (-16).dp),
-            expanded = true, // Always expanded to show content
+            expanded = true,
             floatingActionButton = {
                 ExpandableReviewerFab(
                     onEdit = { viewModel.onEvent(ReviewerEvent.EditCard) },
                     onBury = { viewModel.onEvent(ReviewerEvent.BuryCard) },
                     onSuspend = { viewModel.onEvent(ReviewerEvent.SuspendCard) })
             },
+            colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(),
             floatingActionButtonPosition = FloatingToolbarHorizontalFabPosition.Start,
         ) {
             if (!state.isAnswerShown) {
@@ -123,12 +132,16 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                                 val interactionSource = remember { MutableInteractionSource() }
                                 Button(
                                     onClick = { viewModel.onEvent(ReviewerEvent.RateCard(rating)) },
-                                    modifier = Modifier.animateWidth(interactionSource),
-                                    contentPadding = ButtonDefaults.SmallContentPadding,
-                                    shape = ButtonDefaults.squareShape,
+                                    modifier = Modifier.animateWidth(interactionSource).height(48.dp),
+                                    contentPadding = ButtonDefaults.ExtraSmallContentPadding,
+                                    shape = when (index) {
+                                        0 -> ButtonGroupDefaults.connectedLeadingButtonShape
+                                        3 -> ButtonGroupDefaults.connectedTrailingButtonShape
+                                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes().shape
+                                    },
                                     interactionSource = interactionSource
                                 ) {
-                                    Text(state.nextTimes[index])
+                                    Text(state.nextTimes[index], maxLines = 1, overflow = TextOverflow.Visible)
                                 }
                             },
                             menuContent = {},
