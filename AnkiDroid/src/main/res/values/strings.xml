@@ -19,4 +19,7 @@
     <string name="fab_menu_expanded">Expanded</string>
     <string name="fab_menu_collapsed">Collapsed</string>
     <string name="fab_menu_toggle">Toggle menu</string>
+    <string name="new_cards">New cards</string>
+    <string name="learning_cards">Learning cards</string>
+    <string name="review_cards">Review cards</string>
 </resources>

@@ -54,6 +54,22 @@ import com.ichi2.anki.deckpicker.DisplayDeckNode
 
 private val SubDeckCardRadius = 14.dp
 
+@Composable
+private fun CountChip(
+    count: Int,
+    icon: @Composable () -> Unit,
+    containerColor: Color,
+    modifier: Modifier = Modifier
+) {
+    AssistChip(
+        modifier = modifier,
+        onClick = {},
+        label = { Text(count.toString()) },
+        leadingIcon = icon,
+        colors = ChipDefaults.assistChipColors(containerColor = containerColor)
+    )
+}
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun DeckItem(
@@ -90,58 +106,37 @@ fun DeckItem(
                     .padding(vertical = 12.dp, horizontal = 8.dp),
                 style = if (deck.depth == 0) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium,
             )
-            AssistChip(
-                label = {
-                    Text(
-                        text = deck.newCount.toString(),
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                },
-                leadingIcon = {
+            CountChip(
+                count = deck.newCount,
+                icon = {
                     Icon(
                         painter = painterResource(R.drawable.ic_add_white),
-                        contentDescription = stringResource(R.string.new_cards),
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        contentDescription = stringResource(R.string.new_cards)
                     )
                 },
-                colors = ChipDefaults.assistChipColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                onClick = {},
+                containerColor = MaterialTheme.colorScheme.primaryContainer
             )
             Spacer(modifier = Modifier.padding(horizontal = 2.dp))
-            AssistChip(
-                label = {
-                    Text(
-                        text = deck.lrnCount.toString(),
-                        color = MaterialTheme.colorScheme.onErrorContainer
-                    )
-                },
-                leadingIcon = {
+            CountChip(
+                count = deck.lrnCount,
+                icon = {
                     Icon(
                         painter = painterResource(R.drawable.ic_running_clock),
-                        contentDescription = stringResource(R.string.learning_cards),
-                        tint = MaterialTheme.colorScheme.onErrorContainer
+                        contentDescription = stringResource(R.string.learning_cards)
                     )
                 },
-                colors = ChipDefaults.assistChipColors(containerColor = MaterialTheme.colorScheme.errorContainer),
-                onClick = {},
+                containerColor = MaterialTheme.colorScheme.errorContainer
             )
             Spacer(modifier = Modifier.padding(horizontal = 2.dp))
-            AssistChip(
-                label = {
-                    Text(
-                        text = deck.revCount.toString(),
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                },
-                leadingIcon = {
+            CountChip(
+                count = deck.revCount,
+                icon = {
                     Icon(
                         painter = painterResource(R.drawable.ic_done_white),
-                        contentDescription = stringResource(R.string.review_cards),
-                        tint = MaterialTheme.colorScheme.onSecondaryContainer
+                        contentDescription = stringResource(R.string.review_cards)
                     )
                 },
-                colors = ChipDefaults.assistChipColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-                onClick = {},
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
             )
             if (deck.canCollapse) {
                 Surface(
