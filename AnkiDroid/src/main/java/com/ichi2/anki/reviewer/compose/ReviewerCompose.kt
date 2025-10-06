@@ -123,7 +123,7 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
         ) {
             if (!state.isAnswerShown) {
                 Button(onClick = { viewModel.onEvent(ReviewerEvent.ShowAnswer) }) {
-                    Text("Show Answer")
+                    Text(stringResource(R.string.show_answer))
                 }
             } else {
                 ButtonGroup(
@@ -203,22 +203,22 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                 contentColor = MaterialTheme.colorScheme.onSurface,
             ) {
                 val menuOptions = listOf(
-                    "Redo" to Icons.AutoMirrored.Filled.Undo,
-                    "Enable whiteboard" to Icons.Filled.Edit,
-                    "Edit note" to Icons.Filled.EditNote,
-                    "Edit tags" to Icons.AutoMirrored.Filled.Label,
-                    "Bury card" to Icons.Filled.VisibilityOff,
-                    "Suspend card" to Icons.Filled.Pause,
-                    "Delete note" to Icons.Filled.Delete,
-                    "Mark note" to Icons.Filled.Star,
-                    "Reschedule" to Icons.Filled.Schedule,
-                    "Replay media" to Icons.Filled.Replay,
-                    "Enable voice playback" to Icons.Filled.RecordVoiceOver,
-                    "Deck options" to Icons.Filled.Tune
+                    R.string.redo to Icons.AutoMirrored.Filled.Undo,
+                    R.string.enable_whiteboard to Icons.Filled.Edit,
+                    R.string.cardeditor_title_edit_card to Icons.Filled.EditNote,
+                    R.string.menu_edit_tags to Icons.AutoMirrored.Filled.Label,
+                    R.string.menu_bury_card to Icons.Filled.VisibilityOff,
+                    R.string.menu_suspend_card to Icons.Filled.Pause,
+                    R.string.menu_delete_note to Icons.Filled.Delete,
+                    R.string.menu_mark_note to Icons.Filled.Star,
+                    R.string.card_editor_reschedule_card to Icons.Filled.Schedule,
+                    R.string.replay_media to Icons.Filled.Replay,
+                    R.string.menu_enable_voice_playback to Icons.Filled.RecordVoiceOver,
+                    R.string.deck_options to Icons.Filled.Tune
                 )
                 menuOptions.forEach { (text, icon) ->
                     ListItem(
-                        headlineContent = { Text(text) },
+                        headlineContent = { Text(stringResource(text)) },
                         leadingContent = { Icon(icon, contentDescription = null) },
                         modifier = Modifier.clickable {
                             scope.launch { sheetState.hide() }.invokeOnCompletion {
