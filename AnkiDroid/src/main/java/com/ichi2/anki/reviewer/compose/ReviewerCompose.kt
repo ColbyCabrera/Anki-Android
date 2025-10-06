@@ -18,6 +18,7 @@
 package com.ichi2.anki.reviewer.compose
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,6 +27,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -94,6 +96,7 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                 }
             } else {
                 ButtonGroup(
+
                     overflowIndicator = { menuState ->
                         FilledIconButton(
                             onClick = {
@@ -108,71 +111,33 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                                 contentDescription = "Localized description",
                             )
                         }
-                    }) {
-                    customItem(
-                        buttonGroupContent = {
-                            val interactionSource = remember { MutableInteractionSource() }
-                            Button(
-                                onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.AGAIN)) },
-                                modifier = Modifier.animateWidth(interactionSource),
-                                interactionSource = interactionSource
-                            ) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text("Again")
-                                    Text(state.nextTimes[0])
-                                }
-                            }
-                        },
-                        menuContent = {},
+                    }
+                ) {
+                    val ratings = listOf(
+                        "Again" to CardAnswer.Rating.AGAIN,
+                        "Hard" to CardAnswer.Rating.HARD,
+                        "Good" to CardAnswer.Rating.GOOD,
+                        "Easy" to CardAnswer.Rating.EASY
                     )
-                    customItem(
-                        buttonGroupContent = {
-                            val interactionSource = remember { MutableInteractionSource() }
-                            Button(
-                                onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.HARD)) },
-                                modifier = Modifier.animateWidth(interactionSource),
-                                interactionSource = interactionSource
-                            ) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text("Hard")
-                                    Text(state.nextTimes[1])
+                    ratings.forEachIndexed { index, (label, rating) ->
+                        customItem(
+                            buttonGroupContent = {
+                                val interactionSource = remember { MutableInteractionSource() }
+                                Button(
+                                    onClick = { viewModel.onEvent(ReviewerEvent.RateCard(rating)) },
+                                    modifier = Modifier.animateWidth(interactionSource),
+                                    shape = ButtonDefaults.squareShape,
+                                    interactionSource = interactionSource
+                                ) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text(label)
+                                        Text(state.nextTimes[index])
+                                    }
                                 }
-                            }
-                        },
-                        menuContent = {},
-                    )
-                    customItem(
-                        buttonGroupContent = {
-                            val interactionSource = remember { MutableInteractionSource() }
-                            Button(
-                                onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.GOOD)) },
-                                modifier = Modifier.animateWidth(interactionSource),
-                                interactionSource = interactionSource
-                            ) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text("Good")
-                                    Text(state.nextTimes[2])
-                                }
-                            }
-                        },
-                        menuContent = {},
-                    )
-                    customItem(
-                        buttonGroupContent = {
-                            val interactionSource = remember { MutableInteractionSource() }
-                            Button(
-                                onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.EASY)) },
-                                modifier = Modifier.animateWidth(interactionSource),
-                                interactionSource = interactionSource
-                            ) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text("Easy")
-                                    Text(state.nextTimes[3])
-                                }
-                            }
-                        },
-                        menuContent = {},
-                    )
+                            },
+                            menuContent = {},
+                        )
+                    }
                 }
             }
         }
