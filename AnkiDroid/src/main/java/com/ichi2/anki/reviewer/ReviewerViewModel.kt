@@ -22,7 +22,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import anki.scheduler.CardAnswer
 import com.ichi2.anki.CollectionManager
-import com.ichi2.anki.Reviewer
 import com.ichi2.anki.cardviewer.TypeAnswer
 import com.ichi2.anki.common.time.TimeManager
 import com.ichi2.anki.libanki.Card
