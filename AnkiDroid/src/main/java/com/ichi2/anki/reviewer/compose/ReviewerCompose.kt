@@ -17,6 +17,7 @@
  ****************************************************************************************/
 package com.ichi2.anki.reviewer.compose
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,12 +31,7 @@ import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.FloatingToolbarDefaults.ScreenOffset
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
@@ -44,11 +40,15 @@ import anki.scheduler.CardAnswer
 import com.ichi2.anki.R
 import com.ichi2.anki.reviewer.ReviewerEvent
 import com.ichi2.anki.reviewer.ReviewerViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ReviewerContent(viewModel: ReviewerViewModel) {
     val state by viewModel.state.collectAsState()
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
+    var showBottomSheet by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -113,37 +113,8 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
 
                     customItem(
                         buttonGroupContent = {
-                            var showMenu by remember { mutableStateOf(false) }
-                            Box {
-                                IconButton(onClick = { showMenu = !showMenu }) {
-                                    Icon(Icons.Filled.MoreVert, contentDescription = "More options")
-                                }
-                                DropdownMenu(
-                                    expanded = showMenu,
-                                    onDismissRequest = { showMenu = false }
-                                ) {
-                                    val menuOptions = listOf(
-                                        "Redo" to Icons.AutoMirrored.Filled.Undo,
-                                        "Enable whiteboard" to Icons.Filled.Edit,
-                                        "Edit note" to Icons.Filled.EditNote,
-                                        "Edit tags" to Icons.AutoMirrored.Filled.Label,
-                                        "Bury card" to Icons.Filled.VisibilityOff,
-                                        "Suspend card" to Icons.Filled.Pause,
-                                        "Delete note" to Icons.Filled.Delete,
-                                        "Mark note" to Icons.Filled.Star,
-                                        "Reschedule" to Icons.Filled.Schedule,
-                                        "Replay media" to Icons.Filled.Replay,
-                                        "Enable voice playback" to Icons.Filled.RecordVoiceOver,
-                                        "Deck options" to Icons.Filled.Tune
-                                    )
-                                    menuOptions.forEach { (text, icon) ->
-                                        DropdownMenuItem(
-                                            text = { Text(text) },
-                                            onClick = { /*TODO*/ },
-                                            leadingIcon = { Icon(icon, contentDescription = null) }
-                                        )
-                                    }
-                                }
+                            IconButton(onClick = { showBottomSheet = true }) {
+                                Icon(Icons.Filled.MoreVert, contentDescription = "More options")
                             }
                         },
                         menuContent = {}
@@ -180,6 +151,45 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                             menuContent = {},
                         )
                     }
+                }
+            }
+        }
+        if (showBottomSheet) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    showBottomSheet = false
+                },
+                sheetState = sheetState,
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+            ) {
+                val menuOptions = listOf(
+                    "Redo" to Icons.AutoMirrored.Filled.Undo,
+                    "Enable whiteboard" to Icons.Filled.Edit,
+                    "Edit note" to Icons.Filled.EditNote,
+                    "Edit tags" to Icons.AutoMirrored.Filled.Label,
+                    "Bury card" to Icons.Filled.VisibilityOff,
+                    "Suspend card" to Icons.Filled.Pause,
+                    "Delete note" to Icons.Filled.Delete,
+                    "Mark note" to Icons.Filled.Star,
+                    "Reschedule" to Icons.Filled.Schedule,
+                    "Replay media" to Icons.Filled.Replay,
+                    "Enable voice playback" to Icons.Filled.RecordVoiceOver,
+                    "Deck options" to Icons.Filled.Tune
+                )
+                menuOptions.forEach { (text, icon) ->
+                    ListItem(
+                        headlineContent = { Text(text) },
+                        leadingContent = { Icon(icon, contentDescription = null) },
+                        modifier = Modifier.clickable {
+                            scope.launch { sheetState.hide() }.invokeOnCompletion {
+                                if (!sheetState.isVisible) {
+                                    showBottomSheet = false
+                                }
+                            }
+                            // TODO: Handle click
+                        }
+                    )
                 }
             }
         }
