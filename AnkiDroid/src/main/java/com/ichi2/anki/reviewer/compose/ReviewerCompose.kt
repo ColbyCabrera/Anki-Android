@@ -202,23 +202,52 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                 containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = MaterialTheme.colorScheme.onSurface,
             ) {
-                val menuOptions = listOf(
-                    R.string.redo to Icons.AutoMirrored.Filled.Undo,
-                    R.string.enable_whiteboard to Icons.Filled.Edit,
-                    R.string.cardeditor_title_edit_card to Icons.Filled.EditNote,
-                    R.string.menu_edit_tags to Icons.AutoMirrored.Filled.Label,
-                    R.string.menu_bury_card to Icons.Filled.VisibilityOff,
-                    R.string.menu_suspend_card to Icons.Filled.Pause,
-                    R.string.menu_delete_note to Icons.Filled.Delete,
-                    R.string.menu_mark_note to Icons.Filled.Star,
-                    R.string.card_editor_reschedule_card to Icons.Filled.Schedule,
-                    R.string.replay_media to Icons.Filled.Replay,
-                    R.string.menu_enable_voice_playback to Icons.Filled.RecordVoiceOver,
-                    R.string.deck_options to Icons.Filled.Tune
-                )
-                menuOptions.forEach { (text, icon) ->
+                val menuOptions = remember(viewModel) {
+                    listOf(
+                        Triple(R.string.redo, Icons.AutoMirrored.Filled.Undo) {
+                            // TODO
+                        },
+                        Triple(R.string.enable_whiteboard, Icons.Filled.Edit) {
+                            // TODO
+                        },
+                        Triple(R.string.cardeditor_title_edit_card, Icons.Filled.EditNote) {
+                            viewModel.onEvent(ReviewerEvent.EditCard)
+                        },
+                        Triple(R.string.menu_edit_tags, Icons.AutoMirrored.Filled.Label) {
+                            // TODO
+                        },
+                        Triple(R.string.menu_bury_card, Icons.Filled.VisibilityOff) {
+                            viewModel.onEvent(ReviewerEvent.BuryCard)
+                        },
+                        Triple(R.string.menu_suspend_card, Icons.Filled.Pause) {
+                            viewModel.onEvent(ReviewerEvent.SuspendCard)
+                        },
+                        Triple(R.string.menu_delete_note, Icons.Filled.Delete) {
+                            // TODO
+                        },
+                        Triple(R.string.menu_mark_note, Icons.Filled.Star) {
+                            viewModel.onEvent(ReviewerEvent.ToggleMark)
+                        },
+                        Triple(R.string.card_editor_reschedule_card, Icons.Filled.Schedule) {
+                            // TODO
+                        },
+                        Triple(R.string.replay_media, Icons.Filled.Replay) {
+                            // TODO
+                        },
+                        Triple(
+                            R.string.menu_enable_voice_playback,
+                            Icons.Filled.RecordVoiceOver
+                        ) {
+                            // TODO
+                        },
+                        Triple(R.string.deck_options, Icons.Filled.Tune) {
+                            // TODO
+                        }
+                    )
+                }
+                menuOptions.forEach { (textRes, icon, action) ->
                     ListItem(
-                        headlineContent = { Text(stringResource(text)) },
+                        headlineContent = { Text(stringResource(textRes)) },
                         leadingContent = { Icon(icon, contentDescription = null) },
                         modifier = Modifier.clickable {
                             scope.launch { sheetState.hide() }.invokeOnCompletion {
@@ -226,8 +255,9 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                                     showBottomSheet = false
                                 }
                             }
-                            // TODO: Handle click
-                        })
+                            action()
+                        }
+                    )
                 }
             }
         }
