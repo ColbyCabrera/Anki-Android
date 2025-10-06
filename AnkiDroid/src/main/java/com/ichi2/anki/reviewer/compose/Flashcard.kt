@@ -91,7 +91,7 @@ fun Flashcard(
                 <style>
                     @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
                     html {
-                        color: $onSurfaceColorHex;
+                        color: ${onSurfaceColorHex}EF;
                         text-align: center;
                         font-family: 'Roboto', sans-serif;
                         font-size: ${currentStyle.fontSize.value}px;
@@ -100,6 +100,11 @@ fun Flashcard(
                         letter-spacing: ${currentStyle.letterSpacing.value}px;
                         padding-top: ${currentPadding}px;
                     }
+                    hr {
+                        opacity: 0.1;
+                         margin-bottom: 12px;
+                    }
+                        
                 </style>
                 $currentHtml
                 """.trimIndent()
