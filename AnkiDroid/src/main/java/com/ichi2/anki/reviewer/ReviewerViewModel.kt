@@ -44,7 +44,7 @@ data class ReviewerState(
     val timer: String = "0.0s",
     val chosenAnswer: String = "",
     val isAnswerShown: Boolean = false,
-    val html: String = "<html><body><h1>Loading...</h1></body></html>",
+    val html: String = "<html><body></body></html>",
     val nextTimes: List<String> = List(4) { "" },
     val showTypeInAnswer: Boolean = false,
     val typedAnswer: String = "",
