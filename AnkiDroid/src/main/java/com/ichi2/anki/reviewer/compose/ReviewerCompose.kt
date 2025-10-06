@@ -17,7 +17,9 @@
  ****************************************************************************************/
 package com.ichi2.anki.reviewer.compose
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -36,6 +38,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -106,39 +109,70 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                             )
                         }
                     }) {
-                    data class DifficultyButton(
-                        val difficulty: String,
-                        val nextTime: String,
-                        val onClick: () -> Unit,
+                    customItem(
+                        buttonGroupContent = {
+                            val interactionSource = remember { MutableInteractionSource() }
+                            Button(
+                                onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.AGAIN)) },
+                                modifier = Modifier.animateWidth(interactionSource),
+                                interactionSource = interactionSource
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text("Again")
+                                    Text(state.nextTimes[0])
+                                }
+                            }
+                        },
+                        menuContent = {},
                     )
-
-                    val difficultyButtons = listOf(
-                        DifficultyButton(
-                            difficulty = "Again",
-                            nextTime = state.nextTimes[0],
-                            onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.AGAIN)) }),
-                        DifficultyButton(
-                            difficulty = "Hard",
-                            nextTime = state.nextTimes[1],
-                            onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.HARD)) }),
-                        DifficultyButton(
-                            difficulty = "Good",
-                            nextTime = state.nextTimes[2],
-                            onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.GOOD)) }),
-                        DifficultyButton(
-                            difficulty = "Easy",
-                            nextTime = state.nextTimes[3],
-                            onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.EASY)) })
+                    customItem(
+                        buttonGroupContent = {
+                            val interactionSource = remember { MutableInteractionSource() }
+                            Button(
+                                onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.HARD)) },
+                                modifier = Modifier.animateWidth(interactionSource),
+                                interactionSource = interactionSource
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text("Hard")
+                                    Text(state.nextTimes[1])
+                                }
+                            }
+                        },
+                        menuContent = {},
                     )
-
-                    difficultyButtons.forEachIndexed { index, difficultyButton ->
-
-                        clickableItem(
-                            onClick = difficultyButton.onClick,
-                            label = difficultyButton.nextTime,
-
-                        )
-                    }
+                    customItem(
+                        buttonGroupContent = {
+                            val interactionSource = remember { MutableInteractionSource() }
+                            Button(
+                                onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.GOOD)) },
+                                modifier = Modifier.animateWidth(interactionSource),
+                                interactionSource = interactionSource
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text("Good")
+                                    Text(state.nextTimes[2])
+                                }
+                            }
+                        },
+                        menuContent = {},
+                    )
+                    customItem(
+                        buttonGroupContent = {
+                            val interactionSource = remember { MutableInteractionSource() }
+                            Button(
+                                onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.EASY)) },
+                                modifier = Modifier.animateWidth(interactionSource),
+                                interactionSource = interactionSource
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text("Easy")
+                                    Text(state.nextTimes[3])
+                                }
+                            }
+                        },
+                        menuContent = {},
+                    )
                 }
             }
         }
