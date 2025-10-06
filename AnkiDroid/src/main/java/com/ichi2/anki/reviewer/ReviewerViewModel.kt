@@ -24,6 +24,7 @@ import anki.scheduler.CardAnswer
 import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.Reviewer
 import com.ichi2.anki.cardviewer.TypeAnswer
+import com.ichi2.anki.common.time.TimeManager
 import com.ichi2.anki.libanki.Card
 import com.ichi2.anki.libanki.sched.CurrentQueueState
 import com.ichi2.anki.preferences.sharedPrefs
@@ -66,7 +67,7 @@ sealed class ReviewerEvent {
     object SuspendCard : ReviewerEvent()
 }
 
-class ReviewerViewModel(app: Application, private val reviewer: Reviewer) : AndroidViewModel(app) {
+class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
     private val _state = MutableStateFlow(ReviewerState())
     val state: StateFlow<ReviewerState> = _state.asStateFlow()
 
@@ -184,10 +185,10 @@ class ReviewerViewModel(app: Application, private val reviewer: Reviewer) : Andr
     private fun startTimer() {
         stopTimer()
         timerJob = viewModelScope.launch {
-            val startTime = System.currentTimeMillis()
+            val startTime = TimeManager.time.intTimeMS()
             while (true) {
                 delay(100)
-                val elapsedTime = System.currentTimeMillis() - startTime
+                val elapsedTime = TimeManager.time.intTimeMS() - startTime
                 _state.update { it.copy(timer = "${elapsedTime / 1000.0}s") }
             }
         }
