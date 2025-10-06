@@ -29,6 +29,9 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.ChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -85,25 +88,60 @@ fun DeckItem(
                 modifier = Modifier
                     .weight(1f)
                     .padding(vertical = 12.dp, horizontal = 8.dp),
-                style = if (deck.depth == 0) MaterialTheme.typography.titleLargeEmphasized else MaterialTheme.typography.titleMedium,
+                style = if (deck.depth == 0) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium,
             )
-            Text(
-                text = deck.newCount.toString(),
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(horizontal = 4.dp),
-                style = MaterialTheme.typography.bodyLarge,
+            AssistChip(
+                label = {
+                    Text(
+                        text = deck.newCount.toString(),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_add_white),
+                        contentDescription = stringResource(R.string.new_cards),
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                },
+                colors = ChipDefaults.assistChipColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                onClick = {},
             )
-            Text(
-                text = deck.lrnCount.toString(),
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(horizontal = 4.dp),
-                style = MaterialTheme.typography.bodyLarge,
+            Spacer(modifier = Modifier.padding(horizontal = 2.dp))
+            AssistChip(
+                label = {
+                    Text(
+                        text = deck.lrnCount.toString(),
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_running_clock),
+                        contentDescription = stringResource(R.string.learning_cards),
+                        tint = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                },
+                colors = ChipDefaults.assistChipColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                onClick = {},
             )
-            Text(
-                text = deck.revCount.toString(),
-                color = Color(0xFF006400),
-                modifier = Modifier.padding(horizontal = 4.dp),
-                style = MaterialTheme.typography.bodyLarge,
+            Spacer(modifier = Modifier.padding(horizontal = 2.dp))
+            AssistChip(
+                label = {
+                    Text(
+                        text = deck.revCount.toString(),
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_done_white),
+                        contentDescription = stringResource(R.string.review_cards),
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                },
+                colors = ChipDefaults.assistChipColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                onClick = {},
             )
             if (deck.canCollapse) {
                 Surface(
