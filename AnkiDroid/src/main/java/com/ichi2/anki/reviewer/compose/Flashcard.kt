@@ -82,13 +82,16 @@ fun Flashcard(
                 </style>
                 $html
             """.trimIndent()
-            webView.loadDataWithBaseURL(
-                "file:///$mediaDirectory/",
-                styledHtml,
-                "text/html",
-                "UTF-8",
-                null
-            )
+            if (webView.tag != styledHtml) {
+                webView.tag = styledHtml
+                webView.loadDataWithBaseURL(
+                    "file:///$mediaDirectory/",
+                    styledHtml,
+                    "text/html",
+                    "UTF-8",
+                    null
+                )
+            }
         },
         modifier = modifier
             .fillMaxSize()
