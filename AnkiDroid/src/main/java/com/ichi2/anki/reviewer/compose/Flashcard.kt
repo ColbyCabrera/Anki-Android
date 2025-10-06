@@ -21,6 +21,8 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -47,38 +49,45 @@ fun Flashcard(
     val typography = MaterialTheme.typography
     val displayLargeStyle = typography.displayMedium
     val bodyLargeStyle = typography.titleLarge
-    val currentStyle = if (isAnswerShown) bodyLargeStyle else displayLargeStyle
-    val currentPadding = if (isAnswerShown) 40 else 36
 
-    AndroidView(
-        factory = { context ->
-        WebView(context).apply {
-            settings.javaScriptEnabled = true
-            settings.allowFileAccess = true
-            webViewClient = object : WebViewClient() {
-                override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
-                    if (url != null) {
-                        onLinkClick(url)
-                        return true
+    Crossfade(
+        targetState = Pair(isAnswerShown, html),
+        animationSpec = tween(300)
+    ) { (shown, currentHtml) ->
+        val currentStyle = if (shown) bodyLargeStyle else displayLargeStyle
+        val currentPadding = if (shown) 40 else 36
+        AndroidView(
+            factory = { context ->
+                WebView(context).apply {
+                    settings.javaScriptEnabled = true
+                    settings.allowFileAccess = true
+                    webViewClient = object : WebViewClient() {
+                        override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                            if (url != null) {
+                                onLinkClick(url)
+                                return true
+                            }
+                            return false
+                        }
                     }
-                    return false
+                    val gestureDetector = GestureDetector(
+                        context,
+                        object : GestureDetector.SimpleOnGestureListener() {
+                            override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+                                onTap()
+                                return true
+                            }
+                        }
+                    )
+                    setOnTouchListener { _, event ->
+                        gestureDetector.onTouchEvent(event)
+                        false
+                    }
+                    setBackgroundColor(Color.TRANSPARENT)
                 }
-            }
-            val gestureDetector = GestureDetector(
-                context, object : GestureDetector.SimpleOnGestureListener() {
-                    override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
-                        onTap()
-                        return true
-                    }
-                })
-            setOnTouchListener { _, event ->
-                gestureDetector.onTouchEvent(event)
-                false
-            }
-            setBackgroundColor(Color.TRANSPARENT)
-        }
-    }, update = { webView ->
-        val styledHtml = """
+            },
+            update = { webView ->
+                val styledHtml = """
                 <style>
                     @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
                     html {
@@ -92,21 +101,25 @@ fun Flashcard(
                         padding-top: ${currentPadding}px;
                     }
                 </style>
-                $html
-            """.trimIndent()
-        Timber.tag("Flashcard").d("styledHtml: $styledHtml")
-        if (webView.tag != styledHtml) {
-            webView.tag = styledHtml
-            webView.loadDataWithBaseURL(
-                "file:///$mediaDirectory/", styledHtml, "text/html",
-
-                "UTF-8", null
-            )
-        }
-    }, modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)
-    )
+                $currentHtml
+                """.trimIndent()
+                Timber.tag("Flashcard").d("styledHtml: $styledHtml")
+                if (webView.tag != styledHtml) {
+                    webView.tag = styledHtml
+                    webView.loadDataWithBaseURL(
+                        "file:///$mediaDirectory/",
+                        styledHtml,
+                        "text/html",
+                        "UTF-8",
+                        null
+                    )
+                }
+            },
+            modifier = modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface)
+        )
+    }
 }
 
 @Preview(showBackground = true)
