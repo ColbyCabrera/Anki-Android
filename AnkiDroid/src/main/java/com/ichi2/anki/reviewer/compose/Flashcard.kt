@@ -1,13 +1,32 @@
+/*
+ * Copyright (c) 2024 Brayan Oliveira <brayandso.dev@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package com.ichi2.anki.reviewer.compose
 
 import android.annotation.SuppressLint
+import android.graphics.Color
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
 import java.io.File
@@ -21,6 +40,9 @@ fun Flashcard(
     modifier: Modifier = Modifier,
     mediaDirectory: File?
 ) {
+    val onSurfaceColor = MaterialTheme.colorScheme.onSurface
+    val onSurfaceColorHex = String.format("#%06X", (0xFFFFFF and onSurfaceColor.toArgb()))
+
     AndroidView(
         factory = { context ->
             WebView(context).apply {
@@ -48,18 +70,29 @@ fun Flashcard(
                     gestureDetector.onTouchEvent(event)
                     false
                 }
+                setBackgroundColor(Color.TRANSPARENT)
             }
         },
         update = { webView ->
+            val styledHtml = """
+                <style>
+                    html {
+                        color: $onSurfaceColorHex;
+                    }
+                </style>
+                $html
+            """.trimIndent()
             webView.loadDataWithBaseURL(
                 "file:///$mediaDirectory/",
-                html,
+                styledHtml,
                 "text/html",
                 "UTF-8",
                 null
             )
         },
-        modifier = modifier.fillMaxSize()
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
     )
 }
 
