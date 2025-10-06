@@ -17,6 +17,7 @@ package com.ichi2.anki.reviewer.compose
 
 import android.annotation.SuppressLint
 import android.graphics.Color
+import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.webkit.WebView
@@ -29,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
+import timber.log.Timber
 import java.io.File
 
 @SuppressLint("SetJavaScriptEnabled")
@@ -38,10 +40,15 @@ fun Flashcard(
     onTap: () -> Unit,
     onLinkClick: (String) -> Unit,
     modifier: Modifier = Modifier,
-    mediaDirectory: File?
+    mediaDirectory: File?,
+    isAnswerShown: Boolean
 ) {
     val onSurfaceColor = MaterialTheme.colorScheme.onSurface
     val onSurfaceColorHex = String.format("#%06X", (0xFFFFFF and onSurfaceColor.toArgb()))
+    val typography = MaterialTheme.typography
+    val displayLargeStyle = typography.displayMedium
+    val bodyLargeStyle = typography.titleLarge
+    val currentStyle = if (isAnswerShown) bodyLargeStyle else displayLargeStyle
 
     AndroidView(
         factory = { context ->
@@ -76,18 +83,29 @@ fun Flashcard(
         update = { webView ->
             val styledHtml = """
                 <style>
+                    @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
                     html {
+                        
                         color: $onSurfaceColorHex;
+                        text-align: center;
+                        font-family: 'Roboto', sans-serif;
+                        font-size: ${currentStyle.fontSize.value}px;
+                        font-weight: ${currentStyle.fontWeight?.weight ?: 400};
+                        line-height: ${currentStyle.lineHeight.value}px;
+                        letter-spacing: ${currentStyle.letterSpacing.value}px;
+                        padding-top: 40px;
                     }
                 </style>
                 $html
             """.trimIndent()
+            Timber.tag("Flashcard").d("styledHtml: $styledHtml")
             if (webView.tag != styledHtml) {
                 webView.tag = styledHtml
                 webView.loadDataWithBaseURL(
                     "file:///$mediaDirectory/",
                     styledHtml,
                     "text/html",
+
                     "UTF-8",
                     null
                 )
@@ -106,6 +124,19 @@ fun FlashcardPreview() {
         html = "<html><body><h1>Hello, World!</h1><a href=\"https://example.com\">A link</a></body></html>",
         onTap = {},
         onLinkClick = {},
-        mediaDirectory = null
+        mediaDirectory = null,
+        isAnswerShown = false
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun FlashcardPreviewAnswerShown() {
+    Flashcard(
+        html = "<html><body><h1>Hello, World!</h1><a href=\"https://example.com\">A link</a></body></html>",
+        onTap = {},
+        onLinkClick = {},
+        mediaDirectory = null,
+        isAnswerShown = true
     )
 }

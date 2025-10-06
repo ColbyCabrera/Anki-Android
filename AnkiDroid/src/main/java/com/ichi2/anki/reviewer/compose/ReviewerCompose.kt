@@ -118,6 +118,7 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                     viewModel.onEvent(ReviewerEvent.LinkClicked(it))
                 },
                 mediaDirectory = state.mediaDirectory,
+                isAnswerShown = state.isAnswerShown,
             )
         }
         HorizontalFloatingToolbar(
