@@ -21,6 +21,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -28,16 +29,47 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.automirrored.filled.Undo
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.RecordVoiceOver
+import androidx.compose.material.icons.filled.Replay
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonGroup
+import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.FloatingToolbarDefaults.ScreenOffset
-import androidx.compose.runtime.*
+import androidx.compose.material3.HorizontalFloatingToolbar
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import anki.scheduler.CardAnswer
-import com.ichi2.anki.R
 import com.ichi2.anki.reviewer.ReviewerEvent
 import com.ichi2.anki.reviewer.ReviewerViewModel
 import kotlinx.coroutines.launch
@@ -51,27 +83,33 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
     var showBottomSheet by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Scaffold(
-            topBar = {
-                ReviewerTopBar(
-                    newCount = state.newCount,
-                    learnCount = state.learnCount,
-                    reviewCount = state.reviewCount,
-                    timer = state.timer,
-                    chosenAnswer = state.chosenAnswer,
-                    isMarked = state.isMarked,
-                    flag = state.flag,
-                    onToggleMark = { viewModel.onEvent(ReviewerEvent.ToggleMark) },
-                    onSetFlag = { viewModel.onEvent(ReviewerEvent.SetFlag(it)) })
-            }) { paddingValues ->
+        Scaffold(topBar = {
+            ReviewerTopBar(
+                newCount = state.newCount,
+                learnCount = state.learnCount,
+                reviewCount = state.reviewCount,
+                timer = state.timer,
+                chosenAnswer = state.chosenAnswer,
+                isMarked = state.isMarked,
+                flag = state.flag,
+                onToggleMark = { viewModel.onEvent(ReviewerEvent.ToggleMark) },
+                onSetFlag = { viewModel.onEvent(ReviewerEvent.SetFlag(it)) })
+        }) { paddingValues ->
             Flashcard(
-                html = state.html, onTap = {
-                if (!state.isAnswerShown) {
-                    viewModel.onEvent(ReviewerEvent.ShowAnswer)
-                }
-            }, onLinkClick = {
-                viewModel.onEvent(ReviewerEvent.LinkClicked(it))
-            }, mediaDirectory = state.mediaDirectory, modifier = Modifier.padding(paddingValues)
+                modifier = Modifier
+                    .consumeWindowInsets(paddingValues)
+                    .padding(top = paddingValues.calculateTopPadding()),
+
+                html = state.html,
+                onTap = {
+                    if (!state.isAnswerShown) {
+                        viewModel.onEvent(ReviewerEvent.ShowAnswer)
+                    }
+                },
+                onLinkClick = {
+                    viewModel.onEvent(ReviewerEvent.LinkClicked(it))
+                },
+                mediaDirectory = state.mediaDirectory,
             )
         }
         HorizontalFloatingToolbar(
@@ -80,8 +118,7 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                 .offset(y = -ScreenOffset - 16.dp),
             expanded = true,
             colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(),
-            ) {
-
+        ) {
             if (!state.isAnswerShown) {
                 Button(onClick = { viewModel.onEvent(ReviewerEvent.ShowAnswer) }) {
                     Text("Show Answer")
@@ -111,14 +148,11 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                         "Easy" to CardAnswer.Rating.EASY
                     )
 
-                    customItem(
-                        buttonGroupContent = {
-                            IconButton(onClick = { showBottomSheet = true }) {
-                                Icon(Icons.Filled.MoreVert, contentDescription = "More options")
-                            }
-                        },
-                        menuContent = {}
-                    )
+                    customItem(buttonGroupContent = {
+                        IconButton(onClick = { showBottomSheet = true }) {
+                            Icon(Icons.Filled.MoreVert, contentDescription = "More options")
+                        }
+                    }, menuContent = {})
 
                     ratings.forEachIndexed { index, (_, rating) ->
                         customItem(
@@ -188,8 +222,7 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                                 }
                             }
                             // TODO: Handle click
-                        }
-                    )
+                        })
                 }
             }
         }
