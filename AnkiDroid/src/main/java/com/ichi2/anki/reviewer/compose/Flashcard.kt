@@ -17,7 +17,6 @@ package com.ichi2.anki.reviewer.compose
 
 import android.annotation.SuppressLint
 import android.graphics.Color
-import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.webkit.WebView
@@ -49,43 +48,40 @@ fun Flashcard(
     val displayLargeStyle = typography.displayMedium
     val bodyLargeStyle = typography.titleLarge
     val currentStyle = if (isAnswerShown) bodyLargeStyle else displayLargeStyle
+    val currentPadding = if (isAnswerShown) 40 else 36
 
     AndroidView(
         factory = { context ->
-            WebView(context).apply {
-                settings.javaScriptEnabled = true
-                settings.allowFileAccess = true
-                webViewClient = object : WebViewClient() {
-                    override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
-                        if (url != null) {
-                            onLinkClick(url)
-                            return true
-                        }
-                        return false
+        WebView(context).apply {
+            settings.javaScriptEnabled = true
+            settings.allowFileAccess = true
+            webViewClient = object : WebViewClient() {
+                override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                    if (url != null) {
+                        onLinkClick(url)
+                        return true
                     }
+                    return false
                 }
-                val gestureDetector = GestureDetector(
-                    context,
-                    object : GestureDetector.SimpleOnGestureListener() {
-                        override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
-                            onTap()
-                            return true
-                        }
-                    }
-                )
-                setOnTouchListener { _, event ->
-                    gestureDetector.onTouchEvent(event)
-                    false
-                }
-                setBackgroundColor(Color.TRANSPARENT)
             }
-        },
-        update = { webView ->
-            val styledHtml = """
+            val gestureDetector = GestureDetector(
+                context, object : GestureDetector.SimpleOnGestureListener() {
+                    override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+                        onTap()
+                        return true
+                    }
+                })
+            setOnTouchListener { _, event ->
+                gestureDetector.onTouchEvent(event)
+                false
+            }
+            setBackgroundColor(Color.TRANSPARENT)
+        }
+    }, update = { webView ->
+        val styledHtml = """
                 <style>
                     @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
                     html {
-                        
                         color: $onSurfaceColorHex;
                         text-align: center;
                         font-family: 'Roboto', sans-serif;
@@ -93,25 +89,21 @@ fun Flashcard(
                         font-weight: ${currentStyle.fontWeight?.weight ?: 400};
                         line-height: ${currentStyle.lineHeight.value}px;
                         letter-spacing: ${currentStyle.letterSpacing.value}px;
-                        padding-top: 40px;
+                        padding-top: ${currentPadding}px;
                     }
                 </style>
                 $html
             """.trimIndent()
-            Timber.tag("Flashcard").d("styledHtml: $styledHtml")
-            if (webView.tag != styledHtml) {
-                webView.tag = styledHtml
-                webView.loadDataWithBaseURL(
-                    "file:///$mediaDirectory/",
-                    styledHtml,
-                    "text/html",
+        Timber.tag("Flashcard").d("styledHtml: $styledHtml")
+        if (webView.tag != styledHtml) {
+            webView.tag = styledHtml
+            webView.loadDataWithBaseURL(
+                "file:///$mediaDirectory/", styledHtml, "text/html",
 
-                    "UTF-8",
-                    null
-                )
-            }
-        },
-        modifier = modifier
+                "UTF-8", null
+            )
+        }
+    }, modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface)
     )
