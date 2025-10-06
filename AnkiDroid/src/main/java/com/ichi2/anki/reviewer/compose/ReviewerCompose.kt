@@ -20,7 +20,6 @@ package com.ichi2.anki.reviewer.compose
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -96,7 +95,7 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                 }
             } else {
                 ButtonGroup(
-
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                     overflowIndicator = { menuState ->
                         FilledIconButton(
                             onClick = {
@@ -111,28 +110,25 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                                 contentDescription = "Localized description",
                             )
                         }
-                    }
-                ) {
+                    }) {
                     val ratings = listOf(
                         "Again" to CardAnswer.Rating.AGAIN,
                         "Hard" to CardAnswer.Rating.HARD,
                         "Good" to CardAnswer.Rating.GOOD,
                         "Easy" to CardAnswer.Rating.EASY
                     )
-                    ratings.forEachIndexed { index, (label, rating) ->
+                    ratings.forEachIndexed { index, (_, rating) ->
                         customItem(
                             buttonGroupContent = {
                                 val interactionSource = remember { MutableInteractionSource() }
                                 Button(
                                     onClick = { viewModel.onEvent(ReviewerEvent.RateCard(rating)) },
                                     modifier = Modifier.animateWidth(interactionSource),
+                                    contentPadding = ButtonDefaults.SmallContentPadding,
                                     shape = ButtonDefaults.squareShape,
                                     interactionSource = interactionSource
                                 ) {
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Text(label)
-                                        Text(state.nextTimes[index])
-                                    }
+                                    Text(state.nextTimes[index])
                                 }
                             },
                             menuContent = {},
