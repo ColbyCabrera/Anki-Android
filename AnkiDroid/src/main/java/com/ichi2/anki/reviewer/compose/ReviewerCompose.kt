@@ -67,9 +67,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import anki.scheduler.CardAnswer
+import com.ichi2.anki.R
 import com.ichi2.anki.reviewer.ReviewerEvent
 import com.ichi2.anki.reviewer.ReviewerViewModel
 import kotlinx.coroutines.launch
@@ -137,7 +139,7 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                             }) {
                             Icon(
                                 imageVector = Icons.Filled.MoreVert,
-                                contentDescription = "Localized description",
+                                contentDescription = stringResource(R.string.more_options),
                             )
                         }
                     }) {
@@ -150,7 +152,10 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
 
                     customItem(buttonGroupContent = {
                         IconButton(onClick = { showBottomSheet = true }) {
-                            Icon(Icons.Filled.MoreVert, contentDescription = "More options")
+                            Icon(
+                                Icons.Filled.MoreVert,
+                                contentDescription = stringResource(R.string.more_options)
+                            )
                         }
                     }, menuContent = {})
 
