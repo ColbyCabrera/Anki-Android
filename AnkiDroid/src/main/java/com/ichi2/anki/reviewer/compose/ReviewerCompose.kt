@@ -76,6 +76,13 @@ import com.ichi2.anki.reviewer.ReviewerEvent
 import com.ichi2.anki.reviewer.ReviewerViewModel
 import kotlinx.coroutines.launch
 
+private val ratings = listOf(
+    "Again" to CardAnswer.Rating.AGAIN,
+    "Hard" to CardAnswer.Rating.HARD,
+    "Good" to CardAnswer.Rating.GOOD,
+    "Easy" to CardAnswer.Rating.EASY
+)
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ReviewerContent(viewModel: ReviewerViewModel) {
@@ -101,7 +108,6 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                 modifier = Modifier
                     .consumeWindowInsets(paddingValues)
                     .padding(top = paddingValues.calculateTopPadding()),
-
                 html = state.html,
                 onTap = {
                     if (!state.isAnswerShown) {
@@ -138,13 +144,6 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                         )
                     }
                 }) {
-                val ratings = listOf(
-                    "Again" to CardAnswer.Rating.AGAIN,
-                    "Hard" to CardAnswer.Rating.HARD,
-                    "Good" to CardAnswer.Rating.GOOD,
-                    "Easy" to CardAnswer.Rating.EASY
-                )
-
                 customItem(buttonGroupContent = {
                     val interactionSource = remember { MutableInteractionSource() }
                     IconButton(
@@ -228,7 +227,7 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                 containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = MaterialTheme.colorScheme.onSurface,
             ) {
-                val menuOptions = remember(viewModel) {
+                val menuOptions = remember {
                     listOf(
                         Triple(R.string.redo, Icons.AutoMirrored.Filled.Undo) {
                         // TODO

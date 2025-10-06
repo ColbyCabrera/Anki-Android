@@ -54,8 +54,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import anki.frontend.SetSchedulingStatesRequest
 import anki.scheduler.CardAnswer.Rating
@@ -193,14 +191,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
     private val flagItemIds = mutableSetOf<Int>()
 
-    private val viewModel: ReviewerViewModel by viewModels {
-        object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return ReviewerViewModel(application) as T
-            }
-        }
-    }
+    private val viewModel: ReviewerViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         if (showedActivityFailedScreen(savedInstanceState)) {
