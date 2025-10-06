@@ -114,39 +114,39 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                     customItem(
                         buttonGroupContent = {
                             var showMenu by remember { mutableStateOf(false) }
-                            IconButton(onClick = { showMenu = !showMenu }) {
-                                Icon(Icons.Filled.MoreVert, contentDescription = "More options")
-                            }
-                        },
-                        menuContent = {
-                            var showMenu by remember { mutableStateOf(false) }
-                            DropdownMenu(
-                                expanded = showMenu,
-                                onDismissRequest = { showMenu = false }
-                            ) {
-                                val menuOptions = listOf(
-                                    "Redo" to Icons.AutoMirrored.Filled.Undo,
-                                    "Enable whiteboard" to Icons.Filled.Edit,
-                                    "Edit note" to Icons.Filled.EditNote,
-                                    "Edit tags" to Icons.AutoMirrored.Filled.Label,
-                                    "Bury card" to Icons.Filled.VisibilityOff,
-                                    "Suspend card" to Icons.Filled.Pause,
-                                    "Delete note" to Icons.Filled.Delete,
-                                    "Mark note" to Icons.Filled.Star,
-                                    "Reschedule" to Icons.Filled.Schedule,
-                                    "Replay media" to Icons.Filled.Replay,
-                                    "Enable voice playback" to Icons.Filled.RecordVoiceOver,
-                                    "Deck options" to Icons.Filled.Tune
-                                )
-                                menuOptions.forEach { (text, icon) ->
-                                    DropdownMenuItem(
-                                        text = { Text(text) },
-                                        onClick = { /*TODO*/ },
-                                        leadingIcon = { Icon(icon, contentDescription = null) }
+                            Box {
+                                IconButton(onClick = { showMenu = !showMenu }) {
+                                    Icon(Icons.Filled.MoreVert, contentDescription = "More options")
+                                }
+                                DropdownMenu(
+                                    expanded = showMenu,
+                                    onDismissRequest = { showMenu = false }
+                                ) {
+                                    val menuOptions = listOf(
+                                        "Redo" to Icons.AutoMirrored.Filled.Undo,
+                                        "Enable whiteboard" to Icons.Filled.Edit,
+                                        "Edit note" to Icons.Filled.EditNote,
+                                        "Edit tags" to Icons.AutoMirrored.Filled.Label,
+                                        "Bury card" to Icons.Filled.VisibilityOff,
+                                        "Suspend card" to Icons.Filled.Pause,
+                                        "Delete note" to Icons.Filled.Delete,
+                                        "Mark note" to Icons.Filled.Star,
+                                        "Reschedule" to Icons.Filled.Schedule,
+                                        "Replay media" to Icons.Filled.Replay,
+                                        "Enable voice playback" to Icons.Filled.RecordVoiceOver,
+                                        "Deck options" to Icons.Filled.Tune
                                     )
+                                    menuOptions.forEach { (text, icon) ->
+                                        DropdownMenuItem(
+                                            text = { Text(text) },
+                                            onClick = { /*TODO*/ },
+                                            leadingIcon = { Icon(icon, contentDescription = null) }
+                                        )
+                                    }
                                 }
                             }
-                        }
+                        },
+                        menuContent = {}
                     )
 
                     ratings.forEachIndexed { index, (_, rating) ->
