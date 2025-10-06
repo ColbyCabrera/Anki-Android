@@ -17,9 +17,7 @@
  ****************************************************************************************/
 package com.ichi2.anki.reviewer.compose
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -86,68 +84,63 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                     onSuspend = { viewModel.onEvent(ReviewerEvent.SuspendCard) })
             },
             floatingActionButtonPosition = FloatingToolbarHorizontalFabPosition.Start,
-            content = {
-                if (!state.isAnswerShown) {
-                    Button(onClick = { viewModel.onEvent(ReviewerEvent.ShowAnswer) }) {
-                        Text("Show Answer")
-                    }
-                } else {
-                    Row(
-                        horizontalArrangement = Arrangement.End,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        data class DifficultyButton(
-                            val difficulty: String,
-                            val nextTime: String,
-                            val onClick: () -> Unit,
-                        )
-
-                        val difficultyButtons = listOf(
-                            DifficultyButton(
-                                difficulty = "Button A",
-                                nextTime = state.nextTimes[0],
-                                onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.AGAIN)) }),
-                            DifficultyButton(
-                                difficulty = "Button B",
-                                nextTime = state.nextTimes[1],
-                                onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.HARD)) }),
-                            DifficultyButton(
-                                difficulty = "Button C",
-                                nextTime = state.nextTimes[2],
-                                onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.GOOD)) }),
-                            DifficultyButton(
-                                difficulty = "Button B",
-                                nextTime = state.nextTimes[3],
-                                onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.EASY)) })
-                        )
-
-                        ButtonGroup(
-                            overflowIndicator = { menuState ->
-                            FilledIconButton(
-                                onClick = {
-                                    if (menuState.isExpanded) {
-                                        menuState.dismiss()
-                                    } else {
-                                        menuState.show()
-                                    }
-                                }) {
-                                Icon(
-                                    imageVector = Icons.Filled.MoreVert,
-                                    contentDescription = "Localized description",
-                                )
-                            }
+        ) {
+            if (!state.isAnswerShown) {
+                Button(onClick = { viewModel.onEvent(ReviewerEvent.ShowAnswer) }) {
+                    Text("Show Answer")
+                }
+            } else {
+                ButtonGroup(
+                    overflowIndicator = { menuState ->
+                        FilledIconButton(
+                            onClick = {
+                                if (menuState.isExpanded) {
+                                    menuState.dismiss()
+                                } else {
+                                    menuState.show()
+                                }
+                            }) {
+                            Icon(
+                                imageVector = Icons.Filled.MoreVert,
+                                contentDescription = "Localized description",
+                            )
                         }
-                            content = () -> for (difficultyButton in difficultyButtons) {
-                                Button(
-                                    onClick = difficultyButton.onClick,
-                                    label = difficultyButton.nextTime,
-                                )
-                            }
-                        )
+                    }) {
+                    data class DifficultyButton(
+                        val difficulty: String,
+                        val nextTime: String,
+                        val onClick: () -> Unit,
+                    )
 
+                    val difficultyButtons = listOf(
+                        DifficultyButton(
+                            difficulty = "Again",
+                            nextTime = state.nextTimes[0],
+                            onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.AGAIN)) }),
+                        DifficultyButton(
+                            difficulty = "Hard",
+                            nextTime = state.nextTimes[1],
+                            onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.HARD)) }),
+                        DifficultyButton(
+                            difficulty = "Good",
+                            nextTime = state.nextTimes[2],
+                            onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.GOOD)) }),
+                        DifficultyButton(
+                            difficulty = "Easy",
+                            nextTime = state.nextTimes[3],
+                            onClick = { viewModel.onEvent(ReviewerEvent.RateCard(CardAnswer.Rating.EASY)) })
+                    )
+
+                    difficultyButtons.forEachIndexed { index, difficultyButton ->
+
+                        clickableItem(
+                            onClick = difficultyButton.onClick,
+                            label = difficultyButton.nextTime,
+
+                        )
                     }
                 }
-            })
+            }
+        }
     }
 }
-
