@@ -78,6 +78,16 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.util.TypedValue
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.FormatBold
+import androidx.compose.material.icons.filled.FormatItalic
+import androidx.compose.material.icons.filled.FormatSize
+import androidx.compose.material.icons.filled.FormatUnderlined
+import androidx.compose.material.icons.filled.HorizontalRule
+import androidx.compose.material.icons.filled.LooksOne
+import androidx.compose.material.icons.filled.LooksTwo
+import androidx.compose.material.icons.filled.Title
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.graphics.createBitmap
@@ -150,18 +160,14 @@ import com.ichi2.anki.multimediacard.impl.MultimediaEditableNote
 import com.ichi2.anki.noteeditor.CustomToolbarButton
 import com.ichi2.anki.noteeditor.FieldState
 import com.ichi2.anki.noteeditor.FieldState.FieldChangeType
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.util.TypedValue
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.graphics.createBitmap
 import com.ichi2.anki.noteeditor.NoteEditorLauncher
-import com.ichi2.anki.noteeditor.Toolbar
+import com.ichi2.anki.noteeditor.NoteEditorToolbar
 import com.ichi2.anki.noteeditor.TextFormatter
 import com.ichi2.anki.noteeditor.TextWrapper
+import com.ichi2.anki.noteeditor.ToolbarButtonData
 import com.ichi2.anki.noteeditor.ToolbarIcon
 import com.ichi2.anki.observability.undoableOp
 import com.ichi2.anki.pages.ImageOcclusion
@@ -545,7 +551,7 @@ class NoteEditorFragment :
         requireActivity().window.statusBarColor = Themes.getColorFromAttr(requireContext(), R.attr.appBarColor)
         super.onViewCreated(view, savedInstanceState)
         toolbarButtons = getToolbarButtonsFromPreferences()
-        isToolbarVisible = !shouldHideToolbar()
+        isToolbarVisible = !sharedPrefs().getBoolean(PREF_NOTE_EDITOR_SHOW_TOOLBAR, true)
         updateToolbarMargin()
         view.findViewById<ComposeView>(R.id.editor_toolbar).apply {
             // Dispose the Composition when the view's LifecycleOwner
@@ -2630,10 +2636,10 @@ class NoteEditorFragment :
 
     private fun updateToolbarMargin() {
         val editorLayout = view?.findViewById<View>(R.id.note_editor_layout) ?: return
-        val bottomMargin = if (shouldHideToolbar()) {
-            0
-        } else {
+        val bottomMargin = if (sharedPrefs().getBoolean(PREF_NOTE_EDITOR_SHOW_TOOLBAR, true)) {
             resources.getDimension(R.dimen.note_editor_toolbar_height).toInt()
+        } else {
+            0
         }
         val params = editorLayout.layoutParams as MarginLayoutParams
         params.bottomMargin = bottomMargin
@@ -2808,6 +2814,10 @@ class NoteEditorFragment :
         deckSpinnerSelection!!.updateDeckPosition(deckId)
     }
 
+    override val baseSnackbarBuilder: Snackbar.() -> Unit = {
+        // an empty implementation is sufficient for now
+    }
+
     // ----------------------------------------------------------------------------
     // INNER CLASSES
     // ----------------------------------------------------------------------------
@@ -2906,7 +2916,7 @@ class NoteEditorFragment :
         }
         val prefix = "{{c" + max(1, nextClozeIndex) + "::"
         val suffix = "}}"
-        modifyCurrentSelection(TextWrapper(prefix, suffix), textBox)
+        modifyCurrentSelection(TextWrapper(prefix, suffix))
     }
 
     // BUG: This assumes all fields are inserted as: {{cloze:Text}}
