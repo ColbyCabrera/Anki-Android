@@ -19,4 +19,14 @@
     <string name="fab_menu_expanded">Expanded</string>
     <string name="fab_menu_collapsed">Collapsed</string>
     <string name="fab_menu_toggle">Toggle menu</string>
+    <string name="note_editor_toolbar_bold">Bold</string>
+    <string name="note_editor_toolbar_italic">Italic</string>
+    <string name="note_editor_toolbar_underline">Underline</string>
+    <string name="note_editor_toolbar_mathjax">MathJax</string>
+    <string name="note_editor_toolbar_horizontal_rule">Horizontal Rule</string>
+    <string name="note_editor_toolbar_font_size">Font Size</string>
+    <string name="note_editor_toolbar_headings">Headings</string>
+    <string name="note_editor_toolbar_cloze_new">Cloze (New)</string>
+    <string name="note_editor_toolbar_cloze_same">Cloze (Same)</string>
+    <string name="note_editor_toolbar_add_custom_button">Add Custom Button</string>
 </resources>

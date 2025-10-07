@@ -86,6 +86,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.draganddrop.DropHelper
 import androidx.fragment.app.Fragment
@@ -551,30 +552,54 @@ class NoteEditorFragment :
             // is destroyed
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
-                val customButtons = toolbarButtons.map { customToolbarButton ->
-                    val text = if (customToolbarButton.buttonText.isNotEmpty()) {
-                        customToolbarButton.buttonText
-                    } else {
-                        (customToolbarButton.index + 1).toString()
-                    }
-                    ToolbarButtonData(
-                        id = text,
-                        icon = ToolbarIcon.BitmapIcon(createBitmapForText(text)),
-                        contentDescription = text,
-                        onClick = { modifyCurrentSelection(customToolbarButton.toFormatter()) },
-                        onLongClick = { displayEditToolbarDialog(customToolbarButton) }
+                val defaultButtons = listOf(
+                    ToolbarButtonData("bold", ToolbarIcon.VectorIcon(Icons.Default.FormatBold), getString(R.string.note_editor_toolbar_bold), onClick = { modifyCurrentSelection(TextWrapper("<b>", "</b>")) }),
+                    ToolbarButtonData("italic", ToolbarIcon.VectorIcon(Icons.Default.FormatItalic), getString(R.string.note_editor_toolbar_italic), onClick = { modifyCurrentSelection(TextWrapper("<i>", "</i>")) }),
+                    ToolbarButtonData("underline", ToolbarIcon.VectorIcon(Icons.Default.FormatUnderlined), getString(R.string.note_editor_toolbar_underline), onClick = { modifyCurrentSelection(TextWrapper("<u>", "</u>")) }),
+                    ToolbarButtonData("mathjax", ToolbarIcon.VectorIcon(Icons.Default.Code), getString(R.string.note_editor_toolbar_mathjax), onClick = { modifyCurrentSelection(TextWrapper("\\(", "\\)")) }),
+                    ToolbarButtonData("hr", ToolbarIcon.VectorIcon(Icons.Default.HorizontalRule), getString(R.string.note_editor_toolbar_horizontal_rule), onClick = { modifyCurrentSelection(TextWrapper("<hr>", "")) }),
+                    ToolbarButtonData("font-size", ToolbarIcon.VectorIcon(Icons.Default.FormatSize), getString(R.string.note_editor_toolbar_font_size), onClick = { displayFontSizeDialog() }),
+                    ToolbarButtonData("headings", ToolbarIcon.VectorIcon(Icons.Default.Title), getString(R.string.note_editor_toolbar_headings), onClick = { displayInsertHeadingDialog() })
+                )
+
+                val clozeButtons = if (isClozeType) {
+                    listOf(
+                        ToolbarButtonData("cloze_increment", ToolbarIcon.VectorIcon(Icons.Default.LooksOne), getString(R.string.note_editor_toolbar_cloze_new), onClick = { insertCloze(AddClozeType.INCREMENT_NUMBER) }),
+                        ToolbarButtonData("cloze_same", ToolbarIcon.VectorIcon(Icons.Default.LooksTwo), getString(R.string.note_editor_toolbar_cloze_same), onClick = { insertCloze(AddClozeType.SAME_NUMBER) })
                     )
+                } else {
+                    emptyList()
                 }
+
+                val customButtons = remember(toolbarButtons) {
+                    toolbarButtons.map { customToolbarButton ->
+                        val text = if (customToolbarButton.buttonText.isNotEmpty()) {
+                            customToolbarButton.buttonText
+                        } else {
+                            (customToolbarButton.index + 1).toString()
+                        }
+                        ToolbarButtonData(
+                            id = text,
+                            icon = ToolbarIcon.BitmapIcon(createBitmapForText(text)),
+                            contentDescription = text,
+                            onClick = { modifyCurrentSelection(customToolbarButton.toFormatter()) },
+                            onLongClick = { displayEditToolbarDialog(customToolbarButton) }
+                        )
+                    }
+                }
+
+                val addCustomButton = ToolbarButtonData(
+                    "add_custom",
+                    ToolbarIcon.VectorIcon(Icons.Default.Add),
+                    getString(R.string.note_editor_toolbar_add_custom_button),
+                    onClick = { displayAddToolbarDialog() }
+                )
+
+                val allButtons = customButtons.reversed() + clozeButtons + defaultButtons + addCustomButton
+
                 NoteEditorToolbar(
                     visible = isToolbarVisible,
-                    onFormat = { formatter -> modifyCurrentSelection(formatter) },
-                    onShowFontSizeDialog = { displayFontSizeDialog() },
-                    onShowHeadingsDialog = { displayInsertHeadingDialog() },
-                    showClozeButtons = isClozeType,
-                    onClozeIncrement = { insertCloze(AddClozeType.INCREMENT_NUMBER) },
-                    onClozeSame = { insertCloze(AddClozeType.SAME_NUMBER) },
-                    onAddCustomButtonClicked = { displayAddToolbarDialog() },
-                    customButtons = customButtons
+                    buttons = allButtons
                 )
             }
         }
@@ -2491,9 +2516,9 @@ class NoteEditorFragment :
         return CustomToolbarButton.fromStringSet(set!!)
     }
 
-    private fun saveToolbarButtons(buttons: ArrayList<CustomToolbarButton>) {
+    private fun saveToolbarButtons(buttons: List<CustomToolbarButton>) {
         this.sharedPrefs().edit {
-            putStringSet(PREF_NOTE_EDITOR_CUSTOM_BUTTONS, CustomToolbarButton.toStringSet(buttons))
+            putStringSet(PREF_NOTE_EDITOR_CUSTOM_BUTTONS, CustomToolbarButton.toStringSet(ArrayList(buttons)))
         }
         toolbarButtons = buttons
     }
@@ -2504,9 +2529,7 @@ class NoteEditorFragment :
         suffix: String,
     ) {
         if (prefix.isEmpty() && suffix.isEmpty()) return
-        val newButtons = toolbarButtons.toMutableList()
-        newButtons.add(CustomToolbarButton(newButtons.size, buttonText, prefix, suffix))
-        saveToolbarButtons(ArrayList(newButtons))
+        saveToolbarButtons(toolbarButtons + CustomToolbarButton(toolbarButtons.size, buttonText, prefix, suffix))
     }
 
     private fun editToolbarButton(
@@ -2526,7 +2549,7 @@ class NoteEditorFragment :
                 suffix = suffix.ifEmpty { currentButton.suffix },
             )
 
-        saveToolbarButtons(ArrayList(newButtons))
+        saveToolbarButtons(newButtons)
     }
 
     private fun suggestRemoveButton(
@@ -2546,7 +2569,7 @@ class NoteEditorFragment :
     private fun removeButton(button: CustomToolbarButton) {
         val newButtons = toolbarButtons.toMutableList()
         newButtons.removeAt(button.index)
-        saveToolbarButtons(ArrayList(newButtons))
+        saveToolbarButtons(newButtons)
     }
 
     private val toolbarDialog: AlertDialog.Builder

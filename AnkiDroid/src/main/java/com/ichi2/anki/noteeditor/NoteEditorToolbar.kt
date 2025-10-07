@@ -35,56 +35,20 @@ data class ToolbarButtonData(
 @Composable
 fun NoteEditorToolbar(
     visible: Boolean,
-    onFormat: (TextFormatter) -> Unit,
-    onShowFontSizeDialog: () -> Unit,
-    onShowHeadingsDialog: () -> Unit,
-    showClozeButtons: Boolean,
-    onClozeIncrement: () -> Unit,
-    onClozeSame: () -> Unit,
-    onAddCustomButtonClicked: () -> Unit,
-    customButtons: List<ToolbarButtonData>
+    buttons: List<ToolbarButtonData>
 ) {
     AnimatedVisibility(
         visible = visible,
         enter = expandVertically(),
         exit = shrinkVertically()
     ) {
-        val defaultButtons = listOf(
-            ToolbarButtonData("bold", ToolbarIcon.VectorIcon(Icons.Default.FormatBold), "Bold", onClick = { onFormat(TextWrapper("<b>", "</b>")) }),
-            ToolbarButtonData("italic", ToolbarIcon.VectorIcon(Icons.Default.FormatItalic), "Italic", onClick = { onFormat(TextWrapper("<i>", "</i>")) }),
-            ToolbarButtonData("underline", ToolbarIcon.VectorIcon(Icons.Default.FormatUnderlined), "Underline", onClick = { onFormat(TextWrapper("<u>", "</u>")) }),
-            ToolbarButtonData("mathjax", ToolbarIcon.VectorIcon(Icons.Default.Code), "MathJax", onClick = { onFormat(TextWrapper("\\(", "\\)")) }),
-            ToolbarButtonData("hr", ToolbarIcon.VectorIcon(Icons.Default.HorizontalRule), "Horizontal Rule", onClick = { onFormat(TextWrapper("<hr>", "")) }),
-            ToolbarButtonData("font-size", ToolbarIcon.VectorIcon(Icons.Default.FormatSize), "Font Size", onClick = onShowFontSizeDialog),
-            ToolbarButtonData("headings", ToolbarIcon.VectorIcon(Icons.Default.Title), "Headings", onClick = onShowHeadingsDialog)
-        )
-
-        val clozeButtons = if (showClozeButtons) {
-            listOf(
-                ToolbarButtonData("cloze_increment", ToolbarIcon.VectorIcon(Icons.Default.LooksOne), "Cloze (New)", onClick = onClozeIncrement),
-                ToolbarButtonData("cloze_same", ToolbarIcon.VectorIcon(Icons.Default.LooksTwo), "Cloze (Same)", onClick = onClozeSame)
-            )
-        } else {
-            emptyList()
-        }
-
-        val allButtons = customButtons.reversed() + clozeButtons + defaultButtons
-
         LazyRow {
-            items(allButtons, key = { it.id }) { buttonData ->
+            items(buttons, key = { it.id }) { buttonData ->
                 ToolbarButton(
                     icon = buttonData.icon,
                     contentDescription = buttonData.contentDescription,
                     onClick = buttonData.onClick,
                     onLongClick = buttonData.onLongClick
-                )
-            }
-            item {
-                ToolbarButton(
-                    icon = ToolbarIcon.VectorIcon(Icons.Default.Add),
-                    contentDescription = "Add Custom Button",
-                    onClick = onAddCustomButtonClicked,
-                    onLongClick = null
                 )
             }
         }
