@@ -72,8 +72,21 @@ import androidx.core.util.component2
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.core.view.OnReceiveContentListener
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.util.TypedValue
+import androidx.compose.material.icons.Icons
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.ComposeView
+import androidx.core.graphics.createBitmap
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.draganddrop.DropHelper
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -136,10 +149,19 @@ import com.ichi2.anki.multimediacard.impl.MultimediaEditableNote
 import com.ichi2.anki.noteeditor.CustomToolbarButton
 import com.ichi2.anki.noteeditor.FieldState
 import com.ichi2.anki.noteeditor.FieldState.FieldChangeType
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.util.TypedValue
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.core.graphics.createBitmap
 import com.ichi2.anki.noteeditor.NoteEditorLauncher
 import com.ichi2.anki.noteeditor.Toolbar
-import com.ichi2.anki.noteeditor.Toolbar.TextFormatListener
-import com.ichi2.anki.noteeditor.Toolbar.TextWrapper
+import com.ichi2.anki.noteeditor.TextFormatter
+import com.ichi2.anki.noteeditor.TextWrapper
+import com.ichi2.anki.noteeditor.ToolbarIcon
 import com.ichi2.anki.observability.undoableOp
 import com.ichi2.anki.pages.ImageOcclusion
 import com.ichi2.anki.preferences.sharedPrefs
@@ -221,6 +243,7 @@ class NoteEditorFragment :
     private var changed = false
     private var isTagsEdited = false
     private var isFieldEdited = false
+    private var isToolbarVisible by mutableStateOf(true)
 
     private var multimediaActionJob: Job? = null
 
@@ -275,7 +298,6 @@ class NoteEditorFragment :
     private var editFields: LinkedList<FieldEditText>? = null
     private var sourceText: Array<String?>? = null
     private val fieldState = FieldState.fromEditor(this)
-    private lateinit var toolbar: Toolbar
 
     // Use the same HTML if the same image is pasted multiple times.
     private var pastedImageCache: HashMap<String, String> = HashMap()
@@ -480,11 +502,6 @@ class NoteEditorFragment :
                 else -> resources.getString(R.string.note_editor_no_cards_created)
             }
 
-    override val baseSnackbarBuilder: SnackbarBuilder = {
-        if (sharedPrefs().getBoolean(PREF_NOTE_EDITOR_SHOW_TOOLBAR, true)) {
-            anchorView = requireView().findViewById<Toolbar>(R.id.editor_toolbar)
-        }
-    }
 
     private fun allFieldsHaveContent() = currentFieldStrings.none { it.isNullOrEmpty() }
 
@@ -526,23 +543,39 @@ class NoteEditorFragment :
         @Suppress("deprecation", "API35 properly handle edge-to-edge")
         requireActivity().window.statusBarColor = Themes.getColorFromAttr(requireContext(), R.attr.appBarColor)
         super.onViewCreated(view, savedInstanceState)
-        // Set up toolbar
-        toolbar = view.findViewById(R.id.editor_toolbar)
-        toolbar.apply {
-            formatListener =
-                TextFormatListener { formatter: Toolbar.TextFormatter ->
-                    val currentFocus = requireActivity().currentFocus as? FieldEditText ?: return@TextFormatListener
-                    modifyCurrentSelection(formatter, currentFocus)
+        isToolbarVisible = !shouldHideToolbar()
+        updateToolbarMargin()
+        view.findViewById<ComposeView>(R.id.editor_toolbar).apply {
+            // Dispose the Composition when the view's LifecycleOwner
+            // is destroyed
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                val customButtons = toolbarButtons.map { customToolbarButton ->
+                    val text = if (customToolbarButton.buttonText.isNotEmpty()) {
+                        customToolbarButton.buttonText
+                    } else {
+                        (customToolbarButton.index + 1).toString()
+                    }
+                    ToolbarButtonData(
+                        id = text,
+                        icon = ToolbarIcon.BitmapIcon(createBitmapForText(text)),
+                        contentDescription = text,
+                        onClick = { modifyCurrentSelection(customToolbarButton.toFormatter()) },
+                        onLongClick = { displayEditToolbarDialog(customToolbarButton) }
+                    )
                 }
-            // Sets the background and icon color of toolbar respectively.
-            setBackgroundColor(
-                MaterialColors.getColor(
-                    requireContext(),
-                    R.attr.toolbarBackgroundColor,
-                    0,
-                ),
-            )
-            setIconColor(MaterialColors.getColor(requireContext(), R.attr.toolbarIconColor, 0))
+                NoteEditorToolbar(
+                    visible = isToolbarVisible,
+                    onFormat = { formatter -> modifyCurrentSelection(formatter) },
+                    onShowFontSizeDialog = { displayFontSizeDialog() },
+                    onShowHeadingsDialog = { displayInsertHeadingDialog() },
+                    showClozeButtons = isClozeType,
+                    onClozeIncrement = { insertCloze(AddClozeType.INCREMENT_NUMBER) },
+                    onClozeSame = { insertCloze(AddClozeType.SAME_NUMBER) },
+                    onAddCustomButtonClicked = { displayAddToolbarDialog() },
+                    customButtons = customButtons
+                )
+            }
         }
 
         try {
@@ -1001,18 +1034,16 @@ class NoteEditorFragment :
         }
     }
 
-    private fun modifyCurrentSelection(
-        formatter: Toolbar.TextFormatter,
-        textBox: FieldEditText,
-    ) {
+    private fun modifyCurrentSelection(formatter: TextFormatter) {
+        val currentFocus = requireActivity().currentFocus as? FieldEditText ?: return
         // get the current text and selection locations
-        val selectionStart = textBox.selectionStart
-        val selectionEnd = textBox.selectionEnd
+        val selectionStart = currentFocus.selectionStart
+        val selectionEnd = currentFocus.selectionEnd
 
         // #6762 values are reversed if using a keyboard and pressing Ctrl+Shift+LeftArrow
         val start = min(selectionStart, selectionEnd)
         val end = max(selectionStart, selectionEnd)
-        val text = textBox.text?.toString() ?: ""
+        val text = currentFocus.text?.toString() ?: ""
 
         // Split the text in the places where the formatting will take place
         val beforeText = text.substring(0, start)
@@ -1024,8 +1055,53 @@ class NoteEditorFragment :
         val length = beforeText.length + newText.length + afterText.length
         val newFieldContent =
             StringBuilder(length).append(beforeText).append(newText).append(afterText)
-        textBox.setText(newFieldContent)
-        textBox.setSelection(start + newStart, start + newEnd)
+        currentFocus.setText(newFieldContent)
+        currentFocus.setSelection(start + newStart, start + newEnd)
+    }
+
+    @SuppressLint("CheckResult")
+    private fun displayFontSizeDialog() {
+        val results = resources.getStringArray(R.array.html_size_codes)
+
+        AlertDialog.Builder(requireContext()).show {
+            setItems(R.array.html_size_code_labels) { _, index ->
+                val formatter =
+                    TextWrapper(
+                        prefix = "<span style=\"font-size:${results[index]}\">",
+                        suffix = "</span>",
+                    )
+                modifyCurrentSelection(formatter)
+            }
+            title(R.string.menu_font_size)
+        }
+    }
+
+    @SuppressLint("CheckResult")
+    private fun displayInsertHeadingDialog() {
+        val headingList = arrayOf("h1", "h2", "h3", "h4", "h5")
+        AlertDialog.Builder(requireContext()).show {
+            setItems(headingList) { _, index ->
+                val charSequence = headingList[index]
+                val formatter = TextWrapper(prefix = "<$charSequence>", suffix = "</$charSequence>")
+                modifyCurrentSelection(formatter)
+            }
+            title(R.string.insert_heading)
+        }
+    }
+
+    private fun createBitmapForText(text: String): ImageBitmap {
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 16f, requireContext().resources.displayMetrics)
+            color = MaterialColors.getColor(requireContext(), R.attr.toolbarIconColor, Color.BLACK)
+            textAlign = Paint.Align.CENTER
+        }
+        val baseline = -paint.ascent()
+        val width = (paint.measureText(text) + 0.5f).toInt()
+        val height = (baseline + paint.descent() + 0.5f).toInt()
+        val image = createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(image)
+        canvas.drawText(text, width / 2f, baseline, paint)
+        return image.asImageBitmap()
     }
 
     override fun onStop() {
@@ -1040,10 +1116,6 @@ class NoteEditorFragment :
         // We want to behave as onKeyUp and thus only react to ACTION_UP
         if (event.action != KeyEvent.ACTION_UP) return false
         val keyCode = event.keyCode
-        if (toolbar.onKeyUp(keyCode, event)) {
-            // Toolbar was able to handle this key event. No need to handle it in NoteEditor too.
-            return true
-        }
         when (keyCode) {
             KeyEvent.KEYCODE_NUMPAD_ENTER, KeyEvent.KEYCODE_ENTER ->
                 if (event.isCtrlPressed) {
@@ -1091,6 +1163,20 @@ class NoteEditorFragment :
                         return true
                     }
                 }
+            }
+        }
+
+        // Handle Ctrl + Number for custom buttons
+        if (event.isCtrlPressed && !event.isShiftPressed) {
+            val digit = KeyUtils.getDigit(event) ?: return false
+            val humanReadableDigit = if (digit == 0) 10 else digit
+            val buttonIndex = humanReadableDigit - 1
+
+            val buttons = toolbarButtons
+            if (buttonIndex >= 0 && buttonIndex < buttons.size) {
+                val button = buttons[buttonIndex]
+                modifyCurrentSelection(button.toFormatter())
+                return true
             }
         }
 
@@ -1408,10 +1494,6 @@ class NoteEditorFragment :
         closeNoteEditor()
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        updateToolbar()
-    }
 
     override fun onCreateMenu(
         menu: Menu,
@@ -1446,12 +1528,10 @@ class NoteEditorFragment :
                 }
             }
         }
-        menu.findItem(R.id.action_show_toolbar).isChecked =
-            !shouldHideToolbar()
+        menu.findItem(R.id.action_show_toolbar).isChecked = isToolbarVisible
         menu.findItem(R.id.action_capitalize).isChecked =
             sharedPrefs().getBoolean(PREF_NOTE_EDITOR_CAPITALIZE, true)
-        menu.findItem(R.id.action_scroll_toolbar).isChecked =
-            sharedPrefs().getBoolean(PREF_NOTE_EDITOR_SCROLL_TOOLBAR, true)
+        menu.findItem(R.id.action_scroll_toolbar).isVisible = false
     }
 
     /**
@@ -1502,23 +1582,18 @@ class NoteEditorFragment :
             }
             R.id.action_show_toolbar -> {
                 item.isChecked = !item.isChecked
+                isToolbarVisible = item.isChecked
                 this.sharedPrefs().edit {
                     putBoolean(PREF_NOTE_EDITOR_SHOW_TOOLBAR, item.isChecked)
                 }
-                updateToolbar()
+                updateToolbarMargin()
+                return true
             }
             R.id.action_capitalize -> {
                 Timber.i("NoteEditor:: Capitalize button pressed. New State: %b", !item.isChecked)
                 item.isChecked = !item.isChecked // Needed for Android 9
                 toggleCapitalize(item.isChecked)
                 return true
-            }
-            R.id.action_scroll_toolbar -> {
-                item.isChecked = !item.isChecked
-                this.sharedPrefs().edit {
-                    putBoolean(PREF_NOTE_EDITOR_SCROLL_TOOLBAR, item.isChecked)
-                }
-                updateToolbar()
             }
         }
         return false
@@ -2400,95 +2475,10 @@ class NoteEditorFragment :
         setDid(note)
         updateTags()
         updateCards(editorNote!!.notetype)
-        updateToolbar()
         populateEditFields(changeType, false)
         updateFieldsFromStickyText()
     }
 
-    private fun addClozeButton(
-        @DrawableRes drawableRes: Int,
-        description: String,
-        type: AddClozeType,
-    ) {
-        val drawable =
-            ResourcesCompat.getDrawable(resources, drawableRes, null)!!.apply {
-                setTint(MaterialColors.getColor(requireContext(), R.attr.toolbarIconColor, 0))
-            }
-        val button =
-            toolbar.insertItem(0, drawable) { insertCloze(type) }.apply {
-                contentDescription = description
-            }
-        button.setTooltipTextCompat(description)
-    }
-
-    private fun updateToolbar() {
-        val editorLayout = requireView().findViewById<View>(R.id.note_editor_layout)
-        val bottomMargin =
-            if (shouldHideToolbar()) {
-                0
-            } else {
-                resources
-                    .getDimension(R.dimen.note_editor_toolbar_height)
-                    .toInt()
-            }
-        val params = editorLayout.layoutParams as MarginLayoutParams
-        params.bottomMargin = bottomMargin
-        editorLayout.layoutParams = params
-        if (shouldHideToolbar()) {
-            toolbar.visibility = View.GONE
-            return
-        } else {
-            toolbar.visibility = View.VISIBLE
-        }
-        toolbar.clearCustomItems()
-        if (editorNote!!.notetype.isCloze) {
-            addClozeButton(
-                drawableRes = R.drawable.ic_cloze_new_card,
-                description = TR.editingClozeDeletion(),
-                type = AddClozeType.INCREMENT_NUMBER,
-            )
-            addClozeButton(
-                drawableRes = R.drawable.ic_cloze_same_card,
-                description = TR.editingClozeDeletionRepeat(),
-                type = AddClozeType.SAME_NUMBER,
-            )
-        }
-        val buttons = toolbarButtons
-        for (b in buttons) {
-            // 0th button shows as '1' and is Ctrl + 1
-            val visualIndex = b.index + 1
-            var text = visualIndex.toString()
-            if (b.buttonText.isNotEmpty()) {
-                text = b.buttonText
-            }
-            val bmp = toolbar.createDrawableForString(text)
-
-            val v =
-                toolbar.insertItem(0, bmp) {
-                    // Attempt to open keyboard for the currently focused view in the hosting Activity
-                    val activity = context as? Activity
-                    activity.showSoftInput()
-
-                    toolbar.onFormat(b.toFormatter())
-                }
-            v.contentDescription = text
-
-            // Allow Ctrl + 1...Ctrl + 0 for item 10.
-            v.tag = (visualIndex % 10).toString()
-            v.setOnContextAndLongClickListener {
-                displayEditToolbarDialog(b)
-                true
-            }
-        }
-
-        // Let the user add more buttons (always at the end).
-        // Sets the add custom tag icon color.
-        val drawable = ResourcesCompat.getDrawable(resources, R.drawable.ic_add_toolbar_icon, null)
-        drawable!!.setTint(MaterialColors.getColor(requireContext(), R.attr.toolbarIconColor, 0))
-        val addButton = toolbar.insertItem(0, drawable) { displayAddToolbarDialog() }
-        addButton.contentDescription = resources.getString(R.string.add_toolbar_item)
-        addButton.setTooltipTextCompat(resources.getString(R.string.add_toolbar_item))
-    }
 
     private val toolbarButtons: ArrayList<CustomToolbarButton>
         get() {
@@ -2514,7 +2504,6 @@ class NoteEditorFragment :
         val toolbarButtons = toolbarButtons
         toolbarButtons.add(CustomToolbarButton(toolbarButtons.size, buttonText, prefix, suffix))
         saveToolbarButtons(toolbarButtons)
-        updateToolbar()
     }
 
     private fun editToolbarButton(
@@ -2535,7 +2524,6 @@ class NoteEditorFragment :
             )
 
         saveToolbarButtons(toolbarButtons)
-        updateToolbar()
     }
 
     private fun suggestRemoveButton(
@@ -2556,7 +2544,6 @@ class NoteEditorFragment :
         val toolbarButtons = toolbarButtons
         toolbarButtons.removeAt(button.index)
         saveToolbarButtons(toolbarButtons)
-        updateToolbar()
     }
 
     private val toolbarDialog: AlertDialog.Builder
@@ -2608,6 +2595,23 @@ class NoteEditorFragment :
             )
         }
         editToolbarDialog.show()
+    }
+
+    private fun updateToolbarMargin() {
+        val editorLayout = view?.findViewById<View>(R.id.note_editor_layout) ?: return
+        val bottomMargin = if (shouldHideToolbar()) {
+            0
+        } else {
+            resources.getDimension(R.dimen.note_editor_toolbar_height).toInt()
+        }
+        val params = editorLayout.layoutParams as MarginLayoutParams
+        params.bottomMargin = bottomMargin
+        editorLayout.layoutParams = params
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        updateToolbarMargin()
     }
 
     private fun setNoteTypePosition() {
@@ -3026,6 +3030,11 @@ class NoteEditorFragment :
             if (ImportUtils.isInvalidViewIntent(intent)) return false
             return intent.resolveMimeType()?.startsWith("image/") == true
         }
+
+        private fun shouldHideToolbar(): Boolean =
+            !AnkiDroidApp.instance
+                .sharedPrefs()
+                .getBoolean(PREF_NOTE_EDITOR_SHOW_TOOLBAR, true)
 
         private fun shouldHideToolbar(): Boolean =
             !AnkiDroidApp.instance
