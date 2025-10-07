@@ -543,6 +543,7 @@ class NoteEditorFragment :
         @Suppress("deprecation", "API35 properly handle edge-to-edge")
         requireActivity().window.statusBarColor = Themes.getColorFromAttr(requireContext(), R.attr.appBarColor)
         super.onViewCreated(view, savedInstanceState)
+        toolbarButtons = getToolbarButtonsFromPreferences()
         isToolbarVisible = !shouldHideToolbar()
         updateToolbarMargin()
         view.findViewById<ComposeView>(R.id.editor_toolbar).apply {
@@ -2480,19 +2481,21 @@ class NoteEditorFragment :
     }
 
 
-    private val toolbarButtons: ArrayList<CustomToolbarButton>
-        get() {
-            val set =
-                this
-                    .sharedPrefs()
-                    .getStringSet(PREF_NOTE_EDITOR_CUSTOM_BUTTONS, HashUtil.hashSetInit(0))
-            return CustomToolbarButton.fromStringSet(set!!)
-        }
+    private var toolbarButtons by mutableStateOf<List<CustomToolbarButton>>(emptyList())
+
+    private fun getToolbarButtonsFromPreferences(): ArrayList<CustomToolbarButton> {
+        val set =
+            this
+                .sharedPrefs()
+                .getStringSet(PREF_NOTE_EDITOR_CUSTOM_BUTTONS, HashUtil.hashSetInit(0))
+        return CustomToolbarButton.fromStringSet(set!!)
+    }
 
     private fun saveToolbarButtons(buttons: ArrayList<CustomToolbarButton>) {
         this.sharedPrefs().edit {
             putStringSet(PREF_NOTE_EDITOR_CUSTOM_BUTTONS, CustomToolbarButton.toStringSet(buttons))
         }
+        toolbarButtons = buttons
     }
 
     private fun addToolbarButton(
@@ -2501,9 +2504,9 @@ class NoteEditorFragment :
         suffix: String,
     ) {
         if (prefix.isEmpty() && suffix.isEmpty()) return
-        val toolbarButtons = toolbarButtons
-        toolbarButtons.add(CustomToolbarButton(toolbarButtons.size, buttonText, prefix, suffix))
-        saveToolbarButtons(toolbarButtons)
+        val newButtons = toolbarButtons.toMutableList()
+        newButtons.add(CustomToolbarButton(newButtons.size, buttonText, prefix, suffix))
+        saveToolbarButtons(ArrayList(newButtons))
     }
 
     private fun editToolbarButton(
@@ -2512,10 +2515,10 @@ class NoteEditorFragment :
         suffix: String,
         currentButton: CustomToolbarButton,
     ) {
-        val toolbarButtons = toolbarButtons
+        val newButtons = toolbarButtons.toMutableList()
         val currentButtonIndex = currentButton.index
 
-        toolbarButtons[currentButtonIndex] =
+        newButtons[currentButtonIndex] =
             CustomToolbarButton(
                 index = currentButtonIndex,
                 buttonText = buttonText.ifEmpty { currentButton.buttonText },
@@ -2523,7 +2526,7 @@ class NoteEditorFragment :
                 suffix = suffix.ifEmpty { currentButton.suffix },
             )
 
-        saveToolbarButtons(toolbarButtons)
+        saveToolbarButtons(ArrayList(newButtons))
     }
 
     private fun suggestRemoveButton(
@@ -2541,9 +2544,9 @@ class NoteEditorFragment :
     }
 
     private fun removeButton(button: CustomToolbarButton) {
-        val toolbarButtons = toolbarButtons
-        toolbarButtons.removeAt(button.index)
-        saveToolbarButtons(toolbarButtons)
+        val newButtons = toolbarButtons.toMutableList()
+        newButtons.removeAt(button.index)
+        saveToolbarButtons(ArrayList(newButtons))
     }
 
     private val toolbarDialog: AlertDialog.Builder
@@ -3031,14 +3034,5 @@ class NoteEditorFragment :
             return intent.resolveMimeType()?.startsWith("image/") == true
         }
 
-        private fun shouldHideToolbar(): Boolean =
-            !AnkiDroidApp.instance
-                .sharedPrefs()
-                .getBoolean(PREF_NOTE_EDITOR_SHOW_TOOLBAR, true)
-
-        private fun shouldHideToolbar(): Boolean =
-            !AnkiDroidApp.instance
-                .sharedPrefs()
-                .getBoolean(PREF_NOTE_EDITOR_SHOW_TOOLBAR, true)
     }
 }

@@ -68,7 +68,7 @@ fun NoteEditorToolbar(
             emptyList()
         }
 
-        val allButtons = customButtons + clozeButtons + defaultButtons
+        val allButtons = customButtons.reversed() + clozeButtons + defaultButtons
 
         LazyRow {
             items(allButtons, key = { it.id }) { buttonData ->
