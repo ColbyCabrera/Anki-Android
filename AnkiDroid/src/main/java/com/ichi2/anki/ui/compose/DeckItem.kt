@@ -17,19 +17,28 @@
  ****************************************************************************************/
 package com.ichi2.anki.ui.compose
 
+import android.graphics.Matrix
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -40,16 +49,39 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
+import androidx.graphics.shapes.RoundedPolygon
+import androidx.graphics.shapes.toPath
 import com.ichi2.anki.R
 import com.ichi2.anki.deckpicker.DisplayDeckNode
 
 private val SubDeckCardRadius = 14.dp
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+internal class RoundedPolygonShape(private val polygon: RoundedPolygon) : Shape {
+    override fun createOutline(
+        size: Size, layoutDirection: LayoutDirection, density: Density
+    ): Outline {
+        val matrix = Matrix()
+        matrix.setScale(size.width, size.height)
+        val path = polygon.toPath()
+        path.transform(matrix)
+        return Outline.Generic(path.asComposePath())
+    }
+}
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -68,6 +100,7 @@ fun DeckItem(
     var isContextMenuOpen by remember { mutableStateOf(false) }
 
     val content = @Composable {
+        Row {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -80,36 +113,38 @@ fun DeckItem(
                 },
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = deck.lastDeckNameComponent,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(vertical = 12.dp, horizontal = 8.dp),
-                style = if (deck.depth == 0) MaterialTheme.typography.titleLargeEmphasized else MaterialTheme.typography.titleMedium,
-            )
-            Text(
-                text = deck.newCount.toString(),
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(horizontal = 4.dp),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-            Text(
-                text = deck.lrnCount.toString(),
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(horizontal = 4.dp),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-            Text(
-                text = deck.revCount.toString(),
-                color = Color(0xFF006400),
-                modifier = Modifier.padding(horizontal = 4.dp),
-                style = MaterialTheme.typography.bodyLarge,
-            )
+            Column(Modifier.height(100.dp)) {
+                Text(
+                    text = deck.lastDeckNameComponent,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(vertical = 12.dp, horizontal = 8.dp),
+                    style = if (deck.depth == 0) MaterialTheme.typography.titleLargeEmphasized else MaterialTheme.typography.titleMedium,
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    CardCountsContainer(
+                        cardCount = deck.newCount,
+                        labelText = "New",
+                        shape = RoundedPolygonShape(MaterialShapes.Clover4Leaf)
+                    )
+                    CardCountsContainer(
+                        cardCount = deck.lrnCount,
+                        labelText = "Learn",
+                        shape = RoundedPolygonShape(MaterialShapes.Ghostish)
+                    )
+                    CardCountsContainer(
+                        cardCount = deck.revCount,
+                        labelText = "Review",
+                        shape = RoundedPolygonShape(MaterialShapes.Flower)
+                    )
+                }
+            }
+            Spacer(Modifier.weight(1f))
             if (deck.canCollapse) {
                 Surface(
                     modifier = Modifier
                         .padding(start = 8.dp)
-                        .size(30.dp)
+                        .size(36.dp)
                         .clipToBounds()
                         .pointerInput(Unit) {
                             detectTapGestures(onTap = { onExpandClick() })
@@ -182,7 +217,8 @@ fun DeckItem(
                 )
             }
         }
-    }
+    }}
+
 
     when (deck.depth) {
         0 -> {
@@ -215,4 +251,49 @@ fun DeckItem(
             }
         }
     }
+}
+
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun CardCountsContainer(
+    modifier: Modifier = Modifier, cardCount: Int, labelText: String, shape: Shape
+) {
+
+    BadgedBox(badge = {
+        Badge(
+            modifier = Modifier.zIndex(10F),
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+        ) {
+            Text(text = labelText, style = MaterialTheme.typography.labelSmall)
+        }
+    }) {
+        Box(
+            modifier = Modifier
+                .size(30.dp)
+                .clip(shape)
+                .background(MaterialTheme.colorScheme.primaryContainer)
+                .zIndex(1F),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = cardCount.toString(),
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.padding(0.dp)
+            )
+        }
+
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Preview
+@Composable
+fun CardCountsContainerPreview() {
+    CardCountsContainer(
+        cardCount = 10, labelText = "New", shape = RoundedPolygonShape(MaterialShapes.Clover4Leaf)
+    )
 }
