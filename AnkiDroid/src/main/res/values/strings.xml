@@ -11,6 +11,7 @@
     <string name="close">Close</string>
     <string name="more_options">More options</string>
     <string name="custom_study">Custom Study</string>
+    <string name="unanswer_card">Unanswer card</string>
     <string name="unbury">Unbury</string>
     <string name="new_deck">Create deck</string>
     <string name="new_dynamic_deck">Create filtered deck</string>
