@@ -5,7 +5,7 @@
  *                                                                                      *
  * This program is free software; you can redistribute it and/or modify it under        *
  * the terms of the GNU General Public License as published by the Free Software        *
- * Foundation; either version B of the License, or (at your option) any later           *
+ * Foundation; either version 3 of the License, or (at your option) any later           *
  * version.                                                                             *
  *                                                                                      *
  * This program is distributed in the hope that in editing this file it will be useful, but WITHOUT ANY      *
@@ -76,9 +76,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import anki.scheduler.CardAnswer
 import com.ichi2.anim.ActivityTransitionAnimation
@@ -179,12 +179,13 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                     if (!state.isAnswerShown) {
                         val interactionSource = remember { MutableInteractionSource() }
                         val isPressed by interactionSource.collectIsPressedAsState()
+                        val defaultHorizontalPadding =
+                            ButtonDefaults.MediumContentPadding.calculateLeftPadding(
+                                layoutDirection = LocalLayoutDirection.current
+                            )
                         val horizontalPadding by animateDpAsState(
-                            if (isPressed) ButtonDefaults.MediumContentPadding.calculateLeftPadding(
-                                layoutDirection = LayoutDirection.Ltr
-                            ) + 4.dp else ButtonDefaults.MediumContentPadding.calculateLeftPadding(
-                                layoutDirection = LayoutDirection.Ltr
-                            ), motionScheme.fastSpatialSpec()
+                            if (isPressed) defaultHorizontalPadding + 4.dp else defaultHorizontalPadding,
+                            motionScheme.fastSpatialSpec()
                         )
                         Button(
                             onClick = { viewModel.onEvent(ReviewerEvent.ShowAnswer) },
