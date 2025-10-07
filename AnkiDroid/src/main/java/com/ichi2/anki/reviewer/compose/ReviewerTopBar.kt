@@ -19,9 +19,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Undo
-import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -80,8 +77,8 @@ fun ReviewerTopBar(
         AnimatedVisibility(visible = isAnswerShown) {
             IconButton(onClick = onUnanswerCard) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Undo,
-                    contentDescription = stringResource(id = R.string.unanswer_card)
+                    painterResource(R.drawable.undo_24px),
+                    contentDescription = stringResource(id = R.string.unanswer_card),
                 )
             }
         }
@@ -124,7 +121,7 @@ fun FlagIcon(currentFlag: Int, onSetFlag: (Int) -> Unit) {
     Box {
         IconButton(onClick = { expanded = true }) {
             Icon(
-                imageVector = Icons.Default.Flag,
+                painter = painterResource(R.drawable.flag_24px),
                 contentDescription = "Set Flag",
                 tint = if (currentFlag in flagColors.indices && currentFlag != 0) flagColors[currentFlag] else LocalContentColor.current // Use LocalContentColor.current
             )
