@@ -17,6 +17,8 @@
  ****************************************************************************************/
 package com.ichi2.anki.reviewer.compose
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -59,6 +61,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,13 +70,18 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import anki.scheduler.CardAnswer
+import com.ichi2.anim.ActivityTransitionAnimation
 import com.ichi2.anki.R
+import com.ichi2.anki.noteeditor.NoteEditorLauncher
+import com.ichi2.anki.reviewer.ReviewerEffect
 import com.ichi2.anki.reviewer.ReviewerEvent
 import com.ichi2.anki.reviewer.ReviewerViewModel
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 private val ratings = listOf(
@@ -90,6 +98,27 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     var showBottomSheet by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    val editCardLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) {
+        // We probably want to reload the card here
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.effect.collectLatest { effect ->
+            when (effect) {
+                is ReviewerEffect.NavigateToEditCard -> {
+                    val intent = NoteEditorLauncher.EditCard(
+                        effect.cardId,
+                        ActivityTransitionAnimation.Direction.FADE
+                    ).toIntent(context)
+                    editCardLauncher.launch(intent)
+                }
+            }
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(topBar = {
@@ -212,7 +241,7 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                                         softWrap = false,
                                         overflow = TextOverflow.Visible
                                     )
-                                }
+                                 }
                             },
                             menuContent = {},
                         )
@@ -267,7 +296,7 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                             scope.launch { sheetState.hide() }.invokeOnCompletion {
                                 if (!sheetState.isVisible) {
                                     showBottomSheet = false
-                                }
+                                 }
                             }
                             action()
                         })

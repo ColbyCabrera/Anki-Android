@@ -24,12 +24,18 @@ import anki.scheduler.CardAnswer
 import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.cardviewer.TypeAnswer
 import com.ichi2.anki.libanki.Card
+import com.ichi2.anki.libanki.CardId
 import com.ichi2.anki.libanki.sched.CurrentQueueState
 import com.ichi2.anki.preferences.sharedPrefs
 import com.ichi2.anki.servicelayer.NoteService
 import java.io.File
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -63,9 +69,16 @@ sealed class ReviewerEvent {
     object UnanswerCard : ReviewerEvent()
 }
 
+sealed class ReviewerEffect {
+    data class NavigateToEditCard(val cardId: CardId) : ReviewerEffect()
+}
+
 class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
     private val _state = MutableStateFlow(ReviewerState())
     val state: StateFlow<ReviewerState> = _state.asStateFlow()
+
+    private val _effect = MutableSharedFlow<ReviewerEffect>()
+    val effect: SharedFlow<ReviewerEffect> = _effect.asSharedFlow()
 
     private var currentCard: Card? = null
     private var queueState: CurrentQueueState? = null
@@ -85,9 +98,16 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
             is ReviewerEvent.SetFlag -> setFlag(event.flag)
             is ReviewerEvent.LinkClicked -> linkClicked(event.url)
             is ReviewerEvent.UnanswerCard -> unanswerCard()
+            is ReviewerEvent.EditCard -> editCard()
             ReviewerEvent.BuryCard -> TODO()
-            ReviewerEvent.EditCard -> TODO()
             ReviewerEvent.SuspendCard -> TODO()
+        }
+    }
+
+    private fun editCard() {
+        val card = currentCard ?: return
+        viewModelScope.launch {
+            _effect.emit(ReviewerEffect.NavigateToEditCard(card.id))
         }
     }
 
