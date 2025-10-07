@@ -379,26 +379,28 @@ fun DeckPickerScreen(
                 )
             }
         ) { paddingValues ->
-            DeckPickerContent(
-                decks = decks,
-                isRefreshing = isRefreshing,
-                onRefresh = onRefresh,
-                backgroundImage = backgroundImage,
-                onDeckClick = onDeckClick,
-                onExpandClick = onExpandClick,
-                onDeckOptions = onDeckOptions,
-                onRename = onRename,
-                onExport = onExport,
-                onDelete = onDelete,
-                onRebuild = onRebuild,
-                onEmpty = onEmpty,
-                listState = listState,
-                contentPadding = paddingValues,
-            )
+            Box(modifier = Modifier.fillMaxSize()) {
+                DeckPickerContent(
+                    decks = decks,
+                    isRefreshing = isRefreshing,
+                    onRefresh = onRefresh,
+                    backgroundImage = backgroundImage,
+                    onDeckClick = onDeckClick,
+                    onExpandClick = onExpandClick,
+                    onDeckOptions = onDeckOptions,
+                    onRename = onRename,
+                    onExport = onExport,
+                    onDelete = onDelete,
+                    onRebuild = onRebuild,
+                    onEmpty = onEmpty,
+                    listState = listState,
+                    contentPadding = paddingValues,
+                )
+                Scrim(
+                    visible = fabMenuExpanded, onDismiss = { onFabMenuExpandedChange(false) }
+                )
+            }
         }
-        Scrim(
-            visible = fabMenuExpanded, onDismiss = { onFabMenuExpandedChange(false) }
-        )
         BackHandler(fabMenuExpanded) { onFabMenuExpandedChange(false) }
     }
 }
