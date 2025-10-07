@@ -15,7 +15,6 @@
  */
 package com.ichi2.anki.reviewer.compose
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -23,15 +22,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Flag
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalContentColor // Import LocalContentColor
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -42,6 +39,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -99,8 +98,10 @@ fun ReviewerTopBar(
 fun MarkIcon(isMarked: Boolean, onToggleMark: () -> Unit) {
     IconButton(onClick = onToggleMark) {
         Icon(
-            imageVector = if (isMarked) Icons.Filled.Star else Icons.Outlined.StarOutline,
-            contentDescription = "Mark Note",
+            painter = if (isMarked) painterResource(R.drawable.star_shine_24px) else painterResource(
+                R.drawable.star_24px
+            ),
+            contentDescription = stringResource(if (isMarked) R.string.menu_unmark_note else R.string.menu_mark_note),
             tint = if (isMarked) MaterialTheme.colorScheme.tertiary else LocalContentColor.current
         )
     }
@@ -147,8 +148,7 @@ fun Counts(newCount: Int, learnCount: Int, reviewCount: Int, modifier: Modifier 
             buildAnnotatedString {
                 withStyle(
                     style = SpanStyle(
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
+                        color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold
                     )
                 ) {
                     append("$newCount")
@@ -156,8 +156,7 @@ fun Counts(newCount: Int, learnCount: Int, reviewCount: Int, modifier: Modifier 
                 append(" ")
                 withStyle(
                     style = SpanStyle(
-                        color = MaterialTheme.colorScheme.error,
-                        fontWeight = FontWeight.Bold
+                        color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold
                     )
                 ) {
                     append("$learnCount")
@@ -165,8 +164,7 @@ fun Counts(newCount: Int, learnCount: Int, reviewCount: Int, modifier: Modifier 
                 append(" ")
                 withStyle(
                     style = SpanStyle(
-                        color = MaterialTheme.colorScheme.secondary,
-                        fontWeight = FontWeight.Bold
+                        color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Bold
                     )
                 ) {
                     append("$reviewCount")
@@ -190,7 +188,6 @@ fun ReviewerTopBarPreview() {
             onToggleMark = {},
             onSetFlag = {},
             isAnswerShown = true,
-            onUnanswerCard = {}
-        )
+            onUnanswerCard = {})
     }
 }
