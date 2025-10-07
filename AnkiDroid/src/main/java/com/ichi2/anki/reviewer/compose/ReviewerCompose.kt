@@ -19,6 +19,9 @@ package com.ichi2.anki.reviewer.compose
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -48,7 +51,6 @@ import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.FloatingToolbarDefaults.ScreenOffset
 import androidx.compose.material3.HorizontalFloatingToolbar
@@ -56,6 +58,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.motionScheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -111,8 +114,7 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
             when (effect) {
                 is ReviewerEffect.NavigateToEditCard -> {
                     val intent = NoteEditorLauncher.EditCard(
-                        effect.cardId,
-                        ActivityTransitionAnimation.Direction.FADE
+                        effect.cardId, ActivityTransitionAnimation.Direction.FADE
                     ).toIntent(context)
                     editCardLauncher.launch(intent)
                 }
@@ -158,39 +160,24 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
             expanded = true,
             colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(),
         ) {
-            ButtonGroup(
-                horizontalArrangement = Arrangement.spacedBy(2.dp),
-                overflowIndicator = { menuState ->
-                    FilledIconButton(
-                        onClick = {
-                            if (menuState.isExpanded) {
-                                menuState.dismiss()
-                            } else {
-                                menuState.show()
-                            }
-                        }) {
-                        Icon(
-                            imageVector = Icons.Filled.MoreVert,
-                            contentDescription = stringResource(R.string.more_options),
-                        )
-                    }
-                }) {
-                customItem(buttonGroupContent = {
-                    val interactionSource = remember { MutableInteractionSource() }
-                    IconButton(
-                        onClick = { showBottomSheet = true },
-                        modifier = Modifier
-                            .animateWidth(interactionSource)
-                            .height(48.dp),
-                    ) {
-                        Icon(
-                            Icons.Filled.MoreVert,
-                            contentDescription = stringResource(R.string.more_options)
-                        )
-                    }
-                }, menuContent = {})
-
-                if (!state.isAnswerShown) {
+            remember { MutableInteractionSource() }
+            IconButton(
+                onClick = { showBottomSheet = true },
+                modifier = Modifier.height(48.dp),
+            ) {
+                Icon(
+                    Icons.Filled.MoreVert,
+                    contentDescription = stringResource(R.string.more_options)
+                )
+            }
+            AnimatedVisibility(
+                !state.isAnswerShown,
+                enter = expandHorizontally(motionScheme.fastSpatialSpec()),
+                exit = shrinkHorizontally(motionScheme.fastSpatialSpec())
+            ) {
+                ButtonGroup(
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    overflowIndicator = { }) {
                     customItem(
                         buttonGroupContent = {
                             val interactionSource = remember { MutableInteractionSource() }
@@ -214,7 +201,18 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                         },
                         menuContent = {},
                     )
-                } else {
+                }
+            }
+
+            AnimatedVisibility(
+                state.isAnswerShown,
+                enter = expandHorizontally(motionScheme.fastSpatialSpec()),
+                exit = shrinkHorizontally(motionScheme.fastSpatialSpec())
+            ) {
+                ButtonGroup(
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    overflowIndicator = { }) {
+
                     ratings.forEachIndexed { index, (_, rating) ->
                         customItem(
                             buttonGroupContent = {
@@ -241,7 +239,7 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                                         softWrap = false,
                                         overflow = TextOverflow.Visible
                                     )
-                                 }
+                                }
                             },
                             menuContent = {},
                         )
@@ -296,7 +294,7 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                             scope.launch { sheetState.hide() }.invokeOnCompletion {
                                 if (!sheetState.isVisible) {
                                     showBottomSheet = false
-                                 }
+                                }
                             }
                             action()
                         })
