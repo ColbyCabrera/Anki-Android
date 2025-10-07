@@ -364,6 +364,7 @@ dependencies {
     implementation libs.androidx.work.runtime
     implementation libs.androidx.compose.ui.text
     implementation libs.androidx.compose.animation
+    implementation libs.androidx.compose.ui.unit
     lintChecks project(":lint-rules")
     coreLibraryDesugaring libs.desugar.jdk.libs.nio
 
