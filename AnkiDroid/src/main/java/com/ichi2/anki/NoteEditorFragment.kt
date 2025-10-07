@@ -1115,11 +1115,16 @@ class NoteEditorFragment :
         }
     }
 
-    private fun createBitmapForText(text: String): ImageBitmap {
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+    private val customButtonPaint: Paint by lazy {
+        Paint(Paint.ANTI_ALIAS_FLAG).apply {
             textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 16f, requireContext().resources.displayMetrics)
-            color = MaterialColors.getColor(requireContext(), R.attr.toolbarIconColor, Color.BLACK)
             textAlign = Paint.Align.CENTER
+        }
+    }
+
+    private fun createBitmapForText(text: String): ImageBitmap {
+        val paint = customButtonPaint.apply {
+            color = MaterialColors.getColor(requireContext(), R.attr.toolbarIconColor, Color.BLACK)
         }
         val baseline = -paint.ascent()
         val width = (paint.measureText(text) + 0.5f).toInt()
