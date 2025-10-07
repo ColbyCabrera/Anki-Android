@@ -108,7 +108,7 @@ fun Flashcard(
                 </style>
                 $currentHtml
                 """.trimIndent()
-                Timber.tag("Flashcard").d("styledHtml: $styledHtml")
+                Timber.tag("Flashcard").d("styledHtml: %s", styledHtml)
                 if (webView.tag != styledHtml) {
                     webView.tag = styledHtml
                     webView.loadDataWithBaseURL(
@@ -119,6 +119,9 @@ fun Flashcard(
                         null
                     )
                 }
+            },
+            onRelease = { webView ->
+                webView.destroy()
             },
             modifier = modifier
                 .fillMaxSize()
