@@ -19,13 +19,12 @@ package com.ichi2.anki.reviewer.compose
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -160,144 +159,146 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
             expanded = true,
             colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(),
         ) {
-            remember { MutableInteractionSource() }
-            IconButton(
-                onClick = { showBottomSheet = true },
-                modifier = Modifier.height(48.dp),
-            ) {
-                Icon(
-                    Icons.Filled.MoreVert,
-                    contentDescription = stringResource(R.string.more_options)
-                )
-            }
-            AnimatedVisibility(
-                !state.isAnswerShown,
-                enter = expandHorizontally(motionScheme.fastSpatialSpec()),
-                exit = shrinkHorizontally(motionScheme.fastSpatialSpec())
-            ) {
-                ButtonGroup(
-                    horizontalArrangement = Arrangement.spacedBy(2.dp),
-                    overflowIndicator = { }) {
-                    customItem(
-                        buttonGroupContent = {
-                            val interactionSource = remember { MutableInteractionSource() }
-                            Button(
-                                onClick = { viewModel.onEvent(ReviewerEvent.ShowAnswer) },
-                                modifier = Modifier
-                                    .animateWidth(interactionSource)
-                                    .height(48.dp),
-                                interactionSource = interactionSource,
-                                colors = ButtonDefaults.buttonColors(
-                                    MaterialTheme.colorScheme.secondaryContainer,
-                                    MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.show_answer),
-                                    softWrap = false,
-                                    overflow = TextOverflow.Clip
-                                )
-                            }
-                        },
-                        menuContent = {},
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                remember { MutableInteractionSource() }
+                IconButton(
+                    onClick = { showBottomSheet = true },
+                    modifier = Modifier.height(48.dp),
+                ) {
+                    Icon(
+                        Icons.Filled.MoreVert,
+                        contentDescription = stringResource(R.string.more_options)
                     )
                 }
-            }
+                Box(
+                    modifier = Modifier
+                        .animateContentSize(motionScheme.defaultSpatialSpec())
+                        .padding(0.dp)
+                ) {
+                    if (!state.isAnswerShown) {
+                        ButtonGroup(
+                            overflowIndicator = { }) {
+                            customItem(
+                                buttonGroupContent = {
+                                    val interactionSource = remember { MutableInteractionSource() }
+                                    Button(
+                                        onClick = { viewModel.onEvent(ReviewerEvent.ShowAnswer) },
+                                        modifier = Modifier.height(56.dp),
+                                        interactionSource = interactionSource,
+                                        colors = ButtonDefaults.buttonColors(
+                                            MaterialTheme.colorScheme.secondaryContainer,
+                                            MaterialTheme.colorScheme.onSecondaryContainer
+                                        )
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.show_answer),
+                                            softWrap = false,
+                                            overflow = TextOverflow.Clip
+                                        )
+                                    }
+                                },
+                                menuContent = {},
+                            )
+                        }
+                    } else {
+                        ButtonGroup(
+                            horizontalArrangement = Arrangement.spacedBy(2.dp),
+                            overflowIndicator = { }) {
 
-            AnimatedVisibility(
-                state.isAnswerShown,
-                enter = expandHorizontally(motionScheme.fastSpatialSpec()),
-                exit = shrinkHorizontally(motionScheme.fastSpatialSpec())
-            ) {
-                ButtonGroup(
-                    horizontalArrangement = Arrangement.spacedBy(2.dp),
-                    overflowIndicator = { }) {
-
-                    ratings.forEachIndexed { index, (_, rating) ->
-                        customItem(
-                            buttonGroupContent = {
-                                val interactionSource = remember { MutableInteractionSource() }
-                                Button(
-                                    onClick = { viewModel.onEvent(ReviewerEvent.RateCard(rating)) },
-                                    modifier = Modifier
-                                        .animateWidth(interactionSource)
-                                        .height(48.dp),
-                                    contentPadding = ButtonDefaults.ExtraSmallContentPadding,
-                                    shape = when (index) {
-                                        0 -> ButtonGroupDefaults.connectedLeadingButtonShape
-                                        3 -> ButtonGroupDefaults.connectedTrailingButtonShape
-                                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes().shape
+                            ratings.forEachIndexed { index, (_, rating) ->
+                                customItem(
+                                    buttonGroupContent = {
+                                        val interactionSource =
+                                            remember { MutableInteractionSource() }
+                                        Button(
+                                            onClick = {
+                                                viewModel.onEvent(
+                                                    ReviewerEvent.RateCard(
+                                                        rating
+                                                    )
+                                                )
+                                            },
+                                            modifier = Modifier
+                                                .animateWidth(interactionSource)
+                                                .height(56.dp),
+                                            contentPadding = ButtonDefaults.ExtraSmallContentPadding,
+                                            shape = when (index) {
+                                                0 -> ButtonGroupDefaults.connectedLeadingButtonShape
+                                                3 -> ButtonGroupDefaults.connectedTrailingButtonShape
+                                                else -> ButtonGroupDefaults.connectedMiddleButtonShapes().shape
+                                            },
+                                            interactionSource = interactionSource,
+                                            colors = ButtonDefaults.buttonColors(
+                                                MaterialTheme.colorScheme.secondaryContainer,
+                                                MaterialTheme.colorScheme.onSecondaryContainer
+                                            )
+                                        ) {
+                                            Text(
+                                                state.nextTimes[index],
+                                                softWrap = false,
+                                                overflow = TextOverflow.Visible
+                                            )
+                                        }
                                     },
-                                    interactionSource = interactionSource,
-                                    colors = ButtonDefaults.buttonColors(
-                                        MaterialTheme.colorScheme.secondaryContainer,
-                                        MaterialTheme.colorScheme.onSecondaryContainer
-                                    )
-                                ) {
-                                    Text(
-                                        state.nextTimes[index],
-                                        softWrap = false,
-                                        overflow = TextOverflow.Visible
-                                    )
-                                }
-                            },
-                            menuContent = {},
-                        )
+                                    menuContent = {},
+                                )
+                            }
+                        }
                     }
                 }
             }
-        }
-        if (showBottomSheet) {
-            ModalBottomSheet(
-                onDismissRequest = {
-                    showBottomSheet = false
-                },
-                sheetState = sheetState,
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.onSurface,
-            ) {
-                val menuOptions = remember {
-                    listOf(
-                        Triple(R.string.redo, Icons.AutoMirrored.Filled.Undo) {
-                        // TODO
-                    }, Triple(R.string.enable_whiteboard, Icons.Filled.Edit) {
-                        // TODO
-                    }, Triple(R.string.cardeditor_title_edit_card, Icons.Filled.EditNote) {
-                        viewModel.onEvent(ReviewerEvent.EditCard)
-                    }, Triple(R.string.menu_edit_tags, Icons.AutoMirrored.Filled.Label) {
-                        // TODO
-                    }, Triple(R.string.menu_bury_card, Icons.Filled.VisibilityOff) {
-                        viewModel.onEvent(ReviewerEvent.BuryCard)
-                    }, Triple(R.string.menu_suspend_card, Icons.Filled.Pause) {
-                        viewModel.onEvent(ReviewerEvent.SuspendCard)
-                    }, Triple(R.string.menu_delete_note, Icons.Filled.Delete) {
-                        // TODO
-                    }, Triple(R.string.menu_mark_note, Icons.Filled.Star) {
-                        viewModel.onEvent(ReviewerEvent.ToggleMark)
-                    }, Triple(R.string.card_editor_reschedule_card, Icons.Filled.Schedule) {
-                        // TODO
-                    }, Triple(R.string.replay_media, Icons.Filled.Replay) {
-                        // TODO
-                    }, Triple(
-                        R.string.menu_enable_voice_playback, Icons.Filled.RecordVoiceOver
-                    ) {
-                        // TODO
-                    }, Triple(R.string.deck_options, Icons.Filled.Tune) {
-                        // TODO
-                    })
-                }
-                menuOptions.forEach { (textRes, icon, action) ->
-                    ListItem(
-                        headlineContent = { Text(stringResource(textRes)) },
-                        leadingContent = { Icon(icon, contentDescription = null) },
-                        modifier = Modifier.clickable {
-                            scope.launch { sheetState.hide() }.invokeOnCompletion {
-                                if (!sheetState.isVisible) {
-                                    showBottomSheet = false
-                                }
-                            }
-                            action()
+            if (showBottomSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = {
+                        showBottomSheet = false
+                    },
+                    sheetState = sheetState,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                ) {
+                    val menuOptions = remember {
+                        listOf(
+                            Triple(R.string.redo, Icons.AutoMirrored.Filled.Undo) {
+                            // TODO
+                        }, Triple(R.string.enable_whiteboard, Icons.Filled.Edit) {
+                            // TODO
+                        }, Triple(R.string.cardeditor_title_edit_card, Icons.Filled.EditNote) {
+                            viewModel.onEvent(ReviewerEvent.EditCard)
+                        }, Triple(R.string.menu_edit_tags, Icons.AutoMirrored.Filled.Label) {
+                            // TODO
+                        }, Triple(R.string.menu_bury_card, Icons.Filled.VisibilityOff) {
+                            viewModel.onEvent(ReviewerEvent.BuryCard)
+                        }, Triple(R.string.menu_suspend_card, Icons.Filled.Pause) {
+                            viewModel.onEvent(ReviewerEvent.SuspendCard)
+                        }, Triple(R.string.menu_delete_note, Icons.Filled.Delete) {
+                            // TODO
+                        }, Triple(R.string.menu_mark_note, Icons.Filled.Star) {
+                            viewModel.onEvent(ReviewerEvent.ToggleMark)
+                        }, Triple(R.string.card_editor_reschedule_card, Icons.Filled.Schedule) {
+                            // TODO
+                        }, Triple(R.string.replay_media, Icons.Filled.Replay) {
+                            // TODO
+                        }, Triple(
+                            R.string.menu_enable_voice_playback, Icons.Filled.RecordVoiceOver
+                        ) {
+                            // TODO
+                        }, Triple(R.string.deck_options, Icons.Filled.Tune) {
+                            // TODO
                         })
+                    }
+                    menuOptions.forEach { (textRes, icon, action) ->
+                        ListItem(
+                            headlineContent = { Text(stringResource(textRes)) },
+                            leadingContent = { Icon(icon, contentDescription = null) },
+                            modifier = Modifier.clickable {
+                                scope.launch { sheetState.hide() }.invokeOnCompletion {
+                                    if (!sheetState.isVisible) {
+                                        showBottomSheet = false
+                                    }
+                                }
+                                action()
+                            })
+                    }
                 }
             }
         }
