@@ -121,6 +121,9 @@ fun Flashcard(
                 }
             },
             onRelease = { webView ->
+                webView.stopLoading()
+                webView.webViewClient = WebViewClient()
+                webView.setOnTouchListener(null)
                 webView.destroy()
             },
             modifier = modifier
