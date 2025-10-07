@@ -19,10 +19,12 @@ package com.ichi2.anki.reviewer.compose
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -48,7 +50,6 @@ import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.FloatingToolbarDefaults.ScreenOffset
 import androidx.compose.material3.HorizontalFloatingToolbar
@@ -56,6 +57,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.motionScheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -111,8 +113,7 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
             when (effect) {
                 is ReviewerEffect.NavigateToEditCard -> {
                     val intent = NoteEditorLauncher.EditCard(
-                        effect.cardId,
-                        ActivityTransitionAnimation.Direction.FADE
+                        effect.cardId, ActivityTransitionAnimation.Direction.FADE
                     ).toIntent(context)
                     editCardLauncher.launch(intent)
                 }
@@ -158,148 +159,145 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
             expanded = true,
             colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(),
         ) {
-            ButtonGroup(
-                horizontalArrangement = Arrangement.spacedBy(2.dp),
-                overflowIndicator = { menuState ->
-                    FilledIconButton(
-                        onClick = {
-                            if (menuState.isExpanded) {
-                                menuState.dismiss()
-                            } else {
-                                menuState.show()
-                            }
-                        }) {
-                        Icon(
-                            imageVector = Icons.Filled.MoreVert,
-                            contentDescription = stringResource(R.string.more_options),
-                        )
-                    }
-                }) {
-                customItem(buttonGroupContent = {
-                    val interactionSource = remember { MutableInteractionSource() }
-                    IconButton(
-                        onClick = { showBottomSheet = true },
-                        modifier = Modifier
-                            .animateWidth(interactionSource)
-                            .height(48.dp),
-                    ) {
-                        Icon(
-                            Icons.Filled.MoreVert,
-                            contentDescription = stringResource(R.string.more_options)
-                        )
-                    }
-                }, menuContent = {})
-
-                if (!state.isAnswerShown) {
-                    customItem(
-                        buttonGroupContent = {
-                            val interactionSource = remember { MutableInteractionSource() }
-                            Button(
-                                onClick = { viewModel.onEvent(ReviewerEvent.ShowAnswer) },
-                                modifier = Modifier
-                                    .animateWidth(interactionSource)
-                                    .height(48.dp),
-                                interactionSource = interactionSource,
-                                colors = ButtonDefaults.buttonColors(
-                                    MaterialTheme.colorScheme.secondaryContainer,
-                                    MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.show_answer),
-                                    softWrap = false,
-                                    overflow = TextOverflow.Clip
-                                )
-                            }
-                        },
-                        menuContent = {},
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                remember { MutableInteractionSource() }
+                IconButton(
+                    onClick = { showBottomSheet = true },
+                    modifier = Modifier.height(48.dp),
+                ) {
+                    Icon(
+                        Icons.Filled.MoreVert,
+                        contentDescription = stringResource(R.string.more_options)
                     )
-                } else {
-                    ratings.forEachIndexed { index, (_, rating) ->
-                        customItem(
-                            buttonGroupContent = {
-                                val interactionSource = remember { MutableInteractionSource() }
-                                Button(
-                                    onClick = { viewModel.onEvent(ReviewerEvent.RateCard(rating)) },
-                                    modifier = Modifier
-                                        .animateWidth(interactionSource)
-                                        .height(48.dp),
-                                    contentPadding = ButtonDefaults.ExtraSmallContentPadding,
-                                    shape = when (index) {
-                                        0 -> ButtonGroupDefaults.connectedLeadingButtonShape
-                                        3 -> ButtonGroupDefaults.connectedTrailingButtonShape
-                                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes().shape
+                }
+                Box(
+                    modifier = Modifier
+                        .animateContentSize(motionScheme.fastSpatialSpec())
+                ) {
+                    if (!state.isAnswerShown) {
+                        ButtonGroup(
+                            overflowIndicator = { }) {
+                            customItem(
+                                buttonGroupContent = {
+                                    val interactionSource = remember { MutableInteractionSource() }
+                                    Button(
+                                        onClick = { viewModel.onEvent(ReviewerEvent.ShowAnswer) },
+                                        modifier = Modifier.height(56.dp),
+                                        interactionSource = interactionSource,
+                                        colors = ButtonDefaults.buttonColors(
+                                            MaterialTheme.colorScheme.secondaryContainer,
+                                            MaterialTheme.colorScheme.onSecondaryContainer
+                                        )
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.show_answer),
+                                            softWrap = false,
+                                            overflow = TextOverflow.Clip
+                                        )
+                                    }
+                                },
+                                menuContent = {},
+                            )
+                        }
+                    } else {
+                        ButtonGroup(
+                            horizontalArrangement = Arrangement.spacedBy(2.dp),
+                            overflowIndicator = { }) {
+
+                            ratings.forEachIndexed { index, (_, rating) ->
+                                customItem(
+                                    buttonGroupContent = {
+                                        val interactionSource =
+                                            remember { MutableInteractionSource() }
+                                        Button(
+                                            onClick = {
+                                                viewModel.onEvent(
+                                                    ReviewerEvent.RateCard(
+                                                        rating
+                                                    )
+                                                )
+                                            },
+                                            modifier = Modifier
+                                                .animateWidth(interactionSource)
+                                                .height(56.dp),
+                                            contentPadding = ButtonDefaults.ExtraSmallContentPadding,
+                                            shape = when (index) {
+                                                0 -> ButtonGroupDefaults.connectedLeadingButtonShape
+                                                3 -> ButtonGroupDefaults.connectedTrailingButtonShape
+                                                else -> ButtonGroupDefaults.connectedMiddleButtonShapes().shape
+                                            },
+                                            interactionSource = interactionSource,
+                                            colors = ButtonDefaults.buttonColors(
+                                                MaterialTheme.colorScheme.secondaryContainer,
+                                                MaterialTheme.colorScheme.onSecondaryContainer
+                                            )
+                                        ) {
+                                            Text(
+                                                state.nextTimes[index],
+                                                softWrap = false,
+                                                overflow = TextOverflow.Visible
+                                            )
+                                        }
                                     },
-                                    interactionSource = interactionSource,
-                                    colors = ButtonDefaults.buttonColors(
-                                        MaterialTheme.colorScheme.secondaryContainer,
-                                        MaterialTheme.colorScheme.onSecondaryContainer
-                                    )
-                                ) {
-                                    Text(
-                                        state.nextTimes[index],
-                                        softWrap = false,
-                                        overflow = TextOverflow.Visible
-                                    )
-                                 }
-                            },
-                            menuContent = {},
-                        )
+                                    menuContent = {},
+                                )
+                            }
+                        }
                     }
                 }
             }
-        }
-        if (showBottomSheet) {
-            ModalBottomSheet(
-                onDismissRequest = {
-                    showBottomSheet = false
-                },
-                sheetState = sheetState,
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.onSurface,
-            ) {
-                val menuOptions = remember {
-                    listOf(
-                        Triple(R.string.redo, Icons.AutoMirrored.Filled.Undo) {
-                        // TODO
-                    }, Triple(R.string.enable_whiteboard, Icons.Filled.Edit) {
-                        // TODO
-                    }, Triple(R.string.cardeditor_title_edit_card, Icons.Filled.EditNote) {
-                        viewModel.onEvent(ReviewerEvent.EditCard)
-                    }, Triple(R.string.menu_edit_tags, Icons.AutoMirrored.Filled.Label) {
-                        // TODO
-                    }, Triple(R.string.menu_bury_card, Icons.Filled.VisibilityOff) {
-                        viewModel.onEvent(ReviewerEvent.BuryCard)
-                    }, Triple(R.string.menu_suspend_card, Icons.Filled.Pause) {
-                        viewModel.onEvent(ReviewerEvent.SuspendCard)
-                    }, Triple(R.string.menu_delete_note, Icons.Filled.Delete) {
-                        // TODO
-                    }, Triple(R.string.menu_mark_note, Icons.Filled.Star) {
-                        viewModel.onEvent(ReviewerEvent.ToggleMark)
-                    }, Triple(R.string.card_editor_reschedule_card, Icons.Filled.Schedule) {
-                        // TODO
-                    }, Triple(R.string.replay_media, Icons.Filled.Replay) {
-                        // TODO
-                    }, Triple(
-                        R.string.menu_enable_voice_playback, Icons.Filled.RecordVoiceOver
-                    ) {
-                        // TODO
-                    }, Triple(R.string.deck_options, Icons.Filled.Tune) {
-                        // TODO
-                    })
-                }
-                menuOptions.forEach { (textRes, icon, action) ->
-                    ListItem(
-                        headlineContent = { Text(stringResource(textRes)) },
-                        leadingContent = { Icon(icon, contentDescription = null) },
-                        modifier = Modifier.clickable {
-                            scope.launch { sheetState.hide() }.invokeOnCompletion {
-                                if (!sheetState.isVisible) {
-                                    showBottomSheet = false
-                                 }
-                            }
-                            action()
-                        })
+            if (showBottomSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = {
+                        showBottomSheet = false
+                    },
+                    sheetState = sheetState,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                ) {
+                    val menuOptions = remember {
+                        listOf(
+                            Triple(R.string.redo, Icons.AutoMirrored.Filled.Undo) {
+                                // TODO
+                            }, Triple(R.string.enable_whiteboard, Icons.Filled.Edit) {
+                                // TODO
+                            }, Triple(R.string.cardeditor_title_edit_card, Icons.Filled.EditNote) {
+                                viewModel.onEvent(ReviewerEvent.EditCard)
+                            }, Triple(R.string.menu_edit_tags, Icons.AutoMirrored.Filled.Label) {
+                                // TODO
+                            }, Triple(R.string.menu_bury_card, Icons.Filled.VisibilityOff) {
+                                viewModel.onEvent(ReviewerEvent.BuryCard)
+                            }, Triple(R.string.menu_suspend_card, Icons.Filled.Pause) {
+                                viewModel.onEvent(ReviewerEvent.SuspendCard)
+                            }, Triple(R.string.menu_delete_note, Icons.Filled.Delete) {
+                                // TODO
+                            }, Triple(R.string.menu_mark_note, Icons.Filled.Star) {
+                                viewModel.onEvent(ReviewerEvent.ToggleMark)
+                            }, Triple(R.string.card_editor_reschedule_card, Icons.Filled.Schedule) {
+                                // TODO
+                            }, Triple(R.string.replay_media, Icons.Filled.Replay) {
+                                // TODO
+                            }, Triple(
+                                R.string.menu_enable_voice_playback, Icons.Filled.RecordVoiceOver
+                            ) {
+                                // TODO
+                            }, Triple(R.string.deck_options, Icons.Filled.Tune) {
+                                // TODO
+                            })
+                    }
+                    menuOptions.forEach { (textRes, icon, action) ->
+                        ListItem(
+                            headlineContent = { Text(stringResource(textRes)) },
+                            leadingContent = { Icon(icon, contentDescription = null) },
+                            modifier = Modifier.clickable {
+                                scope.launch { sheetState.hide() }.invokeOnCompletion {
+                                    if (!sheetState.isVisible) {
+                                        showBottomSheet = false
+                                    }
+                                }
+                                action()
+                            })
+                    }
                 }
             }
         }
