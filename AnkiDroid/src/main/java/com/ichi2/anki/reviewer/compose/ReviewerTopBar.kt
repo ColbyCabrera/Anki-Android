@@ -15,20 +15,17 @@
  */
 package com.ichi2.anki.reviewer.compose
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Flag
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalContentColor // Import LocalContentColor
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -39,6 +36,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -46,6 +45,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ichi2.anki.R
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,13 +54,14 @@ fun ReviewerTopBar(
     newCount: Int,
     learnCount: Int,
     reviewCount: Int,
-    timer: String,
     chosenAnswer: String,
     isMarked: Boolean,
     flag: Int,
     onToggleMark: () -> Unit,
     onSetFlag: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isAnswerShown: Boolean,
+    onUnanswerCard: () -> Unit
 ) {
     CenterAlignedTopAppBar(
         modifier = modifier, title = { Text(chosenAnswer) }, navigationIcon = {
@@ -73,9 +74,14 @@ fun ReviewerTopBar(
     }, actions = {
         MarkIcon(isMarked = isMarked, onToggleMark = onToggleMark)
         FlagIcon(currentFlag = flag, onSetFlag = onSetFlag)
-        Text(
-            text = timer, fontSize = 14.sp, modifier = Modifier.padding(end = 8.dp)
-        )
+        AnimatedVisibility(visible = isAnswerShown) {
+            IconButton(onClick = onUnanswerCard) {
+                Icon(
+                    painterResource(R.drawable.undo_24px),
+                    contentDescription = stringResource(id = R.string.unanswer_card),
+                )
+            }
+        }
     }, colors = TopAppBarDefaults.topAppBarColors(
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
         navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -89,8 +95,10 @@ fun ReviewerTopBar(
 fun MarkIcon(isMarked: Boolean, onToggleMark: () -> Unit) {
     IconButton(onClick = onToggleMark) {
         Icon(
-            imageVector = if (isMarked) Icons.Filled.Star else Icons.Outlined.StarOutline,
-            contentDescription = "Mark Note",
+            painter = if (isMarked) painterResource(R.drawable.star_shine_24px) else painterResource(
+                R.drawable.star_24px
+            ),
+            contentDescription = stringResource(if (isMarked) R.string.menu_unmark_note else R.string.menu_mark_note),
             tint = if (isMarked) MaterialTheme.colorScheme.tertiary else LocalContentColor.current
         )
     }
@@ -113,7 +121,7 @@ fun FlagIcon(currentFlag: Int, onSetFlag: (Int) -> Unit) {
     Box {
         IconButton(onClick = { expanded = true }) {
             Icon(
-                imageVector = Icons.Default.Flag,
+                painter = painterResource(R.drawable.flag_24px),
                 contentDescription = "Set Flag",
                 tint = if (currentFlag in flagColors.indices && currentFlag != 0) flagColors[currentFlag] else LocalContentColor.current // Use LocalContentColor.current
             )
@@ -137,8 +145,7 @@ fun Counts(newCount: Int, learnCount: Int, reviewCount: Int, modifier: Modifier 
             buildAnnotatedString {
                 withStyle(
                     style = SpanStyle(
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
+                        color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold
                     )
                 ) {
                     append("$newCount")
@@ -146,8 +153,7 @@ fun Counts(newCount: Int, learnCount: Int, reviewCount: Int, modifier: Modifier 
                 append(" ")
                 withStyle(
                     style = SpanStyle(
-                        color = MaterialTheme.colorScheme.error,
-                        fontWeight = FontWeight.Bold
+                        color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold
                     )
                 ) {
                     append("$learnCount")
@@ -155,8 +161,7 @@ fun Counts(newCount: Int, learnCount: Int, reviewCount: Int, modifier: Modifier 
                 append(" ")
                 withStyle(
                     style = SpanStyle(
-                        color = MaterialTheme.colorScheme.secondary,
-                        fontWeight = FontWeight.Bold
+                        color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Bold
                     )
                 ) {
                     append("$reviewCount")
@@ -174,11 +179,12 @@ fun ReviewerTopBarPreview() {
             newCount = 13,
             learnCount = 3,
             reviewCount = 7,
-            timer = "0.5s",
             chosenAnswer = "Answer",
             isMarked = true,
             flag = 1,
             onToggleMark = {},
-            onSetFlag = {})
+            onSetFlag = {},
+            isAnswerShown = true,
+            onUnanswerCard = {})
     }
 }

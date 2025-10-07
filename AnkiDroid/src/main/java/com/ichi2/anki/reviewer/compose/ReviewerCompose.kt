@@ -17,10 +17,17 @@
  ****************************************************************************************/
 package com.ichi2.anki.reviewer.compose
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -46,7 +53,6 @@ import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.FloatingToolbarDefaults.ScreenOffset
 import androidx.compose.material3.HorizontalFloatingToolbar
@@ -54,11 +60,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.motionScheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,13 +75,19 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import anki.scheduler.CardAnswer
+import com.ichi2.anim.ActivityTransitionAnimation
 import com.ichi2.anki.R
+import com.ichi2.anki.noteeditor.NoteEditorLauncher
+import com.ichi2.anki.reviewer.ReviewerEffect
 import com.ichi2.anki.reviewer.ReviewerEvent
 import com.ichi2.anki.reviewer.ReviewerViewModel
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 private val ratings = listOf(
@@ -90,6 +104,26 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     var showBottomSheet by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    val editCardLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) {
+        // We probably want to reload the card here
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.effect.collectLatest { effect ->
+            when (effect) {
+                is ReviewerEffect.NavigateToEditCard -> {
+                    val intent = NoteEditorLauncher.EditCard(
+                        effect.cardId, ActivityTransitionAnimation.Direction.FADE
+                    ).toIntent(context)
+                    editCardLauncher.launch(intent)
+                }
+            }
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(topBar = {
@@ -97,12 +131,13 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                 newCount = state.newCount,
                 learnCount = state.learnCount,
                 reviewCount = state.reviewCount,
-                timer = state.timer,
                 chosenAnswer = state.chosenAnswer,
                 isMarked = state.isMarked,
                 flag = state.flag,
                 onToggleMark = { viewModel.onEvent(ReviewerEvent.ToggleMark) },
-                onSetFlag = { viewModel.onEvent(ReviewerEvent.SetFlag(it)) })
+                onSetFlag = { viewModel.onEvent(ReviewerEvent.SetFlag(it)) },
+                isAnswerShown = state.isAnswerShown
+            ) { viewModel.onEvent(ReviewerEvent.UnanswerCard) }
         }) { paddingValues ->
             Flashcard(
                 modifier = Modifier
@@ -128,93 +163,90 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
             expanded = true,
             colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(),
         ) {
-            ButtonGroup(
-                horizontalArrangement = Arrangement.spacedBy(2.dp),
-                overflowIndicator = { menuState ->
-                    FilledIconButton(
-                        onClick = {
-                            if (menuState.isExpanded) {
-                                menuState.dismiss()
-                            } else {
-                                menuState.show()
-                            }
-                        }) {
-                        Icon(
-                            imageVector = Icons.Filled.MoreVert,
-                            contentDescription = stringResource(R.string.more_options),
-                        )
-                    }
-                }) {
-                customItem(buttonGroupContent = {
-                    val interactionSource = remember { MutableInteractionSource() }
-                    IconButton(
-                        onClick = { showBottomSheet = true },
-                        modifier = Modifier
-                            .animateWidth(interactionSource)
-                            .height(48.dp),
-                    ) {
-                        Icon(
-                            Icons.Filled.MoreVert,
-                            contentDescription = stringResource(R.string.more_options)
-                        )
-                    }
-                }, menuContent = {})
-
-                if (!state.isAnswerShown) {
-                    customItem(
-                        buttonGroupContent = {
-                            val interactionSource = remember { MutableInteractionSource() }
-                            Button(
-                                onClick = { viewModel.onEvent(ReviewerEvent.ShowAnswer) },
-                                modifier = Modifier
-                                    .animateWidth(interactionSource)
-                                    .height(48.dp),
-                                interactionSource = interactionSource,
-                                colors = ButtonDefaults.buttonColors(
-                                    MaterialTheme.colorScheme.secondaryContainer,
-                                    MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.show_answer),
-                                    softWrap = false,
-                                    overflow = TextOverflow.Clip
-                                )
-                            }
-                        },
-                        menuContent = {},
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(
+                    onClick = { showBottomSheet = true },
+                    modifier = Modifier.height(48.dp),
+                ) {
+                    Icon(
+                        Icons.Filled.MoreVert,
+                        contentDescription = stringResource(R.string.more_options)
                     )
-                } else {
-                    ratings.forEachIndexed { index, (_, rating) ->
-                        customItem(
-                            buttonGroupContent = {
-                                val interactionSource = remember { MutableInteractionSource() }
-                                Button(
-                                    onClick = { viewModel.onEvent(ReviewerEvent.RateCard(rating)) },
-                                    modifier = Modifier
-                                        .animateWidth(interactionSource)
-                                        .height(48.dp),
-                                    contentPadding = ButtonDefaults.ExtraSmallContentPadding,
-                                    shape = when (index) {
-                                        0 -> ButtonGroupDefaults.connectedLeadingButtonShape
-                                        3 -> ButtonGroupDefaults.connectedTrailingButtonShape
-                                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes().shape
-                                    },
-                                    interactionSource = interactionSource,
-                                    colors = ButtonDefaults.buttonColors(
-                                        MaterialTheme.colorScheme.secondaryContainer,
-                                        MaterialTheme.colorScheme.onSecondaryContainer
-                                    )
-                                ) {
-                                    Text(
-                                        state.nextTimes[index],
-                                        softWrap = false,
-                                        overflow = TextOverflow.Visible
-                                    )
-                                }
-                            },
-                            menuContent = {},
+                }
+                Box(
+                    modifier = Modifier.animateContentSize(motionScheme.fastSpatialSpec())
+                ) {
+                    if (!state.isAnswerShown) {
+                        val interactionSource = remember { MutableInteractionSource() }
+                        val isPressed by interactionSource.collectIsPressedAsState()
+                        val defaultHorizontalPadding =
+                            ButtonDefaults.MediumContentPadding.calculateLeftPadding(
+                                layoutDirection = LocalLayoutDirection.current
+                            )
+                        val horizontalPadding by animateDpAsState(
+                            if (isPressed) defaultHorizontalPadding + 4.dp else defaultHorizontalPadding,
+                            motionScheme.fastSpatialSpec()
                         )
+                        Button(
+                            onClick = { viewModel.onEvent(ReviewerEvent.ShowAnswer) },
+                            modifier = Modifier.height(56.dp),
+                            interactionSource = interactionSource,
+                            contentPadding = PaddingValues(horizontal = horizontalPadding),
+                            colors = ButtonDefaults.buttonColors(
+                                MaterialTheme.colorScheme.secondaryContainer,
+                                MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        ) {
+                            Text(
+                                text = stringResource(R.string.show_answer),
+                                softWrap = false,
+                                overflow = TextOverflow.Clip
+                            )
+                        }
+                    } else {
+                        ButtonGroup(
+                            horizontalArrangement = Arrangement.spacedBy(2.dp),
+                            overflowIndicator = { }) {
+
+                            ratings.forEachIndexed { index, (_, rating) ->
+                                customItem(
+                                    buttonGroupContent = {
+                                        val interactionSource =
+                                            remember { MutableInteractionSource() }
+                                        Button(
+                                            onClick = {
+                                                viewModel.onEvent(
+                                                    ReviewerEvent.RateCard(
+                                                        rating
+                                                    )
+                                                )
+                                            },
+                                            modifier = Modifier
+                                                .animateWidth(interactionSource)
+                                                .height(56.dp),
+                                            contentPadding = ButtonDefaults.ExtraSmallContentPadding,
+                                            shape = when (index) {
+                                                0 -> ButtonGroupDefaults.connectedLeadingButtonShape
+                                                3 -> ButtonGroupDefaults.connectedTrailingButtonShape
+                                                else -> ButtonGroupDefaults.connectedMiddleButtonShapes().shape
+                                            },
+                                            interactionSource = interactionSource,
+                                            colors = ButtonDefaults.buttonColors(
+                                                MaterialTheme.colorScheme.secondaryContainer,
+                                                MaterialTheme.colorScheme.onSecondaryContainer
+                                            )
+                                        ) {
+                                            Text(
+                                                state.nextTimes[index],
+                                                softWrap = false,
+                                                overflow = TextOverflow.Visible
+                                            )
+                                        }
+                                    },
+                                    menuContent = {},
+                                )
+                            }
+                        }
                     }
                 }
             }

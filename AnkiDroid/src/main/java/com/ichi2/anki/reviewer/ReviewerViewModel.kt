@@ -23,16 +23,19 @@ import androidx.lifecycle.viewModelScope
 import anki.scheduler.CardAnswer
 import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.cardviewer.TypeAnswer
-import com.ichi2.anki.common.time.TimeManager
 import com.ichi2.anki.libanki.Card
+import com.ichi2.anki.libanki.CardId
 import com.ichi2.anki.libanki.sched.CurrentQueueState
 import com.ichi2.anki.preferences.sharedPrefs
 import com.ichi2.anki.servicelayer.NoteService
 import java.io.File
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -41,7 +44,6 @@ data class ReviewerState(
     val newCount: Int = 0,
     val learnCount: Int = 0,
     val reviewCount: Int = 0,
-    val timer: String = "0.0s",
     val chosenAnswer: String = "",
     val isAnswerShown: Boolean = false,
     val html: String = "<html><body></body></html>",
@@ -64,15 +66,22 @@ sealed class ReviewerEvent {
     object EditCard : ReviewerEvent()
     object BuryCard : ReviewerEvent()
     object SuspendCard : ReviewerEvent()
+    object UnanswerCard : ReviewerEvent()
+}
+
+sealed class ReviewerEffect {
+    data class NavigateToEditCard(val cardId: CardId) : ReviewerEffect()
 }
 
 class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
     private val _state = MutableStateFlow(ReviewerState())
     val state: StateFlow<ReviewerState> = _state.asStateFlow()
 
+    private val _effect = MutableSharedFlow<ReviewerEffect>()
+    val effect: SharedFlow<ReviewerEffect> = _effect.asSharedFlow()
+
     private var currentCard: Card? = null
     private var queueState: CurrentQueueState? = null
-    private var timerJob: Job? = null
     private val typeAnswer = TypeAnswer.createInstance(app.sharedPrefs())
 
     init {
@@ -88,9 +97,17 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
             is ReviewerEvent.ToggleMark -> toggleMark()
             is ReviewerEvent.SetFlag -> setFlag(event.flag)
             is ReviewerEvent.LinkClicked -> linkClicked(event.url)
+            is ReviewerEvent.UnanswerCard -> unanswerCard()
+            is ReviewerEvent.EditCard -> editCard()
             ReviewerEvent.BuryCard -> TODO()
-            ReviewerEvent.EditCard -> TODO()
             ReviewerEvent.SuspendCard -> TODO()
+        }
+    }
+
+    private fun editCard() {
+        val card = currentCard ?: return
+        viewModelScope.launch {
+            _effect.emit(ReviewerEffect.NavigateToEditCard(card.id))
         }
     }
 
@@ -128,14 +145,12 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
                         nextTimes = List(4) { "" },
                         chosenAnswer = "",
                         typedAnswer = "",
-                        timer = "0.0s",
                         isMarked = note.hasTag(this, "marked"),
                         flag = card.userFlag(),
                         mediaDirectory = media.dir
                     )
                 }
             }
-            startTimer()
         }
     }
 
@@ -147,7 +162,6 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun showAnswer() {
-        stopTimer()
         val card = currentCard ?: return
         val queue = queueState ?: return
 
@@ -171,7 +185,6 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun rateCard(rating: CardAnswer.Rating) {
-        stopTimer()
         val queue = queueState ?: return
         viewModelScope.launch {
             CollectionManager.withCol {
@@ -181,21 +194,20 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    private fun startTimer() {
-        stopTimer()
-        timerJob = viewModelScope.launch {
-            val startTime = TimeManager.time.intTimeMS()
-            while (true) {
-                delay(100)
-                val elapsedTime = TimeManager.time.intTimeMS() - startTime
-                _state.update { it.copy(timer = "${elapsedTime / 1000.0}s") }
+    private fun unanswerCard() {
+        val card = currentCard ?: return
+        viewModelScope.launch {
+            CollectionManager.withCol {
+                _state.update {
+                    it.copy(
+                        html = card.question(this),
+                        isAnswerShown = false,
+                        nextTimes = List(4) { "" },
+                        chosenAnswer = ""
+                    )
+                }
             }
         }
-    }
-
-    private fun stopTimer() {
-        timerJob?.cancel()
-        timerJob = null
     }
 
     private fun toggleMark() {

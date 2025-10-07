@@ -231,6 +231,13 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         }
     }
 
+    override fun onDestroy() {
+        if (::micToolBarLayer.isInitialized) {
+            micToolBarLayer.removeAllViews()
+        }
+        super.onDestroy()
+    }
+
     override fun recreateWebView() {
         super.recreateWebView()
         setRenderWorkaround(this)
