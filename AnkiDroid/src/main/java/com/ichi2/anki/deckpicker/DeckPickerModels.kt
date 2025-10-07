@@ -27,4 +27,11 @@ sealed class DeckSelectionResult {
     object NoCardsToStudy : DeckSelectionResult()
 }
 
+enum class SyncIconState {
+    Normal,
+    PendingChanges,
+    OneWay,
+    NotLoggedIn,
+}
+
 fun DeckNode.onlyHasDefaultDeck() = children.singleOrNull()?.did == Consts.DEFAULT_DECK_ID

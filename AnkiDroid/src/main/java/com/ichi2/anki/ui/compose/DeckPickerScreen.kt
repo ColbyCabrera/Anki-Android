@@ -43,6 +43,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -80,6 +82,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
@@ -89,6 +92,7 @@ import androidx.graphics.shapes.Morph
 import androidx.graphics.shapes.toPath
 import com.ichi2.anki.R
 import com.ichi2.anki.deckpicker.DisplayDeckNode
+import com.ichi2.anki.deckpicker.SyncIconState
 
 private val expandedDeckCardRadius = 24.dp
 private val collapsedDeckCardRadius = 70.dp
@@ -293,7 +297,9 @@ fun DeckPickerScreen(
     searchFocusRequester: FocusRequester = FocusRequester(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     fabMenuExpanded: Boolean,
-    onFabMenuExpandedChange: (Boolean) -> Unit
+    onFabMenuExpandedChange: (Boolean) -> Unit,
+    syncIconState: SyncIconState,
+    onSync: () -> Unit,
 ) {
     var isSearchOpen by remember { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -356,6 +362,24 @@ fun DeckPickerScreen(
                                     Icons.Default.Search,
                                     contentDescription = stringResource(R.string.search_decks)
                                 )
+                            }
+                            BadgedBox(
+                                badge = {
+                                    when (syncIconState) {
+                                        SyncIconState.PendingChanges -> Badge()
+                                        SyncIconState.OneWay, SyncIconState.NotLoggedIn -> Badge {
+                                            Text("!")
+                                        }
+                                        else -> {}
+                                    }
+                                },
+                            ) {
+                                IconButton(onClick = onSync) {
+                                    Icon(
+                                        painterResource(R.drawable.ic_sync_24dp),
+                                        contentDescription = stringResource(R.string.sync_now),
+                                    )
+                                }
                             }
                         }
                     },
@@ -446,5 +470,8 @@ fun DeckPickerScreenPreview() {
         onEmpty = {},
         onNavigationIconClick = {},
         fabMenuExpanded = false,
-        onFabMenuExpandedChange = {})
+        onFabMenuExpandedChange = {},
+        syncIconState = SyncIconState.Normal,
+        onSync = {},
+    )
 }

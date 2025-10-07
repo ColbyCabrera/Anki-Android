@@ -33,6 +33,8 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -71,6 +73,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ichi2.anki.R
 import com.ichi2.anki.deckpicker.DisplayDeckNode
+import com.ichi2.anki.deckpicker.SyncIconState
 
 // Define Expressive Typography
 val GoogleSansRounded = FontFamily(
@@ -227,6 +230,8 @@ fun AnkiDroidApp(
     requestSearchFocus: Boolean,
     onSearchFocusRequested: () -> Unit,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    syncIconState: SyncIconState,
+    onSync: () -> Unit,
 ) {
     val searchFocusRequester = remember {
         androidx.compose.ui.focus.FocusRequester()
@@ -301,6 +306,24 @@ fun AnkiDroidApp(
                                         Icons.Default.Search,
                                         contentDescription = stringResource(R.string.search_decks),
                                     )
+                                }
+                                BadgedBox(
+                                    badge = {
+                                        when (syncIconState) {
+                                            SyncIconState.PendingChanges -> Badge()
+                                            SyncIconState.OneWay, SyncIconState.NotLoggedIn -> Badge {
+                                                Text("!")
+                                            }
+                                            else -> {}
+                                        }
+                                    },
+                                ) {
+                                    IconButton(onClick = onSync) {
+                                        Icon(
+                                            painterResource(R.drawable.ic_sync_24dp),
+                                            contentDescription = stringResource(R.string.sync_now),
+                                        )
+                                    }
                                 }
                             }
                             if (studyOptionsData != null) {
@@ -465,6 +488,9 @@ fun AnkiDroidApp(
             onEmpty = onEmpty,
             onNavigationIconClick = onNavigationIconClick,
             fabMenuExpanded = fabMenuExpanded,
-            onFabMenuExpandedChange = { fabMenuExpanded = it })
+            onFabMenuExpandedChange = { fabMenuExpanded = it },
+            syncIconState = syncIconState,
+            onSync = onSync,
+        )
     }
 }
