@@ -5,7 +5,7 @@
  *                                                                                      *
  * This program is free software; you can redistribute it and/or modify it under        *
  * the terms of the GNU General Public License as published by the Free Software        *
- * Foundation; either version 3 of the License, or (at your option) any later           *
+ * Foundation; either version B of the License, or (at your option) any later           *
  * version.                                                                             *
  *                                                                                      *
  * This program is distributed in the hope that in editing this file it will be useful, but WITHOUT ANY      *
@@ -20,10 +20,13 @@ package com.ichi2.anki.reviewer.compose
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -75,6 +78,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import anki.scheduler.CardAnswer
 import com.ichi2.anim.ActivityTransitionAnimation
@@ -174,10 +178,19 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                 ) {
                     if (!state.isAnswerShown) {
                         val interactionSource = remember { MutableInteractionSource() }
+                        val isPressed by interactionSource.collectIsPressedAsState()
+                        val horizontalPadding by animateDpAsState(
+                            if (isPressed) ButtonDefaults.MediumContentPadding.calculateLeftPadding(
+                                layoutDirection = LayoutDirection.Ltr
+                            ) + 4.dp else ButtonDefaults.MediumContentPadding.calculateLeftPadding(
+                                layoutDirection = LayoutDirection.Ltr
+                            ), motionScheme.fastSpatialSpec()
+                        )
                         Button(
                             onClick = { viewModel.onEvent(ReviewerEvent.ShowAnswer) },
                             modifier = Modifier.height(56.dp),
                             interactionSource = interactionSource,
+                            contentPadding = PaddingValues(horizontal = horizontalPadding),
                             colors = ButtonDefaults.buttonColors(
                                 MaterialTheme.colorScheme.secondaryContainer,
                                 MaterialTheme.colorScheme.onSecondaryContainer
