@@ -368,6 +368,16 @@ fun DeckPickerScreen(
                     scrollBehavior = scrollBehavior,
                 )
             },
+            floatingActionButton = {
+                ExpandableFab(
+                    expanded = fabMenuExpanded,
+                    onExpandedChange = onFabMenuExpandedChange,
+                    onAddNote = onAddNote,
+                    onAddDeck = onAddDeck,
+                    onAddSharedDeck = onAddSharedDeck,
+                    onAddFilteredDeck = onAddFilteredDeck
+                )
+            }
         ) { paddingValues ->
             DeckPickerContent(
                 decks = decks,
@@ -387,17 +397,8 @@ fun DeckPickerScreen(
             )
         }
         Scrim(
-            visible = fabMenuExpanded, onDismiss = { onFabMenuExpandedChange(false) })
-        ExpandableFabContainer {
-            ExpandableFab(
-                expanded = fabMenuExpanded,
-                onExpandedChange = onFabMenuExpandedChange,
-                onAddNote = onAddNote,
-                onAddDeck = onAddDeck,
-                onAddSharedDeck = onAddSharedDeck,
-                onAddFilteredDeck = onAddFilteredDeck
-            )
-        }
+            visible = fabMenuExpanded, onDismiss = { onFabMenuExpandedChange(false) }
+        )
         BackHandler(fabMenuExpanded) { onFabMenuExpandedChange(false) }
     }
 }
