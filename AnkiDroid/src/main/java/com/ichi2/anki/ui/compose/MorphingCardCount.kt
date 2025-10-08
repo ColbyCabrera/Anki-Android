@@ -145,7 +145,7 @@ fun MorphingCardCount(
     val morphingShape = MorphShape(morph, morphProgress.value)
 
     Box(modifier = modifier
-        .size(32.dp)
+        .size(36.dp)
         .graphicsLayer {
             // Apply the rotation from the animation.
             rotationZ = rotation.value

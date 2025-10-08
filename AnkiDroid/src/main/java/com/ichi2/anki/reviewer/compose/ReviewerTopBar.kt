@@ -18,6 +18,7 @@ package com.ichi2.anki.reviewer.compose
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -61,20 +62,22 @@ fun ReviewerTopBar(
     onUnanswerCard: () -> Unit
 ) {
     CenterAlignedTopAppBar(
-        modifier = modifier, title = { Text(chosenAnswer) }, navigationIcon = {
-        Counts(newCount = newCount, learnCount = learnCount, reviewCount = reviewCount)
-    }, actions = {
-        MarkIcon(isMarked = isMarked, onToggleMark = onToggleMark)
-        FlagIcon(currentFlag = flag, onSetFlag = onSetFlag)
-        AnimatedVisibility(visible = isAnswerShown) {
-            IconButton(onClick = onUnanswerCard) {
-                Icon(
-                    painterResource(R.drawable.undo_24px),
-                    contentDescription = stringResource(id = R.string.unanswer_card),
-                )
+        modifier = modifier,
+        title = { Text(chosenAnswer) },
+        navigationIcon = {
+            Counts(modifier = Modifier.padding(horizontal = 8.dp),newCount = newCount, learnCount = learnCount, reviewCount = reviewCount)
+        }, actions = {
+            MarkIcon(isMarked = isMarked, onToggleMark = onToggleMark)
+            FlagIcon(currentFlag = flag, onSetFlag = onSetFlag)
+            AnimatedVisibility(visible = isAnswerShown) {
+                IconButton(onClick = onUnanswerCard) {
+                    Icon(
+                        painterResource(R.drawable.undo_24px),
+                        contentDescription = stringResource(id = R.string.unanswer_card),
+                    )
+                }
             }
-        }
-    }, colors = TopAppBarDefaults.topAppBarColors(
+        }, colors = TopAppBarDefaults.topAppBarColors(
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
         navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         titleContentColor = MaterialTheme.colorScheme.onSurface,
