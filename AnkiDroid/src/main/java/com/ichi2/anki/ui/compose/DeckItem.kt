@@ -227,7 +227,7 @@ fun DeckItem(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 ),
-                shape = RoundedCornerShape(SubDeckCardRadius),
+          //      shape = RoundedCornerShape(SubDeckCardRadius),
                 elevation = CardDefaults.cardElevation(0.dp)
             ) {
                 content()
@@ -239,7 +239,7 @@ fun DeckItem(
                 modifier = modifier
                     .fillMaxWidth()
                     .padding(start = ((deck.depth - 1) * 16 + 8).dp, top = 2.dp, bottom = 2.dp)
-                    .clip(RoundedCornerShape(SubDeckCardRadius))
+                 //   .clip(RoundedCornerShape(SubDeckCardRadius))
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh),
             ) {
                 content()
