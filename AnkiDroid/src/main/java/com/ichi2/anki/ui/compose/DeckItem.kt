@@ -128,7 +128,7 @@ fun DeckItem(
             Row(
                 modifier = Modifier
                     .height(70.dp)
-                    .padding(horizontal = 2.dp),
+                    .padding(start = 6.dp),
                 horizontalArrangement = Arrangement.spacedBy(2.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -150,7 +150,7 @@ fun DeckItem(
                 IconButton(
                     onClick = { onExpandClick() },
                     modifier = Modifier
-                        .padding(start = 8.dp)
+                        .padding(start = 6.dp)
                         .size(36.dp)
                 ) {
                     Icon(
@@ -265,7 +265,7 @@ fun CardCountsContainer(
 ) {
     Box(
         modifier = Modifier
-            .size(36.dp)
+            .size(32.dp)
             .clip(shape)
             .background(containerColor),
         contentAlignment = Alignment.Center
@@ -273,7 +273,7 @@ fun CardCountsContainer(
         Text(
             text = cardCount.toString(),
             color = MaterialTheme.colorScheme.onSecondary,
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.labelMedium,
             modifier = Modifier
                 .padding(0.dp)
                 .basicMarquee()
