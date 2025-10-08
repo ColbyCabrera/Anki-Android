@@ -67,7 +67,7 @@ import androidx.graphics.shapes.toPath
 import com.ichi2.anki.R
 import com.ichi2.anki.deckpicker.DisplayDeckNode
 
-private val expandedDeckCardRadius = 24.dp
+private val expandedDeckCardRadius = 14.dp
 private val collapsedDeckCardRadius = 70.dp
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
