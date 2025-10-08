@@ -132,6 +132,7 @@ import com.ichi2.anki.deckpicker.DeckPickerViewModel.FlattenedDeckList
 import com.ichi2.anki.deckpicker.DeckPickerViewModel.StartupResponse
 import com.ichi2.anki.deckpicker.DeckSelectionResult
 import com.ichi2.anki.deckpicker.DeckSelectionType
+import com.ichi2.anki.deckpicker.SyncIconState
 import com.ichi2.anki.dialogs.AsyncDialogFragment
 import com.ichi2.anki.dialogs.BackupPromptDialog
 import com.ichi2.anki.dialogs.ConfirmationDialog
@@ -273,8 +274,6 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
 
     // flag asking user to do a full sync which is used in upgrade path
     private var recommendOneWaySync = false
-
-    private var syncMediaProgressJob: Job? = null
 
     // flag keeping track of when the app has been paused
     var activityPaused = false
@@ -456,6 +455,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                     initial = FlattenedDeckList(emptyList(), false),
                 )
                 val isRefreshing by viewModel.isSyncing.collectAsState(initial = false)
+                val syncIconState by viewModel.syncIconState.collectAsState()
                 var searchQuery by remember { mutableStateOf("") }
                 var requestSearchFocus by remember { mutableStateOf(false) }
                 val focusedDeckId by viewModel.flowOfFocusedDeck.collectAsState()
@@ -597,6 +597,8 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                             requestSearchFocus = requestSearchFocus,
                             onSearchFocusRequested = { requestSearchFocus = false },
                             snackbarHostState = snackbarHostState,
+                            syncIconState = syncIconState,
+                            onSync = { viewModel.requestSync() },
                         )
                     }
                 } else {
@@ -691,6 +693,8 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                             requestSearchFocus = requestSearchFocus,
                             onSearchFocusRequested = { requestSearchFocus = false },
                             snackbarHostState = snackbarHostState,
+                            syncIconState = syncIconState,
+                            onSync = { viewModel.requestSync() },
                         )
                     }
                 }
@@ -823,6 +827,10 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
             hideProgressBar()
         }
 
+        fun onSyncRequested(unit: Unit) {
+            sync()
+        }
+
         fun onStartupResponse(response: StartupResponse) {
             Timber.d("onStartupResponse: %s", response)
             when (response) {
@@ -855,6 +863,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
         viewModel.flowOfDeckList.launchCollectionInLifecycleScope(::onDeckListChanged)
         viewModel.flowOfResizingDividerVisible.launchCollectionInLifecycleScope(::onResizingDividerVisibilityChanged)
         viewModel.flowOfDecksReloaded.launchCollectionInLifecycleScope(::onDecksReloaded)
+        viewModel.flowOfSyncRequest.launchCollectionInLifecycleScope(::onSyncRequested)
         viewModel.flowOfStartupResponse.filterNotNull()
             .launchCollectionInLifecycleScope(::onStartupResponse)
     }
@@ -1020,35 +1029,9 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
         return super.onPrepareOptionsMenu(menu)
     }
 
-    fun setupMediaSyncMenuItem(menu: Menu) {
-        // shouldn't be necessary, but `invalidateOptionsMenu()` is called way more than necessary
-        syncMediaProgressJob?.cancel()
-
-        val syncItem = menu.findItem(R.id.action_sync)
-        val progressIndicator =
-            syncItem.actionView?.findViewById<LinearProgressIndicator>(R.id.progress_indicator)
-
-        val workManager = WorkManager.getInstance(this)
-        val flow = workManager.getWorkInfosForUniqueWorkFlow(UniqueWorkNames.SYNC_MEDIA)
-
-        syncMediaProgressJob = lifecycleScope.launch {
-            flow.flowWithLifecycle(lifecycle).collectLatest {
-                val workInfo = it.lastOrNull()
-                if (workInfo?.state == WorkInfo.State.RUNNING && progressIndicator?.isVisible == false) {
-                    Timber.i("DeckPicker: Showing media sync progress indicator")
-                    progressIndicator.isVisible = true
-                } else if (progressIndicator?.isVisible == true) {
-                    Timber.i("DeckPicker: Hiding media sync progress indicator")
-                    progressIndicator.isVisible = false
-                }
-            }
-        }
-    }
-
     fun updateMenuFromState(menu: Menu) {
         optionsMenuState?.run {
             updateUndoLabelFromState(menu.findItem(R.id.action_undo), undoLabel, undoAvailable)
-            updateSyncIconFromState(menu.findItem(R.id.action_sync), this)
         }
         updateDeckRelatedMenuItems(menu)
     }
@@ -1080,34 +1063,6 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
         }
     }
 
-    private fun updateSyncIconFromState(
-        menuItem: MenuItem,
-        state: OptionsMenuState,
-    ) {
-        val provider = MenuItemCompat.getActionProvider(menuItem) as? SyncActionProvider ?: return
-        val tooltipText = when (state.syncIcon) {
-            SyncIconState.Normal, SyncIconState.PendingChanges -> R.string.button_sync
-            SyncIconState.OneWay -> R.string.sync_menu_title_one_way_sync
-            SyncIconState.NotLoggedIn -> R.string.sync_menu_title_no_account
-        }
-        provider.setTooltipText(getString(tooltipText))
-        when (state.syncIcon) {
-            SyncIconState.Normal -> {
-                BadgeDrawableBuilder.removeBadge(provider)
-            }
-
-            SyncIconState.PendingChanges -> {
-                BadgeDrawableBuilder(this).withColor(getColor(R.color.badge_warning))
-                    .replaceBadge(provider)
-            }
-
-            SyncIconState.OneWay, SyncIconState.NotLoggedIn -> {
-                BadgeDrawableBuilder(this).withText('!').withColor(getColor(R.color.badge_error))
-                    .replaceBadge(provider)
-            }
-        }
-    }
-
     @VisibleForTesting
     suspend fun updateMenuState() {
         optionsMenuState = withOpenColOrNull {
@@ -1115,42 +1070,9 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
             val undoAvailable = undoAvailable()
             // besides checking for cards being available also consider if we have empty decks
             val isColEmpty = isEmpty && decks.count() == 1
-            // the correct sync status is fetched in the next call so "Normal" is used as a placeholder
-            // the sync status is calculated in the next call so "Normal" is used as a placeholder
-            OptionsMenuState(undoLabel, SyncIconState.Normal, undoAvailable, isColEmpty)
-        }?.let { (undoLabel, _, undoAvailable, isColEmpty) ->
-            val syncIcon = fetchSyncIconState()
-            OptionsMenuState(undoLabel, syncIcon, undoAvailable, isColEmpty)
+            OptionsMenuState(undoLabel, undoAvailable, isColEmpty)
         }
-    }
-
-    private suspend fun fetchSyncIconState(): SyncIconState {
-        if (!Prefs.displaySyncStatus) return SyncIconState.Normal
-        val auth = syncAuth()
-        if (auth == null) return SyncIconState.NotLoggedIn
-        return try {
-            // Use CollectionManager to ensure that this doesn't block 'deck count' tasks
-            // throws if a .colpkg import or similar occurs just before this call
-            val output =
-                withContext(Dispatchers.IO) { CollectionManager.getBackend().syncStatus(auth) }
-            if (output.hasNewEndpoint() && output.newEndpoint.isNotEmpty()) {
-                Prefs.currentSyncUri = output.newEndpoint
-            }
-            when (output.required) {
-                SyncStatusResponse.Required.NO_CHANGES -> SyncIconState.Normal
-                SyncStatusResponse.Required.NORMAL_SYNC -> SyncIconState.PendingChanges
-                SyncStatusResponse.Required.FULL_SYNC -> SyncIconState.OneWay
-                SyncStatusResponse.Required.UNRECOGNIZED -> {
-                    Timber.w("Unexpected sync status response: UNRECOGNIZED. Defaulting to Normal.")
-                    SyncIconState.Normal
-                }
-            }
-        } catch (_: BackendNetworkException) {
-            SyncIconState.Normal
-        } catch (e: Exception) {
-            Timber.d(e, "error obtaining sync status: collection likely closed")
-            SyncIconState.Normal
-        }
+        viewModel.updateSyncStatus()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -2218,14 +2140,11 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
 data class OptionsMenuState(
     /** If undo is available, a string describing the action. */
     val undoLabel: String?,
-    val syncIcon: SyncIconState,
     val undoAvailable: Boolean,
     val isColEmpty: Boolean,
 )
 
-enum class SyncIconState {
-    Normal, PendingChanges, OneWay, NotLoggedIn,
-}
+import com.ichi2.anki.deckpicker.SyncIconState
 
 class CollectionLoadingErrorDialog : DialogHandlerMessage(
     WhichDialogHandler.MSG_SHOW_COLLECTION_LOADING_ERROR_DIALOG,

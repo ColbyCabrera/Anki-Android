@@ -40,6 +40,8 @@ import com.ichi2.anki.libanki.sched.DeckNode
 import com.ichi2.anki.libanki.utils.extend
 import com.ichi2.anki.noteeditor.NoteEditorLauncher
 import com.ichi2.anki.notetype.ManageNoteTypesDestination
+import com.ichi2.anki.settings.Prefs
+import com.ichi2.anki.syncAuth
 import com.ichi2.anki.observability.undoableOp
 import com.ichi2.anki.pages.DeckOptionsDestination
 import com.ichi2.anki.performBackupInBackground
@@ -55,6 +57,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import net.ankiweb.rsdroid.RustCleanup
 import timber.log.Timber
+import anki.sync.SyncStatusResponse
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import net.ankiweb.rsdroid.exceptions.BackendNetworkException
 
 /**
  * ViewModel for the [DeckPicker]
@@ -63,7 +69,9 @@ class DeckPickerViewModel :
     ViewModel(),
     OnErrorListener {
     val isSyncing = MutableStateFlow(false)
+    val syncIconState = MutableStateFlow(SyncIconState.Normal)
     val flowOfStartupResponse = MutableStateFlow<StartupResponse?>(null)
+    val flowOfSyncRequest = MutableSharedFlow<Unit>()
 
     private val flowOfDeckDueTree = MutableStateFlow<DeckNode?>(null)
 
@@ -445,6 +453,43 @@ class DeckPickerViewModel :
         val requiredPermissions: PermissionSet
 
         fun initializeAnkiDroidFolder(): Boolean
+    }
+
+    fun requestSync() = viewModelScope.launch {
+        flowOfSyncRequest.emit(Unit)
+    }
+
+    fun updateSyncStatus() = viewModelScope.launch {
+        syncIconState.value = fetchSyncIconState()
+    }
+
+    private suspend fun fetchSyncIconState(): SyncIconState {
+        if (!Prefs.displaySyncStatus) return SyncIconState.Normal
+        val auth = syncAuth()
+        if (auth == null) return SyncIconState.NotLoggedIn
+        return try {
+            // Use CollectionManager to ensure that this doesn't block 'deck count' tasks
+            // throws if a .colpkg import or similar occurs just before this call
+            val output =
+                withContext(Dispatchers.IO) { CollectionManager.getBackend().syncStatus(auth) }
+            if (output.hasNewEndpoint() && output.newEndpoint.isNotEmpty()) {
+                Prefs.currentSyncUri = output.newEndpoint
+            }
+            when (output.required) {
+                SyncStatusResponse.Required.NO_CHANGES -> SyncIconState.Normal
+                SyncStatusResponse.Required.NORMAL_SYNC -> SyncIconState.PendingChanges
+                SyncStatusResponse.Required.FULL_SYNC -> SyncIconState.OneWay
+                SyncStatusResponse.Required.UNRECOGNIZED -> {
+                    Timber.w("Unexpected sync status response: UNRECOGNIZED. Defaulting to Normal.")
+                    SyncIconState.Normal
+                }
+            }
+        } catch (_: BackendNetworkException) {
+            SyncIconState.Normal
+        } catch (e: Exception) {
+            Timber.d(e, "error obtaining sync status: collection likely closed")
+            SyncIconState.Normal
+        }
     }
 
     /** Represents [dueTree] as a list */
