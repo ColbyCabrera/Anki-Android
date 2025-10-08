@@ -26,7 +26,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -185,15 +184,14 @@ private fun RenderDeck(
                 contentColor = MaterialTheme.colorScheme.onSurface
             )
         ) {
-            Column {
+            Column(Modifier.padding(8.dp)) {
                 content()
             }
         }
     } else {
         Column(
             modifier = Modifier.padding(
-                start = if (deck.depth == 1) 8.dp else subDeckPadding,
-                end = if (deck.depth == 1) 8.dp else 0.dp
+                start = if (deck.depth == 1) 0.dp else subDeckPadding,
             )
         ) {
             content()
