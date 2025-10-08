@@ -51,6 +51,39 @@ import com.ichi2.utils.MorphShape
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
+// A list of interesting shapes to cycle through for the morph animation.
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+private val MORPHING_SHAPES = listOf(
+    MaterialShapes.Circle,
+    MaterialShapes.Pill,
+    MaterialShapes.SoftBurst,
+    MaterialShapes.Pentagon,
+    MaterialShapes.Sunny,
+    MaterialShapes.Oval,
+    MaterialShapes.Square,
+    MaterialShapes.Slanted,
+    MaterialShapes.Arch,
+    MaterialShapes.Arrow,
+    MaterialShapes.Fan,
+    MaterialShapes.Cookie4Sided,
+    MaterialShapes.Cookie6Sided,
+    MaterialShapes.Cookie7Sided,
+    MaterialShapes.Cookie9Sided,
+    MaterialShapes.Cookie12Sided,
+    MaterialShapes.Clover4Leaf,
+    MaterialShapes.Clover8Leaf,
+    MaterialShapes.SoftBoom,
+    MaterialShapes.Ghostish,
+    MaterialShapes.Puffy,
+    MaterialShapes.PuffyDiamond,
+    MaterialShapes.Bun,
+    MaterialShapes.Flower
+)
+
+// The spring animation gives it a lively, physical feel.
+private val MORPH_ANIMATION_SPEC: FiniteAnimationSpec<Float> =
+    spring(dampingRatio = 0.6f, stiffness = 200f)
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MorphingCardCount(
@@ -59,40 +92,10 @@ fun MorphingCardCount(
     contentColor: Color,
     modifier: Modifier = Modifier,
 ) {
-    // A list of interesting shapes to cycle through for the morph animation.
-    val shapes = remember {
-        listOf(
-            MaterialShapes.Circle,
-            MaterialShapes.Pill,
-            MaterialShapes.SoftBurst,
-            MaterialShapes.Pentagon,
-            MaterialShapes.Sunny,
-            MaterialShapes.Oval,
-            MaterialShapes.Square,
-            MaterialShapes.Slanted,
-            MaterialShapes.Arch,
-            MaterialShapes.Arrow,
-            MaterialShapes.Fan,
-            MaterialShapes.Cookie4Sided,
-            MaterialShapes.Cookie6Sided,
-            MaterialShapes.Cookie7Sided,
-            MaterialShapes.Cookie9Sided,
-            MaterialShapes.Cookie12Sided,
-            MaterialShapes.Clover4Leaf,
-            MaterialShapes.Clover8Leaf,
-            MaterialShapes.SoftBoom,
-            MaterialShapes.Ghostish,
-            MaterialShapes.Puffy,
-            MaterialShapes.PuffyDiamond,
-            MaterialShapes.Bun,
-            MaterialShapes.Flower
-        )
-    }
-
     // State for managing the morph animation.
-    var currentShapeIndex by remember { mutableIntStateOf(Random.Default.nextInt(shapes.size)) }
-    var startShape by remember { mutableStateOf(shapes[currentShapeIndex]) }
-    var endShape by remember { mutableStateOf(shapes[currentShapeIndex]) }
+    var currentShapeIndex by remember { mutableIntStateOf(Random.Default.nextInt(MORPHING_SHAPES.size)) }
+    var startShape by remember { mutableStateOf(MORPHING_SHAPES[currentShapeIndex]) }
+    var endShape by remember { mutableStateOf(MORPHING_SHAPES[currentShapeIndex]) }
     val morphProgress = remember { Animatable(0f) }
 
     // State for the rotation animation.
@@ -100,10 +103,6 @@ fun MorphingCardCount(
 
     // Store the previous card count to determine the direction of change.
     var previousCardCount by remember { mutableIntStateOf(cardCount) }
-
-    // The spring animation gives it a lively, physical feel.
-    // This must be declared in the Composable scope, not the LaunchedEffect scope.
-    val animationSpec: FiniteAnimationSpec<Float> = spring(dampingRatio = 0.6f, stiffness = 200f)
 
     // Trigger the animation whenever the cardCount changes.
     LaunchedEffect(cardCount) {
@@ -113,9 +112,9 @@ fun MorphingCardCount(
         val rotationDirection = if (cardCount > previousCardCount) 1f else -1f
 
         // Set up the shapes for the upcoming morph.
-        startShape = shapes[currentShapeIndex]
-        currentShapeIndex = (currentShapeIndex + 1) % shapes.size
-        endShape = shapes[currentShapeIndex]
+        startShape = MORPHING_SHAPES[currentShapeIndex]
+        currentShapeIndex = (currentShapeIndex + 1) % MORPHING_SHAPES.size
+        endShape = MORPHING_SHAPES[currentShapeIndex]
 
         // Reset progress and rotation before starting new animations.
         morphProgress.snapTo(0f)
@@ -123,12 +122,11 @@ fun MorphingCardCount(
 
         // Run morph and rotation animations in parallel.
         launch {
-            morphProgress.animateTo(targetValue = 1f, animationSpec = animationSpec)
+            morphProgress.animateTo(targetValue = 1f, animationSpec = MORPH_ANIMATION_SPEC)
         }
         launch {
             rotation.animateTo(
-                targetValue = 360f * rotationDirection,
-                animationSpec = animationSpec
+                targetValue = 360f * rotationDirection, animationSpec = MORPH_ANIMATION_SPEC
             )
         }
 
