@@ -139,35 +139,18 @@ fun Counts(newCount: Int, learnCount: Int, reviewCount: Int, modifier: Modifier 
     Row(modifier = modifier) {
         MorphingCardCount(
             newCount,
-            MaterialTheme.colorScheme.surfaceVariant,
-            MaterialTheme.colorScheme.onSurfaceVariant
+            MaterialTheme.colorScheme.primary,
+            MaterialTheme.colorScheme.onPrimary
         )
-        Text(
-            buildAnnotatedString {
-                withStyle(
-                    style = SpanStyle(
-                        color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold
-                    )
-                ) {
-                    append("$newCount")
-                }
-                append(" ")
-                withStyle(
-                    style = SpanStyle(
-                        color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold
-                    )
-                ) {
-                    append("$learnCount")
-                }
-                append(" ")
-                withStyle(
-                    style = SpanStyle(
-                        color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Bold
-                    )
-                ) {
-                    append("$reviewCount")
-                }
-            }, fontSize = 14.sp
+        MorphingCardCount(
+            learnCount,
+            MaterialTheme.colorScheme.primary,
+            MaterialTheme.colorScheme.onPrimary
+        )
+        MorphingCardCount(
+            reviewCount,
+            MaterialTheme.colorScheme.primary,
+            MaterialTheme.colorScheme.onPrimary
         )
     }
 }

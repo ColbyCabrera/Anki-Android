@@ -18,13 +18,18 @@ package com.ichi2.anki.ui.compose
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
@@ -41,6 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.dp
 import androidx.graphics.shapes.Morph
 import com.ichi2.utils.MorphShape
 import kotlinx.coroutines.launch
@@ -78,6 +84,10 @@ fun MorphingCardCount(
     // Store the previous card count to determine the direction of change.
     var previousCardCount by remember { mutableIntStateOf(cardCount) }
 
+    // The spring animation gives it a lively, physical feel.
+    // This must be declared in the Composable scope, not the LaunchedEffect scope.
+    val animationSpec: FiniteAnimationSpec<Float> = spring(dampingRatio = 0.6f, stiffness = 200f)
+
     // Trigger the animation whenever the cardCount changes.
     LaunchedEffect(cardCount) {
         if (cardCount == previousCardCount) return@LaunchedEffect
@@ -95,9 +105,6 @@ fun MorphingCardCount(
         rotation.snapTo(0f)
 
         // Run morph and rotation animations in parallel.
-        // The spring animation gives it a lively, physical feel.
-        val animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()
-
         launch {
             morphProgress.animateTo(targetValue = 1f, animationSpec = animationSpec)
         }
@@ -119,12 +126,14 @@ fun MorphingCardCount(
 
     Box(
         modifier = modifier
+            .size(32.dp)
             .graphicsLayer {
                 // Apply the rotation from the animation.
                 rotationZ = rotation.value
             }
             .clip(morphingShape)
             .background(containerColor),
+
         contentAlignment = Alignment.Center
     ) {
         // AnimatedContent provides a nice transition for the text itself.
@@ -142,12 +151,14 @@ fun MorphingCardCount(
                     slideOutVertically { height -> height } + fadeOut()
                 }
                 enter togetherWith exit using SizeTransform(clip = false)
-            }, label = "CardCountAnimation"
+            },
+            label = "CardCountAnimation"
         ) { count ->
             Text(
+                modifier = Modifier.basicMarquee(),
                 text = count.toString(),
                 color = contentColor,
-                style = MaterialTheme.typography.headlineLarge
+                style = MaterialTheme.typography.labelMedium
             )
         }
     }
