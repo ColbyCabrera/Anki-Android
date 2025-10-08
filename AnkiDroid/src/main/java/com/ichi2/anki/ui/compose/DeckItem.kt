@@ -18,6 +18,7 @@
 package com.ichi2.anki.ui.compose
 
 import android.graphics.Matrix
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.combinedClickable
@@ -39,6 +40,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.motionScheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -65,7 +67,8 @@ import androidx.graphics.shapes.toPath
 import com.ichi2.anki.R
 import com.ichi2.anki.deckpicker.DisplayDeckNode
 
-private val SubDeckCardRadius = 14.dp
+private val expandedDeckCardRadius = 24.dp
+private val collapsedDeckCardRadius = 70.dp
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 internal class RoundedPolygonShape(private val polygon: RoundedPolygon) : Shape {
@@ -96,8 +99,12 @@ fun DeckItem(
 ) {
     var isContextMenuOpen by remember { mutableStateOf(false) }
 
-    val content = @Composable {
+    val cornerRadius by animateDpAsState(
+        targetValue = if (!deck.collapsed && deck.canCollapse) expandedDeckCardRadius else collapsedDeckCardRadius,
+        animationSpec = motionScheme.defaultEffectsSpec()
+    )
 
+    val content = @Composable {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -227,7 +234,7 @@ fun DeckItem(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 ),
-          //      shape = RoundedCornerShape(SubDeckCardRadius),
+                shape = RoundedCornerShape(cornerRadius),
                 elevation = CardDefaults.cardElevation(0.dp)
             ) {
                 content()
@@ -238,8 +245,8 @@ fun DeckItem(
             Box(
                 modifier = modifier
                     .fillMaxWidth()
-                    .padding(start = ((deck.depth - 1) * 16 + 8).dp, top = 2.dp, bottom = 2.dp)
-                 //   .clip(RoundedCornerShape(SubDeckCardRadius))
+                    .padding(top = 2.dp, bottom = 2.dp)
+                   .clip(RoundedCornerShape(cornerRadius))
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh),
             ) {
                 content()

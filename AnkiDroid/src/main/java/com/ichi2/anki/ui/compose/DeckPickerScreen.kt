@@ -93,7 +93,7 @@ import com.ichi2.anki.deckpicker.DisplayDeckNode
 
 private val expandedDeckCardRadius = 24.dp
 private val collapsedDeckCardRadius = 70.dp
-private val subDeckPadding = 8.dp
+private val subDeckPadding = 16.dp
 
 private class MorphShape(
     private val morph: Morph, private val percentage: Float
@@ -131,67 +131,72 @@ private fun RenderDeck(
         animationSpec = motionScheme.defaultEffectsSpec()
     )
 
-    val startPadding = subDeckPadding * (deck.depth)
+    var rememberedChildren by remember { mutableStateOf<List<DisplayDeckNode>?>(null) }
+    if (!deck.collapsed) {
+        rememberedChildren = children
+    }
 
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                start = startPadding,
-                bottom = if (deck.depth == 0) 4.dp else 0.dp
-            ), shape = RoundedCornerShape(cornerRadius), colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-            contentColor = MaterialTheme.colorScheme.onSurface
+    val content = @Composable {
+        DeckItem(
+            deck = deck,
+            onDeckClick = { onDeckClick(deck) },
+            onExpandClick = { onExpandClick(deck) },
+            onDeckOptions = { onDeckOptions(deck) },
+            onRename = { onRename(deck) },
+            onExport = { onExport(deck) },
+            onDelete = { onDelete(deck) },
+            onRebuild = { onRebuild(deck) },
+            onEmpty = { onEmpty(deck) },
         )
-    ) {
-        Column(
-            modifier = Modifier.padding(
-                end = if (deck.depth == 0) 8.dp else 0.dp,
-                top = if (deck.depth == 0) 6.dp else 0.dp,
-                bottom = if (deck.depth == 0) 6.dp else 0.dp
-            ), verticalArrangement = Arrangement.Center
+        AnimatedVisibility(
+            visible = !deck.collapsed,
+            enter = expandVertically(motionScheme.defaultSpatialSpec()) + fadeIn(motionScheme.defaultEffectsSpec()),
+            exit = shrinkVertically(motionScheme.fastSpatialSpec()) + fadeOut(motionScheme.defaultEffectsSpec()),
         ) {
-            DeckItem(
-                deck = deck,
-                onDeckClick = { onDeckClick(deck) },
-                onExpandClick = { onExpandClick(deck) },
-                onDeckOptions = { onDeckOptions(deck) },
-                onRename = { onRename(deck) },
-                onExport = { onExport(deck) },
-                onDelete = { onDelete(deck) },
-                onRebuild = { onRebuild(deck) },
-                onEmpty = { onEmpty(deck) },
-            )
-
-            var rememberedChildren by remember { mutableStateOf<List<DisplayDeckNode>?>(null) }
-            if (!deck.collapsed) {
-                rememberedChildren = children
-            }
-
-            AnimatedVisibility(
-                visible = !deck.collapsed,
-                enter = expandVertically(motionScheme.defaultSpatialSpec()) + fadeIn(motionScheme.defaultEffectsSpec()),
-                exit = shrinkVertically(motionScheme.fastSpatialSpec()) + fadeOut(motionScheme.defaultEffectsSpec()),
-            ) {
-                Column {
-                    (rememberedChildren ?: emptyList()).forEach { child ->
-                        val grandChildren = deckToChildrenMap[child] ?: emptyList()
-                        RenderDeck(
-                            deck = child,
-                            children = grandChildren,
-                            deckToChildrenMap = deckToChildrenMap,
-                            onDeckClick = onDeckClick,
-                            onExpandClick = onExpandClick,
-                            onDeckOptions = onDeckOptions,
-                            onRename = onRename,
-                            onExport = onExport,
-                            onDelete = onDelete,
-                            onRebuild = onRebuild,
-                            onEmpty = onEmpty,
-                        )
-                    }
+            Column {
+                (rememberedChildren ?: emptyList()).forEach { child ->
+                    val grandChildren = deckToChildrenMap[child] ?: emptyList()
+                    RenderDeck(
+                        deck = child,
+                        children = grandChildren,
+                        deckToChildrenMap = deckToChildrenMap,
+                        onDeckClick = onDeckClick,
+                        onExpandClick = onExpandClick,
+                        onDeckOptions = onDeckOptions,
+                        onRename = onRename,
+                        onExport = onExport,
+                        onDelete = onDelete,
+                        onRebuild = onRebuild,
+                        onEmpty = onEmpty,
+                    )
                 }
             }
+        }
+    }
+
+    if (deck.depth == 0) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 4.dp),
+            shape = RoundedCornerShape(cornerRadius),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                contentColor = MaterialTheme.colorScheme.onSurface
+            )
+        ) {
+            Column {
+                content()
+            }
+        }
+    } else {
+        Column(
+            modifier = Modifier.padding(
+                start = if (deck.depth == 1) 8.dp else subDeckPadding,
+                end = if (deck.depth == 1) 8.dp else 0.dp
+            )
+        ) {
+            content()
         }
     }
 }
