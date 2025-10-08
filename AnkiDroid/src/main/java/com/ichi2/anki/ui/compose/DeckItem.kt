@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -115,7 +116,10 @@ fun DeckItem(
                 .padding(horizontal = 8.dp, vertical = if (deck.depth > 0) 4.dp else 0.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-
+            // Add space between the edge of the deck for the circle shape
+            if (deck.depth > 0) {
+                Spacer(modifier = Modifier.width(4.dp))
+            }
             Text(
                 text = deck.lastDeckNameComponent,
                 modifier = Modifier
@@ -128,7 +132,7 @@ fun DeckItem(
             Row(
                 modifier = Modifier
                     .height(70.dp)
-                    .padding(start = 6.dp),
+                    .padding(start = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(2.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
