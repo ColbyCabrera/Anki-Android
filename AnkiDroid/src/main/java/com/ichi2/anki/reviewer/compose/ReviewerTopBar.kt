@@ -140,13 +140,19 @@ fun Counts(newCount: Int, learnCount: Int, reviewCount: Int, modifier: Modifier 
         horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(2.dp)
     ) {
         MorphingCardCount(
-            newCount, MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.onTertiaryContainer
+            newCount,
+            MaterialTheme.colorScheme.primaryContainer,
+            MaterialTheme.colorScheme.onPrimaryContainer
         )
         MorphingCardCount(
-            learnCount, MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.onTertiaryContainer
+            learnCount,
+            MaterialTheme.colorScheme.errorContainer,
+            MaterialTheme.colorScheme.onErrorContainer
         )
         MorphingCardCount(
-            reviewCount, MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.onTertiaryContainer
+            reviewCount,
+            MaterialTheme.colorScheme.secondaryContainer,
+            MaterialTheme.colorScheme.onSecondaryContainer
         )
     }
 }
