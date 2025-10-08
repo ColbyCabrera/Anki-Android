@@ -19,6 +19,7 @@ package com.ichi2.anki.ui.compose
 
 import android.graphics.Matrix
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -55,6 +56,7 @@ import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
@@ -117,6 +119,8 @@ fun DeckItem(
                     .weight(1f)
                     .padding(vertical = 12.dp, horizontal = 8.dp),
                 style = if (deck.depth == 0) MaterialTheme.typography.titleLargeEmphasized else MaterialTheme.typography.titleMedium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
             )
             Row(
                 modifier = Modifier.height(70.dp),
@@ -265,10 +269,9 @@ fun CardCountsContainer(
 ) {
     Box(
         modifier = Modifier
-            .size(30.dp)
+            .size(36.dp)
             .clip(shape)
-            .background(MaterialTheme.colorScheme.primaryContainer)
-            .zIndex(1F),
+            .background(MaterialTheme.colorScheme.primaryContainer),
         contentAlignment = Alignment.Center
     ) {
         Text(
