@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.graphics.shapes.Morph
 import com.ichi2.utils.MorphShape
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -65,14 +66,31 @@ fun MorphingCardCount(
             MaterialShapes.Pill,
             MaterialShapes.SoftBurst,
             MaterialShapes.Pentagon,
-            MaterialShapes.Cookie9Sided,
             MaterialShapes.Sunny,
             MaterialShapes.Oval,
+            MaterialShapes.Square,
+            MaterialShapes.Slanted,
+            MaterialShapes.Arch,
+            MaterialShapes.Arrow,
+            MaterialShapes.Fan,
+            MaterialShapes.Cookie4Sided,
+            MaterialShapes.Cookie6Sided,
+            MaterialShapes.Cookie7Sided,
+            MaterialShapes.Cookie9Sided,
+            MaterialShapes.Cookie12Sided,
+            MaterialShapes.Clover4Leaf,
+            MaterialShapes.Clover8Leaf,
+            MaterialShapes.SoftBoom,
+            MaterialShapes.Ghostish,
+            MaterialShapes.Puffy,
+            MaterialShapes.PuffyDiamond,
+            MaterialShapes.Bun,
+            MaterialShapes.Flower
         )
     }
 
     // State for managing the morph animation.
-    var currentShapeIndex by remember { mutableIntStateOf(0) }
+    var currentShapeIndex by remember { mutableIntStateOf(Random.Default.nextInt(shapes.size)) }
     var startShape by remember { mutableStateOf(shapes[currentShapeIndex]) }
     var endShape by remember { mutableStateOf(shapes[currentShapeIndex]) }
     val morphProgress = remember { Animatable(0f) }
@@ -108,7 +126,10 @@ fun MorphingCardCount(
             morphProgress.animateTo(targetValue = 1f, animationSpec = animationSpec)
         }
         launch {
-            rotation.animateTo(targetValue = 360f * rotationDirection, animationSpec = animationSpec)
+            rotation.animateTo(
+                targetValue = 360f * rotationDirection,
+                animationSpec = animationSpec
+            )
         }
 
         // Update the state for the next change.
@@ -123,22 +144,19 @@ fun MorphingCardCount(
     // Create the dynamic MorphShape using the current animation progress.
     val morphingShape = MorphShape(morph, morphProgress.value)
 
-    Box(
-        modifier = modifier
-            .size(32.dp)
-            .graphicsLayer {
-                // Apply the rotation from the animation.
-                rotationZ = rotation.value
-            }
-            .clip(morphingShape)
-            .background(containerColor),
+    Box(modifier = modifier
+        .size(32.dp)
+        .graphicsLayer {
+            // Apply the rotation from the animation.
+            rotationZ = rotation.value
+        }
+        .clip(morphingShape)
+        .background(containerColor),
 
-        contentAlignment = Alignment.Center
-    ) {
+        contentAlignment = Alignment.Center) {
         // AnimatedContent provides a nice transition for the text itself.
         AnimatedContent(
-            targetState = cardCount,
-            transitionSpec = {
+            targetState = cardCount, transitionSpec = {
                 val enter = if (targetState > initialState) {
                     slideInVertically { height -> height } + fadeIn()
                 } else {
@@ -150,8 +168,7 @@ fun MorphingCardCount(
                     slideOutVertically { height -> height } + fadeOut()
                 }
                 enter togetherWith exit using SizeTransform(clip = false)
-            },
-            label = "CardCountAnimation"
+            }, label = "CardCountAnimation"
         ) { count ->
             Text(
                 modifier = Modifier.basicMarquee(),
