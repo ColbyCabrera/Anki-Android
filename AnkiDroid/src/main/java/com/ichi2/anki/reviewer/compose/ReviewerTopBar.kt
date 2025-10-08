@@ -23,6 +23,7 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
@@ -38,17 +39,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.ichi2.anki.R
+import com.ichi2.anki.ui.compose.MorphingCardCount
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ReviewerTopBar(
     newCount: Int,
@@ -64,25 +62,22 @@ fun ReviewerTopBar(
     onUnanswerCard: () -> Unit
 ) {
     CenterAlignedTopAppBar(
-        modifier = modifier, title = { Text(chosenAnswer) }, navigationIcon = {
-        Counts(
-            newCount = newCount,
-            learnCount = learnCount,
-            reviewCount = reviewCount,
-            modifier = Modifier.padding(start = 8.dp)
-        )
-    }, actions = {
-        MarkIcon(isMarked = isMarked, onToggleMark = onToggleMark)
-        FlagIcon(currentFlag = flag, onSetFlag = onSetFlag)
-        AnimatedVisibility(visible = isAnswerShown) {
-            IconButton(onClick = onUnanswerCard) {
-                Icon(
-                    painterResource(R.drawable.undo_24px),
-                    contentDescription = stringResource(id = R.string.unanswer_card),
-                )
+        modifier = modifier,
+        title = { Text(chosenAnswer) },
+        navigationIcon = {
+            Counts(modifier = Modifier.padding(horizontal = 8.dp),newCount = newCount, learnCount = learnCount, reviewCount = reviewCount)
+        }, actions = {
+            MarkIcon(isMarked = isMarked, onToggleMark = onToggleMark)
+            FlagIcon(currentFlag = flag, onSetFlag = onSetFlag)
+            AnimatedVisibility(visible = isAnswerShown) {
+                IconButton(onClick = onUnanswerCard) {
+                    Icon(
+                        painterResource(R.drawable.undo_24px),
+                        contentDescription = stringResource(id = R.string.unanswer_card),
+                    )
+                }
             }
-        }
-    }, colors = TopAppBarDefaults.topAppBarColors(
+        }, colors = TopAppBarDefaults.topAppBarColors(
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
         navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         titleContentColor = MaterialTheme.colorScheme.onSurface,
@@ -140,33 +135,24 @@ fun FlagIcon(currentFlag: Int, onSetFlag: (Int) -> Unit) {
 
 @Composable
 fun Counts(newCount: Int, learnCount: Int, reviewCount: Int, modifier: Modifier = Modifier) {
-    Row(modifier = modifier) {
-        Text(
-            buildAnnotatedString {
-                withStyle(
-                    style = SpanStyle(
-                        color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold
-                    )
-                ) {
-                    append("$newCount")
-                }
-                append(" ")
-                withStyle(
-                    style = SpanStyle(
-                        color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold
-                    )
-                ) {
-                    append("$learnCount")
-                }
-                append(" ")
-                withStyle(
-                    style = SpanStyle(
-                        color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Bold
-                    )
-                ) {
-                    append("$reviewCount")
-                }
-            }, fontSize = 14.sp
+    Row(
+        modifier = modifier,
+        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(2.dp)
+    ) {
+        MorphingCardCount(
+            newCount,
+            MaterialTheme.colorScheme.primaryContainer,
+            MaterialTheme.colorScheme.onPrimaryContainer
+        )
+        MorphingCardCount(
+            learnCount,
+            MaterialTheme.colorScheme.errorContainer,
+            MaterialTheme.colorScheme.onErrorContainer
+        )
+        MorphingCardCount(
+            reviewCount,
+            MaterialTheme.colorScheme.secondaryContainer,
+            MaterialTheme.colorScheme.onSecondaryContainer
         )
     }
 }
