@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.ichi2.anki.R
 import com.ichi2.anki.ui.compose.MorphingCardCount
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
@@ -61,24 +62,24 @@ fun ReviewerTopBar(
 ) {
     CenterAlignedTopAppBar(
         modifier = modifier, title = { Text(chosenAnswer) }, navigationIcon = {
-            Counts(newCount = newCount, learnCount = learnCount, reviewCount = reviewCount)
-        }, actions = {
-            MarkIcon(isMarked = isMarked, onToggleMark = onToggleMark)
-            FlagIcon(currentFlag = flag, onSetFlag = onSetFlag)
-            AnimatedVisibility(visible = isAnswerShown) {
-                IconButton(onClick = onUnanswerCard) {
-                    Icon(
-                        painterResource(R.drawable.undo_24px),
-                        contentDescription = stringResource(id = R.string.unanswer_card),
-                    )
-                }
+        Counts(newCount = newCount, learnCount = learnCount, reviewCount = reviewCount)
+    }, actions = {
+        MarkIcon(isMarked = isMarked, onToggleMark = onToggleMark)
+        FlagIcon(currentFlag = flag, onSetFlag = onSetFlag)
+        AnimatedVisibility(visible = isAnswerShown) {
+            IconButton(onClick = onUnanswerCard) {
+                Icon(
+                    painterResource(R.drawable.undo_24px),
+                    contentDescription = stringResource(id = R.string.unanswer_card),
+                )
             }
-        }, colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-            navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            titleContentColor = MaterialTheme.colorScheme.onSurface,
-            actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        }
+    }, colors = TopAppBarDefaults.topAppBarColors(
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+    )
     )
 }
 
@@ -131,21 +132,18 @@ fun FlagIcon(currentFlag: Int, onSetFlag: (Int) -> Unit) {
 
 @Composable
 fun Counts(newCount: Int, learnCount: Int, reviewCount: Int, modifier: Modifier = Modifier) {
-    Row(modifier = modifier) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(2.dp)
+    ) {
         MorphingCardCount(
-            newCount,
-            MaterialTheme.colorScheme.primary,
-            MaterialTheme.colorScheme.onPrimary
+            newCount, MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.onPrimary
         )
         MorphingCardCount(
-            learnCount,
-            MaterialTheme.colorScheme.primary,
-            MaterialTheme.colorScheme.onPrimary
+            learnCount, MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.onPrimary
         )
         MorphingCardCount(
-            reviewCount,
-            MaterialTheme.colorScheme.primary,
-            MaterialTheme.colorScheme.onPrimary
+            reviewCount, MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.onPrimary
         )
     }
 }
