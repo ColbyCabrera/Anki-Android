@@ -22,7 +22,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,8 +29,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -100,7 +97,7 @@ fun DeckItem(
     var isContextMenuOpen by remember { mutableStateOf(false) }
 
     val content = @Composable {
-        Row {
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -113,33 +110,37 @@ fun DeckItem(
                 },
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(Modifier.height(100.dp)) {
-                Text(
-                    text = deck.lastDeckNameComponent,
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(vertical = 12.dp, horizontal = 8.dp),
-                    style = if (deck.depth == 0) MaterialTheme.typography.titleLargeEmphasized else MaterialTheme.typography.titleMedium,
+
+            Text(
+                text = deck.lastDeckNameComponent,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(vertical = 12.dp, horizontal = 8.dp),
+                style = if (deck.depth == 0) MaterialTheme.typography.titleLargeEmphasized else MaterialTheme.typography.titleMedium,
+            )
+            Row(
+                modifier = Modifier.height(70.dp),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CardCountsContainer(
+                    cardCount = deck.newCount,
+                    labelText = "New",
+                    shape = RoundedPolygonShape(MaterialShapes.Clover4Leaf)
                 )
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    CardCountsContainer(
-                        cardCount = deck.newCount,
-                        labelText = "New",
-                        shape = RoundedPolygonShape(MaterialShapes.Clover4Leaf)
-                    )
-                    CardCountsContainer(
-                        cardCount = deck.lrnCount,
-                        labelText = "Learn",
-                        shape = RoundedPolygonShape(MaterialShapes.Ghostish)
-                    )
-                    CardCountsContainer(
-                        cardCount = deck.revCount,
-                        labelText = "Review",
-                        shape = RoundedPolygonShape(MaterialShapes.Flower)
-                    )
-                }
+                CardCountsContainer(
+                    cardCount = deck.lrnCount,
+                    labelText = "Learn",
+                    shape = RoundedPolygonShape(MaterialShapes.Ghostish)
+                )
+                CardCountsContainer(
+                    cardCount = deck.revCount,
+                    labelText = "Review",
+                    shape = RoundedPolygonShape(MaterialShapes.Flower)
+                )
             }
-            Spacer(Modifier.weight(1f))
+
+
             if (deck.canCollapse) {
                 Surface(
                     modifier = Modifier
@@ -164,7 +165,8 @@ fun DeckItem(
                         )
                     }
                 }
-
+            } else {
+                Spacer(modifier = Modifier.size(44.dp))
             }
             DropdownMenu(
                 expanded = isContextMenuOpen,
@@ -217,7 +219,7 @@ fun DeckItem(
                 )
             }
         }
-    }}
+    }
 
 
     when (deck.depth) {
@@ -245,7 +247,9 @@ fun DeckItem(
             Box(
                 modifier = modifier
                     .fillMaxWidth()
-                    .padding(start = 8.dp)
+                    .padding(start = ((deck.depth - 1) * 16 + 8).dp, top = 2.dp, bottom = 2.dp)
+                    .clip(RoundedCornerShape(SubDeckCardRadius))
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
             ) {
                 content()
             }
@@ -259,32 +263,20 @@ fun DeckItem(
 fun CardCountsContainer(
     modifier: Modifier = Modifier, cardCount: Int, labelText: String, shape: Shape
 ) {
-
-    BadgedBox(badge = {
-        Badge(
-            modifier = Modifier.zIndex(10F),
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
-        ) {
-            Text(text = labelText, style = MaterialTheme.typography.labelSmall)
-        }
-    }) {
-        Box(
-            modifier = Modifier
-                .size(30.dp)
-                .clip(shape)
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .zIndex(1F),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = cardCount.toString(),
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                style = MaterialTheme.typography.labelSmall,
-                modifier = Modifier.padding(0.dp)
-            )
-        }
-
+    Box(
+        modifier = Modifier
+            .size(30.dp)
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.primaryContainer)
+            .zIndex(1F),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = cardCount.toString(),
+            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.padding(0.dp)
+        )
     }
 }
 
