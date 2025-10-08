@@ -18,11 +18,11 @@ package com.ichi2.anki.reviewer.compose
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
@@ -43,12 +43,13 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ichi2.anki.R
+import com.ichi2.anki.ui.compose.MorphingCardCount
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ReviewerTopBar(
     newCount: Int,
@@ -65,29 +66,24 @@ fun ReviewerTopBar(
 ) {
     CenterAlignedTopAppBar(
         modifier = modifier, title = { Text(chosenAnswer) }, navigationIcon = {
-        Counts(
-            newCount = newCount,
-            learnCount = learnCount,
-            reviewCount = reviewCount,
-            modifier = Modifier.padding(start = 8.dp)
-        )
-    }, actions = {
-        MarkIcon(isMarked = isMarked, onToggleMark = onToggleMark)
-        FlagIcon(currentFlag = flag, onSetFlag = onSetFlag)
-        AnimatedVisibility(visible = isAnswerShown) {
-            IconButton(onClick = onUnanswerCard) {
-                Icon(
-                    painterResource(R.drawable.undo_24px),
-                    contentDescription = stringResource(id = R.string.unanswer_card),
-                )
+            Counts(newCount = newCount, learnCount = learnCount, reviewCount = reviewCount)
+        }, actions = {
+            MarkIcon(isMarked = isMarked, onToggleMark = onToggleMark)
+            FlagIcon(currentFlag = flag, onSetFlag = onSetFlag)
+            AnimatedVisibility(visible = isAnswerShown) {
+                IconButton(onClick = onUnanswerCard) {
+                    Icon(
+                        painterResource(R.drawable.undo_24px),
+                        contentDescription = stringResource(id = R.string.unanswer_card),
+                    )
+                }
             }
-        }
-    }, colors = TopAppBarDefaults.topAppBarColors(
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-        titleContentColor = MaterialTheme.colorScheme.onSurface,
-        actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-    )
+        }, colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     )
 }
 
@@ -141,6 +137,11 @@ fun FlagIcon(currentFlag: Int, onSetFlag: (Int) -> Unit) {
 @Composable
 fun Counts(newCount: Int, learnCount: Int, reviewCount: Int, modifier: Modifier = Modifier) {
     Row(modifier = modifier) {
+        MorphingCardCount(
+            newCount,
+            MaterialTheme.colorScheme.surfaceVariant,
+            MaterialTheme.colorScheme.onSurfaceVariant
+        )
         Text(
             buildAnnotatedString {
                 withStyle(
