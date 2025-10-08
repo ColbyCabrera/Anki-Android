@@ -20,7 +20,7 @@ package com.ichi2.anki.ui.compose
 import android.graphics.Matrix
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -36,9 +36,9 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -48,13 +48,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asComposePath
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -62,7 +60,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import androidx.graphics.shapes.RoundedPolygon
 import androidx.graphics.shapes.toPath
 import com.ichi2.anki.R
@@ -83,7 +80,7 @@ internal class RoundedPolygonShape(private val polygon: RoundedPolygon) : Shape 
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun DeckItem(
     deck: DisplayDeckNode,
@@ -104,13 +101,11 @@ fun DeckItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp)
-                .pointerInput(Unit) {
-                    detectTapGestures(
-                        onTap = { onDeckClick() },
-                        onLongPress = { isContextMenuOpen = true },
-                    )
-                },
+                .combinedClickable(
+                    onClick = { onDeckClick() },
+                    onLongClick = { isContextMenuOpen = true }
+                )
+                .padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
 
@@ -124,51 +119,42 @@ fun DeckItem(
                 overflow = TextOverflow.Ellipsis,
             )
             Row(
-                modifier = Modifier.height(70.dp).padding(horizontal = 6.dp),
+                modifier = Modifier
+                    .height(70.dp)
+                    .padding(horizontal = 2.dp),
                 horizontalArrangement = Arrangement.spacedBy(2.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 CardCountsContainer(
                     cardCount = deck.newCount,
-                    labelText = "New",
                     shape = RoundedPolygonShape(MaterialShapes.Clover4Leaf),
                     containerColor = MaterialTheme.colorScheme.secondaryFixedDim,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryFixedVariant
                 )
 
                 CardCountsContainer(
                     cardCount = deck.revCount,
-                    labelText = "Review",
                     shape = RoundedPolygonShape(MaterialShapes.Ghostish),
                     containerColor = MaterialTheme.colorScheme.secondary,
-                    contentColor = MaterialTheme.colorScheme.onSecondary
                 )
             }
 
 
             if (deck.canCollapse) {
-                Surface(
+                IconButton(
+                    onClick = { onExpandClick() },
                     modifier = Modifier
                         .padding(start = 8.dp)
                         .size(36.dp)
-                        .clipToBounds()
-                        .pointerInput(Unit) {
-                            detectTapGestures(onTap = { onExpandClick() })
-                        },
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    color = MaterialTheme.colorScheme.surfaceDim,
-                    shape = MaterialTheme.shapes.extraLarge,
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            painter = painterResource(
-                                if (deck.collapsed) R.drawable.ic_expand_more_black_24dp else R.drawable.ic_expand_less_black_24dp,
-                            ),
-                            contentDescription = if (deck.collapsed) stringResource(R.string.expand) else stringResource(
-                                R.string.collapse
-                            ),
-                        )
-                    }
+                    Icon(
+                        painter = painterResource(
+                            if (deck.collapsed) R.drawable.ic_expand_more_black_24dp else R.drawable.ic_expand_less_black_24dp,
+                        ),
+                        contentDescription = if (deck.collapsed) stringResource(R.string.expand) else stringResource(
+                            R.string.collapse
+                        ),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             } else {
                 Spacer(modifier = Modifier.size(44.dp))
@@ -266,12 +252,9 @@ fun DeckItem(
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun CardCountsContainer(
-    modifier: Modifier = Modifier,
     cardCount: Int,
-    labelText: String,
     shape: Shape,
     containerColor: Color = MaterialTheme.colorScheme.secondary,
-    contentColor: Color = MaterialTheme.colorScheme.onSecondary,
 ) {
     Box(
         modifier = Modifier
@@ -297,6 +280,6 @@ fun CardCountsContainer(
 @Composable
 fun CardCountsContainerPreview() {
     CardCountsContainer(
-        cardCount = 10, labelText = "New", shape = RoundedPolygonShape(MaterialShapes.Clover4Leaf)
+        cardCount = 10, shape = RoundedPolygonShape(MaterialShapes.Clover4Leaf)
     )
 }
