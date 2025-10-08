@@ -26,6 +26,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -83,7 +84,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.graphics.shapes.Morph
@@ -136,14 +136,21 @@ private fun RenderDeck(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = startPadding, top = 2.dp, bottom = 2.dp),
-        shape = RoundedCornerShape(cornerRadius),
-        colors = CardDefaults.cardColors(
+            .padding(
+                start = startPadding,
+                bottom = if (deck.depth == 0) 4.dp else 0.dp
+            ), shape = RoundedCornerShape(cornerRadius), colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer,
             contentColor = MaterialTheme.colorScheme.onSurface
         )
     ) {
-        Column(modifier = Modifier.padding(end = if (deck.depth == 0) 8.dp else 0.dp)) {
+        Column(
+            modifier = Modifier.padding(
+                end = if (deck.depth == 0) 8.dp else 0.dp,
+                top = if (deck.depth == 0) 6.dp else 0.dp,
+                bottom = if (deck.depth == 0) 6.dp else 0.dp
+            ), verticalArrangement = Arrangement.Center
+        ) {
             DeckItem(
                 deck = deck,
                 onDeckClick = { onDeckClick(deck) },
@@ -273,7 +280,9 @@ fun DeckPickerContent(
                 }
             }) {
             LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 8.dp),
                 contentPadding = contentPadding,
                 state = listState
             ) {
