@@ -1005,7 +1005,6 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
         menu.findItem(R.id.deck_picker_action_filter)?.isVisible = false
 
         menu.findItem(R.id.action_export_collection)?.title = TR.actionsExport()
-        setupMediaSyncMenuItem(menu)
         // redraw menu synchronously to avoid flicker
         updateMenuFromState(menu)
         // ...then launch a task to possibly update the visible icons.

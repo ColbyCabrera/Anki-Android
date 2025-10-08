@@ -363,24 +363,7 @@ fun DeckPickerScreen(
                                     contentDescription = stringResource(R.string.search_decks)
                                 )
                             }
-                            BadgedBox(
-                                badge = {
-                                    when (syncIconState) {
-                                        SyncIconState.PendingChanges -> Badge()
-                                        SyncIconState.OneWay, SyncIconState.NotLoggedIn -> Badge {
-                                            Text("!")
-                                        }
-                                        else -> {}
-                                    }
-                                },
-                            ) {
-                                IconButton(onClick = onSync) {
-                                        Icon(
-                                            painterResource(R.drawable.ic_sync),
-                                            contentDescription = stringResource(R.string.sync_account),
-                                        )
-                                }
-                            }
+                            SyncActionIcon(syncIconState = syncIconState, onSync = onSync)
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(

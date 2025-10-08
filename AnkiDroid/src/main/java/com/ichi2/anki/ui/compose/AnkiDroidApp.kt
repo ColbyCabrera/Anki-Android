@@ -197,6 +197,35 @@ val AppShapes = Shapes(
     extraLarge = RoundedCornerShape(32.dp), // Expressive: For prominent elements like FABs or hero containers
 )
 
+@Composable
+fun SyncActionIcon(
+    syncIconState: SyncIconState,
+    onSync: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    BadgedBox(
+        modifier = modifier,
+        badge = {
+            when (syncIconState) {
+                SyncIconState.PendingChanges -> Badge(containerColor = MaterialTheme.colorScheme.tertiaryContainer) // Or another appropriate warning color
+                SyncIconState.OneWay, SyncIconState.NotLoggedIn -> Badge {
+                    Text("!")
+                }
+                else -> Badge {
+                    Text("!")
+                }
+            }
+        }
+    ) {
+        IconButton(onClick = onSync) {
+            Icon(
+                painterResource(R.drawable.ic_sync),
+                contentDescription = stringResource(R.string.sync_account)
+            )
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AnkiDroidApp(
@@ -307,24 +336,7 @@ fun AnkiDroidApp(
                                         contentDescription = stringResource(R.string.search_decks),
                                     )
                                 }
-                                BadgedBox(
-                                    badge = {
-                                        when (syncIconState) {
-                                            SyncIconState.PendingChanges -> Badge()
-                                            SyncIconState.OneWay, SyncIconState.NotLoggedIn -> Badge {
-                                                Text("!")
-                                            }
-                                            else -> {}
-                                        }
-                                    },
-                                ) {
-                                    IconButton(onClick = onSync) {
-                                        Icon(
-                                            painterResource(R.drawable.ic_sync),
-                                            contentDescription = stringResource(R.string.sync_account),
-                                        )
-                                    }
-                                }
+                                SyncActionIcon(syncIconState = syncIconState, onSync = onSync)
                             }
                             if (studyOptionsData != null) {
                                 IconButton(onClick = { isStudyOptionsMenuOpen = true }) {
