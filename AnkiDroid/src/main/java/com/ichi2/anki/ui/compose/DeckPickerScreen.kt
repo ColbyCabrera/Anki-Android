@@ -72,43 +72,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Outline
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.graphics.shapes.Morph
-import androidx.graphics.shapes.toPath
 import com.ichi2.anki.R
 import com.ichi2.anki.deckpicker.DisplayDeckNode
+import com.ichi2.utils.MorphShape
 
 private val expandedDeckCardRadius = 24.dp
 private val collapsedDeckCardRadius = 70.dp
 private val subDeckPadding = 16.dp
-
-private class MorphShape(
-    private val morph: Morph, private val percentage: Float
-) : Shape {
-    override fun createOutline(
-        size: Size, layoutDirection: LayoutDirection, density: Density
-    ): Outline {
-        // To draw the morph, we need to scale the path to the component size.
-        // We could also do that in a Modifier, but doing it here makes it more reusable.
-        val matrix = android.graphics.Matrix()
-        matrix.setScale(size.width, size.height)
-        val androidPath = morph.toPath(progress = percentage.coerceIn(0f, 1f))
-        androidPath.transform(matrix)
-        return Outline.Generic(androidPath.asComposePath())
-    }
-}
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
