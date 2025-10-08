@@ -50,6 +50,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asComposePath
@@ -123,20 +124,24 @@ fun DeckItem(
                 overflow = TextOverflow.Ellipsis,
             )
             Row(
-                modifier = Modifier.height(70.dp),
+                modifier = Modifier.height(70.dp).padding(horizontal = 6.dp),
                 horizontalArrangement = Arrangement.spacedBy(2.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 CardCountsContainer(
                     cardCount = deck.newCount,
                     labelText = "New",
-                    shape = RoundedPolygonShape(MaterialShapes.Clover4Leaf)
+                    shape = RoundedPolygonShape(MaterialShapes.Clover4Leaf),
+                    containerColor = MaterialTheme.colorScheme.secondaryFixedDim,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryFixedVariant
                 )
 
                 CardCountsContainer(
                     cardCount = deck.revCount,
                     labelText = "Review",
-                    shape = RoundedPolygonShape(MaterialShapes.Ghostish)
+                    shape = RoundedPolygonShape(MaterialShapes.Ghostish),
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary
                 )
             }
 
@@ -261,20 +266,27 @@ fun DeckItem(
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun CardCountsContainer(
-    modifier: Modifier = Modifier, cardCount: Int, labelText: String, shape: Shape
+    modifier: Modifier = Modifier,
+    cardCount: Int,
+    labelText: String,
+    shape: Shape,
+    containerColor: Color = MaterialTheme.colorScheme.secondary,
+    contentColor: Color = MaterialTheme.colorScheme.onSecondary,
 ) {
     Box(
         modifier = Modifier
             .size(36.dp)
             .clip(shape)
-            .background(MaterialTheme.colorScheme.secondary),
+            .background(containerColor),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = cardCount.toString(),
             color = MaterialTheme.colorScheme.onSecondary,
-            style = MaterialTheme.typography.labelSmall,
-            modifier = Modifier.padding(0.dp)
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier
+                .padding(0.dp)
+                .basicMarquee()
         )
     }
 }
