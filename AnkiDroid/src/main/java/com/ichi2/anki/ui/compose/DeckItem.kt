@@ -132,15 +132,11 @@ fun DeckItem(
                     labelText = "New",
                     shape = RoundedPolygonShape(MaterialShapes.Clover4Leaf)
                 )
-                CardCountsContainer(
-                    cardCount = deck.lrnCount,
-                    labelText = "Learn",
-                    shape = RoundedPolygonShape(MaterialShapes.Ghostish)
-                )
+
                 CardCountsContainer(
                     cardCount = deck.revCount,
                     labelText = "Review",
-                    shape = RoundedPolygonShape(MaterialShapes.Flower)
+                    shape = RoundedPolygonShape(MaterialShapes.Ghostish)
                 )
             }
 
@@ -271,12 +267,12 @@ fun CardCountsContainer(
         modifier = Modifier
             .size(36.dp)
             .clip(shape)
-            .background(MaterialTheme.colorScheme.primaryContainer),
+            .background(MaterialTheme.colorScheme.secondary),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = cardCount.toString(),
-            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            color = MaterialTheme.colorScheme.onSecondary,
             style = MaterialTheme.typography.labelSmall,
             modifier = Modifier.padding(0.dp)
         )
