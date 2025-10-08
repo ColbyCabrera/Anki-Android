@@ -238,10 +238,7 @@ fun DeckPickerContent(
         val parentId = deck.deckNode.parent?.get()?.did
         if (parentId != null && deckMap.containsKey(parentId)) {
             val parent = deckMap[parentId]!!
-            if (!deckToChildrenMap.containsKey(parent)) {
-                deckToChildrenMap[parent] = mutableListOf()
-            }
-            deckToChildrenMap[parent]!!.add(deck)
+            deckToChildrenMap.getOrPut(parent) { mutableListOf() }.add(deck)
         } else {
             rootDecks.add(deck)
         }
