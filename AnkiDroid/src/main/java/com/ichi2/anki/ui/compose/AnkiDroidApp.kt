@@ -320,8 +320,8 @@ fun AnkiDroidApp(
                                 ) {
                                     IconButton(onClick = onSync) {
                                         Icon(
-                                            painterResource(R.drawable.ic_sync_24dp),
-                                            contentDescription = stringResource(R.string.sync_now),
+                                            painterResource(R.drawable.ic_sync),
+                                            contentDescription = stringResource(R.string.sync_account),
                                         )
                                     }
                                 }

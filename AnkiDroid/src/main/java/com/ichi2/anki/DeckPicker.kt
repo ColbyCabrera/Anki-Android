@@ -2144,8 +2144,6 @@ data class OptionsMenuState(
     val isColEmpty: Boolean,
 )
 
-import com.ichi2.anki.deckpicker.SyncIconState
-
 class CollectionLoadingErrorDialog : DialogHandlerMessage(
     WhichDialogHandler.MSG_SHOW_COLLECTION_LOADING_ERROR_DIALOG,
     "CollectionLoadErrorDialog",
