@@ -277,12 +277,6 @@ class DeckPickerViewModel :
             flowOfDeckCountsChanged.emit(Unit)
         }
 
-    fun browseCards(deckId: DeckId) =
-        launchCatchingIO {
-            withCol { decks.select(deckId) }
-            flowOfDestination.emit(BrowserDestination(deckId))
-        }
-
     fun addNote(
         deckId: DeckId?,
         setAsCurrent: Boolean,
@@ -317,11 +311,6 @@ class DeckPickerViewModel :
     fun unburyDeck(deckId: DeckId) =
         launchCatchingIO {
             undoableOp { sched.unburyDeck(deckId) }
-        }
-
-    fun scheduleReviewReminders(deckId: DeckId) =
-        viewModelScope.launch {
-            flowOfDestination.emit(ScheduleRemindersDestination(deckId))
         }
 
     /**

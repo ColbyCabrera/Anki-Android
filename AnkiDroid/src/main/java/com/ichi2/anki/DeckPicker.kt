@@ -99,15 +99,11 @@ import androidx.core.view.MenuItemCompat
 import androidx.core.view.OnReceiveContentListener
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
-import androidx.core.view.isVisible
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.work.WorkInfo
-import androidx.work.WorkManager
 import anki.collection.OpChanges
 import anki.sync.SyncStatusResponse
 import coil.compose.rememberAsyncImagePainter
-import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.ichi2.anki.CollectionManager.TR
 import com.ichi2.anki.CollectionManager.withCol
 import com.ichi2.anki.CollectionManager.withOpenColOrNull
@@ -184,9 +180,7 @@ import com.ichi2.anki.utils.ext.setFragmentResultListener
 import com.ichi2.anki.utils.ext.showDialogFragment
 import com.ichi2.anki.worker.SyncMediaWorker
 import com.ichi2.anki.worker.SyncWorker
-import com.ichi2.anki.worker.UniqueWorkNames
 import com.ichi2.compat.CompatHelper.Companion.getSerializableCompat
-import com.ichi2.ui.BadgeDrawableBuilder
 import com.ichi2.utils.ClipboardUtil.IMPORT_MIME_TYPES
 import com.ichi2.utils.ImportUtils
 import com.ichi2.utils.ImportUtils.ImportResult
@@ -205,12 +199,10 @@ import com.ichi2.utils.title
 import com.ichi2.widget.WidgetStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.ankiweb.rsdroid.Translations
-import net.ankiweb.rsdroid.exceptions.BackendNetworkException
 import org.json.JSONException
 import timber.log.Timber
 import java.io.File
@@ -251,7 +243,7 @@ private fun DeckPicker.deckPickerPainter(): Painter? {
  *   * Filtering decks (if more than 10)
  * * Controlling syncs
  *   * A user may pull down on the 'tree view' to sync
- *   * A [button][updateSyncIconFromState] which relies on [SyncIconState] to display whether a sync is needed
+ *   * A [button][SyncActionIcon] which relies on [SyncIconState] to display whether a sync is needed
  *   * Blocks the UI and displays sync progress when syncing
  * * Displaying 'General' AnkiDroid options: backups, import, 'check media' etc...
  *   * General handler for error/global dialogs (search for 'as DeckPicker')
@@ -813,7 +805,6 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
 
         fun onResizingDividerVisibilityChanged(isVisible: Boolean) {
             val resizingDivider = findViewById<View>(R.id.homescreen_resizing_divider)
-            resizingDivider?.visibility = if (isVisible) View.VISIBLE else View.GONE
         }
 
         fun onCardsDueChanged(dueCount: Int?) {
@@ -2102,7 +2093,9 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
         changes: OpChanges,
         handler: Any?,
     ) {
+        Timber.d("opExecuted called. Changes: studyQueues=${changes.studyQueues}. Handler: ${handler?.javaClass?.simpleName}")
         // undo state may have changed
+        viewModel.updateSyncStatus()
         invalidateOptionsMenu()
         if (changes.studyQueues && handler != this && handler != viewModel) {
             if (!activityPaused) {

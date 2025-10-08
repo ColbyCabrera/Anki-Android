@@ -74,6 +74,7 @@ import androidx.compose.ui.unit.sp
 import com.ichi2.anki.R
 import com.ichi2.anki.deckpicker.DisplayDeckNode
 import com.ichi2.anki.deckpicker.SyncIconState
+import timber.log.Timber
 
 // Define Expressive Typography
 val GoogleSansRounded = FontFamily(
@@ -203,6 +204,7 @@ fun SyncActionIcon(
     onSync: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    Timber.d("Sync state: %s", syncIconState)
     BadgedBox(
         modifier = modifier,
         badge = {
@@ -211,9 +213,7 @@ fun SyncActionIcon(
                 SyncIconState.OneWay, SyncIconState.NotLoggedIn -> Badge {
                     Text("!")
                 }
-                else -> Badge {
-                    Text("!")
-                }
+                else -> {}
             }
         }
     ) {
