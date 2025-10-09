@@ -102,13 +102,13 @@ class NoteEditorActivity :
             NoteEditorCaller.EDIT -> {
                 val cardId = intent.getLongExtra(EXTRA_CARD_ID, -1)
                 mCurrentEditedCard = col.getCard(cardId)
-                editorNote = mCurrentEditedCard!!.note(col)
+                editorNote = mCurrentEditedCard?.note(col)
                 addNote = false
             }
             NoteEditorCaller.PREVIEWER_EDIT -> {
                 val id = intent.getLongExtra(EXTRA_EDIT_FROM_CARD_ID, -1)
                 mCurrentEditedCard = col.getCard(id)
-                editorNote = mCurrentEditedCard!!.note(col)
+                editorNote = mCurrentEditedCard?.note(col)
             }
             NoteEditorCaller.STUDYOPTIONS,
             NoteEditorCaller.DECKPICKER,
@@ -154,7 +154,11 @@ class NoteEditorActivity :
             addNote = true
         }
 
-        val finalNote = editorNote!!
+        val finalNote = editorNote ?: run {
+            Timber.e("editorNote was null, which should not happen. Closing.")
+            finish()
+            return
+        }
 
         val decks = col.decks.allSorted().map { SelectableDeck.Deck(it.getString("name"), it.getLong("id")) }
         var deckId = intent.getLongExtra(EXTRA_DID, 0)
@@ -177,10 +181,10 @@ class NoteEditorActivity :
 
         if (sourceText != null) {
             if (fields.isNotEmpty()) {
-                fields[0] = fields[0].copy(value = TextFieldValue(sourceText!![0] ?: ""))
+                fields[0] = fields[0].copy(value = TextFieldValue(sourceText[0] ?: ""))
             }
             if (fields.size > 1) {
-                fields[1] = fields[1].copy(value = TextFieldValue(sourceText!![1] ?: ""))
+                fields[1] = fields[1].copy(value = TextFieldValue(sourceText[1] ?: ""))
             }
         }
 
@@ -210,7 +214,7 @@ class NoteEditorActivity :
     }
 
     private fun showTagsDialog() {
-        val selTags = viewModel.uiState.value.tags.split(",").map { it.trim() }.let { ArrayList(it) }
+        val selTags = viewModel.uiState.value.tags.split(",").map { it.trim() }.filter { it.isNotBlank() }.let { ArrayList(it) }
         val dialog =
             with(this) {
                 tagsDialogFactory!!.newTagsDialog().withArguments(
