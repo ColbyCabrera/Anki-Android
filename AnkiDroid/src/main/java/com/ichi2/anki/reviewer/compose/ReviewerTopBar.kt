@@ -90,6 +90,7 @@ fun ReviewerTopBar(
     )
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MarkIcon(isMarked: Boolean, onToggleMark: () -> Unit) {
     FilledIconButton(
@@ -109,6 +110,7 @@ fun MarkIcon(isMarked: Boolean, onToggleMark: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun FlagIcon(currentFlag: Int, onSetFlag: (Int) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
@@ -133,7 +135,7 @@ fun FlagIcon(currentFlag: Int, onSetFlag: (Int) -> Unit) {
         ) {
             Icon(
                 painter = painterResource(R.drawable.flag_24px),
-                contentDescription = "Set Flag"
+                contentDescription = stringResource(R.string.menu_flag_card),
             )
         }
         DropdownMenu(
