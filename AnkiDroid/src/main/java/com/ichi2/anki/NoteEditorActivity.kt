@@ -1,43 +1,53 @@
+/*
+ *  Copyright (c) 2025 Hari Srinivasan <harisrini21@gmail.com>
+ *
+ *  This program is free software; you can redistribute it and/or modify it under
+ *  the terms of the GNU General Public License as published by the Free Software
+ *  Foundation; either version 3 of the License, or (at your option) any later
+ *  version.
+ *
+ *  This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ *  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ *  PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along with
+ *  this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.ichi2.anki
 
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.viewModels
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.fragment.app.Fragment
-import anki.config.ConfigKey
-import com.ichi2.anki.dialogs.tags.TagsDialog
-import com.ichi2.anki.dialogs.tags.TagsDialogFactory
-import com.ichi2.anki.dialogs.tags.TagsDialogListener
-import com.ichi2.anki.libanki.Card
+import androidx.fragment.app.commit
+import com.ichi2.anki.android.input.ShortcutGroup
+import com.ichi2.anki.android.input.ShortcutGroupProvider
 import com.ichi2.anki.libanki.Collection
-import com.ichi2.anki.libanki.Decks.Companion.CURRENT_DECK
-import com.ichi2.anki.libanki.Note
-import com.ichi2.anki.model.CardStateFilter
-import com.ichi2.anki.model.SelectableDeck
-import com.ichi2.anki.noteeditor.*
+import com.ichi2.anki.noteeditor.NoteEditorLauncher
 import com.ichi2.anki.snackbar.BaseSnackbarBuilderProvider
 import com.ichi2.anki.snackbar.SnackbarBuilder
-import com.ichi2.anki.ui.theme.AnkiTheme
-import com.ichi2.anki.utils.ext.showDialogFragment
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 import kotlin.reflect.KClass
 import kotlin.reflect.jvm.jvmName
 
+/**
+ * To find the actual note Editor, @see [NoteEditorFragment]
+ * This activity contains the NoteEditorFragment, and, on x-large screens, the previewer fragment.
+ * It also ensures that changes in the note are transmitted to the previewer
+ */
+
+// TODO: Move intent handling to [NoteEditorActivity] from [NoteEditorFragment]
 @AndroidEntryPoint
 class NoteEditorActivity :
     AnkiActivity(),
     BaseSnackbarBuilderProvider,
-    TagsDialogListener {
+    DispatchKeyEventListener,
+    ShortcutGroupProvider {
     override val baseSnackbarBuilder: SnackbarBuilder = { }
 
-    private val viewModel: NoteEditorViewModel by viewModels()
-    private var tagsDialogFactory: TagsDialogFactory? = null
-    private var addNote: Boolean = false
-    private var currentCard: Card? = null
+    lateinit var noteEditorFragment: NoteEditorFragment
 
     private val mainToolbar: androidx.appcompat.widget.Toolbar
         get() = findViewById(R.id.toolbar)
@@ -51,27 +61,72 @@ class NoteEditorActivity :
             return
         }
 
-        tagsDialogFactory = TagsDialogFactory(this).attachToFragmentManager<TagsDialogFactory>(supportFragmentManager)
-
         setContentView(R.layout.note_editor)
-        val composeView = findViewById<ComposeView>(R.id.note_editor_compose_view)
-        if (composeView == null) {
-            Timber.e("Could not find ComposeView in layout, closing")
-            finish()
-            return
-        }
-        composeView.setContent {
-            AnkiTheme {
-                NoteEditorScreen(
-                    viewModel = viewModel,
-                    onShowTagsDialog = ::showTagsDialog,
-                    onShowCardTemplateEditor = ::showCardTemplateEditor
-                )
+
+        /**
+         * The [NoteEditorActivity] activity supports multiple note editing workflows using fragments.
+         * It dynamically chooses the appropriate fragment to load and the arguments to pass to it,
+         * based on intent extras provided at launch time.
+         *
+         * - [FRAGMENT_NAME_EXTRA]: Fully qualified name of the fragment class to instantiate.
+         *   If set to [NoteEditorFragment], the activity initializes it with the arguments in
+         *   [FRAGMENT_ARGS_EXTRA].
+         *
+         * - [FRAGMENT_ARGS_EXTRA]: Bundle containing parameters for the fragment (e.g. note ID,
+         *   deck ID, etc.). Used to populate fields or determine editor behavior.
+         *
+         * This logic is encapsulated in the [launcher]  assignment, which selects the correct
+         * fragment mode (e.g. add note, edit note) based on intent contents.
+         */
+        val launcher =
+            if (intent.hasExtra(FRAGMENT_NAME_EXTRA)) {
+                val fragmentClassName = intent.getStringExtra(FRAGMENT_NAME_EXTRA)
+                if (fragmentClassName == NoteEditorFragment::class.java.name) {
+                    val fragmentArgs = intent.getBundleExtra(FRAGMENT_ARGS_EXTRA)
+                    if (fragmentArgs != null) {
+                        NoteEditorLauncher.PassArguments(fragmentArgs)
+                    } else {
+                        NoteEditorLauncher.AddNote()
+                    }
+                } else {
+                    NoteEditorLauncher.AddNote()
+                }
+            } else {
+                // Regular NoteEditor intent handling
+                intent.getBundleExtra(FRAGMENT_ARGS_EXTRA)?.let { fragmentArgs ->
+                    // If FRAGMENT_ARGS_EXTRA is provided, use it directly
+                    NoteEditorLauncher.PassArguments(fragmentArgs)
+                } ?: intent.extras?.let { bundle ->
+                    // Check if the bundle contains FRAGMENT_ARGS_EXTRA (for launchers that wrap their args)
+                    bundle.getBundle(FRAGMENT_ARGS_EXTRA)?.let { wrappedFragmentArgs ->
+                        NoteEditorLauncher.PassArguments(wrappedFragmentArgs)
+                    } ?: NoteEditorLauncher.PassArguments(bundle)
+                } ?: NoteEditorLauncher.AddNote()
             }
+
+        val existingFragment = supportFragmentManager.findFragmentByTag(FRAGMENT_TAG)
+
+        if (existingFragment == null) {
+            supportFragmentManager.commit {
+                replace(R.id.note_editor_fragment_frame, NoteEditorFragment.newInstance(launcher), FRAGMENT_TAG)
+                setReorderingAllowed(true)
+                /**
+                 * Initializes the noteEditorFragment reference only after the transaction is committed.
+                 * This ensures the fragment is fully created and available in the activity before
+                 * any code attempts to interact with it, preventing potential null reference issues.
+                 */
+                runOnCommit {
+                    noteEditorFragment = supportFragmentManager.findFragmentByTag(FRAGMENT_TAG) as NoteEditorFragment
+                }
+            }
+        } else {
+            noteEditorFragment = existingFragment as NoteEditorFragment
         }
 
         enableToolbar()
 
+        // R.id.home is handled in setNavigationOnClickListener
+        // Set a listener for back button clicks in the toolbar
         mainToolbar.setNavigationOnClickListener {
             Timber.i("NoteEditor:: Back button on the menu was pressed")
             onBackPressedDispatcher.onBackPressed()
@@ -84,176 +139,28 @@ class NoteEditorActivity :
         super.onCollectionLoaded(col)
         Timber.d("onCollectionLoaded()")
         registerReceiver()
-
-        val initialState = NoteEditorInitializer.loadInitialState(this, col, intent) ?: return
-        addNote = initialState.caller != NoteEditorCaller.EDIT && initialState.caller != NoteEditorCaller.PREVIEWER_EDIT
-        currentCard = initialState.currentCard
-
-        val finalNote = initialState.note
-
-        val decks = prepareDecks(col)
-        val selectedDeck = prepareSelectedDeck(col, finalNote, decks)
-        val fields = prepareFields(finalNote)
-        val tags = finalNote.tags.joinToString(", ")
-        val cards = finalNote.notetype.templates.map { it.name }.joinToString(", ")
-
-        viewModel.onDataLoaded(
-            decks = decks,
-            selectedDeck = selectedDeck,
-            noteTypes = col.notetypes.all(),
-            selectedNoteType = finalNote.notetype,
-            fields = fields,
-            tags = tags,
-            cards = cards
-        )
-
-        if (addNote) {
-            setTitle(R.string.menu_add)
-        } else {
-            setTitle(R.string.cardeditor_title_edit_card)
-        }
     }
 
-    private fun prepareDecks(col: Collection): List<SelectableDeck.Deck> {
-        return col.decks.allSorted().map { SelectableDeck.Deck(it.getString("name"), it.getLong("id")) }
-    }
+    override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean =
+        noteEditorFragment.dispatchKeyEvent(event) || super.dispatchKeyEvent(event)
 
-    private fun prepareSelectedDeck(col: Collection, note: Note, decks: List<SelectableDeck.Deck>): SelectableDeck? {
-        var deckId = intent.getLongExtra(EXTRA_DID, 0)
-        if (deckId == 0L) {
-            deckId = if (!col.config.getBool(ConfigKey.Bool.ADDING_DEFAULTS_TO_CURRENT_DECK)) {
-                note.notetype.did
-            } else {
-                col.config.get(CURRENT_DECK) ?: 1L
-            }
-        }
-        return decks.find { it.deckId == deckId }
-    }
-
-    private fun prepareFields(note: Note): List<NoteEditorField> {
-        val fields = note.fields.map { field ->
-            NoteEditorField(
-                name = field.name,
-                value = TextFieldValue(note.getField(field.ord)),
-                isFocused = false
-            )
-        }.toMutableList()
-
-        val sourceText = fetchSourceTextFromIntent()
-        if (sourceText != null) {
-            if (fields.isNotEmpty()) {
-                fields[0] = fields[0].copy(value = TextFieldValue(sourceText[0] ?: ""))
-            }
-            if (fields.size > 1) {
-                fields[1] = fields[1].copy(value = TextFieldValue(sourceText[1] ?: ""))
-            }
-        }
-
-        val getTextFromSearchView = intent.getStringExtra(EXTRA_TEXT_FROM_SEARCH_VIEW)
-        if (!getTextFromSearchView.isNullOrEmpty() && fields.isNotEmpty()) {
-            fields[0] = fields[0].copy(value = TextFieldValue(getTextFromSearchView))
-        }
-
-        return fields
-    }
-
-    private fun fetchSourceTextFromIntent(): Array<String?>? {
-        val extras = intent.extras ?: return null
-        val fetchedSourceText = arrayOfNulls<String>(2)
-        if (Intent.ACTION_PROCESS_TEXT == intent.action) {
-            val stringExtra = extras.getString(Intent.EXTRA_PROCESS_TEXT)
-            fetchedSourceText[0] = stringExtra ?: ""
-            fetchedSourceText[1] = ""
-        } else if (ACTION_CREATE_FLASHCARD == intent.action) {
-            fetchedSourceText[0] = extras.getString(SOURCE_TEXT)
-            fetchedSourceText[1] = extras.getString(TARGET_TEXT)
-        } else {
-            var first: String? = extras.getString(Intent.EXTRA_SUBJECT)
-            var second: String? = extras.getString(Intent.EXTRA_TEXT)
-            if (first.isNullOrEmpty()) {
-                first = second
-                second = null
-            }
-            fetchedSourceText[0] = first
-            fetchedSourceText[1] = second
-        }
-        return fetchedSourceText
-    }
-
-    private fun showTagsDialog() {
-        val factory = tagsDialogFactory ?: return
-        val selTags = viewModel.uiState.value.tags.split(",").map { it.trim() }.filter { it.isNotBlank() }.let { ArrayList(it) }
-        val dialog =
-            with(this) {
-                factory.newTagsDialog().withArguments(
-                    context = this,
-                    type = TagsDialog.DialogType.EDIT_TAGS,
-                    checkedTags = selTags,
-                )
-            }
-        showDialogFragment(dialog)
-    }
-
-    private fun showCardTemplateEditor() {
-        val note = viewModel.uiState.value.selectedNoteType ?: return
-        val intent = Intent(this, CardTemplateEditor::class.java)
-        intent.putExtra("noteTypeId", note.id)
-        if (!addNote) {
-            val card = currentCard
-            if (card != null) {
-                intent.putExtra("noteId", card.nid)
-                intent.putExtra("ordId", card.ord)
-            }
-        }
-        startActivity(intent)
-    }
-
-    override fun onSelectedTags(
-        selectedTags: List<String>,
-        indeterminateTags: List<String>,
-        stateFilter: CardStateFilter
-    ) {
-        viewModel.onTagsUpdated(selectedTags.joinToString(", "))
-    }
+    override val shortcuts: ShortcutGroup
+        get() = noteEditorFragment.shortcuts
 
     companion object {
         const val FRAGMENT_ARGS_EXTRA = "fragmentArgs"
         const val FRAGMENT_NAME_EXTRA = "fragmentName"
         const val FRAGMENT_TAG = "NoteEditorFragmentTag"
-        const val SOURCE_TEXT = "SOURCE_TEXT"
-        const val TARGET_TEXT = "TARGET_TEXT"
-        const val EXTRA_CALLER = "CALLER"
-        const val EXTRA_CARD_ID = "CARD_ID"
-        const val EXTRA_CONTENTS = "CONTENTS"
-        const val EXTRA_TAGS = "TAGS"
-        const val EXTRA_ID = "ID"
-        const val EXTRA_DID = "DECK_ID"
-        const val EXTRA_TEXT_FROM_SEARCH_VIEW = "SEARCH"
-        const val EXTRA_EDIT_FROM_CARD_ID = "editCid"
-        const val ACTION_CREATE_FLASHCARD = "org.openintents.action.CREATE_FLASHCARD"
-        const val ACTION_CREATE_FLASHCARD_SEND = "android.intent.action.SEND"
-        enum class NoteEditorCaller(
-            val value: Int,
-        ) {
-            NO_CALLER(0),
-            EDIT(1),
-            STUDYOPTIONS(2),
-            DECKPICKER(3),
-            REVIEWER_ADD(11),
-            CARDBROWSER_ADD(7),
-            NOTEEDITOR(8),
-            PREVIEWER_EDIT(9),
-            NOTEEDITOR_INTENT_ADD(10),
-            IMG_OCCLUSION(12),
-            ADD_IMAGE(13),
-            INSTANT_NOTE_EDITOR(14),
-            ;
 
-            companion object {
-                fun fromValue(value: Int): NoteEditorCaller? = NoteEditorCaller.values().firstOrNull { it.value == value }
-            }
-        }
-
+        /**
+         * Creates an Intent to launch the NoteEditor activity with a specific fragment class and arguments.
+         *
+         * @param context The context from which the intent will be launched
+         * @param fragmentClass The Kotlin class of the Fragment to instantiate
+         * @param arguments Optional bundle of arguments to pass to the fragment
+         * @param intentAction Optional action to set on the intent
+         * @return An Intent configured to launch NoteEditor with the specified fragment
+         */
         fun getIntent(
             context: Context,
             fragmentClass: KClass<out Fragment>,

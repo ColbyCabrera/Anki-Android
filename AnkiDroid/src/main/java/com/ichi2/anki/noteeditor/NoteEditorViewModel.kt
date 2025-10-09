@@ -1,142 +1,204 @@
 package com.ichi2.anki.noteeditor
 
-import androidx.compose.ui.text.input.TextFieldValue
+import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
-import com.ichi2.anki.libanki.NotetypeJson
-import com.ichi2.anki.model.SelectableDeck
+import androidx.lifecycle.viewModelScope
+import com.ichi2.anki.libanki.Collection
+import com.ichi2.anki.libanki.Note
+import com.ichi2.anki.utils.HashUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.math.max
-import kotlin.math.min
-
-data class NoteEditorField(
-    val name: String,
-    val value: TextFieldValue,
-    val isFocused: Boolean = false
-)
-
-data class NoteEditorState(
-    val toolbarState: NoteEditorToolbarState = NoteEditorToolbarState(),
-    val decks: List<SelectableDeck> = emptyList(),
-    val selectedDeck: SelectableDeck? = null,
-    val noteTypes: List<NotetypeJson> = emptyList(),
-    val selectedNoteType: NotetypeJson? = null,
-    val fields: List<NoteEditorField> = emptyList(),
-    val tags: String = "",
-    val cards: String = ""
-)
-
-data class NoteEditorToolbarState(
-    val isVisible: Boolean = true,
-    val customButtons: List<CustomToolbarButton> = emptyList(),
-    val isClozeNoteType: Boolean = false,
-)
 
 @HiltViewModel
-class NoteEditorViewModel @Inject constructor() : ViewModel() {
+class NoteEditorViewModel @Inject constructor(
+    private val sharedPreferences: SharedPreferences
+) : ViewModel() {
+    private val _uiState = MutableStateFlow(NoteEditorUiState())
+    val uiState: StateFlow<NoteEditorUiState> = _uiState.asStateFlow()
 
-    private val _uiState = MutableStateFlow(NoteEditorState())
-    val uiState = _uiState.asStateFlow()
+    private var note: Note? = null
 
-    fun onDataLoaded(
-        decks: List<SelectableDeck>,
-        selectedDeck: SelectableDeck?,
-        noteTypes: List<NotetypeJson>,
-        selectedNoteType: NotetypeJson?,
-        fields: List<NoteEditorField>,
-        tags: String,
-        cards: String
-    ) {
-        _uiState.update {
-            it.copy(
-                decks = decks,
-                selectedDeck = selectedDeck,
-                noteTypes = noteTypes,
-                selectedNoteType = selectedNoteType,
-                fields = fields,
-                tags = tags,
-                cards = cards
-            )
+    fun initialize(col: Collection, launcher: NoteEditorLauncher) {
+        viewModelScope.launch {
+            val addNote: Boolean
+            var noteToEdit: Note?
+
+            if (launcher is NoteEditorLauncher.EditCard) {
+                addNote = false
+                val card = col.getCard(launcher.cardId)
+                noteToEdit = card?.note(col)
+            } else {
+                addNote = true
+                val notetypeId = col.decks.current().get("mid", 1L)
+                noteToEdit = col.newNote(col.notetypes.get(notetypeId)!!)
+            }
+
+            note = noteToEdit
+            if (note == null) {
+                // TODO: Handle error
+                return@launch
+            }
+
+            val deckNames = col.decks.allNames(includeFiltered = false)
+            val selectedDeckId = noteToEdit.did
+            val selectedDeckName = col.decks.name(selectedDeckId)
+
+            val noteTypeIds = col.notetypes.allIds()
+            val noteTypeNames = noteTypeIds.map { col.notetypes.get(it)!!.name }
+            val selectedNoteTypeName = noteToEdit.notetype.name
+
+            val fieldStates = noteToEdit.fields.mapIndexed { index, field ->
+                NoteEditorFieldState(
+                    label = field.name,
+                    content = noteToEdit.values()[index],
+                    isSticky = field.sticky
+                )
+            }
+
+            val tags = col.tags.join(col.tags.canonify(noteToEdit.tags))
+                .trim()
+                .replace(" ", ", ")
+
+            val cardsLabel = buildCardsLabel(col, noteToEdit, addNote)
+
+            _uiState.update {
+                it.copy(
+                    isToolbarVisible = sharedPreferences.getBoolean(PREF_NOTE_EDITOR_SHOW_TOOLBAR, true),
+                    customButtons = getToolbarButtonsFromPreferences(),
+                    isCloze = noteToEdit.notetype.isCloze,
+                    decks = deckNames,
+                    selectedDeck = selectedDeckName,
+                    noteTypes = noteTypeNames,
+                    selectedNoteType = selectedNoteTypeName,
+                    fields = fieldStates,
+                    tagsLabel = "Tags: $tags",
+                    cardsLabel = cardsLabel
+                )
+            }
         }
-        onClozeNoteTypeChanged(selectedNoteType?.isCloze ?: false)
     }
 
-    fun onClozeNoteTypeChanged(isCloze: Boolean) {
-        _uiState.update { it.copy(toolbarState = it.toolbarState.copy(isClozeNoteType = isCloze)) }
+    private fun buildCardsLabel(col: Collection, note: Note, addNote: Boolean): String {
+        val tmpls = note.notetype.templates
+        var cardsList = StringBuilder()
+        for ((i, tmpl) in tmpls.withIndex()) {
+            var name = tmpl.jsonObject.optString("name")
+            if (!addNote &&
+                tmpls.length() > 1 &&
+                note.noteType(col)!!.jsonObject === note.notetype.jsonObject &&
+                note.cards(col).isNotEmpty() &&
+                note.cards(col)[0].template(col).jsonObject.optString("name") == name
+            ) {
+                name = "<u>$name</u>"
+            }
+            cardsList.append(name)
+            if (i < tmpls.length() - 1) {
+                cardsList.append(", ")
+            }
+        }
+        return "Cards: $cardsList"
     }
 
-    fun onCustomButtonsChanged(buttons: List<CustomToolbarButton>) {
-        _uiState.update { it.copy(toolbarState = it.toolbarState.copy(customButtons = buttons)) }
+    fun onNoteTypeChanged(isCloze: Boolean) {
+        _uiState.update { it.copy(isCloze = isCloze) }
     }
 
-    fun onToolbarVisibilityChanged(isVisible: Boolean) {
-        _uiState.update { it.copy(toolbarState = it.toolbarState.copy(isVisible = isVisible)) }
-    }
-
-    fun onDeckSelected(deck: SelectableDeck) {
+    fun onDeckSelected(deck: String) {
         _uiState.update { it.copy(selectedDeck = deck) }
     }
 
-    fun onNoteTypeSelected(noteType: NotetypeJson) {
+    fun onNoteTypeSelected(noteType: String) {
         _uiState.update { it.copy(selectedNoteType = noteType) }
-        onClozeNoteTypeChanged(noteType.isCloze)
+        // TODO: Handle changing note type logic
     }
 
-    fun onFieldChanged(index: Int, newValue: TextFieldValue) {
-        _uiState.update { currentState ->
-            val newFields = currentState.fields.toMutableList()
-            if (index < newFields.size) {
-                newFields[index] = newFields[index].copy(value = newValue)
-            }
-            currentState.copy(fields = newFields)
+    fun onFieldContentChanged(fieldIndex: Int, newContent: String) {
+        _uiState.update {
+            val newFields = it.fields.toMutableList()
+            newFields[fieldIndex] = newFields[fieldIndex].copy(content = newContent)
+            it.copy(fields = newFields)
         }
     }
 
-    fun onFieldFocused(index: Int) {
-        _uiState.update { currentState ->
-            val newFields = currentState.fields.mapIndexed { i, field ->
-                field.copy(isFocused = i == index)
-            }
-            currentState.copy(fields = newFields)
+    fun onFieldStickyChanged(fieldIndex: Int) {
+        _uiState.update {
+            val newFields = it.fields.toMutableList()
+            val oldField = newFields[fieldIndex]
+            newFields[fieldIndex] = oldField.copy(isSticky = !oldField.isSticky)
+            it.copy(fields = newFields)
         }
     }
 
-    fun onTagsUpdated(tags: String) {
-        _uiState.update { it.copy(tags = tags) }
+    fun toggleToolbarVisibility() {
+        val newVisibility = !_uiState.value.isToolbarVisible
+        sharedPreferences.edit().putBoolean(PREF_NOTE_EDITOR_SHOW_TOOLBAR, newVisibility).apply()
+        _uiState.update { it.copy(isToolbarVisible = newVisibility) }
     }
 
-    fun onCardsUpdated(cards: String) {
-        _uiState.update { it.copy(cards = cards) }
+    fun addCustomToolbarButton(buttonText: String, prefix: String, suffix: String) {
+        if (prefix.isEmpty() && suffix.isEmpty()) return
+        val currentButtons = _uiState.value.customButtons
+        val newButton = CustomToolbarButton(currentButtons.size, buttonText, prefix, suffix)
+        saveToolbarButtons(currentButtons + newButton)
     }
 
-    fun formatFocusedField(formatter: TextFormatter) {
-        val focusedFieldIndex = uiState.value.fields.indexOfFirst { it.isFocused }
-        if (focusedFieldIndex == -1) return
+    fun editCustomToolbarButton(buttonText: String, prefix: String, suffix: String, currentButton: CustomToolbarButton) {
+        val newButtons = _uiState.value.customButtons.toMutableList()
+        val currentButtonIndex = currentButton.index
 
-        val focusedField = uiState.value.fields[focusedFieldIndex]
-        val newValue = formatter.format(focusedField.value)
-        onFieldChanged(focusedFieldIndex, newValue)
+        newButtons[currentButtonIndex] =
+            CustomToolbarButton(
+                index = currentButtonIndex,
+                buttonText = buttonText.ifEmpty { currentButton.buttonText },
+                prefix = prefix.ifEmpty { currentButton.prefix },
+                suffix = suffix.ifEmpty { currentButton.suffix },
+            )
+
+        saveToolbarButtons(newButtons)
+    }
+
+    fun removeCustomToolbarButton(button: CustomToolbarButton) {
+        val newButtons = _uiState.value.customButtons.toMutableList()
+        newButtons.removeAt(button.index)
+        saveToolbarButtons(newButtons)
+    }
+
+    private fun getToolbarButtonsFromPreferences(): List<CustomToolbarButton> {
+        val set = sharedPreferences.getStringSet(PREF_NOTE_EDITOR_CUSTOM_BUTTONS, HashUtil.hashSetInit(0))
+        return CustomToolbarButton.fromStringSet(set!!)
+    }
+
+    private fun saveToolbarButtons(buttons: List<CustomToolbarButton>) {
+        sharedPreferences.edit().putStringSet(PREF_NOTE_EDITOR_CUSTOM_BUTTONS, CustomToolbarButton.toStringSet(ArrayList(buttons))).apply()
+        _uiState.update { it.copy(customButtons = buttons) }
+    }
+
+    companion object {
+        private const val PREF_NOTE_EDITOR_SHOW_TOOLBAR = "noteEditorShowToolbar"
+        private const val PREF_NOTE_EDITOR_CUSTOM_BUTTONS = "note_editor_custom_buttons"
     }
 }
 
-fun TextFormatter.format(textFieldValue: TextFieldValue): TextFieldValue {
-    val selection = textFieldValue.selection
-    val text = textFieldValue.text
+data class NoteEditorFieldState(
+    val label: String,
+    val content: String,
+    val isSticky: Boolean = false
+)
 
-    val start = min(selection.start, selection.end)
-    val end = max(selection.start, selection.end)
-
-    val before = text.substring(0, start)
-    val selected = text.substring(start, end)
-    val after = text.substring(end)
-
-    val (newText, newStart, newEnd) = format(selected)
-
-    return textFieldValue.copy(
-        text = before + newText + after,
-        selection = androidx.compose.ui.text.TextRange(start + newStart, start + newEnd)
-    )
-}
+data class NoteEditorUiState(
+    val isToolbarVisible: Boolean = true,
+    val isCloze: Boolean = false,
+    val customButtons: List<CustomToolbarButton> = emptyList(),
+    val decks: List<String> = emptyList(),
+    val selectedDeck: String = "",
+    val noteTypes: List<String> = emptyList(),
+    val selectedNoteType: String = "",
+    val fields: List<NoteEditorFieldState> = emptyList(),
+    val tagsLabel: String = "",
+    val cardsLabel: String = ""
+)
