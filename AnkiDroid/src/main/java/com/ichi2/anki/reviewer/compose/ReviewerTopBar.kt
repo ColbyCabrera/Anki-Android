@@ -138,8 +138,11 @@ fun FlagIcon(currentFlag: Int, onSetFlag: (Int) -> Unit) {
             onClick = { expanded = true },
             shapes = IconButtonDefaults.shapes(),
             colors = if (currentFlag in flagColors.indices && currentFlag != 0) IconButtonDefaults.filledIconButtonColors(
-                containerColor = flagColors[currentFlag]
-            ) else IconButtonDefaults.filledIconButtonColors()
+                contentColor = flagColors[currentFlag],
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            ) else IconButtonDefaults.filledIconButtonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            )
         ) {
             Icon(
                 painter = painterResource(R.drawable.flag_24px),
