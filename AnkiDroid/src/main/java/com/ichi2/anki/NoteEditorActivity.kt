@@ -54,6 +54,11 @@ class NoteEditorActivity :
 
         setContentView(R.layout.note_editor)
         val composeView = findViewById<ComposeView>(R.id.note_editor_compose_view)
+        if (composeView == null) {
+            Timber.e("Could not find ComposeView in layout, closing")
+            finish()
+            return
+        }
         composeView.setContent {
             AnkiTheme {
                 NoteEditorScreen(
@@ -162,10 +167,11 @@ class NoteEditorActivity :
     }
 
     private fun showTagsDialog() {
+        val factory = tagsDialogFactory ?: return
         val selTags = viewModel.uiState.value.tags.split(",").map { it.trim() }.filter { it.isNotBlank() }.let { ArrayList(it) }
         val dialog =
             with(this) {
-                tagsDialogFactory!!.newTagsDialog().withArguments(
+                factory.newTagsDialog().withArguments(
                     context = this,
                     type = TagsDialog.DialogType.EDIT_TAGS,
                     checkedTags = selTags,
@@ -175,7 +181,17 @@ class NoteEditorActivity :
     }
 
     private fun showCardTemplateEditor() {
-        // TODO: Implement this
+        val note = viewModel.uiState.value.selectedNoteType ?: return
+        val intent = Intent(this, CardTemplateEditor::class.java)
+        intent.putExtra("noteTypeId", note.id)
+        if (!addNote) {
+            val card = initialState.currentCard
+            if (card != null) {
+                intent.putExtra("noteId", card.nid)
+                intent.putExtra("ordId", card.ord)
+            }
+        }
+        startActivity(intent)
     }
 
     override fun onSelectedTags(

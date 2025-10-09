@@ -45,24 +45,31 @@ object NoteEditorInitializer {
                 val cardId = intent.getLongExtra(AnkiActivity.EXTRA_CARD_ID, -1)
                 card = col.getCard(cardId)
                 note = card?.note(col)
+                if (note == null) {
+                    Timber.e("Error loading note for editing, closing.")
+                    activity.finish()
+                    return null
+                }
             }
             AnkiActivity.NoteEditorCaller.PREVIEWER_EDIT -> {
                 val id = intent.getLongExtra(AnkiActivity.EXTRA_EDIT_FROM_CARD_ID, -1)
                 card = col.getCard(id)
                 note = card?.note(col)
+                if (note == null) {
+                    Timber.e("Error loading note for editing from previewer, closing.")
+                    activity.finish()
+                    return null
+                }
             }
             AnkiActivity.NoteEditorCaller.STUDYOPTIONS,
             AnkiActivity.NoteEditorCaller.DECKPICKER,
             AnkiActivity.NoteEditorCaller.REVIEWER_ADD,
             AnkiActivity.NoteEditorCaller.CARDBROWSER_ADD,
-            AnkiActivity.NoteEditorCaller.NOTEEDITOR -> {
-                // Handled by the null check below
-            }
+            AnkiActivity.NoteEditorCaller.NOTEEDITOR,
             AnkiActivity.NoteEditorCaller.NOTEEDITOR_INTENT_ADD,
-            AnkiActivity.NoteEditorCaller.INSTANT_NOTE_EDITOR -> {
-                // Handled by the null check below
-            }
-            AnkiActivity.NoteEditorCaller.IMG_OCCLUSION, AnkiActivity.NoteEditorCaller.ADD_IMAGE -> {
+            AnkiActivity.NoteEditorCaller.INSTANT_NOTE_EDITOR,
+            AnkiActivity.NoteEditorCaller.IMG_OCCLUSION,
+            AnkiActivity.NoteEditorCaller.ADD_IMAGE -> {
                 // Handled by the null check below
             }
         }
