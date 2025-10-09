@@ -16,6 +16,7 @@
 package com.ichi2.anki.reviewer.compose
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -24,9 +25,10 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FilledIconToggleButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -35,6 +37,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -55,29 +58,36 @@ fun ReviewerTopBar(
     chosenAnswer: String,
     isMarked: Boolean,
     flag: Int,
-    onToggleMark: () -> Unit,
+    onToggleMark: (Boolean) -> Unit,
     onSetFlag: (Int) -> Unit,
     modifier: Modifier = Modifier,
     isAnswerShown: Boolean,
     onUnanswerCard: () -> Unit
 ) {
     CenterAlignedTopAppBar(
-        modifier = modifier,
-        title = { Text(chosenAnswer) },
-        navigationIcon = {
-            Counts(modifier = Modifier.padding(horizontal = 8.dp),newCount = newCount, learnCount = learnCount, reviewCount = reviewCount)
-        }, actions = {
-            MarkIcon(isMarked = isMarked, onToggleMark = onToggleMark)
-            FlagIcon(currentFlag = flag, onSetFlag = onSetFlag)
-            AnimatedVisibility(visible = isAnswerShown) {
-                IconButton(onClick = onUnanswerCard) {
-                    Icon(
-                        painterResource(R.drawable.undo_24px),
-                        contentDescription = stringResource(id = R.string.unanswer_card),
-                    )
-                }
+        modifier = modifier, title = { Text(chosenAnswer) }, navigationIcon = {
+        Counts(
+            modifier = Modifier.padding(horizontal = 8.dp),
+            newCount = newCount,
+            learnCount = learnCount,
+            reviewCount = reviewCount
+        )
+    }, actions = {
+        MarkIcon(
+            isMarked = isMarked, onToggleMark = onToggleMark
+        )
+        FlagIcon(currentFlag = flag, onSetFlag = onSetFlag)
+        AnimatedVisibility(visible = isAnswerShown) {
+            FilledIconButton(
+                onClick = onUnanswerCard, shapes = IconButtonDefaults.shapes()
+            ) {
+                Icon(
+                    painterResource(R.drawable.undo_24px),
+                    contentDescription = stringResource(id = R.string.unanswer_card),
+                )
             }
-        }, colors = TopAppBarDefaults.topAppBarColors(
+        }
+    }, colors = TopAppBarDefaults.topAppBarColors(
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
         navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         titleContentColor = MaterialTheme.colorScheme.onSurface,
@@ -86,24 +96,34 @@ fun ReviewerTopBar(
     )
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun MarkIcon(isMarked: Boolean, onToggleMark: () -> Unit) {
-    IconButton(onClick = onToggleMark) {
+fun MarkIcon(isMarked: Boolean, onToggleMark: (Boolean) -> Unit) {
+    FilledIconToggleButton(
+        checked = isMarked,
+        onCheckedChange = onToggleMark,
+        shapes = IconButtonDefaults.toggleableShapes(),
+        colors = IconButtonDefaults.filledIconToggleButtonColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            checkedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            checkedContentColor = MaterialTheme.colorScheme.tertiary
+        )
+    ) {
         Icon(
             painter = if (isMarked) painterResource(R.drawable.star_shine_24px) else painterResource(
                 R.drawable.star_24px
             ),
-            contentDescription = stringResource(if (isMarked) R.string.menu_unmark_note else R.string.menu_mark_note),
-            tint = if (isMarked) MaterialTheme.colorScheme.tertiary else LocalContentColor.current
+            contentDescription = stringResource(if (isMarked) R.string.menu_unmark_note else R.string.menu_mark_note)
         )
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun FlagIcon(currentFlag: Int, onSetFlag: (Int) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     val flagColors = listOf(
-        Color.Transparent, // 0: no flag
+        Color.Unspecified, // 0: no flag
         Color.Red,         // 1: Red
         Color(0xFFFFA500), // 2: Orange
         Color.Green,       // 3: Green
@@ -112,22 +132,57 @@ fun FlagIcon(currentFlag: Int, onSetFlag: (Int) -> Unit) {
         Color.Cyan,        // 6: Turquoise
         Color(0xFF9400D3)  // 7: Purple
     )
+    val flagColorNames = listOf(
+        stringResource(R.string.no_flag),
+        stringResource(R.string.flag_red),
+        stringResource(R.string.flag_orange),
+        stringResource(R.string.flag_green),
+        stringResource(R.string.flag_blue),
+        stringResource(R.string.flag_pink),
+        stringResource(R.string.flag_turquoise),
+        stringResource(R.string.flag_purple)
+    )
 
     Box {
-        IconButton(onClick = { expanded = true }) {
+        FilledIconButton(
+            onClick = { expanded = true },
+            shapes = IconButtonDefaults.shapes(),
+            colors = if (currentFlag in flagColors.indices && currentFlag != 0) IconButtonDefaults.filledIconButtonColors(
+                contentColor = flagColors[currentFlag],
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            ) else IconButtonDefaults.filledIconButtonColors(
+                contentColor = IconButtonDefaults.filledIconToggleButtonColors().contentColor,
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+            )
+        ) {
             Icon(
                 painter = painterResource(R.drawable.flag_24px),
-                contentDescription = "Set Flag",
-                tint = if (currentFlag in flagColors.indices && currentFlag != 0) flagColors[currentFlag] else LocalContentColor.current // Use LocalContentColor.current
+                contentDescription = stringResource(R.string.menu_flag_card),
             )
         }
         DropdownMenu(
-            expanded = expanded, onDismissRequest = { expanded = false }) {
+            expanded = expanded, onDismissRequest = { expanded = false },
+        shape = MaterialTheme.shapes.large,) {
             (0..7).forEach { flag ->
-                DropdownMenuItem(text = { Text("Flag $flag") }, onClick = {
-                    onSetFlag(flag)
-                    expanded = false
-                })
+                DropdownMenuItem(
+                    text = {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.flag_24px),
+                                contentDescription = null,
+                                tint = flagColors[flag]
+                            )
+                            Text(flagColorNames[flag])
+                        }
+                    },
+                    onClick = {
+                        onSetFlag(flag)
+                        expanded = false
+                    }
+                )
             }
         }
     }
@@ -136,8 +191,7 @@ fun FlagIcon(currentFlag: Int, onSetFlag: (Int) -> Unit) {
 @Composable
 fun Counts(newCount: Int, learnCount: Int, reviewCount: Int, modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier,
-        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(2.dp)
+        modifier = modifier, horizontalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         MorphingCardCount(
             newCount,
@@ -168,8 +222,8 @@ fun ReviewerTopBarPreview() {
             chosenAnswer = "Answer",
             isMarked = true,
             flag = 1,
-            onToggleMark = {},
-            onSetFlag = {},
+            onToggleMark = { _ -> },
+            onSetFlag = { _ -> },
             isAnswerShown = true,
             onUnanswerCard = {})
     }
