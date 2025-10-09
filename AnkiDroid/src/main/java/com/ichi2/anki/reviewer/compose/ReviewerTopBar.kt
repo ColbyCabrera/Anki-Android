@@ -16,6 +16,7 @@
 package com.ichi2.anki.reviewer.compose
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -25,8 +26,10 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FilledIconToggleButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.IconToggleButtonShapes
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -56,7 +59,7 @@ fun ReviewerTopBar(
     chosenAnswer: String,
     isMarked: Boolean,
     flag: Int,
-    onToggleMark: () -> Unit,
+    onToggleMark: (Boolean) -> Unit,
     onSetFlag: (Int) -> Unit,
     modifier: Modifier = Modifier,
     isAnswerShown: Boolean,
@@ -68,7 +71,10 @@ fun ReviewerTopBar(
         navigationIcon = {
             Counts(modifier = Modifier.padding(horizontal = 8.dp),newCount = newCount, learnCount = learnCount, reviewCount = reviewCount)
         }, actions = {
-            MarkIcon(isMarked = isMarked, onToggleMark = onToggleMark)
+            MarkIcon(
+                isMarked = isMarked,
+                onToggleMark = onToggleMark
+            )
             FlagIcon(currentFlag = flag, onSetFlag = onSetFlag)
             AnimatedVisibility(visible = isAnswerShown) {
                 FilledIconButton(
@@ -92,14 +98,16 @@ fun ReviewerTopBar(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun MarkIcon(isMarked: Boolean, onToggleMark: () -> Unit) {
-    FilledIconButton(
-        onClick = onToggleMark,
-        shapes = IconButtonDefaults.shapes(),
-        colors = if (isMarked) IconButtonDefaults.filledIconButtonColors(
-            containerColor = MaterialTheme.colorScheme.tertiary,
-            contentColor = MaterialTheme.colorScheme.onTertiary
-        ) else IconButtonDefaults.filledIconButtonColors()
+fun MarkIcon(isMarked: Boolean, onToggleMark: (Boolean) -> Unit) {
+    FilledIconToggleButton(
+        checked = isMarked,
+        onCheckedChange = onToggleMark,
+        shapes = IconButtonDefaults.toggleableShapes(),
+        colors = IconButtonDefaults.filledIconToggleButtonColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            checkedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            checkedContentColor = MaterialTheme.colorScheme.tertiary
+        )
     ) {
         Icon(
             painter = if (isMarked) painterResource(R.drawable.star_shine_24px) else painterResource(
@@ -154,7 +162,7 @@ fun FlagIcon(currentFlag: Int, onSetFlag: (Int) -> Unit) {
 fun Counts(newCount: Int, learnCount: Int, reviewCount: Int, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
-        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(2.dp)
+        horizontalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         MorphingCardCount(
             newCount,
@@ -185,8 +193,8 @@ fun ReviewerTopBarPreview() {
             chosenAnswer = "Answer",
             isMarked = true,
             flag = 1,
-            onToggleMark = {},
-            onSetFlag = {},
+            onToggleMark = { _ -> },
+            onSetFlag = { _ -> },
             isAnswerShown = true,
             onUnanswerCard = {})
     }
