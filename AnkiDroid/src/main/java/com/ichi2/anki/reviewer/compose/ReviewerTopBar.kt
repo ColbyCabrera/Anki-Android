@@ -24,8 +24,9 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -70,7 +71,10 @@ fun ReviewerTopBar(
             MarkIcon(isMarked = isMarked, onToggleMark = onToggleMark)
             FlagIcon(currentFlag = flag, onSetFlag = onSetFlag)
             AnimatedVisibility(visible = isAnswerShown) {
-                IconButton(onClick = onUnanswerCard) {
+                FilledIconButton(
+                    onClick = onUnanswerCard,
+                    shapes = IconButtonDefaults.shapes()
+                ) {
                     Icon(
                         painterResource(R.drawable.undo_24px),
                         contentDescription = stringResource(id = R.string.unanswer_card),
@@ -88,13 +92,19 @@ fun ReviewerTopBar(
 
 @Composable
 fun MarkIcon(isMarked: Boolean, onToggleMark: () -> Unit) {
-    IconButton(onClick = onToggleMark) {
+    FilledIconButton(
+        onClick = onToggleMark,
+        shapes = IconButtonDefaults.shapes(),
+        colors = if (isMarked) IconButtonDefaults.filledIconButtonColors(
+            containerColor = MaterialTheme.colorScheme.tertiary,
+            contentColor = MaterialTheme.colorScheme.onTertiary
+        ) else IconButtonDefaults.filledIconButtonColors()
+    ) {
         Icon(
             painter = if (isMarked) painterResource(R.drawable.star_shine_24px) else painterResource(
                 R.drawable.star_24px
             ),
-            contentDescription = stringResource(if (isMarked) R.string.menu_unmark_note else R.string.menu_mark_note),
-            tint = if (isMarked) MaterialTheme.colorScheme.tertiary else LocalContentColor.current
+            contentDescription = stringResource(if (isMarked) R.string.menu_unmark_note else R.string.menu_mark_note)
         )
     }
 }
@@ -114,11 +124,16 @@ fun FlagIcon(currentFlag: Int, onSetFlag: (Int) -> Unit) {
     )
 
     Box {
-        IconButton(onClick = { expanded = true }) {
+        FilledIconButton(
+            onClick = { expanded = true },
+            shapes = IconButtonDefaults.shapes(),
+            colors = if (currentFlag in flagColors.indices && currentFlag != 0) IconButtonDefaults.filledIconButtonColors(
+                containerColor = flagColors[currentFlag]
+            ) else IconButtonDefaults.filledIconButtonColors()
+        ) {
             Icon(
                 painter = painterResource(R.drawable.flag_24px),
-                contentDescription = "Set Flag",
-                tint = if (currentFlag in flagColors.indices && currentFlag != 0) flagColors[currentFlag] else LocalContentColor.current // Use LocalContentColor.current
+                contentDescription = "Set Flag"
             )
         }
         DropdownMenu(
