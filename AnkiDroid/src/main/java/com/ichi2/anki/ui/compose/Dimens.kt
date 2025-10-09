@@ -21,3 +21,4 @@ import androidx.compose.ui.unit.dp
 
 internal val FabPaddingEnd = 8.dp
 internal val FabPaddingBottom = 32.dp
+internal val SnackbarPaddingBottom = 96.dp
