@@ -3,15 +3,17 @@ package com.ichi2.anki
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.fragment.app.Fragment
-import com.ichi2.anki.NoteEditorFragment.Companion.NoteEditorCaller
+import anki.config.ConfigKey
 import com.ichi2.anki.dialogs.tags.TagsDialog
 import com.ichi2.anki.dialogs.tags.TagsDialogFactory
 import com.ichi2.anki.dialogs.tags.TagsDialogListener
+import com.ichi2.anki.libanki.Card
 import com.ichi2.anki.libanki.Collection
+import com.ichi2.anki.libanki.Decks.Companion.CURRENT_DECK
 import com.ichi2.anki.libanki.Note
 import com.ichi2.anki.model.CardStateFilter
 import com.ichi2.anki.model.SelectableDeck
@@ -26,8 +28,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 import kotlin.reflect.KClass
 import kotlin.reflect.jvm.jvmName
-import com.ichi2.anki.libanki.Decks.Companion.CURRENT_DECK
-import anki.config.ConfigKey
 
 @AndroidEntryPoint
 class NoteEditorActivity :
@@ -55,8 +55,9 @@ class NoteEditorActivity :
 
         tagsDialogFactory = TagsDialogFactory(this).attachToFragmentManager<TagsDialogFactory>(supportFragmentManager)
 
-        setContentView(R.layout.activity_compose_layout)
-        setContent {
+        setContentView(R.layout.note_editor)
+        val composeView = findViewById<ComposeView>(R.id.note_editor_compose_view)
+        composeView.setContent {
             AnkiTheme {
                 NoteEditorScreen(
                     viewModel = viewModel,
@@ -81,17 +82,16 @@ class NoteEditorActivity :
         Timber.d("onCollectionLoaded()")
         registerReceiver()
 
-        var caller = NoteEditorCaller.fromValue(intent.getIntExtra(NoteEditorFragment.EXTRA_CALLER, NoteEditorCaller.NO_CALLER.value))
+        var caller = NoteEditorCaller.fromValue(intent.getIntExtra(EXTRA_CALLER, NoteEditorCaller.NO_CALLER.value))
         if (caller == NoteEditorCaller.NO_CALLER) {
             val action = intent.action
-            if (NoteEditorFragment.ACTION_CREATE_FLASHCARD == action || NoteEditorFragment.ACTION_CREATE_FLASHCARD_SEND == action || Intent.ACTION_PROCESS_TEXT == action) {
+            if (ACTION_CREATE_FLASHCARD == action || ACTION_CREATE_FLASHCARD_SEND == action || Intent.ACTION_PROCESS_TEXT == action) {
                 caller = NoteEditorCaller.NOTEEDITOR_INTENT_ADD
             }
         }
 
         var editorNote: Note? = null
         var sourceText: Array<String?>? = null
-        var aedictIntent = false
 
         when (caller) {
             NoteEditorCaller.NO_CALLER -> {
@@ -100,13 +100,13 @@ class NoteEditorActivity :
                 return
             }
             NoteEditorCaller.EDIT -> {
-                val cardId = intent.getLongExtra(NoteEditorFragment.EXTRA_CARD_ID, -1)
+                val cardId = intent.getLongExtra(EXTRA_CARD_ID, -1)
                 mCurrentEditedCard = col.getCard(cardId)
                 editorNote = mCurrentEditedCard!!.note(col)
                 addNote = false
             }
             NoteEditorCaller.PREVIEWER_EDIT -> {
-                val id = intent.getLongExtra(NoteEditorFragment.EXTRA_EDIT_FROM_CARD_ID, -1)
+                val id = intent.getLongExtra(EXTRA_EDIT_FROM_CARD_ID, -1)
                 mCurrentEditedCard = col.getCard(id)
                 editorNote = mCurrentEditedCard!!.note(col)
             }
@@ -127,9 +127,9 @@ class NoteEditorActivity :
                         val stringExtra = extras.getString(Intent.EXTRA_PROCESS_TEXT)
                         fetchedSourceText[0] = stringExtra ?: ""
                         fetchedSourceText[1] = ""
-                    } else if (NoteEditorFragment.ACTION_CREATE_FLASHCARD == intent.action) {
-                        fetchedSourceText[0] = extras.getString(NoteEditorFragment.SOURCE_TEXT)
-                        fetchedSourceText[1] = extras.getString(NoteEditorFragment.TARGET_TEXT)
+                    } else if (ACTION_CREATE_FLASHCARD == intent.action) {
+                        fetchedSourceText[0] = extras.getString(SOURCE_TEXT)
+                        fetchedSourceText[1] = extras.getString(TARGET_TEXT)
                     } else {
                         var first: String? = extras.getString(Intent.EXTRA_SUBJECT) ?: ""
                         var second: String? = extras.getString(Intent.EXTRA_TEXT) ?: ""
@@ -157,7 +157,7 @@ class NoteEditorActivity :
         val finalNote = editorNote!!
 
         val decks = col.decks.allSorted().map { SelectableDeck.Deck(it.getString("name"), it.getLong("id")) }
-        var deckId = intent.getLongExtra(NoteEditorFragment.EXTRA_DID, 0)
+        var deckId = intent.getLongExtra(EXTRA_DID, 0)
         if (deckId == 0L) {
             deckId = if (!col.config.getBool(ConfigKey.Bool.ADDING_DEFAULTS_TO_CURRENT_DECK)) {
                 finalNote.notetype.did
@@ -184,7 +184,7 @@ class NoteEditorActivity :
             }
         }
 
-        val getTextFromSearchView = intent.getStringExtra(NoteEditorFragment.EXTRA_TEXT_FROM_SEARCH_VIEW)
+        val getTextFromSearchView = intent.getStringExtra(EXTRA_TEXT_FROM_SEARCH_VIEW)
         if (!getTextFromSearchView.isNullOrEmpty() && fields.isNotEmpty()) {
             fields[0] = fields[0].copy(value = TextFieldValue(getTextFromSearchView))
         }
@@ -238,6 +238,39 @@ class NoteEditorActivity :
         const val FRAGMENT_ARGS_EXTRA = "fragmentArgs"
         const val FRAGMENT_NAME_EXTRA = "fragmentName"
         const val FRAGMENT_TAG = "NoteEditorFragmentTag"
+        const val SOURCE_TEXT = "SOURCE_TEXT"
+        const val TARGET_TEXT = "TARGET_TEXT"
+        const val EXTRA_CALLER = "CALLER"
+        const val EXTRA_CARD_ID = "CARD_ID"
+        const val EXTRA_CONTENTS = "CONTENTS"
+        const val EXTRA_TAGS = "TAGS"
+        const val EXTRA_ID = "ID"
+        const val EXTRA_DID = "DECK_ID"
+        const val EXTRA_TEXT_FROM_SEARCH_VIEW = "SEARCH"
+        const val EXTRA_EDIT_FROM_CARD_ID = "editCid"
+        const val ACTION_CREATE_FLASHCARD = "org.openintents.action.CREATE_FLASHCARD"
+        const val ACTION_CREATE_FLASHCARD_SEND = "android.intent.action.SEND"
+        enum class NoteEditorCaller(
+            val value: Int,
+        ) {
+            NO_CALLER(0),
+            EDIT(1),
+            STUDYOPTIONS(2),
+            DECKPICKER(3),
+            REVIEWER_ADD(11),
+            CARDBROWSER_ADD(7),
+            NOTEEDITOR(8),
+            PREVIEWER_EDIT(9),
+            NOTEEDITOR_INTENT_ADD(10),
+            IMG_OCCLUSION(12),
+            ADD_IMAGE(13),
+            INSTANT_NOTE_EDITOR(14),
+            ;
+
+            companion object {
+                fun fromValue(value: Int) = NoteEditorCaller.values().first { it.value == value }
+            }
+        }
 
         fun getIntent(
             context: Context,
