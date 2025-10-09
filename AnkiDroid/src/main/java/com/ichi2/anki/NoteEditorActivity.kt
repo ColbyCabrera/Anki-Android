@@ -37,6 +37,7 @@ class NoteEditorActivity :
     private val viewModel: NoteEditorViewModel by viewModels()
     private var tagsDialogFactory: TagsDialogFactory? = null
     private var addNote: Boolean = false
+    private var currentCard: Card? = null
 
     private val mainToolbar: androidx.appcompat.widget.Toolbar
         get() = findViewById(R.id.toolbar)
@@ -86,43 +87,13 @@ class NoteEditorActivity :
 
         val initialState = NoteEditorInitializer.loadInitialState(this, col, intent) ?: return
         addNote = initialState.caller != NoteEditorCaller.EDIT && initialState.caller != NoteEditorCaller.PREVIEWER_EDIT
+        currentCard = initialState.currentCard
 
         val finalNote = initialState.note
 
-        val decks = col.decks.allSorted().map { SelectableDeck.Deck(it.getString("name"), it.getLong("id")) }
-        var deckId = intent.getLongExtra(EXTRA_DID, 0)
-        if (deckId == 0L) {
-            deckId = if (!col.config.getBool(ConfigKey.Bool.ADDING_DEFAULTS_TO_CURRENT_DECK)) {
-                finalNote.notetype.did
-            } else {
-                col.config.get(CURRENT_DECK) ?: 1L
-            }
-        }
-        val selectedDeck = decks.find { it.deckId == deckId }
-
-        val fields = finalNote.fields.map { field ->
-            NoteEditorField(
-                name = field.name,
-                value = TextFieldValue(finalNote.getField(field.ord)),
-                isFocused = false
-            )
-        }.toMutableList()
-
-        val sourceText = fetchSourceTextFromIntent()
-        if (sourceText != null) {
-            if (fields.isNotEmpty()) {
-                fields[0] = fields[0].copy(value = TextFieldValue(sourceText[0] ?: ""))
-            }
-            if (fields.size > 1) {
-                fields[1] = fields[1].copy(value = TextFieldValue(sourceText[1] ?: ""))
-            }
-        }
-
-        val getTextFromSearchView = intent.getStringExtra(EXTRA_TEXT_FROM_SEARCH_VIEW)
-        if (!getTextFromSearchView.isNullOrEmpty() && fields.isNotEmpty()) {
-            fields[0] = fields[0].copy(value = TextFieldValue(getTextFromSearchView))
-        }
-
+        val decks = prepareDecks(col)
+        val selectedDeck = prepareSelectedDeck(col, finalNote, decks)
+        val fields = prepareFields(finalNote)
         val tags = finalNote.tags.joinToString(", ")
         val cards = finalNote.notetype.templates.map { it.name }.joinToString(", ")
 
@@ -143,6 +114,49 @@ class NoteEditorActivity :
         }
     }
 
+    private fun prepareDecks(col: Collection): List<SelectableDeck.Deck> {
+        return col.decks.allSorted().map { SelectableDeck.Deck(it.getString("name"), it.getLong("id")) }
+    }
+
+    private fun prepareSelectedDeck(col: Collection, note: Note, decks: List<SelectableDeck.Deck>): SelectableDeck? {
+        var deckId = intent.getLongExtra(EXTRA_DID, 0)
+        if (deckId == 0L) {
+            deckId = if (!col.config.getBool(ConfigKey.Bool.ADDING_DEFAULTS_TO_CURRENT_DECK)) {
+                note.notetype.did
+            } else {
+                col.config.get(CURRENT_DECK) ?: 1L
+            }
+        }
+        return decks.find { it.deckId == deckId }
+    }
+
+    private fun prepareFields(note: Note): List<NoteEditorField> {
+        val fields = note.fields.map { field ->
+            NoteEditorField(
+                name = field.name,
+                value = TextFieldValue(note.getField(field.ord)),
+                isFocused = false
+            )
+        }.toMutableList()
+
+        val sourceText = fetchSourceTextFromIntent()
+        if (sourceText != null) {
+            if (fields.isNotEmpty()) {
+                fields[0] = fields[0].copy(value = TextFieldValue(sourceText[0] ?: ""))
+            }
+            if (fields.size > 1) {
+                fields[1] = fields[1].copy(value = TextFieldValue(sourceText[1] ?: ""))
+            }
+        }
+
+        val getTextFromSearchView = intent.getStringExtra(EXTRA_TEXT_FROM_SEARCH_VIEW)
+        if (!getTextFromSearchView.isNullOrEmpty() && fields.isNotEmpty()) {
+            fields[0] = fields[0].copy(value = TextFieldValue(getTextFromSearchView))
+        }
+
+        return fields
+    }
+
     private fun fetchSourceTextFromIntent(): Array<String?>? {
         val extras = intent.extras ?: return null
         val fetchedSourceText = arrayOfNulls<String>(2)
@@ -154,11 +168,11 @@ class NoteEditorActivity :
             fetchedSourceText[0] = extras.getString(SOURCE_TEXT)
             fetchedSourceText[1] = extras.getString(TARGET_TEXT)
         } else {
-            var first: String? = extras.getString(Intent.EXTRA_SUBJECT) ?: ""
-            var second: String? = extras.getString(Intent.EXTRA_TEXT) ?: ""
+            var first: String? = extras.getString(Intent.EXTRA_SUBJECT)
+            var second: String? = extras.getString(Intent.EXTRA_TEXT)
             if (first.isNullOrEmpty()) {
                 first = second
-                second = ""
+                second = null
             }
             fetchedSourceText[0] = first
             fetchedSourceText[1] = second
@@ -185,7 +199,7 @@ class NoteEditorActivity :
         val intent = Intent(this, CardTemplateEditor::class.java)
         intent.putExtra("noteTypeId", note.id)
         if (!addNote) {
-            val card = initialState.currentCard
+            val card = currentCard
             if (card != null) {
                 intent.putExtra("noteId", card.nid)
                 intent.putExtra("ordId", card.ord)
