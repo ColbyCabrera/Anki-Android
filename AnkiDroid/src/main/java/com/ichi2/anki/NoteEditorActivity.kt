@@ -17,9 +17,7 @@ import com.ichi2.anki.libanki.Decks.Companion.CURRENT_DECK
 import com.ichi2.anki.libanki.Note
 import com.ichi2.anki.model.CardStateFilter
 import com.ichi2.anki.model.SelectableDeck
-import com.ichi2.anki.noteeditor.NoteEditorField
-import com.ichi2.anki.noteeditor.NoteEditorScreen
-import com.ichi2.anki.noteeditor.NoteEditorViewModel
+import com.ichi2.anki.noteeditor.*
 import com.ichi2.anki.snackbar.BaseSnackbarBuilderProvider
 import com.ichi2.anki.snackbar.SnackbarBuilder
 import com.ichi2.anki.ui.theme.AnkiTheme
@@ -39,7 +37,6 @@ class NoteEditorActivity :
     private val viewModel: NoteEditorViewModel by viewModels()
     private var tagsDialogFactory: TagsDialogFactory? = null
     private var addNote: Boolean = false
-    private var mCurrentEditedCard: Card? = null
 
     private val mainToolbar: androidx.appcompat.widget.Toolbar
         get() = findViewById(R.id.toolbar)
@@ -82,83 +79,10 @@ class NoteEditorActivity :
         Timber.d("onCollectionLoaded()")
         registerReceiver()
 
-        var caller = NoteEditorCaller.fromValue(intent.getIntExtra(EXTRA_CALLER, NoteEditorCaller.NO_CALLER.value))
-        if (caller == NoteEditorCaller.NO_CALLER) {
-            val action = intent.action
-            if (ACTION_CREATE_FLASHCARD == action || ACTION_CREATE_FLASHCARD_SEND == action || Intent.ACTION_PROCESS_TEXT == action) {
-                caller = NoteEditorCaller.NOTEEDITOR_INTENT_ADD
-            }
-        }
+        val initialState = NoteEditorInitializer.loadInitialState(this, col, intent) ?: return
+        addNote = initialState.caller != NoteEditorCaller.EDIT && initialState.caller != NoteEditorCaller.PREVIEWER_EDIT
 
-        var editorNote: Note? = null
-        var sourceText: Array<String?>? = null
-
-        when (caller) {
-            NoteEditorCaller.NO_CALLER -> {
-                Timber.e("no caller could be identified, closing")
-                finish()
-                return
-            }
-            NoteEditorCaller.EDIT -> {
-                val cardId = intent.getLongExtra(EXTRA_CARD_ID, -1)
-                mCurrentEditedCard = col.getCard(cardId)
-                editorNote = mCurrentEditedCard?.note(col)
-                addNote = false
-            }
-            NoteEditorCaller.PREVIEWER_EDIT -> {
-                val id = intent.getLongExtra(EXTRA_EDIT_FROM_CARD_ID, -1)
-                mCurrentEditedCard = col.getCard(id)
-                editorNote = mCurrentEditedCard?.note(col)
-            }
-            NoteEditorCaller.STUDYOPTIONS,
-            NoteEditorCaller.DECKPICKER,
-            NoteEditorCaller.REVIEWER_ADD,
-            NoteEditorCaller.CARDBROWSER_ADD,
-            NoteEditorCaller.NOTEEDITOR -> {
-                addNote = true
-            }
-            NoteEditorCaller.NOTEEDITOR_INTENT_ADD,
-            NoteEditorCaller.INSTANT_NOTE_EDITOR -> {
-                addNote = true
-                val extras = intent.extras
-                if (extras != null) {
-                    val fetchedSourceText = arrayOfNulls<String>(2)
-                    if (Intent.ACTION_PROCESS_TEXT == intent.action) {
-                        val stringExtra = extras.getString(Intent.EXTRA_PROCESS_TEXT)
-                        fetchedSourceText[0] = stringExtra ?: ""
-                        fetchedSourceText[1] = ""
-                    } else if (ACTION_CREATE_FLASHCARD == intent.action) {
-                        fetchedSourceText[0] = extras.getString(SOURCE_TEXT)
-                        fetchedSourceText[1] = extras.getString(TARGET_TEXT)
-                    } else {
-                        var first: String? = extras.getString(Intent.EXTRA_SUBJECT) ?: ""
-                        var second: String? = extras.getString(Intent.EXTRA_TEXT) ?: ""
-                        if (first.isNullOrEmpty()) {
-                            first = second
-                            second = ""
-                        }
-                        fetchedSourceText[0] = first
-                        fetchedSourceText[1] = second
-                    }
-                    sourceText = fetchedSourceText
-                }
-            }
-            NoteEditorCaller.IMG_OCCLUSION, NoteEditorCaller.ADD_IMAGE -> {
-                addNote = true
-            }
-        }
-
-        if (editorNote == null) {
-            val notetype = col.notetypes.current()
-            editorNote = Note.fromNotetypeId(col, notetype.id)
-            addNote = true
-        }
-
-        val finalNote = editorNote ?: run {
-            Timber.e("editorNote was null, which should not happen. Closing.")
-            finish()
-            return
-        }
+        val finalNote = initialState.note
 
         val decks = col.decks.allSorted().map { SelectableDeck.Deck(it.getString("name"), it.getLong("id")) }
         var deckId = intent.getLongExtra(EXTRA_DID, 0)
@@ -179,6 +103,7 @@ class NoteEditorActivity :
             )
         }.toMutableList()
 
+        val sourceText = fetchSourceTextFromIntent()
         if (sourceText != null) {
             if (fields.isNotEmpty()) {
                 fields[0] = fields[0].copy(value = TextFieldValue(sourceText[0] ?: ""))
@@ -211,6 +136,29 @@ class NoteEditorActivity :
         } else {
             setTitle(R.string.cardeditor_title_edit_card)
         }
+    }
+
+    private fun fetchSourceTextFromIntent(): Array<String?>? {
+        val extras = intent.extras ?: return null
+        val fetchedSourceText = arrayOfNulls<String>(2)
+        if (Intent.ACTION_PROCESS_TEXT == intent.action) {
+            val stringExtra = extras.getString(Intent.EXTRA_PROCESS_TEXT)
+            fetchedSourceText[0] = stringExtra ?: ""
+            fetchedSourceText[1] = ""
+        } else if (ACTION_CREATE_FLASHCARD == intent.action) {
+            fetchedSourceText[0] = extras.getString(SOURCE_TEXT)
+            fetchedSourceText[1] = extras.getString(TARGET_TEXT)
+        } else {
+            var first: String? = extras.getString(Intent.EXTRA_SUBJECT) ?: ""
+            var second: String? = extras.getString(Intent.EXTRA_TEXT) ?: ""
+            if (first.isNullOrEmpty()) {
+                first = second
+                second = ""
+            }
+            fetchedSourceText[0] = first
+            fetchedSourceText[1] = second
+        }
+        return fetchedSourceText
     }
 
     private fun showTagsDialog() {
@@ -272,7 +220,7 @@ class NoteEditorActivity :
             ;
 
             companion object {
-                fun fromValue(value: Int) = NoteEditorCaller.values().first { it.value == value }
+                fun fromValue(value: Int): NoteEditorCaller? = NoteEditorCaller.values().firstOrNull { it.value == value }
             }
         }
 
