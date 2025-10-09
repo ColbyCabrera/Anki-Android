@@ -321,7 +321,10 @@ fun DeckPickerScreen(
         Scaffold(
             modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             snackbarHost = {
-                SnackbarHost(snackbarHostState) { data ->
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                    modifier = Modifier.padding(bottom = SnackbarPaddingBottom)
+                ) { data ->
                     Snackbar(
                         snackbarData = data,
                         containerColor = MaterialTheme.colorScheme.secondary,
