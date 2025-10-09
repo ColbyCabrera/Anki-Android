@@ -29,8 +29,6 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledIconToggleButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.IconToggleButtonShapes
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -39,6 +37,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -66,28 +65,29 @@ fun ReviewerTopBar(
     onUnanswerCard: () -> Unit
 ) {
     CenterAlignedTopAppBar(
-        modifier = modifier,
-        title = { Text(chosenAnswer) },
-        navigationIcon = {
-            Counts(modifier = Modifier.padding(horizontal = 8.dp),newCount = newCount, learnCount = learnCount, reviewCount = reviewCount)
-        }, actions = {
-            MarkIcon(
-                isMarked = isMarked,
-                onToggleMark = onToggleMark
-            )
-            FlagIcon(currentFlag = flag, onSetFlag = onSetFlag)
-            AnimatedVisibility(visible = isAnswerShown) {
-                FilledIconButton(
-                    onClick = onUnanswerCard,
-                    shapes = IconButtonDefaults.shapes()
-                ) {
-                    Icon(
-                        painterResource(R.drawable.undo_24px),
-                        contentDescription = stringResource(id = R.string.unanswer_card),
-                    )
-                }
+        modifier = modifier, title = { Text(chosenAnswer) }, navigationIcon = {
+        Counts(
+            modifier = Modifier.padding(horizontal = 8.dp),
+            newCount = newCount,
+            learnCount = learnCount,
+            reviewCount = reviewCount
+        )
+    }, actions = {
+        MarkIcon(
+            isMarked = isMarked, onToggleMark = onToggleMark
+        )
+        FlagIcon(currentFlag = flag, onSetFlag = onSetFlag)
+        AnimatedVisibility(visible = isAnswerShown) {
+            FilledIconButton(
+                onClick = onUnanswerCard, shapes = IconButtonDefaults.shapes()
+            ) {
+                Icon(
+                    painterResource(R.drawable.undo_24px),
+                    contentDescription = stringResource(id = R.string.unanswer_card),
+                )
             }
-        }, colors = TopAppBarDefaults.topAppBarColors(
+        }
+    }, colors = TopAppBarDefaults.topAppBarColors(
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
         navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         titleContentColor = MaterialTheme.colorScheme.onSurface,
@@ -123,7 +123,7 @@ fun MarkIcon(isMarked: Boolean, onToggleMark: (Boolean) -> Unit) {
 fun FlagIcon(currentFlag: Int, onSetFlag: (Int) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     val flagColors = listOf(
-        Color.Transparent, // 0: no flag
+        Color.Unspecified, // 0: no flag
         Color.Red,         // 1: Red
         Color(0xFFFFA500), // 2: Orange
         Color.Green,       // 3: Green
@@ -131,6 +131,16 @@ fun FlagIcon(currentFlag: Int, onSetFlag: (Int) -> Unit) {
         Color.Magenta,     // 5: Pink
         Color.Cyan,        // 6: Turquoise
         Color(0xFF9400D3)  // 7: Purple
+    )
+    val flagColorNames = listOf(
+        stringResource(R.string.no_flag),
+        stringResource(R.string.flag_red),
+        stringResource(R.string.flag_orange),
+        stringResource(R.string.flag_green),
+        stringResource(R.string.flag_blue),
+        stringResource(R.string.flag_pink),
+        stringResource(R.string.flag_turquoise),
+        stringResource(R.string.flag_purple)
     )
 
     Box {
@@ -141,7 +151,8 @@ fun FlagIcon(currentFlag: Int, onSetFlag: (Int) -> Unit) {
                 contentColor = flagColors[currentFlag],
                 containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             ) else IconButtonDefaults.filledIconButtonColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                contentColor = IconButtonDefaults.filledIconToggleButtonColors().contentColor,
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow
             )
         ) {
             Icon(
@@ -150,12 +161,28 @@ fun FlagIcon(currentFlag: Int, onSetFlag: (Int) -> Unit) {
             )
         }
         DropdownMenu(
-            expanded = expanded, onDismissRequest = { expanded = false }) {
+            expanded = expanded, onDismissRequest = { expanded = false },
+        shape = MaterialTheme.shapes.large,) {
             (0..7).forEach { flag ->
-                DropdownMenuItem(text = { Text("Flag $flag") }, onClick = {
-                    onSetFlag(flag)
-                    expanded = false
-                })
+                DropdownMenuItem(
+                    text = {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.flag_24px),
+                                contentDescription = null,
+                                tint = flagColors[flag]
+                            )
+                            Text(flagColorNames[flag])
+                        }
+                    },
+                    onClick = {
+                        onSetFlag(flag)
+                        expanded = false
+                    }
+                )
             }
         }
     }
@@ -164,8 +191,7 @@ fun FlagIcon(currentFlag: Int, onSetFlag: (Int) -> Unit) {
 @Composable
 fun Counts(newCount: Int, learnCount: Int, reviewCount: Int, modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(2.dp)
+        modifier = modifier, horizontalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         MorphingCardCount(
             newCount,
