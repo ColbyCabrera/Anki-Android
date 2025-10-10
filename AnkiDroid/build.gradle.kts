@@ -7,6 +7,8 @@ plugins {
     id("com.google.android.gms.oss-licenses-plugin")
     id("de.mannodermaus.android-junit5")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("com.google.dagger.hilt.android")
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -140,6 +142,9 @@ dependencies {
     implementation(libs.timber)
     implementation(libs.vyshane.slf4j.timber)
     implementation(libs.websocket)
+    implementation(libs.hilt.android)
+    implementation("androidx.hilt:hilt-navigation-compose:1.3.0")
+    ksp(libs.hilt.compiler)
     testImplementation(project(":AnkiDroidApi-Test"))
     testImplementation(libs.androidx.arch.core.testing)
     testImplementation(libs.androidx.test.core)

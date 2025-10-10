@@ -377,7 +377,7 @@ dependencies {
     // modules
     implementation project(":common")
     implementation project(":libanki")
-
+    implementation libs.androidx.hilt.navigation.compose
     implementation libs.androidx.activity
     implementation libs.androidx.annotation
     implementation libs.androidx.appcompat

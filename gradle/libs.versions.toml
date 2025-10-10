@@ -9,6 +9,7 @@ hilt = "2.57.2"
 # devices *if* you also change AnkiDroid/build.gradle play { retain {} } block
 # to include the version codes of the last released version for the older
 # minSdk. It is critical to update those version codes when you change this.
+hiltNavigationCompose = "1.3.0"
 minSdk = "24"  # also in testlib/build.gradle.kts
 
 targetSdk = "35"  # also in  ../robolectricDownloader.gradle
@@ -152,6 +153,7 @@ androidx-browser = { module = "androidx.browser:browser", version.ref = "android
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidxAppCompat" }
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidxAnnotation" }
 androidx-activity = { module = "androidx.activity:activity", version.ref = "androidxActivity" }
+androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 androidx-material = { module = "androidx.compose.material:material" }
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 androidx-media3-ui = { module = "androidx.media3:media3-ui", version.ref = "androidxMedia3" }
