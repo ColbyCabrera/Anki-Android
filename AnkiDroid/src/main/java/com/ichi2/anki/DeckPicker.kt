@@ -482,7 +482,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                         startActivity(Intent(this@DeckPicker, Statistics::class.java))
                     },
                     DrawerItem(R.drawable.ic_settings_black, R.string.settings) {
-                        startActivity(Intent(this@DeckPicker, PreferencesActivity::class.java))
+                        startActivity(PreferencesActivity.getIntent(this@DeckPicker))
                     },
                     DrawerItem(R.drawable.ic_help_black, R.string.help) {
                         startActivity(Intent(this@DeckPicker, HelpActivity::class.java))
