@@ -482,7 +482,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                         startActivity(Intent(this@DeckPicker, Statistics::class.java))
                     },
                     DrawerItem(R.drawable.ic_settings_black, R.string.settings) {
-                        startActivity(PreferencesActivity.getIntent(this@DeckPicker))
+                        startActivity(Intent(this@DeckPicker, PreferencesActivity::class.java))
                     },
                     DrawerItem(R.drawable.ic_help_black, R.string.help) {
                         startActivity(Intent(this@DeckPicker, HelpActivity::class.java))
@@ -2064,6 +2064,11 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
         createDeckDialog.onNewDeckCreated = {
             updateDeckList()
             invalidateOptionsMenu()
+        }
+        createDeckDialog.onSnackbarMessage = { message ->
+            lifecycleScope.launch {
+                viewModel.snackbarMessage.emit(message)
+            }
         }
         createDeckDialog.showDialog()
     }
