@@ -3,9 +3,7 @@ package com.ichi2.anki.noteeditor
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.Scaffold
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -18,7 +16,7 @@ fun NoteEditorScreen(
     viewModel: NoteEditorViewModel = hiltViewModel(),
     onTagsClick: () -> Unit,
     onCardsClick: () -> Unit,
-    onMediaClick: (Int) -> Unit
+    onMediaClick: (Int) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
