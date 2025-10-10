@@ -1517,7 +1517,7 @@ abstract class AbstractFlashcardViewer : NavigationDrawerActivity(), ViewerComma
         content: String,
     ) {
         if (card != null) {
-            card.settings.mediaPlaybackRequiresUserGesture = !cardMediaPlayer.config.autoplay
+            card.settings.mediaPlaybackRequiresUserGesture = false
             card.loadDataWithBaseURL(
                 server.baseUrl(),
                 content,
