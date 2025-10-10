@@ -1,3 +1,4 @@
+
 package com.ichi2.anki.noteeditor
 
 import androidx.compose.foundation.layout.Column
@@ -23,6 +24,7 @@ fun NoteEditorScreen(
 
     Scaffold { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
+            /*
             NoteEditorSelectors(
                 decks = uiState.decks,
                 selectedDeck = uiState.selectedDeck,
@@ -51,6 +53,7 @@ fun NoteEditorScreen(
                 cards = uiState.cardsLabel,
                 onCardsClick = onCardsClick
             )
+            */
         }
     }
 }

@@ -1,3 +1,4 @@
+
 package com.ichi2.anki.noteeditor
 
 import android.content.SharedPreferences
@@ -5,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ichi2.anki.libanki.Collection
 import com.ichi2.anki.libanki.Note
-import com.ichi2.anki.utils.HashUtil
+import com.ichi2.lib.HashUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,11 +32,11 @@ class NoteEditorViewModel @Inject constructor(
             if (launcher is NoteEditorLauncher.EditCard) {
                 addNote = false
                 val card = col.getCard(launcher.cardId)
-                noteToEdit = card?.note(col)
+                noteToEdit = card?.note()
             } else {
                 addNote = true
-                val notetypeId = col.decks.current().get("mid", 1L)
-                noteToEdit = col.newNote(col.notetypes.get(notetypeId)!!)
+                val notetypeId = col.decks.current().getLong("mid")
+                noteToEdit = col.newNote(col.notetypes.get(notetypeId))
             }
 
             note = noteToEdit
@@ -44,19 +45,19 @@ class NoteEditorViewModel @Inject constructor(
                 return@launch
             }
 
-            val deckNames = col.decks.allNames(includeFiltered = false)
+            val deckNames = col.decks.allNames()
             val selectedDeckId = noteToEdit.did
             val selectedDeckName = col.decks.name(selectedDeckId)
 
             val noteTypeIds = col.notetypes.allIds()
-            val noteTypeNames = noteTypeIds.map { col.notetypes.get(it)!!.name }
-            val selectedNoteTypeName = noteToEdit.notetype.name
+            val noteTypeNames = noteTypeIds.map { col.notetypes.get(it).getString("name") }
+            val selectedNoteTypeName = noteToEdit.notetype().getString("name")
 
-            val fieldStates = noteToEdit.fields.mapIndexed { index, field ->
+            val fieldStates = noteToEdit.fields().mapIndexed { index, field ->
                 NoteEditorFieldState(
-                    label = field.name,
+                    label = field.getString("name"),
                     content = noteToEdit.values()[index],
-                    isSticky = field.sticky
+                    isSticky = field.getBoolean("sticky")
                 )
             }
 
@@ -70,7 +71,7 @@ class NoteEditorViewModel @Inject constructor(
                 it.copy(
                     isToolbarVisible = sharedPreferences.getBoolean(PREF_NOTE_EDITOR_SHOW_TOOLBAR, true),
                     customButtons = getToolbarButtonsFromPreferences(),
-                    isCloze = noteToEdit.notetype.isCloze,
+                    isCloze = noteToEdit.notetype().getBoolean("isCloze"),
                     decks = deckNames,
                     selectedDeck = selectedDeckName,
                     noteTypes = noteTypeNames,
@@ -84,15 +85,16 @@ class NoteEditorViewModel @Inject constructor(
     }
 
     private fun buildCardsLabel(col: Collection, note: Note, addNote: Boolean): String {
-        val tmpls = note.notetype.templates
+        val tmpls = note.notetype().getJSONArray("tmpls")
         var cardsList = StringBuilder()
-        for ((i, tmpl) in tmpls.withIndex()) {
-            var name = tmpl.jsonObject.optString("name")
+        for (i in 0 until tmpls.length()) {
+            val tmpl = tmpls.getJSONObject(i)
+            var name = tmpl.optString("name")
             if (!addNote &&
                 tmpls.length() > 1 &&
-                note.noteType(col)!!.jsonObject === note.notetype.jsonObject &&
-                note.cards(col).isNotEmpty() &&
-                note.cards(col)[0].template(col).jsonObject.optString("name") == name
+                note.noteType()!!.getLong("id") == note.notetype().getLong("id") &&
+                note.cards().isNotEmpty() &&
+                note.cards()[0].template().optString("name") == name
             ) {
                 name = "<u>$name</u>"
             }
@@ -202,3 +204,20 @@ data class NoteEditorUiState(
     val tagsLabel: String = "",
     val cardsLabel: String = ""
 )
+
+data class CustomToolbarButton(
+    val index: Int,
+    val buttonText: String,
+    val prefix: String,
+    val suffix: String
+) {
+    companion object {
+        fun fromStringSet(set: Set<String>): List<CustomToolbarButton> {
+            return emptyList()
+        }
+
+        fun toStringSet(buttons: List<CustomToolbarButton>): Set<String> {
+            return emptySet()
+        }
+    }
+}

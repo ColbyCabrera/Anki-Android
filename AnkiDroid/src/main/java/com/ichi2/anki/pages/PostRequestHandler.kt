@@ -1,3 +1,4 @@
+
 /*
  *  Copyright (c) 2023 Brayan Oliveira <brayandso.dev@gmail.com>
  *  Copyright (c) 2024 David Allison <davidallisongithub@gmail.com>
@@ -24,7 +25,6 @@ import androidx.lifecycle.lifecycleScope
 import anki.collection.OpChanges
 import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.CollectionManager.withCol
-import com.ichi2.anki.NoteEditorFragment
 import com.ichi2.anki.importAnkiPackageUndoable
 import com.ichi2.anki.importCsvRaw
 import com.ichi2.anki.launchCatchingTask
@@ -43,6 +43,7 @@ import com.ichi2.anki.libanki.stats.cardStatsRaw
 import com.ichi2.anki.libanki.stats.getGraphPreferencesRaw
 import com.ichi2.anki.libanki.stats.graphsRaw
 import com.ichi2.anki.libanki.stats.setGraphPreferencesRaw
+import com.ichi2.anki.noteeditor.NoteEditorActivity
 import com.ichi2.anki.observability.undoableOp
 import com.ichi2.anki.searchInBrowser
 import kotlinx.coroutines.Deferred
@@ -177,7 +178,7 @@ suspend fun FragmentActivity?.handleUiPostRequest(
             launchCatchingTask {
                 // Allow time for toast message to appear before closing editor
                 delay(1000)
-                setResult(NoteEditorFragment.RESULT_UPDATED_IO_NOTE)
+                setResult(NoteEditorActivity.RESULT_UPDATED_IO_NOTE)
                 finish()
             }
         }
