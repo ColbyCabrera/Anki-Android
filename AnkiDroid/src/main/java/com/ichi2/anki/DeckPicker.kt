@@ -1526,7 +1526,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
 
             KeyEvent.KEYCODE_P -> {
                 Timber.i("Open Settings from keypress")
-                startActivity(Intent(this, PreferencesActivity::class.java))
+                startActivity(PreferencesActivity.getIntent(this@DeckPicker))
                 return true
             }
 
@@ -2064,6 +2064,11 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
         createDeckDialog.onNewDeckCreated = {
             updateDeckList()
             invalidateOptionsMenu()
+        }
+        createDeckDialog.onSnackbarMessage = { message ->
+            lifecycleScope.launch {
+                viewModel.snackbarMessage.emit(message)
+            }
         }
         createDeckDialog.showDialog()
     }

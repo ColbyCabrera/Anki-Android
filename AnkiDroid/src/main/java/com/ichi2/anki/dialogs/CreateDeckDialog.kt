@@ -58,6 +58,7 @@ class CreateDeckDialog(
 ) {
     private var previousDeckName: String? = null
     lateinit var onNewDeckCreated: ((DeckId) -> Unit)
+    lateinit var onSnackbarMessage: ((String) -> Unit)
     private var initialDeckName = ""
     private var shownDialog: AlertDialog? = null
 
@@ -284,7 +285,9 @@ class CreateDeckDialog(
         message: String,
         duration: Int = Snackbar.LENGTH_SHORT,
     ) {
-        if (context is Activity) {
+        if (::onSnackbarMessage.isInitialized) {
+            onSnackbarMessage(message)
+        } else if (context is Activity) {
             context.showSnackbar(message, duration)
         } else {
             showThemedToast(context, message, duration == Snackbar.LENGTH_SHORT)
