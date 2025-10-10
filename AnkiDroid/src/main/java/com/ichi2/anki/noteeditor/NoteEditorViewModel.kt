@@ -40,13 +40,9 @@ class NoteEditorViewModel @Inject constructor(
             }
 
             note = noteToEdit
-            if (noteToEdit == null) {
-                // TODO: Handle error
-                return@launch
-            }
 
-            val deckNames = col.get_all_deck_names(true)
-            val selectedDeckId = noteToEdit.deckId
+            val deckNames = col.decks.allNamesAndIds().map { it.name }
+            val selectedDeckId = noteToEdit.cards(col).first().did
             val selectedDeckName = col.decks.name(selectedDeckId)
 
             val noteTypeNames = col.notetypes.allNamesAndIds().map { it.name }.toList()
@@ -56,7 +52,7 @@ class NoteEditorViewModel @Inject constructor(
                 NoteEditorFieldState(
                     label = noteToEdit.notetype.fields[index].name,
                     content = field,
-                    isSticky = noteToEdit.notetype.fields[index].isSticky,
+                    isSticky = noteToEdit.notetype.fields[index].sticky,
                 )
             }
 
@@ -71,7 +67,7 @@ class NoteEditorViewModel @Inject constructor(
                     isToolbarVisible = sharedPreferences.getBoolean(PREF_NOTE_EDITOR_SHOW_TOOLBAR, true),
                     customButtons = getToolbarButtonsFromPreferences(),
                     isCloze = noteToEdit.notetype.isCloze,
-                    decks = deckNames.map { it.second },
+                    decks = deckNames,
                     selectedDeck = selectedDeckName,
                     noteTypes = noteTypeNames,
                     selectedNoteType = selectedNoteTypeName,
@@ -89,7 +85,7 @@ class NoteEditorViewModel @Inject constructor(
         for ((i, tmpl) in tmpls.withIndex()) {
             var name = tmpl.name
             if (!addNote &&
-                tmpls.size > 1 &&
+                tmpls.length() > 1 &&
                 note.noteTypeId == note.notetype.id &&
                 note.cards(col).isNotEmpty() &&
                 note.cards(col)[0].template(col).name == name
@@ -97,7 +93,7 @@ class NoteEditorViewModel @Inject constructor(
                 name = "<u>$name</u>"
             }
             cardsList.append(name)
-            if (i < tmpls.size - 1) {
+            if (i < tmpls.length() - 1) {
                 cardsList.append(", ")
             }
         }
