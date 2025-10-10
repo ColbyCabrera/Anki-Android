@@ -189,8 +189,6 @@ class CreateDeckDialog(
             Timber.d("CreateDeckDialog::createDeck - Not creating invalid deck name '%s'", deckName)
             displayFeedback(context.getString(R.string.invalid_deck_name), Snackbar.LENGTH_LONG)
         }
-        // AlertDialog should be dismissed after the Keyboard 'Done' or Deck 'Ok' button is pressed
-        shownDialog?.dismiss()
     }
 
     fun createFilteredDeck(deckName: String): Boolean {
@@ -276,8 +274,6 @@ class CreateDeckDialog(
                 displayFeedback(e.localizedMessage ?: e.message ?: "", Snackbar.LENGTH_LONG)
             }
         }
-        // AlertDialog should be dismissed after the Keyboard 'Done' or Deck 'Ok' button is pressed
-        shownDialog?.dismiss()
     }
 
     private fun displayFeedback(
