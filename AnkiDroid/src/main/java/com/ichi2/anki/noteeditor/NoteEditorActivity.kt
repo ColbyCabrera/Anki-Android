@@ -5,7 +5,7 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import com.ichi2.anki.AnkiDroidApp
-import com.ichi2.anki.theme.AnkiTheme
+import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -13,7 +13,7 @@ class NoteEditorActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            AnkiTheme {
+            AnkiDroidTheme {
                 NoteEditorScreen(
                     onTagsClick = { /*TODO*/ },
                     onCardsClick = { /*TODO*/ },
@@ -36,6 +36,7 @@ class NoteEditorActivity : AppCompatActivity() {
         const val EXTRA_TAGS = "tags"
         const val RELOAD_REQUIRED_EXTRA_KEY = "reload_required"
         const val NOTE_CHANGED_EXTRA_KEY = "note_changed"
+        const val RESULT_UPDATED_IO_NOTE = 1
 
 
         enum class NoteEditorCaller(val value: Int) {

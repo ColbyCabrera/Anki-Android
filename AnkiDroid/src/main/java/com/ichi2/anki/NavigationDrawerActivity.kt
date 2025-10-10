@@ -122,8 +122,6 @@ abstract class NavigationDrawerActivity :
     /** Whether android:fitsSystemWindows="true" should be applied to the navigation drawer  */
     protected open fun fitsSystemWindows(): Boolean = true
 
-    fun navDrawerIsReady(): Boolean = navigationView != null
-
     // Navigation drawer initialisation
     @Suppress("deprecation", "API35 properly handle edge-to-edge")
     protected fun initNavigationDrawer(mainView: View = findViewById(android.R.id.content)) {
