@@ -3,21 +3,30 @@ package com.ichi2.anki.noteeditor
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.ichi2.anki.AnkiDroidApp
+import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import dagger.hilt.android.AndroidEntryPoint
+import com.ichi2.anki.libanki.Collection as AnkiCollection
 
 @AndroidEntryPoint
 class NoteEditorActivity : AppCompatActivity() {
+    private val viewModel: NoteEditorViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val launcher = NoteEditorLauncher.PassArguments(intent.extras!!)
+        val col = CollectionManager.getColUnsafe()
+        viewModel.initialize(col, launcher)
         setContent {
             AnkiDroidTheme {
-                NoteEditorScreen(
+                NoteEditor(
+                    viewModel = viewModel,
                     onTagsClick = { /*TODO*/ },
                     onCardsClick = { /*TODO*/ },
-                    onMediaClick = { /*TODO*/ }
+                    onMediaClick = { /*TODO*/ },
                 )
             }
         }
@@ -37,21 +46,5 @@ class NoteEditorActivity : AppCompatActivity() {
         const val RELOAD_REQUIRED_EXTRA_KEY = "reload_required"
         const val NOTE_CHANGED_EXTRA_KEY = "note_changed"
         const val RESULT_UPDATED_IO_NOTE = 1
-
-
-        enum class NoteEditorCaller(val value: Int) {
-            IMG_OCCLUSION(0),
-            DECKPICKER(1),
-            CARDBROWSER_ADD(2),
-            REVIEWER_ADD(3),
-            INSTANT_NOTE_EDITOR(4),
-            EDIT(5),
-            PREVIEWER_EDIT(6),
-            NOTEEDITOR(7);
-
-            companion object {
-                fun fromInt(value: Int) = values().first { it.value == value }
-            }
-        }
     }
 }

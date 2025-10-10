@@ -32,7 +32,7 @@ sealed interface NoteEditorLauncher : Destination {
     ) : NoteEditorLauncher {
         override fun toBundle(): Bundle =
             bundleOf(
-                NoteEditorActivity.EXTRA_CALLER to NoteEditorActivity.NoteEditorCaller.IMG_OCCLUSION.value,
+                NoteEditorActivity.EXTRA_CALLER to NoteEditorCaller.IMG_OCCLUSION.value,
                 NoteEditorActivity.EXTRA_IMG_OCCLUSION to imageUri,
             )
     }
@@ -48,7 +48,7 @@ sealed interface NoteEditorLauncher : Destination {
     ) : NoteEditorLauncher {
         override fun toBundle(): Bundle =
             bundleOf(
-                NoteEditorActivity.EXTRA_CALLER to NoteEditorActivity.NoteEditorCaller.DECKPICKER.value,
+                NoteEditorActivity.EXTRA_CALLER to NoteEditorCaller.DECKPICKER.value,
             ).also { bundle ->
                 deckId?.let { deckId -> bundle.putLong(NoteEditorActivity.EXTRA_DID, deckId) }
             }
@@ -61,7 +61,7 @@ sealed interface NoteEditorLauncher : Destination {
         override fun toBundle(): Bundle {
             val fragmentArgs =
                 bundleOf(
-                    NoteEditorActivity.EXTRA_CALLER to NoteEditorActivity.NoteEditorCaller.CARDBROWSER_ADD.value,
+                    NoteEditorActivity.EXTRA_CALLER to NoteEditorCaller.CARDBROWSER_ADD.value,
                     NoteEditorActivity.EXTRA_TEXT_FROM_SEARCH_VIEW to viewModel.searchTerms,
                     NoteEditorActivity.IN_CARD_BROWSER_ACTIVITY to inCardBrowserActivity,
                 )
@@ -80,7 +80,7 @@ sealed interface NoteEditorLauncher : Destination {
         override fun toBundle(): Bundle {
             val fragmentArgs =
                 bundleOf(
-                    NoteEditorActivity.EXTRA_CALLER to NoteEditorActivity.NoteEditorCaller.REVIEWER_ADD.value,
+                    NoteEditorActivity.EXTRA_CALLER to NoteEditorCaller.REVIEWER_ADD.value,
                 ).also { bundle ->
                     animation?.let { animation ->
                         bundle.putParcelable(
@@ -101,7 +101,7 @@ sealed interface NoteEditorLauncher : Destination {
     ) : NoteEditorLauncher {
         override fun toBundle(): Bundle =
             bundleOf(
-                NoteEditorActivity.EXTRA_CALLER to NoteEditorActivity.NoteEditorCaller.INSTANT_NOTE_EDITOR.value,
+                NoteEditorActivity.EXTRA_CALLER to NoteEditorCaller.INSTANT_NOTE_EDITOR.value,
                 Intent.EXTRA_TEXT to sharedText,
             )
     }
@@ -113,7 +113,7 @@ sealed interface NoteEditorLauncher : Destination {
     ) : NoteEditorLauncher {
         override fun toBundle(): Bundle =
             bundleOf(
-                NoteEditorActivity.EXTRA_CALLER to NoteEditorActivity.NoteEditorCaller.EDIT.value,
+                NoteEditorActivity.EXTRA_CALLER to NoteEditorCaller.EDIT.value,
                 NoteEditorActivity.EXTRA_CARD_ID to cardId,
                 AnkiActivity.FINISH_ANIMATION_EXTRA to animation as Parcelable,
                 NoteEditorActivity.IN_CARD_BROWSER_ACTIVITY to inCardBrowserActivity,
@@ -125,7 +125,7 @@ sealed interface NoteEditorLauncher : Destination {
     ) : NoteEditorLauncher {
         override fun toBundle(): Bundle =
             bundleOf(
-                NoteEditorActivity.EXTRA_CALLER to NoteEditorActivity.NoteEditorCaller.PREVIEWER_EDIT.value,
+                NoteEditorActivity.EXTRA_CALLER to NoteEditorCaller.PREVIEWER_EDIT.value,
                 NoteEditorActivity.EXTRA_EDIT_FROM_CARD_ID to cardId,
             )
     }
@@ -137,7 +137,7 @@ sealed interface NoteEditorLauncher : Destination {
     ) : NoteEditorLauncher {
         override fun toBundle(): Bundle =
             bundleOf(
-                NoteEditorActivity.EXTRA_CALLER to NoteEditorActivity.NoteEditorCaller.NOTEEDITOR.value,
+                NoteEditorActivity.EXTRA_CALLER to NoteEditorCaller.NOTEEDITOR.value,
                 NoteEditorActivity.EXTRA_DID to deckId,
                 NoteEditorActivity.EXTRA_CONTENTS to fieldsText,
             ).also { bundle ->
