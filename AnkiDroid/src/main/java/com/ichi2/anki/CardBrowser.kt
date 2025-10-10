@@ -1,3 +1,4 @@
+
 /****************************************************************************************
  * Copyright (c) 2010 Norbert Nagold <norbert.nagold@gmail.com>                         *
  * Copyright (c) 2012 Kostas Spyropoulos <inigo.aldana@gmail.com>                       *
@@ -71,7 +72,6 @@ import com.ichi2.anki.browser.toCardBrowserLaunchOptions
 import com.ichi2.anki.common.annotations.NeedsTest
 import com.ichi2.anki.common.utils.annotation.KotlinCleanup
 import com.ichi2.anki.dialogs.DeckSelectionDialog.DeckSelectionListener
-import com.ichi2.anki.dialogs.DiscardChangesDialog
 import com.ichi2.anki.dialogs.GradeNowDialog
 import com.ichi2.anki.dialogs.SaveBrowserSearchDialogFragment
 import com.ichi2.anki.dialogs.SavedBrowserSearchesDialogFragment
@@ -90,6 +90,7 @@ import com.ichi2.anki.model.CardsOrNotes
 import com.ichi2.anki.model.CardsOrNotes.CARDS
 import com.ichi2.anki.model.CardsOrNotes.NOTES
 import com.ichi2.anki.model.SelectableDeck
+import com.ichi2.anki.noteeditor.NoteEditorActivity
 import com.ichi2.anki.noteeditor.NoteEditorLauncher
 import com.ichi2.anki.observability.ChangeManager
 import com.ichi2.anki.preferences.sharedPrefs
@@ -123,14 +124,14 @@ open class CardBrowser :
      */
     @get:VisibleForTesting
     val addNoteLauncher: NoteEditorLauncher
-        get() = createAddNoteLauncher(viewModel, fragmented)
+        get() = createAddNoteLauncher(viewModel)
 
     /**
      * Provides an instance of NoteEditorLauncher for editing a note
      */
     private val editNoteLauncher: NoteEditorLauncher
         get() =
-            NoteEditorLauncher.EditCard(viewModel.currentCardId, Direction.DEFAULT, fragmented).also {
+            NoteEditorLauncher.EditCard(viewModel.currentCardId, Direction.DEFAULT).also {
                 Timber.i("editNoteLauncher: %s", it)
             }
 
@@ -147,11 +148,6 @@ open class CardBrowser :
     lateinit var viewModel: CardBrowserViewModel
 
     lateinit var cardBrowserFragment: CardBrowserFragment
-
-    /**
-     * The frame containing the NoteEditor. Non null only in layout x-large.
-     */
-    private var noteEditorFrame: FragmentContainerView? = null
 
     private var deckSpinnerSelection: DeckSpinnerSelection? = null
 
@@ -193,8 +189,8 @@ open class CardBrowser :
             // in use by reviewer?
             result.data?.let {
                 if (
-                    it.getBooleanExtra(NoteEditorFragment.RELOAD_REQUIRED_EXTRA_KEY, false) ||
-                    it.getBooleanExtra(NoteEditorFragment.NOTE_CHANGED_EXTRA_KEY, false)
+                    it.getBooleanExtra(NoteEditorActivity.RELOAD_REQUIRED_EXTRA_KEY, false) ||
+                    it.getBooleanExtra(NoteEditorActivity.NOTE_CHANGED_EXTRA_KEY, false)
                 ) {
                     if (reviewerCardId == currentCardId) {
                         reloadRequired = true
@@ -230,8 +226,8 @@ open class CardBrowser :
             val data = result.data
             if (data != null &&
                 (
-                    data.getBooleanExtra(NoteEditorFragment.RELOAD_REQUIRED_EXTRA_KEY, false) ||
-                        data.getBooleanExtra(NoteEditorFragment.NOTE_CHANGED_EXTRA_KEY, false)
+                    data.getBooleanExtra(NoteEditorActivity.RELOAD_REQUIRED_EXTRA_KEY, false) ||
+                        data.getBooleanExtra(NoteEditorActivity.NOTE_CHANGED_EXTRA_KEY, false)
                 )
             ) {
                 forceRefreshSearch()
@@ -310,7 +306,7 @@ open class CardBrowser :
             RESULT_OK,
             Intent().apply {
                 // Add reload flag to result intent so that schedule reset when returning to note editor
-                putExtra(NoteEditorFragment.RELOAD_REQUIRED_EXTRA_KEY, reloadRequired)
+                putExtra(NoteEditorActivity.RELOAD_REQUIRED_EXTRA_KEY, reloadRequired)
             },
         )
 
@@ -319,39 +315,8 @@ open class CardBrowser :
         setContentView(layout)
         initNavigationDrawer()
 
-        noteEditorFrame = findViewById(R.id.note_editor_frame)
-
-        /**
-         * Check if noteEditorFrame is not null and if its visibility is set to VISIBLE.
-         * If both conditions are true, assign true to the variable [fragmented], otherwise assign false.
-         * [fragmented] will be true if the view size is large otherwise false
-         */
-        // TODO: Consider refactoring by storing noteEditorFrame and similar views in a sealed class (e.g., FragmentAccessor).
-        val fragmented =
-            Prefs.devIsCardBrowserFragmented &&
-                !useSearchView &&
-                noteEditorFrame?.visibility == View.VISIBLE
-        Timber.i("Using split Browser: %b", fragmented)
-
-        if (fragmented) {
-            val parentLayout = findViewById<LinearLayout>(R.id.card_browser_xl_view)
-            val divider = findViewById<View>(R.id.card_browser_resizing_divider)
-            val cardBrowserPane = findViewById<View>(R.id.card_browser_frame)
-            val noteEditorPane = findViewById<View>(R.id.note_editor_frame)
-
-            ResizablePaneManager(
-                parentLayout = parentLayout,
-                divider = divider,
-                leftPane = cardBrowserPane,
-                rightPane = noteEditorPane,
-                sharedPrefs = Prefs.getUiConfig(this),
-                leftPaneWeightKey = PREF_CARD_BROWSER_PANE_WEIGHT,
-                rightPaneWeightKey = PREF_NOTE_EDITOR_PANE_WEIGHT,
-            )
-        }
-
         // must be called once we have an accessible collection
-        viewModel = createViewModel(launchOptions, fragmented)
+        viewModel = createViewModel(launchOptions, false)
 
         cardBrowserFragment = supportFragmentManager.findFragmentById(R.id.card_browser_frame) as? CardBrowserFragment
             ?: CardBrowserFragment().also { fragment ->
@@ -422,61 +387,6 @@ open class CardBrowser :
     override fun setupBackPressedCallbacks() {
         onBackPressedDispatcher.addCallback(this, multiSelectOnBackPressedCallback)
         super.setupBackPressedCallbacks()
-    }
-
-    private fun showSaveChangesDialog(launcher: NoteEditorLauncher) {
-        DiscardChangesDialog.showDialog(
-            context = this,
-            positiveButtonText = this.getString(R.string.save),
-            negativeButtonText = this.getString(R.string.discard),
-            // The neutral button allows the user to back out of the action,
-            // e.g., if they accidentally triggered a navigation or card selection.
-            neutralButtonText = this.getString(R.string.dialog_cancel),
-            message = this.getString(R.string.save_changes_message),
-            positiveMethod = {
-                launchCatchingTask {
-                    fragment?.saveNote()
-                    loadNoteEditorFragment(launcher)
-                }
-            },
-            negativeMethod = {
-                loadNoteEditorFragment(launcher)
-            },
-            neutralMethod = {},
-        )
-    }
-
-    private fun loadNoteEditorFragment(launcher: NoteEditorLauncher) {
-        val noteEditorFragment = NoteEditorFragment.newInstance(launcher)
-        supportFragmentManager.commit {
-            replace(R.id.note_editor_frame, noteEditorFragment)
-        }
-        // Invalidate options menu so that note editor menu will show
-        invalidateOptionsMenu()
-    }
-
-    /**
-     * Retrieves the `NoteEditor` fragment if it is present in the fragment container
-     */
-    val fragment: NoteEditorFragment?
-        get() = supportFragmentManager.findFragmentById(R.id.note_editor_frame) as? NoteEditorFragment
-
-    /**
-     * Loads the NoteEditor fragment in container if the view is x-large.
-     */
-    fun loadNoteEditorFragmentIfFragmented() {
-        if (!fragmented) {
-            return
-        }
-        // Show note editor frame
-        noteEditorFrame!!.isVisible = true
-
-        // If there are unsaved changes in NoteEditor then show dialog for confirmation
-        if (fragment?.hasUnsavedChanges() == true) {
-            showSaveChangesDialog(editNoteLauncher)
-        } else {
-            loadNoteEditorFragment(editNoteLauncher)
-        }
     }
 
     private fun refreshSubtitle() {
@@ -557,11 +467,7 @@ open class CardBrowser :
         }
 
         fun onSelectedCardUpdated(unit: Unit) {
-            if (fragmented) {
-                loadNoteEditorFragmentIfFragmented()
-            } else {
-                onEditCardActivityResult.launch(editNoteLauncher.toIntent(this))
-            }
+            onEditCardActivityResult.launch(editNoteLauncher.toIntent(this))
         }
 
         fun onSaveSearchNamePrompt(searchTerms: String) {
@@ -635,12 +541,6 @@ open class CardBrowser :
                 } else if (searchView?.isIconified == true) {
                     Timber.i("E: Edit note")
                     // search box is not available so treat the event as a shortcut
-                    // Disable 'E' edit shortcut in split mode as the integrated NoteEditor
-                    // is already available in the split view, making the shortcut redundant
-                    if (fragmented) {
-                        Timber.i("E: Ignored in split mode")
-                        return true
-                    }
                     openNoteEditorForCurrentlySelectedNote()
                     return true
                 } else {
@@ -876,11 +776,6 @@ open class CardBrowser :
             showBackIcon()
             increaseHorizontalPaddingOfOverflowMenuIcons(menu)
         }
-        // Remove save note and preview note options if there are no notes
-        if (fragmented && viewModel.rowCount == 0) {
-            menu.removeItem(R.id.action_save)
-            menu.removeItem(R.id.action_preview)
-        }
         actionBarMenu?.findItem(R.id.action_undo)?.run {
             isVisible = getColUnsafe.undoAvailable()
             title = getColUnsafe.undoLabel()
@@ -946,7 +841,7 @@ open class CardBrowser :
     }
 
     private fun refreshMenuItems() {
-        previewItem?.isVisible = !fragmented && viewModel.rowCount > 0
+        previewItem?.isVisible = viewModel.rowCount > 0
         actionBarMenu?.findItem(R.id.action_select_all)?.isVisible =
             viewModel.rowCount > 0 &&
             viewModel.selectedRowCount() < viewModel.rowCount
@@ -1000,7 +895,7 @@ open class CardBrowser :
             isVisible = viewModel.hasSelectedAnyRows()
         }
 
-        actionBarMenu.findItem(R.id.action_edit_note).isVisible = !fragmented && canPerformMultiSelectEditNote()
+        actionBarMenu.findItem(R.id.action_edit_note).isVisible = canPerformMultiSelectEditNote()
         actionBarMenu.findItem(R.id.action_view_card_info).isVisible = canPerformCardInfo()
 
         val deleteNoteItem =
@@ -1038,68 +933,6 @@ open class CardBrowser :
             setAction(R.string.error_handling_options) { cardBrowserFragment.showOptionsDialog() }
         }
         return true
-    }
-
-    @NeedsTest("filter-marked query needs testing")
-    @NeedsTest("filter-suspended query needs testing")
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (drawerToggle.onOptionsItemSelected(item)) return true
-        cardBrowserFragment.prepareForUndoableOperation()
-
-        Flag.entries.find { it.ordinal == item.itemId }?.let { flag ->
-            when (item.groupId) {
-                Mode.SINGLE_SELECT.value -> filterByFlag(flag)
-                Mode.MULTI_SELECT.value -> cardBrowserFragment.updateFlagForSelectedRows(flag)
-                else -> return@let
-            }
-            return true
-        }
-
-        when (item.itemId) {
-            R.id.action_add_note_from_card_browser -> {
-                addNoteFromCardBrowser()
-                return true
-            }
-            R.id.action_save_search -> {
-                viewModel.saveCurrentSearch()
-                return true
-            }
-            R.id.action_list_my_searches -> {
-                showSavedSearches()
-                return true
-            }
-            R.id.action_undo -> {
-                Timber.w("CardBrowser:: Undo pressed")
-                onUndo()
-                return true
-            }
-            R.id.action_preview -> {
-                onPreview()
-                return true
-            }
-            R.id.action_edit_note -> {
-                openNoteEditorForCurrentlySelectedNote()
-                return super.onOptionsItemSelected(item)
-            }
-            R.id.action_view_card_info -> {
-                displayCardInfo()
-                return true
-            }
-            R.id.action_grade_now -> {
-                Timber.i("CardBrowser:: Grade now button pressed")
-                openGradeNow()
-                return true
-            }
-        }
-
-        // TODO: make better use of MenuProvider
-        if (fragment?.onMenuItemSelected(item) == true) {
-            return true
-        }
-        if (fragment == null) {
-            Timber.w("Unexpected onOptionsItemSelected call: %s", item.itemId)
-        }
-        return super.onOptionsItemSelected(item)
     }
 
     private fun showSavedSearches() {
@@ -1147,11 +980,7 @@ open class CardBrowser :
     ): Intent = PreviewerDestination(index, idsFile).toIntent(this)
 
     private fun addNoteFromCardBrowser() {
-        if (fragmented) {
-            loadNoteEditorFragmentIfFragmented()
-        } else {
-            onAddNoteActivityResult.launch(addNoteLauncher.toIntent(this))
-        }
+        onAddNoteActivityResult.launch(addNoteLauncher.toIntent(this))
     }
 
     private val reviewerCardId: CardId
@@ -1189,15 +1018,9 @@ open class CardBrowser :
             // Check whether deck is empty or not
             val isDeckEmpty = viewModel.rowCount == 0
             // Hide note editor frame if deck is empty and fragmented
-            noteEditorFrame?.visibility =
-                if (fragmented && !isDeckEmpty) {
-                    viewModel.currentCardId = (viewModel.focusedRow ?: viewModel.cards[0]).toCardId(viewModel.cardsOrNotes)
-                    loadNoteEditorFragmentIfFragmented()
-                    View.VISIBLE
-                } else {
-                    invalidateOptionsMenu()
-                    View.GONE
-                }
+            if (isDeckEmpty) {
+                invalidateOptionsMenu()
+            }
             // check whether mSearchView is initialized as it is lateinit property.
             if (searchView == null || searchView!!.isIconified) {
                 return@launchCatchingTask
@@ -1375,8 +1198,7 @@ open class CardBrowser :
         @VisibleForTesting
         fun createAddNoteLauncher(
             viewModel: CardBrowserViewModel,
-            inCardBrowserActivity: Boolean = false,
-        ): NoteEditorLauncher = NoteEditorLauncher.AddNoteFromCardBrowser(viewModel, inCardBrowserActivity)
+        ): NoteEditorLauncher = NoteEditorLauncher.AddNoteFromCardBrowser(viewModel)
     }
 }
 

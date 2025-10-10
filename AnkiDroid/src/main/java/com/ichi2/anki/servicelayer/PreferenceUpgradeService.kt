@@ -1,3 +1,4 @@
+
 /*
  *  Copyright (c) 2021 David Allison <davidallisongithub@gmail.com>
  *
@@ -265,7 +266,6 @@ object PreferenceUpgradeService {
                         s!!
                             .split(
                                 Consts.FIELD_SEPARATOR.toRegex(),
-                                CustomToolbarButton.KEEP_EMPTY_ENTRIES.coerceAtLeast(0),
                             ).toTypedArray()
                     if (fields.size != 3) {
                         continue

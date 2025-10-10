@@ -1,3 +1,4 @@
+
 /****************************************************************************************
  * Copyright (c) 2014 Timothy Rae <perceptualchaos2@gmail.com>                          *
  *                                                                                      *
@@ -44,9 +45,10 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.navigation.NavigationView
-import com.ichi2.anki.NoteEditorFragment.Companion.NoteEditorCaller
 import com.ichi2.anki.dialogs.help.HelpDialog
 import com.ichi2.anki.libanki.CardId
+import com.ichi2.anki.noteeditor.NoteEditorActivity
+import com.ichi2.anki.noteeditor.NoteEditorCaller
 import com.ichi2.anki.preferences.PreferencesActivity
 import com.ichi2.anki.preferences.sharedPrefs
 import com.ichi2.anki.utils.ext.showDialogFragment
@@ -120,8 +122,6 @@ abstract class NavigationDrawerActivity :
 
     /** Whether android:fitsSystemWindows="true" should be applied to the navigation drawer  */
     protected open fun fitsSystemWindows(): Boolean = true
-
-    fun navDrawerIsReady(): Boolean = navigationView != null
 
     // Navigation drawer initialisation
     @Suppress("deprecation", "API35 properly handle edge-to-edge")
@@ -481,7 +481,7 @@ abstract class NavigationDrawerActivity :
             val intentAddNote = Intent(context, IntentHandler2::class.java)
             intentAddNote.action = Intent.ACTION_VIEW
             intentAddNote.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK
-            intentAddNote.putExtra(NoteEditorFragment.EXTRA_CALLER, NoteEditorCaller.DECKPICKER.value)
+            intentAddNote.putExtra(NoteEditorActivity.EXTRA_CALLER, NoteEditorCaller.DECKPICKER.value)
             val noteEditorShortcut =
                 ShortcutInfoCompat
                     .Builder(context, "noteEditorShortcutId")

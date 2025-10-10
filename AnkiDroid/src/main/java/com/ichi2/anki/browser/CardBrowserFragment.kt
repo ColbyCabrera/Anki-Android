@@ -1,3 +1,4 @@
+
 /*
  *  Copyright (c) 2025 David Allison <davidallisongithub@gmail.com>
  *
@@ -8,7 +9,7 @@
  *
  *  This program is distributed in the hope that it will be useful, but WITHOUT ANY
  *  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
- *  PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ *  PARTICU-LAR PURPOSE. See the GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License along with
  *  this program.  If not, see <http://www.gnu.org/licenses/>.
@@ -643,13 +644,7 @@ class CardBrowserFragment :
         launchCatchingTask {
             activityViewModel.focusedRow = id
             if (activityViewModel.isInMultiSelectMode) {
-                val wasSelected = activityViewModel.selectedRows.contains(id)
                 activityViewModel.toggleRowSelection(id.toRowSelection())
-                // Load NoteEditor on trailing side if card is selected
-                if (wasSelected) {
-                    activityViewModel.currentCardId = id.toCardId(activityViewModel.cardsOrNotes)
-                    requireCardBrowserActivity().loadNoteEditorFragmentIfFragmented()
-                }
             } else {
                 val cardId = activityViewModel.queryDataForCardEdit(id)
                 requireCardBrowserActivity().openNoteEditorForCard(cardId)

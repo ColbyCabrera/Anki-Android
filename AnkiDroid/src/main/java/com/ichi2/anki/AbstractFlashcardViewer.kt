@@ -1,3 +1,4 @@
+
 /* **************************************************************************************
  * Copyright (c) 2011 Kostas Spyropoulos <inigo.aldana@gmail.com>                       *
  * Copyright (c) 2014 Bruno Romero de Azevedo <brunodea@inf.ufsm.br>                    *
@@ -126,6 +127,7 @@ import com.ichi2.anki.libanki.TTSTag
 import com.ichi2.anki.libanki.TtsPlayer
 import com.ichi2.anki.model.CardStateFilter
 import com.ichi2.anki.multimedia.getAvTag
+import com.ichi2.anki.noteeditor.NoteEditorActivity
 import com.ichi2.anki.noteeditor.NoteEditorLauncher
 import com.ichi2.anki.observability.ChangeManager
 import com.ichi2.anki.observability.undoableOp
@@ -353,7 +355,7 @@ abstract class AbstractFlashcardViewer : NavigationDrawerActivity(), ViewerComma
                The card could have been rescheduled, the deck could have changed, or a change of
                note type could have lead to the card being deleted */
             val reloadRequired = result.data?.getBooleanExtra(
-                NoteEditorFragment.RELOAD_REQUIRED_EXTRA_KEY,
+                NoteEditorActivity.RELOAD_REQUIRED_EXTRA_KEY,
                 false
             ) == true
             if (reloadRequired) {
