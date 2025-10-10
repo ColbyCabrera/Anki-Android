@@ -22,6 +22,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.ktlint.gradle.plugin) apply false
     alias(libs.plugins.keeper) apply false
+    alias(libs.plugins.hilt.android) apply false
 }
 
 val localProperties = java.util.Properties()
