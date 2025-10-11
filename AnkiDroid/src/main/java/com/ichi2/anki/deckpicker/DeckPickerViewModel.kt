@@ -22,6 +22,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import anki.card_rendering.EmptyCardsReport
 import anki.i18n.GeneratedTranslations
+import anki.sync.SyncStatusResponse
 import com.ichi2.anki.CardBrowser
 import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.CollectionManager.TR
@@ -30,10 +31,12 @@ import com.ichi2.anki.DeckPicker
 import com.ichi2.anki.InitialActivity
 import com.ichi2.anki.OnErrorListener
 import com.ichi2.anki.PermissionSet
+import com.ichi2.anki.SyncIconState
 import com.ichi2.anki.browser.BrowserDestination
 import com.ichi2.anki.configureRenderingMode
 import com.ichi2.anki.launchCatchingIO
 import com.ichi2.anki.libanki.CardId
+import com.ichi2.anki.libanki.Collection
 import com.ichi2.anki.libanki.Consts
 import com.ichi2.anki.libanki.DeckId
 import com.ichi2.anki.libanki.sched.DeckNode
@@ -44,16 +47,23 @@ import com.ichi2.anki.observability.undoableOp
 import com.ichi2.anki.pages.DeckOptionsDestination
 import com.ichi2.anki.performBackupInBackground
 import com.ichi2.anki.reviewreminders.ScheduleRemindersDestination
+import com.ichi2.anki.settings.Prefs
+import com.ichi2.anki.syncAuth
 import com.ichi2.anki.utils.Destination
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.ankiweb.rsdroid.RustCleanup
+import net.ankiweb.rsdroid.exceptions.BackendNetworkException
 import timber.log.Timber
 
 /**
@@ -66,6 +76,9 @@ class DeckPickerViewModel :
     val flowOfStartupResponse = MutableStateFlow<StartupResponse?>(null)
 
     private val flowOfDeckDueTree = MutableStateFlow<DeckNode?>(null)
+
+    private val _syncState = MutableStateFlow(SyncIconState.Normal)
+    val syncState: StateFlow<SyncIconState> = _syncState.asStateFlow()
 
     /** The root of the tree displaying all decks */
     var dueTree: DeckNode?
@@ -342,6 +355,7 @@ class DeckPickerViewModel :
         val loadDeckCounts =
             viewModelScope.launch {
                 Timber.d("Refreshing deck list")
+                refreshSyncState()
                 val (deckDueTree, collectionHasNoCards) =
                     withCol {
                         Pair(sched.deckDueTree(), isEmpty)
@@ -376,6 +390,40 @@ class DeckPickerViewModel :
             }
         this.loadDeckCounts = loadDeckCounts
         return loadDeckCounts
+    }
+
+    suspend fun refreshSyncState() {
+        _syncState.value = withContext(Dispatchers.IO) {
+            withCol { fetchSyncIconState() }
+        }
+    }
+
+    private fun Collection.fetchSyncIconState(): SyncIconState {
+        if (!Prefs.displaySyncStatus) return SyncIconState.Normal
+        val auth = syncAuth()
+        if (auth == null) return SyncIconState.NotLoggedIn
+        return try {
+            // Use CollectionManager to ensure that this doesn't block 'deck count' tasks
+            // throws if a .colpkg import or similar occurs just before this call
+            val output = backend.syncStatus(auth)
+            if (output.hasNewEndpoint() && output.newEndpoint.isNotEmpty()) {
+                Prefs.currentSyncUri = output.newEndpoint
+            }
+            when (output.required) {
+                SyncStatusResponse.Required.NO_CHANGES -> SyncIconState.Normal
+                SyncStatusResponse.Required.NORMAL_SYNC -> SyncIconState.PendingChanges
+                SyncStatusResponse.Required.FULL_SYNC -> SyncIconState.OneWay
+                SyncStatusResponse.Required.UNRECOGNIZED -> {
+                    Timber.w("Unexpected sync status response: UNRECOGNIZED. Defaulting to Normal.")
+                    SyncIconState.Normal
+                }
+            }
+        } catch (_: BackendNetworkException) {
+            SyncIconState.Normal
+        } catch (e: Exception) {
+            Timber.d(e, "error obtaining sync status: collection likely closed")
+            SyncIconState.Normal
+        }
     }
 
     fun updateDeckFilter(filterText: String) {
