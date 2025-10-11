@@ -131,6 +131,8 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
         }
         cardActionJob = viewModelScope.launch {
             loadCardSuspend()
+        }.also {
+            it.invokeOnCompletion { cardActionJob = null }
         }
     }
 
@@ -206,6 +208,8 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
                     )
                 }
             }
+        }.also {
+            it.invokeOnCompletion { cardActionJob = null }
         }
     }
 
@@ -219,6 +223,8 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
                 sched.answerCard(queue, rating)
             }
             loadCardSuspend()
+        }.also {
+            it.invokeOnCompletion { cardActionJob = null }
         }
     }
 
