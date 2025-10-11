@@ -133,7 +133,7 @@ fun CongratsScreen(onDeckOptions: () -> Unit, onBack: () -> Unit, timeUntilNextD
                     ) {
                         Text(
                             text = String.format(
-                                Locale.US,
+                                Locale.getDefault(),
                                 "%02d:%02d:%02d",
                                 hours,
                                 minutes,
