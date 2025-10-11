@@ -96,6 +96,7 @@ import com.ichi2.anki.reviewer.AnswerButtons.Companion.getTextColors
 import com.ichi2.anki.reviewer.AutomaticAnswerAction
 import com.ichi2.anki.reviewer.FullScreenMode.Companion.fromPreference
 import com.ichi2.anki.reviewer.FullScreenMode.Companion.isFullScreenReview
+import com.ichi2.anki.reviewer.ReviewerEffect
 import com.ichi2.anki.reviewer.ReviewerUi
 import com.ichi2.anki.reviewer.ReviewerViewModel
 import com.ichi2.anki.scheduling.ForgetCardsDialog
@@ -127,6 +128,7 @@ import com.ichi2.utils.tintOverflowMenuIcons
 import com.ichi2.utils.title
 import com.ichi2.widget.WidgetStatus.updateInBackground
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -216,6 +218,17 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         composeView.setContent {
             AnkiDroidTheme {
                 com.ichi2.anki.reviewer.compose.ReviewerContent(viewModel)
+            }
+        }
+
+        lifecycleScope.launch {
+            viewModel.effect.collectLatest { effect ->
+                when (effect) {
+                    is ReviewerEffect.NavigateToDeckPicker -> finish()
+                    else -> {
+                        // Handle other effects if needed
+                    }
+                }
             }
         }
     }
