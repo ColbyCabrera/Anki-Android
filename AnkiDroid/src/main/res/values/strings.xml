@@ -20,4 +20,7 @@
     <string name="fab_menu_expanded">Expanded</string>
     <string name="fab_menu_collapsed">Collapsed</string>
     <string name="fab_menu_toggle">Toggle menu</string>
+    <string name="back">back</string>
+    <string name="daily_limit_reached">There are more new cards available, but the daily limit has been reached. You can increase the limit in options, but please bear in mind that the more new cards you introduce, the higher your short-term review workload will become.</string>
+    <string name="study_more">If you wish to study outside of the regular schedule, you can use the custom study feature.</string>
 </resources>
