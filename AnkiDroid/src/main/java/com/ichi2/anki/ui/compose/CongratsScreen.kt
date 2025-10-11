@@ -70,7 +70,7 @@ fun CongratsScreen(onDeckOptions: () -> Unit, onBack: () -> Unit, timeUntilNextD
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(contentPadding)
-                    .padding(vertical = 48.dp, horizontal = 16.dp),
+                    .padding(top = 48.dp, start = 16.dp, end = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
