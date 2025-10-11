@@ -30,7 +30,6 @@ import com.ichi2.anki.preferences.sharedPrefs
 import com.ichi2.anki.servicelayer.NoteService
 import java.io.File
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -52,7 +51,8 @@ data class ReviewerState(
     val typedAnswer: String = "",
     val isMarked: Boolean = false,
     val flag: Int = 0,
-    val mediaDirectory: File? = null
+    val mediaDirectory: File? = null,
+    val isFinished: Boolean = false
 )
 
 sealed class ReviewerEvent {
@@ -71,6 +71,7 @@ sealed class ReviewerEvent {
 
 sealed class ReviewerEffect {
     data class NavigateToEditCard(val cardId: CardId) : ReviewerEffect()
+    object NavigateToDeckPicker : ReviewerEffect()
 }
 
 class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
@@ -83,6 +84,9 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
     private var currentCard: Card? = null
     private var queueState: CurrentQueueState? = null
     private val typeAnswer = TypeAnswer.createInstance(app.sharedPrefs())
+
+    /** A job that is running for the current card. This is used to prevent multiple actions from running at the same time. */
+    private var cardActionJob: Job? = null
 
     init {
         onEvent(ReviewerEvent.LoadInitialCard)
@@ -122,34 +126,54 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun loadCard() {
-        viewModelScope.launch {
-            val cardAndQueueState = getNextCard()
-            if (cardAndQueueState == null) {
-                _state.update { it.copy(html = "<html><body><h1>Finished!</h1></body></html>") }
-                return@launch
+        if (cardActionJob?.isActive == true) {
+            return
+        }
+        cardActionJob = viewModelScope.launch {
+            loadCardSuspend()
+        }.also {
+            it.invokeOnCompletion { cardActionJob = null }
+        }
+    }
+
+    private suspend fun loadCardSuspend() {
+        val cardAndQueueState = getNextCard()
+        if (cardAndQueueState == null) {
+            _state.update {
+                it.copy(
+                    isFinished = true,
+                    newCount = 0,
+                    learnCount = 0,
+                    reviewCount = 0
+                )
             }
-            val (card, queue) = cardAndQueueState
-            currentCard = card
-            queueState = queue
-            CollectionManager.withCol {
-                val note = card.note(this)
-                typeAnswer.updateInfo(this, card, getApplication<Application>().resources)
-                _state.update {
-                    it.copy(
-                        newCount = queue.counts.new,
-                        learnCount = queue.counts.lrn,
-                        reviewCount = queue.counts.rev,
-                        html = card.question(this),
-                        isAnswerShown = false,
-                        showTypeInAnswer = typeAnswer.correct != null,
-                        nextTimes = List(4) { "" },
-                        chosenAnswer = "",
-                        typedAnswer = "",
-                        isMarked = note.hasTag(this, "marked"),
-                        flag = card.userFlag(),
-                        mediaDirectory = media.dir
-                    )
-                }
+            _effect.emit(ReviewerEffect.NavigateToDeckPicker)
+            currentCard = null
+            queueState = null
+            return
+        }
+        val (card, queue) = cardAndQueueState
+        currentCard = card
+        queueState = queue
+        CollectionManager.withCol {
+            val note = card.note(this)
+            typeAnswer.updateInfo(this, card, getApplication<Application>().resources)
+            _state.update {
+                it.copy(
+                    newCount = queue.counts.new,
+                    learnCount = queue.counts.lrn,
+                    reviewCount = queue.counts.rev,
+                    html = card.question(this),
+                    isAnswerShown = false,
+                    showTypeInAnswer = typeAnswer.correct != null,
+                    nextTimes = List(4) { "" },
+                    chosenAnswer = "",
+                    typedAnswer = "",
+                    isMarked = note.hasTag(this, "marked"),
+                    flag = card.userFlag(),
+                    mediaDirectory = media.dir,
+                    isFinished = false
+                )
             }
         }
     }
@@ -162,10 +186,13 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun showAnswer() {
+        if (cardActionJob?.isActive == true || _state.value.isFinished) {
+            return
+        }
         val card = currentCard ?: return
         val queue = queueState ?: return
 
-        viewModelScope.launch {
+        cardActionJob = viewModelScope.launch {
             CollectionManager.withCol {
                 val labels = sched.describeNextStates(queue.states)
                 typeAnswer.input = _state.value.typedAnswer
@@ -181,16 +208,23 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
                     )
                 }
             }
+        }.also {
+            it.invokeOnCompletion { cardActionJob = null }
         }
     }
 
     private fun rateCard(rating: CardAnswer.Rating) {
+        if (cardActionJob?.isActive == true || _state.value.isFinished) {
+            return
+        }
         val queue = queueState ?: return
-        viewModelScope.launch {
+        cardActionJob = viewModelScope.launch {
             CollectionManager.withCol {
                 sched.answerCard(queue, rating)
             }
-            loadCard()
+            loadCardSuspend()
+        }.also {
+            it.invokeOnCompletion { cardActionJob = null }
         }
     }
 

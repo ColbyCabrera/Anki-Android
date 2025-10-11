@@ -121,6 +121,9 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                     ).toIntent(context)
                     editCardLauncher.launch(intent)
                 }
+                else -> {
+                    // All other effects are handled by the Activity
+                }
             }
         }
     }
