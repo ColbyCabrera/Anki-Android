@@ -45,7 +45,9 @@ val RobotoFlex = FontFamily(
     Font(R.font.roboto_flex, FontWeight.Normal),
 )
 
-
+val RobotoMono = FontFamily(
+    Font(R.font.roboto_mono, FontWeight.Normal),
+)
 
 @OptIn(ExperimentalTextApi::class)
 val GoogleSansFlexLowWidth = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

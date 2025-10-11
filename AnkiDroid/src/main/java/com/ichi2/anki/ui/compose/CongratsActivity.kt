@@ -10,13 +10,19 @@ class CongratsActivity : AnkiActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            CongratsScreen(onDeckOptions = {
-                val col = CollectionManager.getColUnsafe()
-                val intent = DeckOptions.getIntent(this, col.decks.current().id)
-                startActivity(intent)
-            }, onBack = {
-                finish()
-            })
+            val col = CollectionManager.getColUnsafe()
+            val timeUntilNextDay = col.sched.dayCutoff * 1000 - System.currentTimeMillis()
+
+            CongratsScreen(
+                onDeckOptions = {
+                    val intent = DeckOptions.getIntent(this, col.decks.current().id)
+                    startActivity(intent)
+                },
+                onBack = {
+                    finish()
+                },
+                timeUntilNextDay = timeUntilNextDay
+            )
         }
     }
 }
