@@ -225,8 +225,8 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
             viewModel.effect.collectLatest { effect ->
                 when (effect) {
                     is ReviewerEffect.NavigateToDeckPicker -> finish()
-                    else -> {
-                        // Handle other effects if needed
+                    is ReviewerEffect.NavigateToEditCard -> {
+                        // Handled in Compose
                     }
                 }
             }
