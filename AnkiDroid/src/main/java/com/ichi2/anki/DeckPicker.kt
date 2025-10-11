@@ -456,6 +456,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                     initial = FlattenedDeckList(emptyList(), false),
                 )
                 val isRefreshing by viewModel.isSyncing.collectAsState(initial = false)
+                val syncState by viewModel.syncState.collectAsState()
                 var searchQuery by remember { mutableStateOf("") }
                 var requestSearchFocus by remember { mutableStateOf(false) }
                 val focusedDeckId by viewModel.flowOfFocusedDeck.collectAsState()
@@ -597,6 +598,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                             requestSearchFocus = requestSearchFocus,
                             onSearchFocusRequested = { requestSearchFocus = false },
                             snackbarHostState = snackbarHostState,
+                            syncState = syncState,
                         )
                     }
                 } else {
@@ -691,6 +693,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                             requestSearchFocus = requestSearchFocus,
                             onSearchFocusRequested = { requestSearchFocus = false },
                             snackbarHostState = snackbarHostState,
+                            syncState = syncState,
                         )
                     }
                 }
@@ -1119,37 +1122,8 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
             // the sync status is calculated in the next call so "Normal" is used as a placeholder
             OptionsMenuState(undoLabel, SyncIconState.Normal, undoAvailable, isColEmpty)
         }?.let { (undoLabel, _, undoAvailable, isColEmpty) ->
-            val syncIcon = fetchSyncIconState()
+            val syncIcon = viewModel.syncState.value
             OptionsMenuState(undoLabel, syncIcon, undoAvailable, isColEmpty)
-        }
-    }
-
-    private suspend fun fetchSyncIconState(): SyncIconState {
-        if (!Prefs.displaySyncStatus) return SyncIconState.Normal
-        val auth = syncAuth()
-        if (auth == null) return SyncIconState.NotLoggedIn
-        return try {
-            // Use CollectionManager to ensure that this doesn't block 'deck count' tasks
-            // throws if a .colpkg import or similar occurs just before this call
-            val output =
-                withContext(Dispatchers.IO) { CollectionManager.getBackend().syncStatus(auth) }
-            if (output.hasNewEndpoint() && output.newEndpoint.isNotEmpty()) {
-                Prefs.currentSyncUri = output.newEndpoint
-            }
-            when (output.required) {
-                SyncStatusResponse.Required.NO_CHANGES -> SyncIconState.Normal
-                SyncStatusResponse.Required.NORMAL_SYNC -> SyncIconState.PendingChanges
-                SyncStatusResponse.Required.FULL_SYNC -> SyncIconState.OneWay
-                SyncStatusResponse.Required.UNRECOGNIZED -> {
-                    Timber.w("Unexpected sync status response: UNRECOGNIZED. Defaulting to Normal.")
-                    SyncIconState.Normal
-                }
-            }
-        } catch (_: BackendNetworkException) {
-            SyncIconState.Normal
-        } catch (e: Exception) {
-            Timber.d(e, "error obtaining sync status: collection likely closed")
-            SyncIconState.Normal
         }
     }
 

@@ -83,6 +83,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.graphics.shapes.Morph
 import com.ichi2.anki.R
+import com.ichi2.anki.SyncIconState
 import com.ichi2.anki.deckpicker.DisplayDeckNode
 import com.ichi2.utils.MorphShape
 
@@ -310,6 +311,7 @@ fun DeckPickerScreen(
     onRebuild: (DisplayDeckNode) -> Unit,
     onEmpty: (DisplayDeckNode) -> Unit,
     onNavigationIconClick: () -> Unit,
+    syncState: SyncIconState,
     searchFocusRequester: FocusRequester = FocusRequester(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     fabMenuExpanded: Boolean,
@@ -380,7 +382,16 @@ fun DeckPickerScreen(
                                     contentDescription = stringResource(R.string.search_decks)
                                 )
                             }
-                            BadgedBox(modifier = Modifier.size(40.dp), badge = { Badge() }) {
+                            BadgedBox(
+                                modifier = Modifier.height(40.dp).width(48.dp).padding(end = 8.dp),
+                                badge = {
+                                    when (syncState) {
+                                        SyncIconState.PendingChanges -> Badge()
+                                        SyncIconState.OneWay, SyncIconState.NotLoggedIn -> Badge { Text("!") }
+                                        else -> { /* No badge for Normal state */ }
+                                    }
+                                }
+                            ) {
                                 IconButton(onClick = { onRefresh() }) {
                                     Icon(
                                         painter = painterResource(R.drawable.sync_24px),
@@ -476,6 +487,7 @@ fun DeckPickerScreenPreview() {
         onRebuild = {},
         onEmpty = {},
         onNavigationIconClick = {},
+        syncState = SyncIconState.Normal,
         fabMenuExpanded = false,
         onFabMenuExpandedChange = {})
 }
