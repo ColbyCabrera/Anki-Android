@@ -1188,9 +1188,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         }
 
         delayedHide(100)
-        if (stopTimerOnAnswer) {
-            // Nothing to do
-        }
         super.displayCardAnswer()
     }
 
@@ -1232,9 +1229,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         super.initControls()
         if (prefWhiteboard) {
             setWhiteboardVisibility(showWhiteboard)
-        }
-        if (showRemainingCardCount) {
-            // Nothing to do
         }
     }
 
