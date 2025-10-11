@@ -100,9 +100,13 @@ fun CongratsScreen(onDeckOptions: () -> Unit, onBack: () -> Unit, timeUntilNextD
                         .background(MaterialTheme.colorScheme.tertiaryContainer)
                         .height(340.dp),
                 ) {
-                    var remainingTime by remember { mutableLongStateOf(timeUntilNextDay) }
+                    var remainingTime by remember(timeUntilNextDay) {
+                        mutableLongStateOf(
+                            timeUntilNextDay.coerceAtLeast(0L)
+                        )
+                    }
 
-                    LaunchedEffect(Unit) {
+                    LaunchedEffect(timeUntilNextDay) {
                         while (remainingTime > 0) {
                             delay(1000)
                             remainingTime = (remainingTime - 1000).coerceAtLeast(0L)
