@@ -103,7 +103,7 @@ fun CongratsScreen(onDeckOptions: () -> Unit, onBack: () -> Unit, timeUntilNextD
                     LaunchedEffect(Unit) {
                         while (remainingTime > 0) {
                             delay(1000)
-                            remainingTime -= 1000
+                            remainingTime = (remainingTime - 1000).coerceAtLeast(0L)
                         }
                     }
 
