@@ -35,6 +35,7 @@ import com.ichi2.anki.R
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import com.ichi2.anki.ui.compose.theme.RobotoMono
 import kotlinx.coroutines.delay
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -128,11 +129,7 @@ fun CongratsScreen(onDeckOptions: () -> Unit, onBack: () -> Unit, timeUntilNextD
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "${
-                                hours.toString().padStart(2, '0')
-                            }:${minutes.toString().padStart(2, '0')}:${
-                                seconds.toString().padStart(2, '0')
-                            }",
+                            text = String.format(Locale.US, "%02d:%02d:%02d", hours, minutes, seconds),
                             modifier = Modifier.scale(1F, 3F),
                             fontFamily = RobotoMono,
                             fontSize = MaterialTheme.typography.displayLarge.fontSize * 1.2,
