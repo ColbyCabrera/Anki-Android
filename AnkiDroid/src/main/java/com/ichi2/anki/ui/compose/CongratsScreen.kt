@@ -23,7 +23,7 @@ import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun CongratsScreen(onDeckOptions: () -> Unit) {
+fun CongratsScreen(onDeckOptions: () -> Unit, onBack: () -> Unit) {
     AnkiDroidTheme {
         Scaffold(topBar = {
             TopAppBar(
@@ -36,7 +36,7 @@ fun CongratsScreen(onDeckOptions: () -> Unit) {
                 subtitle = {},
                 titleHorizontalAlignment = Alignment.CenterHorizontally,
                 navigationIcon = {
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = onBack) {
                         Icon(
                             painter = painterResource(id = R.drawable.arrow_back_24px),
                             contentDescription = stringResource(R.string.back)
@@ -55,7 +55,7 @@ fun CongratsScreen(onDeckOptions: () -> Unit) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(contentPadding).padding(vertical = 32.dp, horizontal = 16.dp),
+                    .padding(contentPadding).padding(vertical = 48.dp, horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {

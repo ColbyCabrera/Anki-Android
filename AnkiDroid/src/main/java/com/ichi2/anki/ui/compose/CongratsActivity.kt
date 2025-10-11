@@ -14,6 +14,8 @@ class CongratsActivity : AnkiActivity() {
                 val col = CollectionManager.getColUnsafe()
                 val intent = DeckOptions.getIntent(this, col.decks.current().id)
                 startActivity(intent)
+            }, onBack = {
+                finish()
             })
         }
     }
