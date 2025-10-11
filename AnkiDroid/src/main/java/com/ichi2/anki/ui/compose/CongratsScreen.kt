@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -66,17 +68,19 @@ fun CongratsScreen(onDeckOptions: () -> Unit, onBack: () -> Unit, timeUntilNextD
                     }
                 })
         }, content = { contentPadding ->
+            val scrollState = rememberScrollState()
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(contentPadding)
+                    .fillMaxSize().padding(contentPadding)
+                    .verticalScroll(scrollState)
                     .padding(top = 48.dp, start = 16.dp, end = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+
             ) {
                 Text(
                     text = stringResource(id = R.string.studyoptions_congrats_finished),
-                    style = MaterialTheme.typography.headlineMedium
+                    style = MaterialTheme.typography.headlineMedium,
+
                 )
                 Text(
                     text = stringResource(R.string.daily_limit_reached),
@@ -118,8 +122,9 @@ fun CongratsScreen(onDeckOptions: () -> Unit, onBack: () -> Unit, timeUntilNextD
                     )
 
                     Row(
-                        Modifier.fillMaxSize().padding(horizontal = 16.dp),
-
+                        Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
