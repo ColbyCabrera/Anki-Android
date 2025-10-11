@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -91,7 +92,7 @@ fun CongratsScreen(onDeckOptions: () -> Unit, onBack: () -> Unit, timeUntilNextD
                         .padding(top = 32.dp)
                         .clip(MaterialTheme.shapes.medium)
                         .background(MaterialTheme.colorScheme.tertiaryContainer)
-                        .fillMaxSize(),
+                        .height(340.dp),
                 ) {
                     var remainingTime by remember { mutableLongStateOf(timeUntilNextDay) }
 
@@ -109,7 +110,7 @@ fun CongratsScreen(onDeckOptions: () -> Unit, onBack: () -> Unit, timeUntilNextD
                     Text(
                         modifier = Modifier.padding(horizontal = 16.dp),
                         text = stringResource(R.string.next_review_in),
-                        color = MaterialTheme.colorScheme.onTertiary,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer,
                         fontFamily = RobotoMono,
                         fontSize = MaterialTheme.typography.displayMedium.fontSize,
                         lineHeight = MaterialTheme.typography.displayLarge.lineHeight,
@@ -117,8 +118,8 @@ fun CongratsScreen(onDeckOptions: () -> Unit, onBack: () -> Unit, timeUntilNextD
                     )
 
                     Row(
-                        Modifier.fillMaxSize(),
-                        horizontalArrangement = Arrangement.Center,
+                        Modifier.fillMaxSize().padding(horizontal = 16.dp),
+
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
@@ -131,7 +132,8 @@ fun CongratsScreen(onDeckOptions: () -> Unit, onBack: () -> Unit, timeUntilNextD
                             fontFamily = RobotoMono,
                             fontSize = MaterialTheme.typography.displayLarge.fontSize * 1.2,
                             fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onTertiary,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                            softWrap = false
                         )
                     }
                 }
