@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -41,8 +42,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -76,6 +77,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -345,7 +347,7 @@ fun DeckPickerScreen(
                     navigationIcon = {
                         IconButton(onClick = onNavigationIconClick) {
                             Icon(
-                                Icons.Default.Menu,
+                                painter = painterResource(R.drawable.menu_24px),
                                 contentDescription = stringResource(R.string.navigation_drawer_open)
                             )
                         }
@@ -374,9 +376,17 @@ fun DeckPickerScreen(
                         } else {
                             IconButton(onClick = { isSearchOpen = true }) {
                                 Icon(
-                                    Icons.Default.Search,
+                                    painter = painterResource(R.drawable.search_24px),
                                     contentDescription = stringResource(R.string.search_decks)
                                 )
+                            }
+                            BadgedBox(modifier = Modifier.size(40.dp), badge = { Badge() }) {
+                                IconButton(onClick = { onRefresh }) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.sync_24px),
+                                        contentDescription = stringResource(R.string.button_sync)
+                                    )
+                                }
                             }
                         }
                     },
