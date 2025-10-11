@@ -70,6 +70,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ichi2.anki.R
+import com.ichi2.anki.SyncIconState
 import com.ichi2.anki.deckpicker.DisplayDeckNode
 
 // Define Expressive Typography
@@ -226,6 +227,7 @@ fun AnkiDroidApp(
     onUnbury: (Long) -> Unit,
     requestSearchFocus: Boolean,
     onSearchFocusRequested: () -> Unit,
+    syncState: SyncIconState,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     val searchFocusRequester = remember {
@@ -465,6 +467,7 @@ fun AnkiDroidApp(
             onEmpty = onEmpty,
             onNavigationIconClick = onNavigationIconClick,
             fabMenuExpanded = fabMenuExpanded,
-            onFabMenuExpandedChange = { fabMenuExpanded = it })
+            onFabMenuExpandedChange = { fabMenuExpanded = it },
+            syncState = syncState)
     }
 }
