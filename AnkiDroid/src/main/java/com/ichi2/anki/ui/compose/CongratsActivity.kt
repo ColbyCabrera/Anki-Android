@@ -11,7 +11,7 @@ class CongratsActivity : AnkiActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val col = CollectionManager.getColUnsafe()
-            val timeUntilNextDay = col.sched.dayCutoff * 1000 - System.currentTimeMillis()
+            val timeUntilNextDay = (col.sched.dayCutoff * 1000 - System.currentTimeMillis()).coerceAtLeast(0L)
 
             CongratsScreen(
                 onDeckOptions = {
