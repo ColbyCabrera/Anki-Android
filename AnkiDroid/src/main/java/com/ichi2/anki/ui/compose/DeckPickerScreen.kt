@@ -381,7 +381,7 @@ fun DeckPickerScreen(
                                 )
                             }
                             BadgedBox(modifier = Modifier.size(40.dp), badge = { Badge() }) {
-                                IconButton(onClick = { onRefresh }) {
+                                IconButton(onClick = { onRefresh() }) {
                                     Icon(
                                         painter = painterResource(R.drawable.sync_24px),
                                         contentDescription = stringResource(R.string.button_sync)
