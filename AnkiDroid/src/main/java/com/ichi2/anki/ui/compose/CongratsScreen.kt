@@ -72,7 +72,8 @@ fun CongratsScreen(onDeckOptions: () -> Unit, onBack: () -> Unit, timeUntilNextD
             val scrollState = rememberScrollState()
             Column(
                 modifier = Modifier
-                    .fillMaxSize().padding(contentPadding)
+                    .fillMaxSize()
+                    .padding(contentPadding)
                     .verticalScroll(scrollState)
                     .padding(top = 48.dp, start = 16.dp, end = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -129,7 +130,13 @@ fun CongratsScreen(onDeckOptions: () -> Unit, onBack: () -> Unit, timeUntilNextD
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = String.format(Locale.US, "%02d:%02d:%02d", hours, minutes, seconds),
+                            text = String.format(
+                                Locale.US,
+                                "%02d:%02d:%02d",
+                                hours,
+                                minutes,
+                                seconds
+                            ),
                             modifier = Modifier.scale(1F, 3F),
                             fontFamily = RobotoMono,
                             fontSize = MaterialTheme.typography.displayLarge.fontSize * 1.2,
