@@ -1,7 +1,9 @@
 package com.ichi2.anki.ui.compose
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -12,13 +14,20 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.ichi2.anki.R
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import com.ichi2.anki.ui.compose.theme.RobotoMono
@@ -32,11 +41,11 @@ fun CongratsScreen(onDeckOptions: () -> Unit, onBack: () -> Unit, timeUntilNextD
         Scaffold(topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = stringResource(id = R.string.app_name),
-                        style = MaterialTheme.typography.displayMediumEmphasized
-                    )
-                },
+                Text(
+                    text = stringResource(id = R.string.app_name),
+                    style = MaterialTheme.typography.displayMediumEmphasized
+                )
+            },
                 subtitle = {},
                 titleHorizontalAlignment = Alignment.CenterHorizontally,
                 navigationIcon = {
@@ -77,30 +86,55 @@ fun CongratsScreen(onDeckOptions: () -> Unit, onBack: () -> Unit, timeUntilNextD
                     style = MaterialTheme.typography.bodyLarge
                 )
 
-                var remainingTime by remember { mutableLongStateOf(timeUntilNextDay) }
+                Column(
+                    modifier = Modifier
+                        .padding(top = 32.dp)
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(MaterialTheme.colorScheme.tertiaryContainer)
+                        .fillMaxSize(),
+                ) {
+                    var remainingTime by remember { mutableLongStateOf(timeUntilNextDay) }
 
-                LaunchedEffect(Unit) {
-                    while (remainingTime > 0) {
-                        delay(1000)
-                        remainingTime -= 1000
+                    LaunchedEffect(Unit) {
+                        while (remainingTime > 0) {
+                            delay(1000)
+                            remainingTime -= 1000
+                        }
+                    }
+
+                    val hours = TimeUnit.MILLISECONDS.toHours(remainingTime)
+                    val minutes = TimeUnit.MILLISECONDS.toMinutes(remainingTime) % 60
+                    val seconds = TimeUnit.MILLISECONDS.toSeconds(remainingTime) % 60
+
+                    Text(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        text = stringResource(R.string.next_review_in),
+                        color = MaterialTheme.colorScheme.onTertiary,
+                        fontFamily = RobotoMono,
+                        fontSize = MaterialTheme.typography.displayMedium.fontSize,
+                        lineHeight = MaterialTheme.typography.displayLarge.lineHeight,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+
+                    Row(
+                        Modifier.fillMaxSize(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "${
+                                hours.toString().padStart(2, '0')
+                            }:${minutes.toString().padStart(2, '0')}:${
+                                seconds.toString().padStart(2, '0')
+                            }",
+                            modifier = Modifier.scale(1F, 3F),
+                            fontFamily = RobotoMono,
+                            fontSize = MaterialTheme.typography.displayLarge.fontSize * 1.2,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onTertiary,
+                        )
                     }
                 }
-
-                val hours = TimeUnit.MILLISECONDS.toHours(remainingTime)
-                val minutes = TimeUnit.MILLISECONDS.toMinutes(remainingTime) % 60
-                val seconds = TimeUnit.MILLISECONDS.toSeconds(remainingTime) % 60
-
-                Text()
-
-                Text(
-                    text = "Next review in: ${
-                        hours.toString().padStart(2, '0')
-                    }:${minutes.toString().padStart(2, '0')}:${
-                        seconds.toString().padStart(2, '0')
-                    }",
-                    fontFamily = RobotoMono,
-                    fontSize = MaterialTheme.typography.displayLarge.fontSize,
-                )
             }
         })
     }
