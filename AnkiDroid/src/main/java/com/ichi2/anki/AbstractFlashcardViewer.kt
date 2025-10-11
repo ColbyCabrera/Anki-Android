@@ -130,7 +130,6 @@ import com.ichi2.anki.noteeditor.NoteEditorLauncher
 import com.ichi2.anki.observability.ChangeManager
 import com.ichi2.anki.observability.undoableOp
 import com.ichi2.anki.pages.AnkiServer
-import com.ichi2.anki.pages.CongratsPage
 import com.ichi2.anki.pages.PostRequestHandler
 import com.ichi2.anki.preferences.AccessibilitySettingsFragment
 import com.ichi2.anki.preferences.PreferencesActivity
@@ -515,10 +514,6 @@ abstract class AbstractFlashcardViewer : NavigationDrawerActivity(), ViewerComma
 
         if (currentCard == null) {
             closeReviewer(RESULT_NO_MORE_CARDS)
-            // When launched with a shortcut, we want to display a message when finishing
-            if (intent.getBooleanExtra(EXTRA_STARTED_WITH_SHORTCUT, false)) {
-                CongratsPage.display(this)
-            }
             return
         }
 

@@ -165,8 +165,6 @@ import com.ichi2.anki.libanki.undoLabel
 import com.ichi2.anki.mediacheck.MediaCheckFragment
 import com.ichi2.anki.observability.ChangeManager
 import com.ichi2.anki.pages.AnkiPackageImporterFragment
-import com.ichi2.anki.pages.CongratsPage
-import com.ichi2.anki.pages.CongratsPage.Companion.onDeckCompleted
 import com.ichi2.anki.pages.Statistics
 import com.ichi2.anki.preferences.AdvancedSettingsFragment
 import com.ichi2.anki.preferences.PreferencesActivity
@@ -755,7 +753,6 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                             }
 
                             is DeckSelectionResult.NoCardsToStudy -> {
-                                onDeckCompleted()
                             }
                         }
                     }
@@ -1291,7 +1288,6 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
         if (resultCode == AbstractFlashcardViewer.RESULT_NO_MORE_CARDS) {
             lifecycleScope.launch {
                 val isFinished = withCol { sched.totalCount() == 0 }
-                CongratsPage.onReviewsCompleted(this@DeckPicker, isFinished)
             }
         }
     }

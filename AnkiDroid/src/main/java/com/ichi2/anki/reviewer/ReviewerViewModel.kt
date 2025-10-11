@@ -25,6 +25,10 @@ import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.cardviewer.TypeAnswer
 import com.ichi2.anki.libanki.Card
 import com.ichi2.anki.libanki.CardId
+import com.ichi2.anki.R
+import com.ichi2.anki.common.time.SECONDS_PER_DAY
+import com.ichi2.anki.common.time.TIME_HOUR
+import com.ichi2.anki.common.time.TIME_MINUTE
 import com.ichi2.anki.libanki.sched.CurrentQueueState
 import com.ichi2.anki.preferences.sharedPrefs
 import com.ichi2.anki.servicelayer.NoteService
@@ -38,6 +42,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.math.round
 
 data class ReviewerState(
     val newCount: Int = 0,
@@ -52,7 +57,7 @@ data class ReviewerState(
     val isMarked: Boolean = false,
     val flag: Int = 0,
     val mediaDirectory: File? = null,
-    val isFinished: Boolean = false
+    val congratsMessage: String? = null
 )
 
 sealed class ReviewerEvent {
@@ -71,7 +76,6 @@ sealed class ReviewerEvent {
 
 sealed class ReviewerEffect {
     data class NavigateToEditCard(val cardId: CardId) : ReviewerEffect()
-    object NavigateToDeckPicker : ReviewerEffect()
 }
 
 class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
@@ -139,17 +143,7 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
     private suspend fun loadCardSuspend() {
         val cardAndQueueState = getNextCard()
         if (cardAndQueueState == null) {
-            _state.update {
-                it.copy(
-                    isFinished = true,
-                    newCount = 0,
-                    learnCount = 0,
-                    reviewCount = 0
-                )
-            }
-            _effect.emit(ReviewerEffect.NavigateToDeckPicker)
-            currentCard = null
-            queueState = null
+            showCongratsScreen()
             return
         }
         val (card, queue) = cardAndQueueState
@@ -172,10 +166,42 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
                     isMarked = note.hasTag(this, "marked"),
                     flag = card.userFlag(),
                     mediaDirectory = media.dir,
-                    isFinished = false
+                    congratsMessage = null
                 )
             }
         }
+    }
+
+    private suspend fun showCongratsScreen() {
+        val message = CollectionManager.withCol {
+            val info = sched.congratulationsInfo()
+            val secsUntilNextLearn = info.secsUntilNextLearn
+            if (secsUntilNextLearn >= SECONDS_PER_DAY) {
+                getApplication<Application>().getString(R.string.studyoptions_congrats_finished)
+            } else {
+                val (unit, amount) =
+                    if (secsUntilNextLearn < TIME_MINUTE) {
+                        "seconds" to secsUntilNextLearn.toDouble()
+                    } else if (secsUntilNextLearn < TIME_HOUR) {
+                        "minutes" to secsUntilNextLearn / TIME_MINUTE
+                    } else {
+                        "hours" to secsUntilNextLearn / TIME_HOUR
+                    }
+
+                val nextLearnDue = CollectionManager.TR.schedulingNextLearnDue(unit, round(amount).toInt())
+                getApplication<Application>().getString(R.string.studyoptions_congrats_next_due_in, nextLearnDue)
+            }
+        }
+        _state.update {
+            it.copy(
+                congratsMessage = message,
+                newCount = 0,
+                learnCount = 0,
+                reviewCount = 0
+            )
+        }
+        currentCard = null
+        queueState = null
     }
 
     private suspend fun getNextCard(): Pair<Card, CurrentQueueState>? = CollectionManager.withCol {
@@ -186,7 +212,7 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun showAnswer() {
-        if (cardActionJob?.isActive == true || _state.value.isFinished) {
+        if (cardActionJob?.isActive == true || _state.value.congratsMessage != null) {
             return
         }
         val card = currentCard ?: return
@@ -214,7 +240,7 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun rateCard(rating: CardAnswer.Rating) {
-        if (cardActionJob?.isActive == true || _state.value.isFinished) {
+        if (cardActionJob?.isActive == true || _state.value.congratsMessage != null) {
             return
         }
         val queue = queueState ?: return

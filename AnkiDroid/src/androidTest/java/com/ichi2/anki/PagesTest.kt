@@ -70,7 +70,6 @@ class PagesTest : InstrumentedTest() {
                 listOf<Pair<PagesTest.(Context) -> Intent, String>>(
                     Pair(PagesTest::getStatistics, "Statistics"),
                     Pair(PagesTest::getCardInfo, "CardInfo"),
-                    Pair(PagesTest::getCongratsPage, "CongratsPage"),
                     Pair(PagesTest::getDeckOptions, "DeckOptions"),
                     // the following need a file path
                     Pair(PagesTest::needsPath, "AnkiPackageImporterFragment"),
@@ -86,12 +85,6 @@ class PagesTest : InstrumentedTest() {
 fun PagesTest.getStatistics(context: Context): Intent = Statistics.getIntent(context)
 
 fun PagesTest.getCardInfo(context: Context): Intent =
-    addNoteUsingBasicNoteType().firstCard(col).let { card ->
-        this.card = card
-        CardInfoDestination(card.id, "Unused").toIntent(context)
-    }
-
-fun PagesTest.getCongratsPage(context: Context): Intent =
     addNoteUsingBasicNoteType().firstCard(col).let { card ->
         this.card = card
         CardInfoDestination(card.id, "Unused").toIntent(context)

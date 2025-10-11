@@ -121,11 +121,13 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                     ).toIntent(context)
                     editCardLauncher.launch(intent)
                 }
-                else -> {
-                    // All other effects are handled by the Activity
-                }
             }
         }
+    }
+
+    if (state.congratsMessage != null) {
+        CongratsScreen(message = state.congratsMessage!!)
+        return
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
