@@ -383,12 +383,12 @@ fun DeckPickerScreen(
                                 )
                             }
                             BadgedBox(
-                                modifier = Modifier.size(40.dp),
+                                modifier = Modifier.height(40.dp).width(48.dp).padding(end = 8.dp),
                                 badge = {
-                                    if (syncState == SyncIconState.PendingChanges) {
-                                        Badge()
-                                    } else if (syncState == SyncIconState.OneWay || syncState == SyncIconState.NotLoggedIn) {
-                                        Badge { Text("!") }
+                                    when (syncState) {
+                                        SyncIconState.PendingChanges -> Badge()
+                                        SyncIconState.OneWay, SyncIconState.NotLoggedIn -> Badge { Text("!") }
+                                        else -> { /* No badge for Normal state */ }
                                     }
                                 }
                             ) {
