@@ -310,6 +310,11 @@
             android:parentActivityName=".DeckPicker"
             >
         </activity>
+        <activity
+            android:name=".ui.compose.CongratsActivity"
+            android:exported="false"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            />
 
         <!-- Context menu item name is the label, context is the system language -->
         <!-- Note: This appears to require that the target label is variable -->

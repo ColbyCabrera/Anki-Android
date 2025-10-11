@@ -32,7 +32,6 @@ import anki.scheduler.UnburyDeckRequest
 import com.google.android.material.appbar.MaterialToolbar
 import com.ichi2.anki.CollectionManager.TR
 import com.ichi2.anki.CollectionManager.withCol
-import com.ichi2.anki.DeckPicker
 import com.ichi2.anki.FilteredDeckOptions
 import com.ichi2.anki.OnErrorListener
 import com.ichi2.anki.R
@@ -230,10 +229,6 @@ class CongratsPage :
 
             val nextLearnDue = TR.schedulingNextLearnDue(unit, round(amount).toInt())
             return activity.getString(R.string.studyoptions_congrats_next_due_in, nextLearnDue)
-        }
-
-        fun DeckPicker.onDeckCompleted() {
-            startActivity(getIntent(this))
         }
     }
 }
