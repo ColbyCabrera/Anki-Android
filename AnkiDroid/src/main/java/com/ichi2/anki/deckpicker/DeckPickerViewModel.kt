@@ -80,6 +80,20 @@ class DeckPickerViewModel :
     private val _syncState = MutableStateFlow(SyncIconState.Normal)
     val syncState: StateFlow<SyncIconState> = _syncState.asStateFlow()
 
+    private val _syncDialogState = MutableStateFlow<SyncDialogState?>(null)
+    val syncDialogState: StateFlow<SyncDialogState?> = _syncDialogState.asStateFlow()
+
+    fun showSyncDialog(title: String, message: String, onCancel: () -> Unit) {
+        _syncDialogState.value = SyncDialogState(title, message, onCancel)
+    }
+
+    fun updateSyncDialog(message: String) {
+        _syncDialogState.value = _syncDialogState.value?.copy(message = message)
+    }
+
+    fun hideSyncDialog() {
+        _syncDialogState.value = null
+    }
     /** The root of the tree displaying all decks */
     var dueTree: DeckNode?
         get() = flowOfDeckDueTree.value
@@ -504,6 +518,12 @@ class DeckPickerViewModel :
             val empty = FlattenedDeckList(emptyList(), hasSubDecks = false)
         }
     }
+
+    data class SyncDialogState(
+        val title: String,
+        val message: String,
+        val onCancel: () -> Unit
+    )
 }
 
 /** Result of [DeckPickerViewModel.deleteDeck] */

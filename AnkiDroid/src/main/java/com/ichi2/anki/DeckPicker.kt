@@ -132,6 +132,7 @@ import com.ichi2.anki.deckpicker.DeckPickerViewModel.FlattenedDeckList
 import com.ichi2.anki.deckpicker.DeckPickerViewModel.StartupResponse
 import com.ichi2.anki.deckpicker.DeckSelectionResult
 import com.ichi2.anki.deckpicker.DeckSelectionType
+import com.ichi2.anki.deckpicker.ui.SyncProgressDialog
 import com.ichi2.anki.dialogs.AsyncDialogFragment
 import com.ichi2.anki.dialogs.BackupPromptDialog
 import com.ichi2.anki.dialogs.ConfirmationDialog
@@ -209,7 +210,6 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.ankiweb.rsdroid.Translations
-import net.ankiweb.rsdroid.exceptions.BackendNetworkException
 import org.json.JSONException
 import timber.log.Timber
 import java.io.File
@@ -457,6 +457,16 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                 )
                 val isRefreshing by viewModel.isSyncing.collectAsState(initial = false)
                 val syncState by viewModel.syncState.collectAsState()
+                val syncDialogState by viewModel.syncDialogState.collectAsState()
+
+                syncDialogState?.let {
+                    SyncProgressDialog(
+                        title = it.title,
+                        message = it.message,
+                        onCancel = it.onCancel
+                    )
+                }
+
                 var searchQuery by remember { mutableStateOf("") }
                 var requestSearchFocus by remember { mutableStateOf(false) }
                 val focusedDeckId by viewModel.flowOfFocusedDeck.collectAsState()
