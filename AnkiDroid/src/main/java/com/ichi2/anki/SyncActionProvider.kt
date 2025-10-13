@@ -27,6 +27,18 @@ import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.ichi2.compat.setTooltipTextCompat
 import com.ichi2.ui.RtlCompliantActionProvider.Companion.unwrapContext
 
+/**
+ * A provider for the sync button in the toolbar.
+ *
+ *
+ * This provider is responsible for the entire lifecycle of the view, including showing/hiding the progress indicator
+ * and the badge.
+ *
+ *
+ * The badge is shown when the collection is "dirty" - i.e. when there are local changes that have not been synced.
+ *
+ * @see DeckPicker.updateSyncIconFromState
+ */
 class SyncActionProvider(
     context: Context,
 ) : ActionProviderCompat(context) {

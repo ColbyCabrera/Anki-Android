@@ -1083,6 +1083,13 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
         }
     }
 
+    /**
+     * Update the sync icon in the toolbar to reflect the current sync status.
+     *
+     * This is what shows the badge when the collection is "dirty" (i.e. has [SyncIconState.PendingChanges]).
+     * @param menuItem The menu item to update.
+     * @param state The current options menu state, which contains the sync icon state.
+     */
     private fun updateSyncIconFromState(
         menuItem: MenuItem,
         state: OptionsMenuState,
@@ -2202,8 +2209,26 @@ data class OptionsMenuState(
     val isColEmpty: Boolean,
 )
 
+/**
+ * The state of the sync icon in the toolbar.
+ *
+ * This is used to show a badge when the collection is "dirty" (i.e. has pending changes).
+ *
+ * @see DeckPicker.updateSyncIconFromState
+ * @see DeckPickerViewModel.fetchSyncIconState
+ */
 enum class SyncIconState {
-    Normal, PendingChanges, OneWay, NotLoggedIn,
+    /** No changes to sync. */
+    Normal,
+
+    /** The collection has been modified, but not synced. */
+    PendingChanges,
+
+    /** A one-way sync is recommended. */
+    OneWay,
+
+    /** The user is not logged in. */
+    NotLoggedIn,
 }
 
 class CollectionLoadingErrorDialog : DialogHandlerMessage(
