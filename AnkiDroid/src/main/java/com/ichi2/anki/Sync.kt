@@ -20,6 +20,7 @@ import androidx.annotation.StringRes
 import androidx.lifecycle.lifecycleScope
 import anki.sync.SyncAuth
 import anki.sync.SyncCollectionResponse
+import anki.sync.SyncStatusResponse
 import anki.sync.syncAuth
 import com.ichi2.anki.CollectionManager.TR
 import com.ichi2.anki.CollectionManager.withCol
@@ -31,11 +32,19 @@ import com.ichi2.anki.settings.enums.ShouldFetchMedia
 import com.ichi2.anki.worker.SyncMediaWorker
 import com.ichi2.preferences.VersatileTextWithASwitchPreference
 import com.ichi2.utils.NetworkUtils
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.ankiweb.rsdroid.Backend
 import net.ankiweb.rsdroid.exceptions.BackendInterruptedException
 import net.ankiweb.rsdroid.exceptions.BackendSyncException
 import timber.log.Timber
+import java.util.concurrent.TimeUnit
+
+private const val SYNC_DIALOG_MINIMUM_INTERVAL_SECONDS = 5L
 
 object SyncPreferences {
     const val CURRENT_SYNC_URI = "currentSyncUri"
@@ -93,16 +102,18 @@ fun DeckPicker.handleNewSync(
         try {
             when (conflict) {
                 ConflictResolution.FULL_DOWNLOAD -> handleDownload(
-                    deckPicker, auth, deckPicker.mediaUsnOnConflict
+                    deckPicker,
+                    auth,
+                    deckPicker.mediaUsnOnConflict,
                 )
 
                 ConflictResolution.FULL_UPLOAD -> handleUpload(
-                    deckPicker, auth, deckPicker.mediaUsnOnConflict
+                    deckPicker,
+                    auth,
+                    deckPicker.mediaUsnOnConflict,
                 )
 
-                null -> {
-                    handleNormalSync(deckPicker, auth, syncMedia)
-                }
+                null -> handleNormalSync(deckPicker, auth, syncMedia)
             }
         } catch (exc: BackendSyncException.BackendSyncAuthFailedException) {
             // auth failed; log out
@@ -139,20 +150,39 @@ private suspend fun handleNormalSync(
     val viewModel = deckPicker.viewModel
     val backend = CollectionManager.getBackend()
 
-    viewModel.showSyncDialog(deckPicker.getString(R.string.syncing), "") {
-        cancelSync(backend)
+    val hasChanges = try {
+        withContext(Dispatchers.IO) {
+            val status = backend.syncStatus(auth)
+            status.required != SyncStatusResponse.Required.NO_CHANGES
+        }
+    } catch (e: Exception) {
+        Timber.e(e, "Failed to get sync status")
+        true
+    }
+    val showDialog = hasChanges || millisecondsSinceLastSync() > TimeUnit.SECONDS.toMillis(
+        SYNC_DIALOG_MINIMUM_INTERVAL_SECONDS,
+    )
+
+    if (showDialog) {
+        viewModel.showSyncDialog(deckPicker.getString(R.string.syncing), "") {
+            cancelSync(backend)
+        }
     }
 
-    val syncJob = deckPicker.lifecycleScope.launch {
-        while (isActive) {
-            val progress = backend.latestProgress()
-            if (progress.hasNormalSync()) {
-                val added = progress.normalSync.added
-                val removed = progress.normalSync.removed
-                viewModel.updateSyncDialog("$added\n$removed")
+    val syncJob = if (showDialog) {
+        deckPicker.lifecycleScope.launch {
+            while (isActive) {
+                val progress = backend.latestProgress()
+                if (progress.hasNormalSync()) {
+                    val added = progress.normalSync.added
+                    val removed = progress.normalSync.removed
+                    viewModel.updateSyncDialog("$added\n$removed")
+                }
+                delay(100)
             }
-            delay(100)
         }
+    } else {
+        null
     }
 
     val output = try {
@@ -160,8 +190,10 @@ private suspend fun handleNormalSync(
             syncCollection(auth2, syncMedia = false) // media is synced by SyncMediaWorker
         }
     } finally {
-        syncJob.cancel()
-        viewModel.hideSyncDialog()
+        syncJob?.cancel()
+        if (showDialog) {
+            viewModel.hideSyncDialog()
+        }
     }
 
     if (output.hasNewEndpoint() && output.newEndpoint.isNotEmpty()) {
@@ -184,9 +216,14 @@ private suspend fun handleNormalSync(
         SyncCollectionResponse.ChangesRequired.NO_CHANGES -> {
             // scheduler version may have changed
             withCol { _loadScheduler() }
-            val message =
-                if (syncMedia) R.string.col_synced_media_in_background else R.string.sync_database_acknowledge
-            deckPicker.showSyncLogMessage(message, output.serverMessage)
+            if (hasChanges) {
+                val message = if (syncMedia) {
+                    R.string.col_synced_media_in_background
+                } else {
+                    R.string.sync_database_acknowledge
+                }
+                deckPicker.showSyncLogMessage(message, output.serverMessage)
+            }
             deckPicker.refreshState()
             if (syncMedia) {
                 SyncMediaWorker.start(deckPicker, auth2)
@@ -209,7 +246,7 @@ private suspend fun handleNormalSync(
         SyncCollectionResponse.ChangesRequired.NORMAL_SYNC,
         SyncCollectionResponse.ChangesRequired.UNRECOGNIZED,
         null,
-        -> {
+            -> {
             Timber.e("Unexpected sync status: ${output.required}")
             deckPicker.showSyncErrorDialog(SyncErrorDialog.Type.DIALOG_CONNECTION_ERROR)
         }
