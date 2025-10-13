@@ -24,4 +24,5 @@
     <string name="daily_limit_reached">There are more new cards available, but the daily limit has been reached. You can increase the limit in options, but please bear in mind that the more new cards you introduce, the higher your short-term review workload will become.</string>
     <string name="study_more">If you wish to study outside of the regular schedule, you can use the custom study feature.</string>
     <string name="next_review_in">Next review in:</string>
+    <string name="sync_now">Sync now</string>
 </resources>

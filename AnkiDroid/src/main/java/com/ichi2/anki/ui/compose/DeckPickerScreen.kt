@@ -86,6 +86,7 @@ import androidx.graphics.shapes.Morph
 import com.ichi2.anki.R
 import com.ichi2.anki.SyncIconState
 import com.ichi2.anki.deckpicker.DisplayDeckNode
+import com.ichi2.anki.ui.compose.SyncIcon
 import com.ichi2.utils.MorphShape
 
 private val expandedDeckCardRadius = 24.dp
@@ -393,12 +394,10 @@ fun DeckPickerScreen(
                                     }
                                 }
                             ) {
-                                IconButton(onClick = { onRefresh() }) {
-                                    Icon(
-                                        painter = painterResource(R.drawable.sync_24px),
-                                        contentDescription = stringResource(R.string.button_sync)
-                                    )
-                                }
+                                SyncIcon(
+                                    isSyncing = isRefreshing,
+                                    onRefresh = { onRefresh() }
+                                )
                             }
                         }
                     },
