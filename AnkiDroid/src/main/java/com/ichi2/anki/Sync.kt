@@ -150,10 +150,17 @@ private suspend fun handleNormalSync(
     val viewModel = deckPicker.viewModel
     val backend = CollectionManager.getBackend()
 
-    val status = backend.syncStatus(auth)
-    val hasChanges = status.required != SyncStatusResponse.Required.NO_CHANGES
+    val hasChanges = try {
+        withContext(Dispatchers.IO) {
+            val status = backend.syncStatus(auth)
+            status.required != SyncStatusResponse.Required.NO_CHANGES
+        }
+    } catch (e: Exception) {
+        Timber.e(e, "Failed to get sync status")
+        true
+    }
     val showDialog = hasChanges || millisecondsSinceLastSync() > TimeUnit.SECONDS.toMillis(
-        SYNC_DIALOG_MINIMUM_INTERVAL_SECONDS
+        SYNC_DIALOG_MINIMUM_INTERVAL_SECONDS,
     )
 
     if (showDialog) {
