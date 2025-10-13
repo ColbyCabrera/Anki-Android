@@ -88,7 +88,9 @@ class DeckPickerViewModel :
     }
 
     fun updateSyncDialog(message: String) {
-        _syncDialogState.value = _syncDialogState.value?.copy(message = message)
+        _syncDialogState.value?.let { current ->
+            _syncDialogState.value = current.copy(message = message)
+        }
     }
 
     fun hideSyncDialog() {
