@@ -169,16 +169,20 @@ private suspend fun handleNormalSync(
         }
     }
 
-    val syncJob = deckPicker.lifecycleScope.launch {
-        while (isActive) {
-            val progress = backend.latestProgress()
-            if (progress.hasNormalSync()) {
-                val added = progress.normalSync.added
-                val removed = progress.normalSync.removed
-                viewModel.updateSyncDialog("$added\n$removed")
+    val syncJob = if (showDialog) {
+        deckPicker.lifecycleScope.launch {
+            while (isActive) {
+                val progress = backend.latestProgress()
+                if (progress.hasNormalSync()) {
+                    val added = progress.normalSync.added
+                    val removed = progress.normalSync.removed
+                    viewModel.updateSyncDialog("$added\n$removed")
+                }
+                delay(100)
             }
-            delay(100)
         }
+    } else {
+        null
     }
 
     val output = try {
@@ -186,7 +190,7 @@ private suspend fun handleNormalSync(
             syncCollection(auth2, syncMedia = false) // media is synced by SyncMediaWorker
         }
     } finally {
-        syncJob.cancel()
+        syncJob?.cancel()
         if (showDialog) {
             viewModel.hideSyncDialog()
         }
