@@ -31,11 +31,7 @@ import com.ichi2.anki.settings.enums.ShouldFetchMedia
 import com.ichi2.anki.worker.SyncMediaWorker
 import com.ichi2.preferences.VersatileTextWithASwitchPreference
 import com.ichi2.utils.NetworkUtils
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import net.ankiweb.rsdroid.Backend
 import net.ankiweb.rsdroid.exceptions.BackendInterruptedException
 import net.ankiweb.rsdroid.exceptions.BackendSyncException
@@ -148,7 +144,7 @@ private suspend fun handleNormalSync(
     }
 
     val syncJob = deckPicker.lifecycleScope.launch {
-        while (true) {
+        while (isActive) {
             val progress = backend.latestProgress()
             if (progress.hasNormalSync()) {
                 val added = progress.normalSync.added
@@ -213,8 +209,9 @@ private suspend fun handleNormalSync(
         SyncCollectionResponse.ChangesRequired.NORMAL_SYNC,
         SyncCollectionResponse.ChangesRequired.UNRECOGNIZED,
         null,
-            -> {
-            TODO("should never happen")
+        -> {
+            Timber.e("Unexpected sync status: ${output.required}")
+            deckPicker.showSyncErrorDialog(SyncErrorDialog.Type.DIALOG_CONNECTION_ERROR)
         }
     }
 }
@@ -314,7 +311,7 @@ suspend fun monitorMediaSync(deckPicker: DeckPicker) {
 
     withContext(Dispatchers.IO) {
         try {
-            while (true) {
+            while (isActive) {
                 // this will throw if the sync exited with an error
                 val resp = backend.mediaSyncStatus()
                 if (!resp.active) {
