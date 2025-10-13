@@ -32,10 +32,10 @@ import com.ichi2.anki.worker.SyncMediaWorker
 import com.ichi2.preferences.VersatileTextWithASwitchPreference
 import com.ichi2.utils.NetworkUtils
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.ankiweb.rsdroid.Backend
 import net.ankiweb.rsdroid.exceptions.BackendInterruptedException
 import net.ankiweb.rsdroid.exceptions.BackendSyncException
@@ -49,8 +49,7 @@ object SyncPreferences {
 }
 
 enum class ConflictResolution {
-    FULL_DOWNLOAD,
-    FULL_UPLOAD,
+    FULL_DOWNLOAD, FULL_UPLOAD,
 }
 
 fun syncAuth(): SyncAuth? {
@@ -71,12 +70,11 @@ fun syncAuth(): SyncAuth? {
 
 fun getEndpoint(): String? {
     val currentEndpoint = Prefs.currentSyncUri?.ifEmpty { null }
-    val customEndpoint =
-        if (Prefs.isCustomSyncEnabled) {
-            Prefs.customSyncUri
-        } else {
-            null
-        }
+    val customEndpoint = if (Prefs.isCustomSyncEnabled) {
+        Prefs.customSyncUri
+    } else {
+        null
+    }
     return currentEndpoint ?: customEndpoint
 }
 
@@ -99,15 +97,11 @@ fun DeckPicker.handleNewSync(
         try {
             when (conflict) {
                 ConflictResolution.FULL_DOWNLOAD -> handleDownload(
-                    deckPicker,
-                    auth,
-                    deckPicker.mediaUsnOnConflict
+                    deckPicker, auth, deckPicker.mediaUsnOnConflict
                 )
 
                 ConflictResolution.FULL_UPLOAD -> handleUpload(
-                    deckPicker,
-                    auth,
-                    deckPicker.mediaUsnOnConflict
+                    deckPicker, auth, deckPicker.mediaUsnOnConflict
                 )
 
                 null -> {
@@ -177,18 +171,16 @@ private suspend fun handleNormalSync(
     if (output.hasNewEndpoint() && output.newEndpoint.isNotEmpty()) {
         Timber.i("sync endpoint updated")
         Prefs.currentSyncUri = output.newEndpoint
-        auth2 =
-            syncAuth {
-                this.hkey = auth.hkey
-                endpoint = output.newEndpoint
-            }
-    }
-    val mediaUsn =
-        if (syncMedia) {
-            output.serverMediaUsn
-        } else {
-            null
+        auth2 = syncAuth {
+            this.hkey = auth.hkey
+            endpoint = output.newEndpoint
         }
+    }
+    val mediaUsn = if (syncMedia) {
+        output.serverMediaUsn
+    } else {
+        null
+    }
 
     Timber.i("sync result: ${output.required}")
     when (output.required) {
@@ -227,13 +219,12 @@ private suspend fun handleNormalSync(
     }
 }
 
-private fun fullDownloadProgress(title: String): ProgressContext.() -> Unit =
-    {
-        if (progress.hasFullSync()) {
-            text = title
-            amount = progress.fullSync.run { Pair(transferred, total) }
-        }
+private fun fullDownloadProgress(title: String): ProgressContext.() -> Unit = {
+    if (progress.hasFullSync()) {
+        text = title
+        amount = progress.fullSync.run { Pair(transferred, total) }
     }
+}
 
 private suspend fun handleDownload(
     deckPicker: DeckPicker,
@@ -308,13 +299,11 @@ fun cancelMediaSync(backend: Backend) {
  */
 fun shouldFetchMedia(): Boolean {
     val shouldFetchMedia = Prefs.shouldFetchMedia
-    return shouldFetchMedia == ShouldFetchMedia.ALWAYS ||
-            (shouldFetchMedia == ShouldFetchMedia.ONLY_UNMETERED && !NetworkUtils.isActiveNetworkMetered())
+    return shouldFetchMedia == ShouldFetchMedia.ALWAYS || (shouldFetchMedia == ShouldFetchMedia.ONLY_UNMETERED && !NetworkUtils.isActiveNetworkMetered())
 }
 
-fun monitorMediaSync(deckPicker: DeckPicker) {
+suspend fun monitorMediaSync(deckPicker: DeckPicker) {
     val backend = CollectionManager.getBackend()
-    val scope = CoroutineScope(Dispatchers.IO)
     val viewModel = deckPicker.viewModel
 
     viewModel.showSyncDialog(TR.syncMediaLogTitle(), "") {
@@ -323,7 +312,7 @@ fun monitorMediaSync(deckPicker: DeckPicker) {
 
     suspend fun showMessage(msg: String) = viewModel.snackbarMessage.emit(msg)
 
-    scope.launch {
+    withContext(Dispatchers.IO) {
         try {
             while (true) {
                 // this will throw if the sync exited with an error
