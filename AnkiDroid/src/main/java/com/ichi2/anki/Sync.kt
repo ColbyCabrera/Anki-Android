@@ -44,6 +44,8 @@ import net.ankiweb.rsdroid.exceptions.BackendSyncException
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
+private const val SYNC_DIALOG_MINIMUM_INTERVAL_SECONDS = 5L
+
 object SyncPreferences {
     const val CURRENT_SYNC_URI = "currentSyncUri"
     const val CUSTOM_SYNC_URI = "syncBaseUrl"
@@ -150,7 +152,9 @@ private suspend fun handleNormalSync(
 
     val status = backend.syncStatus(auth)
     val hasChanges = status.required != SyncStatusResponse.Required.NO_CHANGES
-    val showDialog = hasChanges || millisecondsSinceLastSync() > TimeUnit.SECONDS.toMillis(10)
+    val showDialog = hasChanges || millisecondsSinceLastSync() > TimeUnit.SECONDS.toMillis(
+        SYNC_DIALOG_MINIMUM_INTERVAL_SECONDS
+    )
 
     if (showDialog) {
         viewModel.showSyncDialog(deckPicker.getString(R.string.syncing), "") {
