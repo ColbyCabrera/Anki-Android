@@ -25,6 +25,9 @@ import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.cardviewer.TypeAnswer
 import com.ichi2.anki.libanki.Card
 import com.ichi2.anki.libanki.CardId
+import com.ichi2.anki.libanki.Sound
+import com.ichi2.anki.libanki.SoundOrVideoTag
+import com.ichi2.anki.libanki.TemplateManager
 import com.ichi2.anki.libanki.sched.CurrentQueueState
 import com.ichi2.anki.preferences.sharedPrefs
 import com.ichi2.anki.servicelayer.NoteService
@@ -63,6 +66,7 @@ sealed class ReviewerEvent {
     object ToggleMark : ReviewerEvent()
     data class SetFlag(val flag: Int) : ReviewerEvent()
     data class LinkClicked(val url: String) : ReviewerEvent()
+    data class PlayAudio(val side: String, val index: Int) : ReviewerEvent()
     object EditCard : ReviewerEvent()
     object BuryCard : ReviewerEvent()
     object SuspendCard : ReviewerEvent()
@@ -101,6 +105,7 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
             is ReviewerEvent.ToggleMark -> toggleMark()
             is ReviewerEvent.SetFlag -> setFlag(event.flag)
             is ReviewerEvent.LinkClicked -> linkClicked(event.url)
+            is ReviewerEvent.PlayAudio -> playAudio(event.side, event.index)
             is ReviewerEvent.UnanswerCard -> unanswerCard()
             is ReviewerEvent.EditCard -> editCard()
             ReviewerEvent.BuryCard -> TODO()
@@ -116,9 +121,34 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun linkClicked(url: String) {
+        val match = Sound.AV_PLAYLINK_RE.find(url)
+        if (match != null) {
+            val side = match.groupValues[1]
+            val index = match.groupValues[2].toInt()
+            onEvent(ReviewerEvent.PlayAudio(side, index))
+            return
+        }
+
         val intent = Intent(Intent.ACTION_VIEW, url.toUri())
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         getApplication<Application>().startActivity(intent)
+    }
+
+    private fun playAudio(side: String, index: Int) {
+        viewModelScope.launch {
+            val card = currentCard ?: return@launch
+            val renderOutput = CollectionManager.withCol { card.renderOutput(it) }
+            val avTag = when (side) {
+                "q" -> renderOutput.questionAvTags.getOrNull(index)
+                "a" -> renderOutput.answerAvTags.getOrNull(index)
+                else -> null
+            }
+            if (avTag is SoundOrVideoTag) {
+                CollectionManager.withCol {
+                    media.play(avTag, side)
+                }
+            }
+        }
     }
 
     private fun onTypedAnswerChanged(newText: String) {
@@ -158,12 +188,13 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
         CollectionManager.withCol {
             val note = card.note(this)
             typeAnswer.updateInfo(this, card, getApplication<Application>().resources)
+            val renderOutput = card.renderOutput(this)
             _state.update {
                 it.copy(
                     newCount = queue.counts.new,
                     learnCount = queue.counts.lrn,
                     reviewCount = queue.counts.rev,
-                    html = card.question(this),
+                    html = processHtml(renderOutput.question, renderOutput),
                     isAnswerShown = false,
                     showTypeInAnswer = typeAnswer.correct != null,
                     nextTimes = List(4) { "" },
@@ -196,13 +227,14 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
             CollectionManager.withCol {
                 val labels = sched.describeNextStates(queue.states)
                 typeAnswer.input = _state.value.typedAnswer
-                val answerHtml = typeAnswer.filterAnswer(card.answer(this))
+                val renderOutput = card.renderOutput(this)
+                val answerHtml = typeAnswer.filterAnswer(renderOutput.answer)
 
                 val paddedLabels = (labels + List(4) { "" }).take(4)
 
                 _state.update {
                     it.copy(
-                        html = answerHtml,
+                        html = processHtml(answerHtml, renderOutput),
                         isAnswerShown = true,
                         nextTimes = paddedLabels
                     )
@@ -262,6 +294,22 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
                 setUserFlagForCards(listOf(card.id), flag)
             }
             _state.update { it.copy(flag = flag) }
+        }
+    }
+
+    private fun processHtml(
+        html: String,
+        renderOutput: TemplateManager.TemplateRenderOutput
+    ): String {
+        return Sound.replaceAvRefsWith(html, renderOutput) { avTag, avRef ->
+            when (avTag) {
+                is SoundOrVideoTag -> {
+                    val url = "playsound:${avRef.side}:${avRef.index}"
+                    val content = avTag.filename
+                    """<a href="$url" class="replay-button" title="$content"><svg viewBox="0 0 24 24" class="play-action"><path d="M8,5.14V19.14L19,12.14L8,5.14Z"></path></svg></a>"""
+                }
+                else -> null
+            }
         }
     }
 }
