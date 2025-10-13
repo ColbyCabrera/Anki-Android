@@ -25,4 +25,6 @@
     <string name="study_more">If you wish to study outside of the regular schedule, you can use the custom study feature.</string>
     <string name="next_review_in">Next review in:</string>
     <string name="sync_now">Sync now</string>
+    <string name="sync_starting">Sync starting…</string>
+    <string name="syncing">Syncing…</string>
 </resources>
