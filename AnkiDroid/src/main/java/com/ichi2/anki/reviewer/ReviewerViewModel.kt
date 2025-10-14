@@ -89,7 +89,14 @@ sealed class ReviewerEffect {
 class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
 
     companion object {
-        private const val PLAY_BUTTON_TEMPLATE = """<a href="%s" class="replay-button" title="%s" aria-label="Play %s" role="button"><svg viewBox="0 0 24 24" class="play-action"><path d="M8,5.14V19.14L19,12.14L8,5.14Z"></path></svg></a>"""
+        private const val PLAY_BUTTON_TEMPLATE =
+            """
+                <a href="%s" class="replay-button" title="%s" aria-label="Play %s" role="button">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="56px" width="56px" class="play-action" viewBox="0 -960 960 960" width="24px">
+                        <path d="M320-273v-414q0-17 12-28.5t28-11.5q5 0 10.5 1.5T381-721l326 207q9 6 13.5 15t4.5 19q0 10-4.5 19T707-446L381-239q-5 3-10.5 4.5T360-233q-16 0-28-11.5T320-273Z"/>
+                    </svg>
+                </a>
+            """
     }
 
     private val _state = MutableStateFlow(ReviewerState())
@@ -101,10 +108,11 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
     private var currentCard: Card? = null
     private var queueState: CurrentQueueState? = null
     private val typeAnswer = TypeAnswer.createInstance(app.sharedPrefs())
-    private val cardMediaPlayer: CardMediaPlayer = CardMediaPlayer({ }, object : MediaErrorListener {
-        override fun onError(uri: Uri): MediaErrorBehavior {
-            Timber.w("Error playing media: %s", uri)
-            return MediaErrorBehavior.CONTINUE_MEDIA
+    private val cardMediaPlayer: CardMediaPlayer =
+        CardMediaPlayer({ }, object : MediaErrorListener {
+            override fun onError(uri: Uri): MediaErrorBehavior {
+                Timber.w("Error playing media: %s", uri)
+                return MediaErrorBehavior.CONTINUE_MEDIA
         }
 
         override fun onMediaPlayerError(mp: MediaPlayer?, which: Int, extra: Int, uri: Uri): MediaErrorBehavior {

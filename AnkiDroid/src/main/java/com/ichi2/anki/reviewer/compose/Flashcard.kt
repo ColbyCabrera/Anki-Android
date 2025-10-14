@@ -109,6 +109,9 @@ fun Flashcard(
                         height: 48px;
                         width: 48px;
                     }
+                    .play-action {
+                        fill: ${onSurfaceColorHex}EF;
+                    }
                 </style>
                 $currentHtml
                 """.trimIndent()
