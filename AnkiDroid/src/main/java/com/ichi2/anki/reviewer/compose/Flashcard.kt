@@ -102,9 +102,13 @@ fun Flashcard(
                     }
                     hr {
                         opacity: 0.1;
-                         margin-bottom: 12px;
+                        margin-bottom: 12px;
                     }
-                        
+                    .replay-button {
+                        display: inline-block;
+                        height: 48px;
+                        width: 48px;
+                    }
                 </style>
                 $currentHtml
                 """.trimIndent()
