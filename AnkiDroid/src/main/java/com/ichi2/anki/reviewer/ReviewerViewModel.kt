@@ -373,7 +373,7 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
         html: String,
         renderOutput: TemplateManager.TemplateRenderContext.TemplateRenderOutput
     ): String {
-        return Sound.replaceAvRefsWith(html, renderOutput) { avTag, avRef ->
+        val processedHtml = Sound.replaceAvRefsWith(html, renderOutput) { avTag, avRef ->
             when (avTag) {
                 is SoundOrVideoTag -> {
                     val url = "playsound:${avRef.side}:${avRef.index}"
@@ -383,5 +383,6 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
                 else -> null
             }
         }
+        return "<style>${renderOutput.css}</style>$processedHtml"
     }
 }
