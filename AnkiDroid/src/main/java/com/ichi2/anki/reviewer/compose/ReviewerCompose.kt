@@ -147,11 +147,7 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                     .consumeWindowInsets(paddingValues)
                     .padding(top = paddingValues.calculateTopPadding()),
                 html = state.html,
-                onTap = {
-                    if (!state.isAnswerShown) {
-                        viewModel.onEvent(ReviewerEvent.ShowAnswer)
-                    }
-                },
+                onTap = { },
                 onLinkClick = {
                     viewModel.onEvent(ReviewerEvent.LinkClicked(it))
                 },
