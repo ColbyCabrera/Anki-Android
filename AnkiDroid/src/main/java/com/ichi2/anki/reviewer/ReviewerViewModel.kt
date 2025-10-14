@@ -339,33 +339,32 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    private fun buryCard() {
+    private fun performCardAction(action: suspend (Card) -> Unit) {
         if (cardActionJob?.isActive == true || _state.value.isFinished) {
             return
         }
         val card = currentCard ?: return
         cardActionJob = viewModelScope.launch {
-            CollectionManager.withCol {
-                this.sched.buryCards(listOf(card.id))
-            }
+            action(card)
             loadCardSuspend()
         }.also {
             it.invokeOnCompletion { cardActionJob = null }
         }
     }
 
-    private fun suspendCard() {
-        if (cardActionJob?.isActive == true || _state.value.isFinished) {
-            return
+    private fun buryCard() {
+        performCardAction { card ->
+            CollectionManager.withCol {
+                this.sched.buryCards(listOf(card.id))
+            }
         }
-        val card = currentCard ?: return
-        cardActionJob = viewModelScope.launch {
+    }
+
+    private fun suspendCard() {
+        performCardAction { card ->
             CollectionManager.withCol {
                 this.sched.suspendCards(listOf(card.id))
             }
-            loadCardSuspend()
-        }.also {
-            it.invokeOnCompletion { cardActionJob = null }
         }
     }
 
@@ -380,6 +379,7 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
                     val content = avTag.filename.htmlEncode()
                     PLAY_BUTTON_TEMPLATE.format(url, content, content)
                 }
+
                 else -> null
             }
         }
