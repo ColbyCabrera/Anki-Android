@@ -93,7 +93,7 @@ class SaveBrowserSearchDialogFragment : DialogFragment() {
             }
     }
 }
-
+/*
 /**
  * Registers a fragment result listener to update [CardBrowser] after the user successfully saves a
  * previously made search from the toolbar.
@@ -122,3 +122,4 @@ fun CardBrowser.registerSaveSearchHandler() {
         }
     }
 }
+*/

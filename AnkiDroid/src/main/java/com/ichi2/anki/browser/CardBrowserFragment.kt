@@ -13,7 +13,7 @@
  *  You should have received a copy of the GNU General Public License along with
  *  this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+/*
 package com.ichi2.anki.browser
 
 import android.content.DialogInterface
@@ -132,8 +132,8 @@ class CardBrowserFragment :
 
     @VisibleForTesting
     lateinit var cardsListView: RecyclerView
-
-    /** LayoutManager for [cardsListView] */
+*/
+    /** LayoutManager for [cardsListView] *//*
     val layoutManager: LinearLayoutManager
         get() = cardsListView.layoutManager as LinearLayoutManager
 
@@ -668,10 +668,10 @@ class CardBrowserFragment :
             val dialog = getChangeDeckDialog(selectableDecks)
             showDialogFragment(dialog)
         }
-
+*/
     /** All the notes of the selected cards will be marked
      * If one or more card is unmarked, all will be marked,
-     * otherwise, they will be unmarked  */
+     * otherwise, they will be unmarked  *//*
     @NeedsTest("Test that the mark get toggled as expected for a list of selected cards")
     @VisibleForTesting
     fun toggleMark() =
@@ -680,8 +680,8 @@ class CardBrowserFragment :
         }
 
     fun toggleSuspendCards() = launchCatchingTask { withProgress { activityViewModel.toggleSuspendCards().join() } }
-
-    /** @see CardBrowserViewModel.toggleBury */
+*/
+    /** @see CardBrowserViewModel.toggleBury *//*
     fun toggleBury() =
         launchCatchingTask {
             val result = withProgress { activityViewModel.toggleBury() } ?: return@launchCatchingTask
@@ -706,8 +706,8 @@ class CardBrowserFragment :
             showDialogFragment(SetDueDateDialog.newInstance(allCardIds))
         }
     }
-
-    /** @see repositionCardsNoValidation */
+*/
+    /** @see repositionCardsNoValidation *//*
     fun repositionSelectedCards(): Boolean {
         Timber.i("CardBrowser:: Reposition button pressed")
         if (ankiActivity.warnUserIfInNotesOnlyMode()) return false
@@ -883,11 +883,11 @@ class CardBrowserFragment :
             }
         return dialog
     }
-
+*/
     /**
      * Change Deck
      * @param did Id of the deck
-     */
+     *//*
     @VisibleForTesting
     internal fun moveSelectedCardsToDeck(did: DeckId): Job =
         launchCatchingTask {
@@ -954,13 +954,13 @@ class CardBrowserFragment :
             }
         }
     }
-
+*/
     /**
      * Updates the tags of selected/checked notes and saves them to the disk
      * @param selectedTags list of checked tags
      * @param indeterminateTags a list of tags which can checked or unchecked, should be ignored if not expected
      * For more info on [selectedTags] and [indeterminateTags] see [com.ichi2.anki.dialogs.tags.TagsDialogListener.onSelectedTags]
-     */
+     *//*
     private suspend fun editSelectedCardsTags(
         selectedTags: List<String>,
         indeterminateTags: List<String>,
@@ -1038,11 +1038,13 @@ class CardBrowserFragment :
     }
 
     companion object {
-        /**
+        */
+/**
          * Argument key to add on change deck dialog,
          * so it can be dismissed on activity recreation,
          * since the cards are unselected when this happens
-         */
+         *//*
         private const val CHANGE_DECK_KEY = "CHANGE_DECK"
     }
 }
+*/

@@ -41,7 +41,6 @@ import com.ichi2.anki.CollectionManager.withCol
 import com.ichi2.anki.CrashReportService
 import com.ichi2.anki.DeckSpinnerSelection.Companion.ALL_DECKS_ID
 import com.ichi2.anki.Flag
-import com.ichi2.anki.PreviewerDestination
 import com.ichi2.anki.browser.CardBrowserViewModel.ChangeMultiSelectMode.MultiSelectCause
 import com.ichi2.anki.browser.CardBrowserViewModel.ChangeMultiSelectMode.SingleSelectCause
 import com.ichi2.anki.browser.CardBrowserViewModel.ToggleSelectionState.SELECT_ALL
@@ -140,6 +139,9 @@ class CardBrowserViewModel(
 
     // temporary flow for refactoring - called when cards are cleared
     val flowOfCardsUpdated = MutableSharedFlow<Unit>()
+
+    private val _browserRows = MutableStateFlow<List<BrowserRow>>(emptyList())
+    val browserRows: StateFlow<List<BrowserRow>> = _browserRows
 
     val cards = BrowserRowCollection(CARDS, mutableListOf())
 
@@ -325,7 +327,7 @@ class CardBrowserViewModel(
         return CardInfoDestination(firstSelectedCard, TR.cardStatsCurrentCard(TR.qtMiscBrowse()))
     }
 
-    suspend fun queryDataForCardEdit(id: CardOrNoteId): CardId = id.toCardId(cardsOrNotes)
+    suspend fun queryDataForCardEdit(id: Long): CardId = id
 
     private suspend fun getInitialDeck(): SelectableDeck {
         // TODO: Handle the launch intent
@@ -1063,18 +1065,6 @@ class CardBrowserViewModel(
         setFilterQuery(sb.toString())
     }
 
-    /** Previewing */
-    suspend fun queryPreviewIntentData(): PreviewerDestination {
-        // If in NOTES mode, we show one Card per Note, as this matches Anki Desktop
-        return if (selectedRowCount() > 1) {
-            PreviewerDestination(currentIndex = 0, IdsFile(cacheDir, queryAllSelectedCardIds()))
-        } else {
-            // Preview all cards, starting from the one that is currently selected
-            val startIndex = indexOfFirstCheckedCard() ?: 0
-            PreviewerDestination(startIndex, IdsFile(cacheDir, queryOneCardIdPerNote()))
-        }
-    }
-
     private suspend fun queryOneCardIdPerNote(): List<CardId> = cards.queryOneCardIdPerRow()
 
     /** @return the index of the first checked card in [cards], or `null` if no cards are checked */
@@ -1183,11 +1173,18 @@ class CardBrowserViewModel(
                 ) {
                     flowOfSearchState.emit(SearchState.Searching)
                     Timber.d("performing search: '%s'", query)
-                    val cards = com.ichi2.anki.searchForRows(query, order.toSortOrder(), cardsOrNotes)
-                    Timber.d("Search returned %d card(s)", cards.size)
+                    val newBrowserRows = withCol {
+                        val ids = when (cardsOrNotes) {
+                            CARDS -> findCards(query, order.toSortOrder())
+                            NOTES -> findNotes(query, order.toSortOrder())
+                        }
+                        ids.map { backend.browserRowForId(it) }
+                    }
+                    Timber.d("Search returned %d card(s)", newBrowserRows.size)
 
                     ensureActive()
-                    this@CardBrowserViewModel.cards.replaceWith(cardsOrNotes, cards)
+                    _browserRows.value = newBrowserRows
+                    this@CardBrowserViewModel.cards.replaceWith(cardsOrNotes, newBrowserRows.map { CardOrNoteId(it.id) })
                     flowOfSearchState.emit(SearchState.Completed)
                     selectUnvalidatedRowIds(cardOrNoteIdsToSelect)
                 }
@@ -1198,6 +1195,7 @@ class CardBrowserViewModel(
 
     private suspend fun clearCardsList() {
         cards.reset()
+        _browserRows.value = emptyList()
         flowOfCardsUpdated.emit(Unit)
     }
 

@@ -312,7 +312,7 @@ open class AnkiDroidJsAPI(
                 activity.startActivity(intent)
                 convertToByteArray(apiContract, true)
             }
-            "searchCardWithCallback" -> ankiSearchCardWithCallback(apiContract)
+            // "searchCardWithCallback" -> ankiSearchCardWithCallback(apiContract)
             "isDisplayingAnswer" -> convertToByteArray(apiContract, activity.isDisplayingAnswer)
             "addTagToCard" -> {
                 activity.runOnUiThread { activity.showTagsDialog() }
@@ -455,6 +455,7 @@ open class AnkiDroidJsAPI(
         return conversion(apiContract, status)
     }
 
+    /*
     @NeedsTest("needs coverage")
     private suspend fun ankiSearchCardWithCallback(apiContract: ApiContract): ByteArray =
         withContext(Dispatchers.Main) {
@@ -497,7 +498,7 @@ open class AnkiDroidJsAPI(
             }
             convertToByteArray(apiContract, true)
         }
-
+    */
     open class CardDataForJsApi {
         var newCardCount: Int = -1
         var lrnCardCount: Int = -1
