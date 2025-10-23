@@ -140,8 +140,8 @@ class CardBrowserViewModel(
     // temporary flow for refactoring - called when cards are cleared
     val flowOfCardsUpdated = MutableSharedFlow<Unit>()
 
-    private val _browserRows = MutableStateFlow<List<BrowserRow>>(emptyList())
-    val browserRows: StateFlow<List<BrowserRow>> = _browserRows
+    private val _browserRows = MutableStateFlow<List<BrowserRowWithId>>(emptyList())
+    val browserRows: StateFlow<List<BrowserRowWithId>> = _browserRows
 
     val cards = BrowserRowCollection(CARDS, mutableListOf())
 
@@ -1178,7 +1178,12 @@ class CardBrowserViewModel(
                             CARDS -> findCards(query, order.toSortOrder())
                             NOTES -> findNotes(query, order.toSortOrder())
                         }
-                        ids.map { backend.browserRowForId(it) }
+                        ids.map { id ->
+                            BrowserRowWithId(
+                                browserRow = backend.browserRowForId(id),
+                                id = id
+                            )
+                        }
                     }
                     Timber.d("Search returned %d card(s)", newBrowserRows.size)
 

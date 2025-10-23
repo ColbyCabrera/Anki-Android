@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import anki.search.BrowserRow
+import com.ichi2.anki.browser.BrowserRowWithId
 import com.ichi2.anki.browser.CardBrowserViewModel
 import com.ichi2.anki.browser.ColumnHeading
 
@@ -22,7 +23,7 @@ import com.ichi2.anki.browser.ColumnHeading
 fun CardBrowserScreen(
     viewModel: CardBrowserViewModel,
     onNavigateUp: () -> Unit,
-    onCardClicked: (BrowserRow) -> Unit
+    onCardClicked: (BrowserRowWithId) -> Unit
 ) {
     val browserRows by viewModel.browserRows.collectAsStateWithLifecycle()
     val columnHeadings by viewModel.flowOfColumnHeadings.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -33,7 +34,7 @@ fun CardBrowserScreen(
                 title = { Text("Card Browser") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateUp) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Navigate Up")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Navigate Up")
                     }
                 },
                 actions = {
@@ -47,7 +48,7 @@ fun CardBrowserScreen(
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
             CardBrowserHeader(columns = columnHeadings)
-            Divider()
+            HorizontalDivider()
             if (browserRows.isEmpty()) {
                 // TODO: Show a loading indicator or empty state
                 Text(text = "Loading cards...", modifier = Modifier.padding(16.dp))
@@ -58,11 +59,11 @@ fun CardBrowserScreen(
                         key = { it.id }
                     ) { row ->
                         CardBrowserRow(
-                            row = row,
+                            row = row.browserRow,
                             columns = columnHeadings,
                             modifier = Modifier.clickable { onCardClicked(row) }
                         )
-                        Divider()
+                        HorizontalDivider()
                     }
                 }
             }
@@ -102,9 +103,9 @@ fun CardBrowserRow(
     ) {
         // This is a simplified representation. The original adapter handles HTML.
         // For a full conversion, a composable that can render HTML would be needed.
-        row.cells.forEach { cell ->
+        row.getCellsList().forEach { cell ->
             Text(
-                text = cell.text,
+                text = cell.getText(),
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
                 modifier = Modifier.weight(1f) // Basic weighting
