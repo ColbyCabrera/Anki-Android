@@ -47,7 +47,7 @@ import timber.log.Timber
  * for state management and business logic.
  */
 open class CardBrowser :
-    NavigationDrawerActivity(),
+    AnkiActivity(),
     ChangeManager.Subscriber {
 
     private lateinit var viewModel: CardBrowserViewModel
@@ -147,12 +147,4 @@ open class CardBrowser :
             inCardBrowserActivity: Boolean = false,
         ): NoteEditorLauncher = NoteEditorLauncher.AddNoteFromCardBrowser(viewModel, inCardBrowserActivity)
     }
-
-    // Deprecated properties and methods from the old implementation.
-    // These are kept to avoid breaking other parts of the app that might still reference them.
-    // They should be removed as the app is further migrated to a more modern architecture.
-    @Deprecated("Fragmented view is not supported in Compose version")
-    override var fragmented: Boolean
-        get() = false
-        set(_) { throw UnsupportedOperationException("Fragmented view is not supported in Compose version") }
 }
