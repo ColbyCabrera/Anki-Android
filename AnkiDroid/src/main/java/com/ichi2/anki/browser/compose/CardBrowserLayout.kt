@@ -194,7 +194,7 @@ fun CardBrowserLayout(
             CardBrowserScreen(
                 viewModel = viewModel,
                 onCardClicked = onCardClicked,
-                modifier = Modifier.padding(paddingValues)
+                modifier = Modifier.padding(0.dp)
             )
         }
     }

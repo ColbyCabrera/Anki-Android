@@ -25,7 +25,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.annotation.VisibleForTesting
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModelProvider
 import anki.collection.OpChanges
 import com.ichi2.anim.ActivityTransitionAnimation.Direction
@@ -133,37 +136,46 @@ open class CardBrowser :
 
         setContent {
             AnkiDroidTheme {
-                CardBrowserLayout(
-                    viewModel = viewModel,
-                    onNavigateUp = { finish() },
-                    onCardClicked = { row ->
-                        launchCatchingTask {
-                            val cardId = viewModel.queryDataForCardEdit(row.id)
-                            openNoteEditorForCard(cardId)
+                Box(modifier = Modifier.fillMaxSize()) {
+                    CardBrowserLayout(
+                        viewModel = viewModel,
+                        onNavigateUp = { finish() },
+                        onCardClicked = { row ->
+                            launchCatchingTask {
+                                val cardId = viewModel.queryDataForCardEdit(row.id)
+                                openNoteEditorForCard(cardId)
+                            }
+                        },
+                        onAddNote = {
+                            onAddNoteActivityResult.launch(addNoteLauncher.toIntent(this@CardBrowser))
+                        },
+                        onPreview = {
+                            launchCatchingTask {
+                                val intentData = viewModel.queryPreviewIntentData()
+                                val intent = PreviewerFragment.getIntent(
+                                    this@CardBrowser,
+                                    intentData.idsFile,
+                                    intentData.currentIndex
+                                )
+                                onPreviewCardsActivityResult.launch(intent)
+                            }
+                        },
+                        onFilter = viewModel::search,
+                        onSelectAll = {
+                            // TODO
+                        },
+                        onOptions = {
+                            val dialog = BrowserOptionsDialog.newInstance(
+                                viewModel.cardsOrNotes,
+                                viewModel.isTruncated
+                            )
+                            dialog.show(supportFragmentManager, "BrowserOptionsDialog")
+                        },
+                        onCreateFilteredDeck = {
+                            // TODO
                         }
-                    },
-                    onAddNote = {
-                        onAddNoteActivityResult.launch(addNoteLauncher.toIntent(this@CardBrowser))
-                    },
-                    onPreview = {
-                        launchCatchingTask {
-                            val intentData = viewModel.queryPreviewIntentData()
-                            val intent = PreviewerFragment.getIntent(this@CardBrowser, intentData.idsFile, intentData.currentIndex)
-                            onPreviewCardsActivityResult.launch(intent)
-                        }
-                    },
-                    onFilter = viewModel::search,
-                    onSelectAll = {
-                        // TODO
-                    },
-                    onOptions = {
-                        val dialog = BrowserOptionsDialog.newInstance(viewModel.cardsOrNotes, viewModel.isTruncated)
-                        dialog.show(supportFragmentManager, "BrowserOptionsDialog")
-                    },
-                    onCreateFilteredDeck = {
-                        // TODO
-                    }
-                )
+                    )
+                }
             }
         }
     }
