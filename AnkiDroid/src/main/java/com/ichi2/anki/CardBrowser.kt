@@ -21,6 +21,7 @@ package com.ichi2.anki
 import android.os.Bundle
 import android.view.KeyEvent
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.annotation.VisibleForTesting
@@ -40,6 +41,7 @@ import com.ichi2.anki.libanki.Collection
 import com.ichi2.anki.noteeditor.NoteEditorLauncher
 import com.ichi2.anki.observability.ChangeManager
 import com.ichi2.anki.previewer.PreviewerFragment
+import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import timber.log.Timber
 
 /**
@@ -122,13 +124,15 @@ open class CardBrowser :
             return
         }
 
+        enableEdgeToEdge()
+
         val launchOptions = intent?.toCardBrowserLaunchOptions()
         viewModel = createViewModel(launchOptions)
 
         startLoadingCollection()
 
         setContent {
-            MaterialTheme {
+            AnkiDroidTheme {
                 CardBrowserLayout(
                     viewModel = viewModel,
                     onNavigateUp = { finish() },
