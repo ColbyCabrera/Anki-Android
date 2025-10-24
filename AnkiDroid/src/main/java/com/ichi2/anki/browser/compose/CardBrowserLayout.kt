@@ -25,13 +25,24 @@ import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ichi2.anki.browser.BrowserRowWithId
@@ -48,8 +59,12 @@ fun CardBrowserLayout(
     onPreview: () -> Unit
 ) {
     val activity = LocalActivity.current
-    val windowSizeClass = calculateWindowSizeClass(activity)
-    val isTablet = windowSizeClass.widthSizeClass > WindowWidthSizeClass.Compact
+    val isTablet = if (activity != null) {
+        val windowSizeClass = calculateWindowSizeClass(activity)
+        windowSizeClass.widthSizeClass > WindowWidthSizeClass.Compact
+    } else {
+        false
+    }
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     var isSearchOpen by remember { mutableStateOf(false) }
     var showMoreMenu by remember { mutableStateOf(false) }
@@ -80,50 +95,40 @@ fun CardBrowserLayout(
                     content = { },
                 )
             } else {
-                TopAppBar(
-                    title = { Text("Card Browser") },
-                    navigationIcon = {
-                        IconButton(onClick = onNavigateUp) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Navigate Up")
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = { isSearchOpen = true }) {
-                            Icon(Icons.Default.Search, contentDescription = "Search")
-                        }
-                        IconButton(onClick = { viewModel.undo() }) {
-                            Icon(Icons.AutoMirrored.Filled.Undo, contentDescription = "Undo")
-                        }
-                        IconButton(onClick = onAddNote) {
-                            Icon(Icons.Default.Add, contentDescription = "Add Note")
-                        }
-                        IconButton(onClick = { showMoreMenu = true }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "More Options")
-                        }
-                        DropdownMenu(
-                            expanded = showMoreMenu,
-                            onDismissRequest = { showMoreMenu = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Preview") },
-                                onClick = {
-                                    onPreview()
-                                    showMoreMenu = false
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Card Info") },
-                                onClick = {
-                                    // TODO: Implement Card Info
-                                    showMoreMenu = false
-                                }
-                            )
-                        }
+                TopAppBar(title = { Text("Card Browser") }, navigationIcon = {
+                    IconButton(onClick = onNavigateUp) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Navigate Up"
+                        )
                     }
-                )
+                }, actions = {
+                    IconButton(onClick = { isSearchOpen = true }) {
+                        Icon(Icons.Default.Search, contentDescription = "Search")
+                    }
+                    IconButton(onClick = { viewModel.undo() }) {
+                        Icon(Icons.AutoMirrored.Filled.Undo, contentDescription = "Undo")
+                    }
+                    IconButton(onClick = onAddNote) {
+                        Icon(Icons.Default.Add, contentDescription = "Add Note")
+                    }
+                    IconButton(onClick = { showMoreMenu = true }) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "More Options")
+                    }
+                    DropdownMenu(
+                        expanded = showMoreMenu, onDismissRequest = { showMoreMenu = false }) {
+                        DropdownMenuItem(text = { Text("Preview") }, onClick = {
+                            onPreview()
+                            showMoreMenu = false
+                        })
+                        DropdownMenuItem(text = { Text("Card Info") }, onClick = {
+                            // TODO: Implement Card Info
+                            showMoreMenu = false
+                        })
+                    }
+                })
             }
-        }
-    ) { paddingValues ->
+        }) { paddingValues ->
         if (isTablet) {
             Row(
                 Modifier.padding(paddingValues)
