@@ -34,6 +34,7 @@ import com.ichi2.anki.browser.MySearchesContract
 import com.ichi2.anki.browser.SharedPreferencesLastDeckIdRepository
 import com.ichi2.anki.browser.compose.CardBrowserLayout
 import com.ichi2.anki.browser.toCardBrowserLaunchOptions
+import com.ichi2.anki.dialogs.BrowserOptionsDialog
 import com.ichi2.anki.libanki.CardId
 import com.ichi2.anki.libanki.Collection
 import com.ichi2.anki.noteeditor.NoteEditorLauncher
@@ -147,14 +148,13 @@ open class CardBrowser :
                             onPreviewCardsActivityResult.launch(intent)
                         }
                     },
-                    onFilter = {
-                        // TODO
-                    },
+                    onFilter = viewModel::search,
                     onSelectAll = {
                         // TODO
                     },
                     onOptions = {
-                        // TODO
+                        val dialog = BrowserOptionsDialog.newInstance(viewModel.cardsOrNotes, viewModel.isTruncated)
+                        dialog.show(supportFragmentManager, "BrowserOptionsDialog")
                     },
                     onCreateFilteredDeck = {
                         // TODO

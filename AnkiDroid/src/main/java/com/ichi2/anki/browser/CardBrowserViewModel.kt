@@ -1227,6 +1227,7 @@ class CardBrowserViewModel(
     }
 
     fun search(query: String) {
+        setSearchQuery(query)
         launchSearchForCards(query)
     }
 

@@ -7,10 +7,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import anki.search.BrowserRow
+import com.ichi2.anki.R
 import com.ichi2.anki.browser.BrowserRowWithId
 import com.ichi2.anki.browser.CardBrowserViewModel
 import com.ichi2.anki.browser.ColumnHeading
@@ -28,8 +31,7 @@ fun CardBrowserScreen(
         CardBrowserHeader(columns = columnHeadings)
         HorizontalDivider()
         if (browserRows.isEmpty()) {
-            // TODO: Show a loading indicator or empty state
-            Text(text = "Loading cards...", modifier = Modifier.padding(16.dp))
+            EmptyCardBrowser()
         } else {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(
@@ -46,6 +48,27 @@ fun CardBrowserScreen(
             }
         }
     }
+}
+
+@Composable
+fun EmptyCardBrowser(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        CardBrowserEmpty()
+    }
+}
+
+@Composable
+fun CardBrowserEmpty(modifier: Modifier = Modifier) {
+    Text(
+        text = stringResource(id = R.string.card_browser_no_cards_in_deck),
+        modifier = modifier
+    )
 }
 
 @Composable
