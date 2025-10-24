@@ -21,8 +21,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.DropdownMenu
@@ -34,6 +34,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -44,7 +45,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ichi2.anki.R
 import com.ichi2.anki.browser.BrowserRowWithId
 import com.ichi2.anki.browser.CardBrowserViewModel
 import com.ichi2.anki.noteeditor.compose.NoteEditor
@@ -68,6 +71,7 @@ fun CardBrowserLayout(
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     var isSearchOpen by remember { mutableStateOf(false) }
     var showMoreMenu by remember { mutableStateOf(false) }
+    var showDeckMenu by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -95,7 +99,21 @@ fun CardBrowserLayout(
                     content = { },
                 )
             } else {
-                TopAppBar(title = { Text("Card Browser") }, navigationIcon = {
+                TopAppBar(title = {
+                    Row {
+                        TextButton(onClick = { showDeckMenu = true }) {
+                            Text(stringResource(R.string.card_browser_all_decks))
+                            Icon(
+                                Icons.Default.ArrowDropDown,
+                                contentDescription = "Select Deck"
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = showDeckMenu, onDismissRequest = { showDeckMenu = false }) {
+                            // TODO: Populate with decks from ViewModel
+                        }
+                    }
+                }, navigationIcon = {
                     IconButton(onClick = onNavigateUp) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
@@ -106,9 +124,6 @@ fun CardBrowserLayout(
                     IconButton(onClick = { isSearchOpen = true }) {
                         Icon(Icons.Default.Search, contentDescription = "Search")
                     }
-                    IconButton(onClick = { viewModel.undo() }) {
-                        Icon(Icons.AutoMirrored.Filled.Undo, contentDescription = "Undo")
-                    }
                     IconButton(onClick = onAddNote) {
                         Icon(Icons.Default.Add, contentDescription = "Add Note")
                     }
@@ -117,12 +132,40 @@ fun CardBrowserLayout(
                     }
                     DropdownMenu(
                         expanded = showMoreMenu, onDismissRequest = { showMoreMenu = false }) {
+                        DropdownMenuItem(text = { Text("Change display order") }, onClick = {
+                            // TODO
+                            showMoreMenu = false
+                        })
+                        DropdownMenuItem(text = { Text("Filter marked") }, onClick = {
+                            // TODO
+                            showMoreMenu = false
+                        })
+                        DropdownMenuItem(text = { Text("Filter suspended") }, onClick = {
+                            // TODO
+                            showMoreMenu = false
+                        })
+                        DropdownMenuItem(text = { Text("Filter by tag") }, onClick = {
+                            // TODO
+                            showMoreMenu = false
+                        })
+                        DropdownMenuItem(text = { Text("Filter by flag") }, onClick = {
+                            // TODO: Nested menu
+                            showMoreMenu = false
+                        })
                         DropdownMenuItem(text = { Text("Preview") }, onClick = {
                             onPreview()
                             showMoreMenu = false
                         })
-                        DropdownMenuItem(text = { Text("Card Info") }, onClick = {
-                            // TODO: Implement Card Info
+                        DropdownMenuItem(text = { Text("Select all") }, onClick = {
+                            // TODO
+                            showMoreMenu = false
+                        })
+                        DropdownMenuItem(text = { Text("Options") }, onClick = {
+                            // TODO
+                            showMoreMenu = false
+                        })
+                        DropdownMenuItem(text = { Text("Create Filtered Deck...") }, onClick = {
+                            // TODO
                             showMoreMenu = false
                         })
                     }
