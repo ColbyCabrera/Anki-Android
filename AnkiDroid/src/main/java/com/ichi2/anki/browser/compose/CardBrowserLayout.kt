@@ -18,11 +18,15 @@ package com.ichi2.anki.browser.compose
 
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.DropdownMenu
@@ -31,10 +35,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBar
-import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -46,6 +49,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ichi2.anki.R
 import com.ichi2.anki.browser.BrowserRowWithId
@@ -76,36 +80,29 @@ fun CardBrowserLayout(
     Scaffold(
         topBar = {
             if (isSearchOpen) {
-                val onActiveChange = { active: Boolean -> isSearchOpen = active }
-                val colors1 = SearchBarDefaults.colors()
-                SearchBar(
-                    inputField = {
-                        SearchBarDefaults.InputField(
-                            query = searchQuery,
-                            onQueryChange = { query -> viewModel.setSearchQuery(query) },
-                            onSearch = { query -> viewModel.search(query) },
-                            expanded = isSearchOpen,
-                            onExpandedChange = onActiveChange,
-                            colors = colors1.inputFieldColors,
-                        )
-                    },
-                    expanded = isSearchOpen,
-                    onExpandedChange = onActiveChange,
-                    shape = SearchBarDefaults.inputFieldShape,
-                    colors = colors1,
-                    tonalElevation = SearchBarDefaults.TonalElevation,
-                    shadowElevation = SearchBarDefaults.ShadowElevation,
-                    windowInsets = SearchBarDefaults.windowInsets,
-                    content = { },
-                )
+                TopAppBar(title = {
+                    TextField(
+                        value = searchQuery,
+                        onValueChange = { query -> viewModel.setSearchQuery(query) },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Search") },
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        keyboardActions = KeyboardActions(onSearch = {
+                            viewModel.search(searchQuery)
+                        })
+                    )
+                }, navigationIcon = {
+                    IconButton(onClick = { isSearchOpen = false }) {
+                        Icon(Icons.Default.Close, contentDescription = "Close Search")
+                    }
+                })
             } else {
                 TopAppBar(title = {
                     Row {
                         TextButton(onClick = { showDeckMenu = true }) {
                             Text(stringResource(R.string.card_browser_all_decks))
                             Icon(
-                                Icons.Default.ArrowDropDown,
-                                contentDescription = "Select Deck"
+                                Icons.Default.ArrowDropDown, contentDescription = "Select Deck"
                             )
                         }
                         DropdownMenu(
