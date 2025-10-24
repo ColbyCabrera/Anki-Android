@@ -38,7 +38,6 @@ import com.ichi2.anki.AnkiDroidApp
 import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.CollectionManager.TR
 import com.ichi2.anki.CollectionManager.withCol
-import com.ichi2.anki.CrashReportService
 import com.ichi2.anki.DeckSpinnerSelection.Companion.ALL_DECKS_ID
 import com.ichi2.anki.Flag
 import com.ichi2.anki.browser.CardBrowserViewModel.ChangeMultiSelectMode.MultiSelectCause
@@ -123,7 +122,7 @@ import kotlin.math.min
 class CardBrowserViewModel(
     private val lastDeckIdRepository: LastDeckIdRepository,
     private val cacheDir: File,
-    options: CardBrowserLaunchOptions?,
+    private val options: CardBrowserLaunchOptions?,
     preferences: SharedPreferencesProvider,
     val isFragmented: Boolean,
     val savedStateHandle: SavedStateHandle,
@@ -207,12 +206,6 @@ class CardBrowserViewModel(
     /** The query which is currently in the search box, potentially null. Only set when search box was open  */
     val tempSearchQuery get() = searchQueryInputFlow.value
 
-    /** Whether the current element in the search bar can be saved */
-    val flowOfCanSearch =
-        searchQueryInputFlow
-            .map { it?.isNotEmpty() == true }
-            .stateIn(viewModelScope, SharingStarted.Eagerly, initialValue = false)
-
     val flowOfIsTruncated: MutableStateFlow<Boolean> =
         MutableStateFlow(sharedPrefs().getBoolean("isTruncated", false))
     val isTruncated get() = flowOfIsTruncated.value
@@ -290,14 +283,15 @@ class CardBrowserViewModel(
     val lastDeckId: DeckId?
         get() = lastDeckIdRepository.lastDeckId
 
-    suspend fun setSelectedDeck(deck: SelectableDeck) =
-        when (deck) {
-            is SelectableDeck.AllDecks -> setSelectedDeck(ALL_DECKS_ID)
-            is SelectableDeck.Deck -> setSelectedDeck(deck.deckId)
+    suspend fun setSelectedDeck(deck: SelectableDeck) {
+        val deckId = when (deck) {
+            is SelectableDeck.AllDecks -> ALL_DECKS_ID
+            is SelectableDeck.Deck -> deck.deckId
         }
+        setSelectedDeckInternal(deckId)
+    }
 
-    // TODO: Replace with setSelectedDeck(selectableDeck)
-    suspend fun setSelectedDeck(deckId: DeckId) {
+    private suspend fun setSelectedDeckInternal(deckId: DeckId) {
         Timber.i("setting deck: %d", deckId)
         lastDeckIdRepository.lastDeckId = deckId
         restrictOnDeck =
@@ -312,8 +306,7 @@ class CardBrowserViewModel(
         flowOfDeckId.update { deckId }
     }
 
-    // TODO: replace with flowOfDeckSelection
-    val flowOfDeckId = MutableStateFlow(lastDeckId)
+    private val flowOfDeckId = MutableStateFlow(lastDeckId)
     val deckId get() = flowOfDeckId.value
 
     val flowOfDeckSelection =
@@ -325,15 +318,23 @@ class CardBrowserViewModel(
             }
         }
 
-    suspend fun queryCardInfoDestination(): CardInfoDestination? {
-        val firstSelectedCard = selectedRows.firstOrNull()?.toCardId(cardsOrNotes) ?: return null
-        return CardInfoDestination(firstSelectedCard, TR.cardStatsCurrentCard(TR.qtMiscBrowse()))
-    }
-
-    suspend fun queryDataForCardEdit(id: Long): CardId = id
+    fun queryDataForCardEdit(id: Long): CardId = id
 
     private suspend fun getInitialDeck(): SelectableDeck {
-        // TODO: Handle the launch intent
+        val search = when (options) {
+            is CardBrowserLaunchOptions.SearchQueryJs -> options.search
+            is CardBrowserLaunchOptions.DeepLink -> options.search
+            is CardBrowserLaunchOptions.SystemContextMenu -> options.search.toString()
+            else -> null
+        }
+        val deckName = search?.let { extractDeckNameFromSearch(it) }
+        if (deckName != null) {
+            val did = withCol { decks.id(deckName) }
+            if (did != 0L) {
+                return SelectableDeck.Deck(deckId = did, name = deckName)
+            }
+        }
+
         val lastDeckId = lastDeckId
         if (lastDeckId == ALL_DECKS_ID) {
             return SelectableDeck.AllDecks
@@ -348,6 +349,32 @@ class CardBrowserViewModel(
             }
 
         return SelectableDeck.Deck(deckId = idToUse, name = withCol { decks.name(idToUse) })
+    }
+
+    /**
+     * Return the deck name from a search string, if it exists.
+     * e.g. "deck:hello" -> "hello"
+     *      "deck:'hello'" -> "hello"
+     *      "deck:\"hello\"" -> "hello"
+     */
+    private fun extractDeckNameFromSearch(search: String): String? {
+        val deckPrefix = "deck:"
+        val deckPrefixPos = search.indexOf(deckPrefix)
+        if (deckPrefixPos == -1) {
+            return null
+        }
+        var deckName = search.substring(deckPrefixPos + deckPrefix.length)
+        val deckNameEndPos = deckName.indexOf(" ")
+        if (deckNameEndPos != -1) {
+            deckName = deckName.substring(0, deckNameEndPos)
+        }
+        if (deckName.startsWith("'") && deckName.endsWith("'")) {
+            deckName = deckName.substring(1, deckName.length - 1)
+        }
+        if (deckName.startsWith("\"") && deckName.endsWith("\"")) {
+            deckName = deckName.substring(1, deckName.length - 1)
+        }
+        return deckName
     }
 
     val flowOfInitCompleted = MutableStateFlow(false)
@@ -534,33 +561,6 @@ class CardBrowserViewModel(
             }
             focusedRow = id
         }
-
-    /**
-     * Handles right-click on a row, by default delegating to onLongPress
-     */
-    fun handleRightClick(rowSelection: RowSelection) {
-        viewModelScope.launch {
-            val id = rowSelection.rowId
-            currentCardId = id.toCardId(cardsOrNotes)
-            if (isInMultiSelectMode && lastSelectedId != null) {
-                selectRowsBetween(lastSelectedId!!, id)
-            } else {
-                toggleRowSelection(rowSelection)
-            }
-            focusedRow = id
-        }
-    }
-
-    // on a row tap
-    fun openNoteEditorForCard(cardId: CardId) {
-        currentCardId = cardId
-        if (!isFragmented) {
-            endMultiSelectMode(SingleSelectCause.OpenNoteEditorActivity)
-        }
-        viewModelScope.launch {
-            cardSelectionEventFlow.emit(Unit)
-        }
-    }
 
     /** Whether any rows are selected */
     fun hasSelectedAnyRows(): Boolean = selectedRows.isNotEmpty()
@@ -763,9 +763,7 @@ class CardBrowserViewModel(
 
     fun selectedRowCount(): Int = selectedRows.size
 
-    suspend fun selectedNoteCount() = selectedRows.queryNoteIds(cardsOrNotes).distinct().size
-
-    fun hasSelectedAllDecks(): Boolean = lastDeckId == ALL_DECKS_ID
+    fun hasSelectedAllDecks(): Boolean = lastDeckIdRepository.lastDeckId == ALL_DECKS_ID
 
     fun changeCardOrder(which: SortType) {
         val changeType =
@@ -942,9 +940,7 @@ class CardBrowserViewModel(
                 )
             }
         } catch (e: Exception) {
-            // TODO: Remove this once we've verified no production errors
             Timber.w(e, "getting min/max position")
-            CrashReportService.sendExceptionReport(e, "prepareToRepositionCards")
             return RepositionData(
                 min = null,
                 max = null,
@@ -975,11 +971,6 @@ class CardBrowserViewModel(
 
     fun getRowAtPosition(position: Int) = cards[position]
 
-    fun getPositionOfId(id: CardOrNoteId) =
-        cards.indexOf(id).let {
-            if (it == -1) null else it
-        }
-
     private suspend fun updateSavedSearches(func: MutableMap<String, String>.() -> Unit): Map<String, String> {
         val filters = savedSearches().toMutableMap()
         func(filters)
@@ -988,8 +979,6 @@ class CardBrowserViewModel(
     }
 
     suspend fun savedSearches(): Map<String, String> = withCol { config.get("savedFilters") } ?: hashMapOf()
-
-    fun savedSearchesUnsafe(col: com.ichi2.anki.libanki.Collection): Map<String, String> = col.config.get("savedFilters") ?: hashMapOf()
 
     suspend fun removeSavedSearch(searchName: String): Map<String, String> {
         Timber.d("removing user search")
@@ -1055,33 +1044,12 @@ class CardBrowserViewModel(
         setFilterQuery(searchTerms)
     }
 
-    suspend fun filterByTags(
-        selectedTags: List<String>,
-        cardState: CardStateFilter,
-    ) {
-        val sb = StringBuilder(cardState.toSearch)
-        // join selectedTags as "tag:$tag" with " or " between them
-        val tagsConcat = selectedTags.joinToString(" or ") { tag -> "\"tag:$tag\"" }
-        if (selectedTags.isNotEmpty()) {
-            sb.append("($tagsConcat)") // Only if we added anything to the tag list
-        }
-        setFilterQuery(sb.toString())
-    }
-
     private suspend fun queryOneCardIdPerNote(): List<CardId> = cards.queryOneCardIdPerRow()
 
     /** @return the index of the first checked card in [cards], or `null` if no cards are checked */
     private fun indexOfFirstCheckedCard(): Int? {
         val idToFind = selectedRows.firstOrNull() ?: return null
         return cards.indexOf(idToFind)
-    }
-
-    fun setSearchQueryExpanded(expand: Boolean) {
-        if (expand) {
-            expandSearchQuery()
-        } else {
-            collapseSearchQuery()
-        }
     }
 
     private fun collapseSearchQuery() {
@@ -1097,10 +1065,6 @@ class CardBrowserViewModel(
         searchQueryInputFlow.update { newText }
     }
 
-    fun removeUnsubmittedInput() {
-        searchQueryInputFlow.update { null }
-    }
-
     fun moveSelectedCardsToDeck(deckId: DeckId): Deferred<OpChangesWithCount> =
         viewModelScope.async {
             val selectedCardIds = queryAllSelectedCardIds()
@@ -1108,13 +1072,6 @@ class CardBrowserViewModel(
                 setDeck(selectedCardIds, deckId)
             }
         }
-
-    suspend fun updateSelectedCardsFlag(flag: Flag): List<CardId> {
-        val idsToChange = queryAllSelectedCardIds()
-        undoableOp(this) { setUserFlagForCards(cids = idsToChange, flag = flag) }
-        flowOfCardStateChanged.emit(Unit)
-        return idsToChange
-    }
 
     /**
      * Turn off [Multi-Select Mode][isInMultiSelectMode] and return to normal state
@@ -1152,7 +1109,6 @@ class CardBrowserViewModel(
      * @param cardOrNoteIdsToSelect if the screen is reinitialized after destruction
      * restore these rows after the search is completed
      *
-     * @see com.ichi2.anki.searchForRows
      */
     @NeedsTest("Invalid searches are handled. For instance: 'and'")
     fun launchSearchForCards(cardOrNoteIdsToSelect: List<CardOrNoteId> = emptyList()) {
@@ -1209,8 +1165,6 @@ class CardBrowserViewModel(
 
     suspend fun queryCardIdAtPosition(index: Int): CardId = cards.queryCardIdsAt(index).first()
 
-    suspend fun querySelectedCardIdAtPosition(index: Int): CardId = selectedRows.toList()[index].toCardId(cardsOrNotes)
-
     /**
      * Obtains two lists of column headings with preview data
      * (preview uses the first row of data, if it exists)
@@ -1238,32 +1192,6 @@ class CardBrowserViewModel(
         )
     }
 
-    /**
-     * Replaces occurrences of search with the new value.
-     *
-     * @return the number of affected notes
-     * @see com.ichi2.anki.libanki.Collection.findAndReplace
-     * @see com.ichi2.anki.libanki.Tags.findAndReplace
-     */
-    fun findAndReplace(result: FindReplaceResult) =
-        viewModelScope.async {
-            // TODO pass the selection as the user saw it in the dialog to avoid running "find
-            //  and replace" on a different selection
-            val noteIds = if (result.onlyOnSelectedNotes) queryAllSelectedNoteIds() else emptyList()
-
-            if (result.field == TAGS_AS_FIELD) {
-                undoableOp {
-                    tags.findAndReplace(noteIds, result.search, result.replacement, result.regex, result.matchCase)
-                }.count
-            } else {
-                val field =
-                    if (result.field == ALL_FIELDS_AS_FIELD) null else result.field
-                undoableOp {
-                    findAndReplace(noteIds, result.search, result.replacement, result.regex, field, result.matchCase)
-                }.count
-            }
-        }
-
     fun updateSelectedColumn(
         selectedColumn: ColumnHeading,
         newColumn: ColumnWithSample,
@@ -1276,7 +1204,6 @@ class CardBrowserViewModel(
         updateActiveColumns(replacements, cardsOrNotes)
     }
 
-    // TODO: Do a selective update, and accept a noteId as parameter
     fun onCurrentNoteEdited() {
         Timber.i("Reloading search due to note edit")
         launchSearchForCards()
@@ -1414,9 +1341,6 @@ class CardBrowserViewModel(
 
     /** Whether [CardBrowserViewModel] is processing a search */
     sealed interface SearchState {
-        /** The class is initializing */
-        data object Initializing : SearchState
-
         /** A search is in progress */
         data object Searching : SearchState
 

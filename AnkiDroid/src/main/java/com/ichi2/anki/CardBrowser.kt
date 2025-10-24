@@ -18,7 +18,6 @@
 
 package com.ichi2.anki
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
 import androidx.activity.compose.setContent
@@ -31,6 +30,7 @@ import anki.collection.OpChanges
 import com.ichi2.anim.ActivityTransitionAnimation.Direction
 import com.ichi2.anki.browser.CardBrowserLaunchOptions
 import com.ichi2.anki.browser.CardBrowserViewModel
+import com.ichi2.anki.browser.MySearchesContract
 import com.ichi2.anki.browser.SharedPreferencesLastDeckIdRepository
 import com.ichi2.anki.browser.compose.CardBrowserLayout
 import com.ichi2.anki.browser.toCardBrowserLaunchOptions
@@ -60,6 +60,12 @@ open class CardBrowser :
 
     private val addNoteLauncher: NoteEditorLauncher
         get() = NoteEditorLauncher.AddNoteFromCardBrowser(viewModel, inCardBrowserActivity = false)
+
+    private val onMySearches = registerForActivityResult(MySearchesContract()) { query ->
+        if (query != null) {
+            viewModel.search(query)
+        }
+    }
 
     private var onEditCardActivityResult =
         registerForActivityResult(StartActivityForResult()) { result: ActivityResult ->
@@ -140,6 +146,18 @@ open class CardBrowser :
                             val intent = PreviewerFragment.getIntent(this@CardBrowser, intentData.idsFile, intentData.currentIndex)
                             onPreviewCardsActivityResult.launch(intent)
                         }
+                    },
+                    onFilter = {
+                        // TODO
+                    },
+                    onSelectAll = {
+                        // TODO
+                    },
+                    onOptions = {
+                        // TODO
+                    },
+                    onCreateFilteredDeck = {
+                        // TODO
                     }
                 )
             }
@@ -165,7 +183,7 @@ open class CardBrowser :
             }
             KeyEvent.KEYCODE_F -> {
                 if (event.isCtrlPressed) {
-                    // TODO: Open search
+                    onMySearches.launch(Unit)
                     return true
                 }
             }

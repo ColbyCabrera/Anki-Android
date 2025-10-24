@@ -30,16 +30,18 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ichi2.anki.Flag
 import com.ichi2.anki.R
 import com.ichi2.anki.browser.BrowserRowWithId
 import com.ichi2.anki.browser.CardBrowserViewModel
 import com.ichi2.anki.model.SelectableDeck
+import com.ichi2.anki.model.SortType
 import com.ichi2.anki.noteeditor.compose.NoteEditor
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class, ExperimentalMaterial3Api::class)
@@ -49,7 +51,11 @@ fun CardBrowserLayout(
     onNavigateUp: () -> Unit,
     onCardClicked: (BrowserRowWithId) -> Unit,
     onAddNote: () -> Unit,
-    onPreview: () -> Unit
+    onPreview: () -> Unit,
+    onFilter: (String) -> Unit,
+    onSelectAll: () -> Unit,
+    onOptions: () -> Unit,
+    onCreateFilteredDeck: () -> Unit
 ) {
     val activity = LocalActivity.current
     val isTablet = if (activity != null) {
@@ -155,74 +161,16 @@ fun CardBrowserLayout(
                         IconButton(onClick = { showMoreMenu = true }) {
                             Icon(Icons.Default.MoreVert, contentDescription = "More Options")
                         }
-                        DropdownMenu(
-                            expanded = showMoreMenu,
-                            onDismissRequest = { showMoreMenu = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Change display order") },
-                                onClick = {
-                                    // TODO
-                                    showMoreMenu = false
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Filter marked") },
-                                onClick = {
-                                    // TODO
-                                    showMoreMenu = false
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Filter suspended") },
-                                onClick = {
-                                    // TODO
-                                    showMoreMenu = false
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Filter by tag") },
-                                onClick = {
-                                    // TODO
-                                    showMoreMenu = false
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Filter by flag") },
-                                onClick = {
-                                    // TODO: Nested menu
-                                    showMoreMenu = false
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Preview") },
-                                onClick = {
-                                    onPreview()
-                                    showMoreMenu = false
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Select all") },
-                                onClick = {
-                                    // TODO
-                                    showMoreMenu = false
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Options") },
-                                onClick = {
-                                    // TODO
-                                    showMoreMenu = false
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Create Filtered Deck...") },
-                                onClick = {
-                                    // TODO
-                                    showMoreMenu = false
-                                }
-                            )
-                        }
+                        MoreOptionsActionItems(
+                            viewModel,
+                            showMoreMenu,
+                            onDismiss = { showMoreMenu = false },
+                            onPreview,
+                            onFilter,
+                            onSelectAll,
+                            onOptions,
+                            onCreateFilteredDeck
+                        )
                     }
                 )
             }
@@ -246,6 +194,135 @@ fun CardBrowserLayout(
                 viewModel = viewModel,
                 onCardClicked = onCardClicked,
                 modifier = Modifier.padding(paddingValues)
+            )
+        }
+    }
+}
+
+@Composable
+private fun MoreOptionsActionItems(
+    viewModel: CardBrowserViewModel,
+    expanded: Boolean,
+    onDismiss: () -> Unit,
+    onPreview: () -> Unit,
+    onFilter: (String) -> Unit,
+    onSelectAll: () -> Unit,
+    onOptions: () -> Unit,
+    onCreateFilteredDeck: () -> Unit
+) {
+    var showSortMenu by remember { mutableStateOf(false) }
+    var showFlagMenu by remember { mutableStateOf(false) }
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismiss
+    ) {
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.card_browser_change_display_order)) },
+            onClick = {
+                showSortMenu = true
+            }
+        )
+        if (showSortMenu) {
+            SelectableSortOrder(
+                viewModel = viewModel,
+                onDismiss = {
+                    showSortMenu = false
+                    onDismiss()
+                }
+            )
+        }
+        DropdownMenuItem(
+            text = { Text("Filter marked") },
+            onClick = {
+                onFilter("tag:marked")
+                onDismiss()
+            }
+        )
+        DropdownMenuItem(
+            text = { Text("Filter suspended") },
+            onClick = {
+                onFilter("is:suspended")
+                onDismiss()
+            }
+        )
+        DropdownMenuItem(
+            text = { Text("Filter by tag") },
+            onClick = {
+                // TODO
+                onDismiss()
+            }
+        )
+        DropdownMenuItem(
+            text = { Text("Filter by flag") },
+            onClick = { showFlagMenu = true }
+        )
+        if (showFlagMenu) {
+            DropdownMenu(expanded = true, onDismissRequest = { showFlagMenu = false }) {
+                Flag.entries.forEach { flag ->
+                    DropdownMenuItem(
+                        text = { Text(stringResource(flag.id)) },
+                        onClick = {
+                            onFilter("flag:${flag.code}")
+                            onDismiss()
+                        }
+                    )
+                }
+            }
+        }
+        DropdownMenuItem(
+            text = { Text("Preview") },
+            onClick = {
+                onPreview()
+                onDismiss()
+            }
+        )
+        DropdownMenuItem(
+            text = { Text("Select all") },
+            onClick = {
+                onSelectAll()
+                onDismiss()
+            }
+        )
+        DropdownMenuItem(
+            text = { Text("Options") },
+            onClick = {
+                onOptions()
+                onDismiss()
+            }
+        )
+        DropdownMenuItem(
+            text = { Text("Create Filtered Deck...") },
+            onClick = {
+                onCreateFilteredDeck()
+                onDismiss()
+            }
+        )
+    }
+}
+
+@Composable
+fun SelectableSortOrder(viewModel: CardBrowserViewModel, onDismiss: () -> Unit) {
+    val currentSortType = viewModel.order
+    val sortLabels = stringArrayResource(id = R.array.card_browser_order_labels)
+    DropdownMenu(expanded = true, onDismissRequest = onDismiss) {
+        SortType.entries.forEach { sortType ->
+            DropdownMenuItem(
+                text = {
+                    Row {
+                        RadioButton(
+                            selected = currentSortType == sortType,
+                            onClick = {
+                                viewModel.changeCardOrder(sortType)
+                                onDismiss()
+                            }
+                        )
+                        Text(text = sortLabels[sortType.cardBrowserLabelIndex])
+                    }
+                },
+                onClick = {
+                    viewModel.changeCardOrder(sortType)
+                    onDismiss()
+                }
             )
         }
     }
