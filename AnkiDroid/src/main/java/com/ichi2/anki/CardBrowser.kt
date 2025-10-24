@@ -20,6 +20,7 @@ package com.ichi2.anki
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.KeyEvent
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
@@ -31,18 +32,19 @@ import com.ichi2.anim.ActivityTransitionAnimation.Direction
 import com.ichi2.anki.browser.CardBrowserLaunchOptions
 import com.ichi2.anki.browser.CardBrowserViewModel
 import com.ichi2.anki.browser.SharedPreferencesLastDeckIdRepository
-import com.ichi2.anki.browser.compose.CardBrowserScreen
+import com.ichi2.anki.browser.compose.CardBrowserLayout
 import com.ichi2.anki.browser.toCardBrowserLaunchOptions
 import com.ichi2.anki.libanki.CardId
 import com.ichi2.anki.libanki.Collection
 import com.ichi2.anki.noteeditor.NoteEditorLauncher
 import com.ichi2.anki.observability.ChangeManager
+import com.ichi2.anki.previewer.PreviewerFragment
 import timber.log.Timber
 
 /**
  * A Jetpack Compose-based Activity for browsing cards.
  *
- * This activity is the entry point for the card browser feature. It hosts the [CardBrowserScreen]
+ * This activity is the entry point for the card browser feature. It hosts the [CardBrowserLayout]
  * Composable, which is responsible for rendering the UI. It retains the [CardBrowserViewModel]
  * for state management and business logic.
  */
@@ -56,6 +58,9 @@ open class CardBrowser :
     private val editNoteLauncher: NoteEditorLauncher
         get() = NoteEditorLauncher.EditCard(viewModel.currentCardId, Direction.DEFAULT, false)
 
+    private val addNoteLauncher: NoteEditorLauncher
+        get() = NoteEditorLauncher.AddNoteFromCardBrowser(viewModel, inCardBrowserActivity = false)
+
     private var onEditCardActivityResult =
         registerForActivityResult(StartActivityForResult()) { result: ActivityResult ->
             Timber.i("onEditCardActivityResult: resultCode=%d", result.resultCode)
@@ -66,6 +71,38 @@ open class CardBrowser :
             }
             if (result.resultCode == RESULT_OK) {
                 viewModel.onCurrentNoteEdited()
+            }
+        }
+
+    private var onAddNoteActivityResult =
+        registerForActivityResult(StartActivityForResult()) { result: ActivityResult ->
+            Timber.i("onAddNoteActivityResult: resultCode=%d", result.resultCode)
+            if (result.resultCode == DeckPicker.RESULT_DB_ERROR) {
+                setResult(DeckPicker.RESULT_DB_ERROR)
+                finish()
+                return@registerForActivityResult
+            }
+            if (result.resultCode == RESULT_OK) {
+                viewModel.search(viewModel.searchQuery.value)
+            }
+        }
+
+    private var onPreviewCardsActivityResult =
+        registerForActivityResult(StartActivityForResult()) { result: ActivityResult ->
+            Timber.d("onPreviewCardsActivityResult: resultCode=%d", result.resultCode)
+            if (result.resultCode == DeckPicker.RESULT_DB_ERROR) {
+                setResult(DeckPicker.RESULT_DB_ERROR)
+                finish()
+                return@registerForActivityResult
+            }
+            val data = result.data
+            if (data != null &&
+                (
+                    data.getBooleanExtra(NoteEditorFragment.RELOAD_REQUIRED_EXTRA_KEY, false) ||
+                        data.getBooleanExtra(NoteEditorFragment.NOTE_CHANGED_EXTRA_KEY, false)
+                    )
+            ) {
+                viewModel.search(viewModel.searchQuery.value)
             }
         }
 
@@ -85,13 +122,23 @@ open class CardBrowser :
 
         setContent {
             MaterialTheme {
-                CardBrowserScreen(
+                CardBrowserLayout(
                     viewModel = viewModel,
                     onNavigateUp = { finish() },
                     onCardClicked = { row ->
                         launchCatchingTask {
                             val cardId = viewModel.queryDataForCardEdit(row.id)
                             openNoteEditorForCard(cardId)
+                        }
+                    },
+                    onAddNote = {
+                        onAddNoteActivityResult.launch(addNoteLauncher.toIntent(this@CardBrowser))
+                    },
+                    onPreview = {
+                        launchCatchingTask {
+                            val intentData = viewModel.queryPreviewIntentData()
+                            val intent = PreviewerFragment.getIntent(this@CardBrowser, intentData.idsFile, intentData.currentIndex)
+                            onPreviewCardsActivityResult.launch(intent)
                         }
                     }
                 )
@@ -103,6 +150,43 @@ open class CardBrowser :
         super.onCollectionLoaded(col)
         Timber.d("onCollectionLoaded(): Collection loaded, ViewModel will start search.")
         // The ViewModel observes the collection loading state and will trigger the initial search.
+    }
+
+    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
+        if (event == null) {
+            return super.onKeyUp(keyCode, event)
+        }
+        when (keyCode) {
+            KeyEvent.KEYCODE_E -> {
+                if (event.isCtrlPressed) {
+                    onAddNoteActivityResult.launch(addNoteLauncher.toIntent(this))
+                    return true
+                }
+            }
+            KeyEvent.KEYCODE_F -> {
+                if (event.isCtrlPressed) {
+                    // TODO: Open search
+                    return true
+                }
+            }
+            KeyEvent.KEYCODE_P -> {
+                if (event.isCtrlPressed && event.isShiftPressed) {
+                    launchCatchingTask {
+                        val intentData = viewModel.queryPreviewIntentData()
+                        val intent = PreviewerFragment.getIntent(this@CardBrowser, intentData.idsFile, intentData.currentIndex)
+                        onPreviewCardsActivityResult.launch(intent)
+                    }
+                    return true
+                }
+            }
+            KeyEvent.KEYCODE_Z -> {
+                if (event.isCtrlPressed) {
+                    viewModel.undo()
+                    return true
+                }
+            }
+        }
+        return super.onKeyUp(keyCode, event)
     }
 
     /** Opens the note editor for a card. */

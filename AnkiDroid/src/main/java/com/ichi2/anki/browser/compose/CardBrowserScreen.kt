@@ -4,9 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -18,53 +15,33 @@ import com.ichi2.anki.browser.BrowserRowWithId
 import com.ichi2.anki.browser.CardBrowserViewModel
 import com.ichi2.anki.browser.ColumnHeading
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CardBrowserScreen(
     viewModel: CardBrowserViewModel,
-    onNavigateUp: () -> Unit,
-    onCardClicked: (BrowserRowWithId) -> Unit
+    onCardClicked: (BrowserRowWithId) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val browserRows by viewModel.browserRows.collectAsStateWithLifecycle()
     val columnHeadings by viewModel.flowOfColumnHeadings.collectAsStateWithLifecycle(initialValue = emptyList())
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Card Browser") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateUp) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Navigate Up")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { /* TODO: Implement search */ }) {
-                        Icon(Icons.Default.Search, contentDescription = "Search")
-                    }
-                    // TODO: Add other menu actions
-                }
-            )
-        }
-    ) { paddingValues ->
-        Column(modifier = Modifier.padding(paddingValues)) {
-            CardBrowserHeader(columns = columnHeadings)
-            HorizontalDivider()
-            if (browserRows.isEmpty()) {
-                // TODO: Show a loading indicator or empty state
-                Text(text = "Loading cards...", modifier = Modifier.padding(16.dp))
-            } else {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(
-                        items = browserRows,
-                        key = { it.id }
-                    ) { row ->
-                        CardBrowserRow(
-                            row = row.browserRow,
-                            columns = columnHeadings,
-                            modifier = Modifier.clickable { onCardClicked(row) }
-                        )
-                        HorizontalDivider()
-                    }
+    Column(modifier = modifier) {
+        CardBrowserHeader(columns = columnHeadings)
+        HorizontalDivider()
+        if (browserRows.isEmpty()) {
+            // TODO: Show a loading indicator or empty state
+            Text(text = "Loading cards...", modifier = Modifier.padding(16.dp))
+        } else {
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                items(
+                    items = browserRows,
+                    key = { it.id }
+                ) { row ->
+                    CardBrowserRow(
+                        row = row.browserRow,
+                        columns = columnHeadings,
+                        modifier = Modifier.clickable { onCardClicked(row) }
+                    )
+                    HorizontalDivider()
                 }
             }
         }

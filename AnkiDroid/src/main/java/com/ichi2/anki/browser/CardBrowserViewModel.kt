@@ -147,6 +147,9 @@ class CardBrowserViewModel(
 
     val flowOfSearchState = MutableSharedFlow<SearchState>()
 
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery
+
     val flowOfSearchTerms = MutableStateFlow("")
 
     val searchTerms: String
@@ -441,7 +444,7 @@ class CardBrowserViewModel(
             setSelectedDeck(initialDeckId)
             refreshBackendColumns()
 
-            val cardsOrNotes = withCol { CardsOrNotes.fromCollection(this@withCol) }
+            val cardsOrNotes = withCol { CardsOrNotes.fromCollection(this) }
             flowOfCardsOrNotes.update { cardsOrNotes }
 
             withCol {
@@ -615,7 +618,7 @@ class CardBrowserViewModel(
             Timber.i("setting mode to %s", newValue)
             withCol {
                 // Change this to only change the preference on a state change
-                newValue.saveToCollection(this@withCol)
+                newValue.saveToCollection(this)
             }
             flowOfCardsOrNotes.update { newValue }
         }
@@ -1291,6 +1294,38 @@ class CardBrowserViewModel(
         }
 
     suspend fun getAvailableDecks(): List<SelectableDeck.Deck> = SelectableDeck.fromCollection(includeFiltered = false)
+
+    fun setSearchQuery(query: String) {
+        _searchQuery.value = query
+    }
+
+    fun search(query: String) {
+        launchSearchForCards(query)
+    }
+
+    fun undo() = viewModelScope.launch {
+        withCol {
+            undo()
+        }
+        refreshSearch()
+    }
+
+    suspend fun queryPreviewIntentData(): PreviewIntentData {
+        val ids =
+            if (cardsOrNotes == CARDS) {
+                queryAllCardIds()
+            } else {
+                queryOneCardIdPerNote()
+            }
+        val idsFile = IdsFile(cacheDir, ids)
+        val currentIndex = indexOfFirstCheckedCard() ?: 0
+        return PreviewIntentData(currentIndex, idsFile)
+    }
+
+    data class PreviewIntentData(
+        val currentIndex: Int,
+        val idsFile: IdsFile,
+    )
 
     companion object {
         const val STATE_MULTISELECT = "multiselect"
