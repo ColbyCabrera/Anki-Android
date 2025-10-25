@@ -183,7 +183,10 @@ fun BrowserToolbar(
         modifier = modifier,
         expanded = true,
         floatingActionButton = {
-            FloatingToolbarDefaults.VibrantFloatingActionButton(onClick = onAddNote) {
+            FloatingToolbarDefaults.VibrantFloatingActionButton(
+                onClick = onAddNote,
+                shape = FloatingActionButtonDefaults.smallShape,
+            ) {
                 Icon(
                     painter = painterResource(R.drawable.add_24px),
                     contentDescription = stringResource(R.string.add_card)
