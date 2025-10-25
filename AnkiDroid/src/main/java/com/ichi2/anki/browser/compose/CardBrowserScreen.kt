@@ -147,7 +147,20 @@ fun CardBrowserScreen(
                 onCreateFilteredDeck = {
                     onCreateFilteredDeck()
                     showMoreOptionsMenu = false
-                }
+                },
+                hasSelection = hasSelection,
+                onEditNote = { /* TODO */ },
+                onDeleteNote = { /* TODO */ },
+                onCardInfo = { /* TODO */ },
+                onToggleSuspend = { /* TODO */ },
+                onToggleBury = { /* TODO */ },
+                onChangeDeck = { /* TODO */ },
+                onReposition = { /* TODO */ },
+                onSetDueDate = { /* TODO */ },
+                onEditTags = { /* TODO */ },
+                onGradeNow = { /* TODO */ },
+                onResetProgress = { /* TODO */ },
+                onExportCard = { /* TODO */ }
             )
         }
 
@@ -388,7 +401,20 @@ fun FilterBottomSheet(
 fun MoreOptionsBottomSheet(
     onDismissRequest: () -> Unit,
     onChangeDisplayOrder: () -> Unit,
-    onCreateFilteredDeck: () -> Unit
+    onCreateFilteredDeck: () -> Unit,
+    hasSelection: Boolean,
+    onEditNote: () -> Unit,
+    onDeleteNote: () -> Unit,
+    onCardInfo: () -> Unit,
+    onToggleSuspend: () -> Unit,
+    onToggleBury: () -> Unit,
+    onChangeDeck: () -> Unit,
+    onReposition: () -> Unit,
+    onSetDueDate: () -> Unit,
+    onEditTags: () -> Unit,
+    onGradeNow: () -> Unit,
+    onResetProgress: () -> Unit,
+    onExportCard: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
@@ -399,21 +425,72 @@ fun MoreOptionsBottomSheet(
         containerColor = MaterialTheme.colorScheme.surface,
         contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.card_browser_change_display_order)) },
-            modifier = Modifier.clickable { onChangeDisplayOrder() }
-        )
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.new_dynamic_deck)) },
-            modifier = Modifier.clickable {
-                onCreateFilteredDeck()
-                scope.launch { sheetState.hide() }.invokeOnCompletion {
-                    if (!sheetState.isVisible) {
-                        onDismissRequest()
+        if (hasSelection) {
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.cardeditor_title_edit_card)) },
+                modifier = Modifier.clickable { onEditNote() }
+            )
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.menu_delete_note)) },
+                modifier = Modifier.clickable { onDeleteNote() }
+            )
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.card_info_title)) },
+                modifier = Modifier.clickable { onCardInfo() }
+            )
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.menu_suspend_card)) },
+                modifier = Modifier.clickable { onToggleSuspend() }
+            )
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.menu_bury_card)) },
+                modifier = Modifier.clickable { onToggleBury() }
+            )
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.card_browser_change_deck)) },
+                modifier = Modifier.clickable { onChangeDeck() }
+            )
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.card_editor_reposition_card)) },
+                modifier = Modifier.clickable { onReposition() }
+            )
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.sentence_set_due_date)) },
+                modifier = Modifier.clickable { onSetDueDate() }
+            )
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.menu_edit_tags)) },
+                modifier = Modifier.clickable { onEditTags() }
+            )
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.sentence_grade_now)) },
+                modifier = Modifier.clickable { onGradeNow() }
+            )
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.reset_progress)) },
+                modifier = Modifier.clickable { onResetProgress() }
+            )
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.export_card)) },
+                modifier = Modifier.clickable { onExportCard() }
+            )
+        } else {
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.card_browser_change_display_order)) },
+                modifier = Modifier.clickable { onChangeDisplayOrder() }
+            )
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.new_dynamic_deck)) },
+                modifier = Modifier.clickable {
+                    onCreateFilteredDeck()
+                    scope.launch { sheetState.hide() }.invokeOnCompletion {
+                        if (!sheetState.isVisible) {
+                            onDismissRequest()
+                        }
                     }
                 }
-            }
-        )
+            )
+        }
     }
 }
 
