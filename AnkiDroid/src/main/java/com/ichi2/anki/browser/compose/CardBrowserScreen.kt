@@ -519,7 +519,7 @@ fun CardBrowserHeader(columns: List<ColumnHeading>) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         columns.forEach { column ->
             Text(
@@ -552,6 +552,7 @@ fun CardBrowserRow(
                 else -> MaterialTheme.colorScheme.surface
             }
         }
+
         else -> MaterialTheme.colorScheme.surface
     }
 
@@ -576,7 +577,7 @@ fun CardBrowserRow(
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             row.cellsList.forEach { cell ->
                 Text(
