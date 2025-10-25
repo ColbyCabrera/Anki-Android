@@ -15,7 +15,6 @@
  ****************************************************************************************/
 package com.ichi2.anki.browser.compose
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -29,13 +28,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.material3.FloatingToolbarDefaults.ScreenOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
@@ -73,6 +72,7 @@ fun CardBrowserScreen(
     var showMoreOptionsMenu by remember { mutableStateOf(false) }
     var showSortMenu by remember { mutableStateOf(false) }
     var showFlagMenu by remember { mutableStateOf(false) }
+    var showSetFlagMenu by remember { mutableStateOf(false) }
 
     Box(modifier = modifier) {
         Column(modifier = modifier) {
@@ -87,16 +87,7 @@ fun CardBrowserScreen(
                     ) { row ->
                         CardBrowserRow(
                             row = row.browserRow,
-                            columns = columnHeadings,
                             isSelected = selectedRows.contains(CardOrNoteId(row.id)),
-                            onLongClick = {
-                                viewModel.handleRowLongPress(
-                                    CardBrowserViewModel.RowSelection(
-                                        rowId = CardOrNoteId(row.id),
-                                        topOffset = 0
-                                    )
-                                )
-                            },
                             modifier = Modifier.combinedClickable(
                                 onClick = { onCardClicked(row) },
                                 onLongClick = {
@@ -122,6 +113,7 @@ fun CardBrowserScreen(
             onPreview = onPreview,
             onSelectAll = onSelectAll,
             onFilter = { showFilterSheet = true },
+            onSetFlag = { showSetFlagMenu = true },
             onOptions = onOptions,
             onMoreOptions = { showMoreOptionsMenu = true },
             modifier = Modifier
@@ -171,6 +163,16 @@ fun CardBrowserScreen(
                 }
             )
         }
+
+        if (showSetFlagMenu) {
+            SetFlagBottomSheet(
+                onDismiss = { showSetFlagMenu = false },
+                onSetFlag = {
+                    viewModel.setFlagForSelectedRows(it)
+                    showSetFlagMenu = false
+                }
+            )
+        }
     }
 }
 
@@ -183,6 +185,7 @@ fun BrowserToolbar(
     onPreview: () -> Unit,
     onSelectAll: () -> Unit,
     onFilter: () -> Unit,
+    onSetFlag: () -> Unit,
     onOptions: () -> Unit,
     onMoreOptions: () -> Unit,
     modifier: Modifier = Modifier
@@ -230,7 +233,7 @@ fun BrowserToolbar(
                         contentDescription = stringResource(R.string.menu_mark_note)
                     )
                 }
-                IconButton(onClick = onFilter) {
+                IconButton(onClick = onSetFlag) {
                     Icon(
                         painter = painterResource(R.drawable.flag_24px),
                         contentDescription = stringResource(R.string.menu_flag)
@@ -435,6 +438,46 @@ fun FlagFilterBottomSheet(onDismiss: () -> Unit, onFilter: (String) -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SetFlagBottomSheet(onDismiss: () -> Unit, onSetFlag: (Flag) -> Unit) {
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
+    var flagLabels by remember { mutableStateOf<Map<Flag, String>>(emptyMap()) }
+    LaunchedEffect(true) {
+        flagLabels = Flag.queryDisplayNames()
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+    ) {
+        LazyColumn {
+            items(Flag.entries) { flag ->
+                ListItem(
+                    headlineContent = { Text(flagLabels[flag] ?: "") },
+                    leadingContent = {
+                        Icon(
+                            painter = painterResource(id = flag.drawableRes),
+                            contentDescription = "Set flag"
+                        )
+                    },
+                    modifier = Modifier.clickable {
+                        onSetFlag(flag)
+                        scope.launch { sheetState.hide() }.invokeOnCompletion {
+                            if (!sheetState.isVisible) {
+                                onDismiss()
+                            }
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
+
 @Composable
 fun EmptyCardBrowser(modifier: Modifier = Modifier) {
     Column(
@@ -476,15 +519,25 @@ fun CardBrowserHeader(columns: List<ColumnHeading>) {
 @Composable
 fun CardBrowserRow(
     row: BrowserRow,
-    columns: List<ColumnHeading>,
     isSelected: Boolean,
     modifier: Modifier = Modifier,
-    onLongClick: () -> Unit
 ) {
-    val backgroundColor = if (isSelected) {
-        MaterialTheme.colorScheme.primaryContainer
-    } else {
-        MaterialTheme.colorScheme.surface
+    val backgroundColor: Color = when {
+        isSelected && row.color == BrowserRow.Color.COLOR_DEFAULT -> MaterialTheme.colorScheme.primaryContainer
+        row.color != BrowserRow.Color.COLOR_DEFAULT -> {
+            when (row.color) {
+                BrowserRow.Color.COLOR_MARKED -> MaterialTheme.colorScheme.tertiaryContainer
+                BrowserRow.Color.COLOR_FLAG_RED -> Color(0xFFFFCDD2)
+                BrowserRow.Color.COLOR_FLAG_ORANGE -> Color(0xFFFFE0B2)
+                BrowserRow.Color.COLOR_FLAG_GREEN -> Color(0xFFC8E6C9)
+                BrowserRow.Color.COLOR_FLAG_BLUE -> Color(0xFFBBDEFB)
+                BrowserRow.Color.COLOR_FLAG_PINK -> Color(0xFFF8BBD0)
+                BrowserRow.Color.COLOR_FLAG_TURQUOISE -> Color(0xFFB2EBF2)
+                BrowserRow.Color.COLOR_FLAG_PURPLE -> Color(0xFFE1BEE7)
+                else -> MaterialTheme.colorScheme.surface
+            }
+        }
+        else -> MaterialTheme.colorScheme.surface
     }
 
     Surface(

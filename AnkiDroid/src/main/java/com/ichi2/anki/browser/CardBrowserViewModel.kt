@@ -584,6 +584,17 @@ class CardBrowserViewModel(
         flowOfCardStateChanged.emit(Unit)
     }
 
+    fun setFlagForSelectedRows(flag: Flag) = viewModelScope.launch {
+        if (!hasSelectedAnyRows()) {
+            return@launch
+        }
+        val cardIds = queryAllSelectedCardIds()
+        undoableOp<OpChanges> {
+            setUserFlagForCards(cardIds, flag.code).changes
+        }
+        flowOfCardStateChanged.emit(Unit)
+    }
+
     /**
      * Deletes the selected notes,
      * @return the number of deleted notes
@@ -1319,6 +1330,8 @@ class CardBrowserViewModel(
 
             var previouslySelectedRowIds: Set<CardOrNoteId>? = null
         }
+
+
 
         sealed class MultiSelectCause : ChangeMultiSelectMode() {
             data class RowSelected(
