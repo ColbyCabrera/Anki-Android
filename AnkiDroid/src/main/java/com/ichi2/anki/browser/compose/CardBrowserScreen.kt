@@ -39,6 +39,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import anki.search.BrowserRow
@@ -525,7 +526,9 @@ fun CardBrowserHeader(columns: List<ColumnHeading>) {
             Text(
                 text = column.label,
                 style = MaterialTheme.typography.titleSmall,
-                modifier = Modifier.weight(1f) // Basic weighting
+                modifier = Modifier.weight(1f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
