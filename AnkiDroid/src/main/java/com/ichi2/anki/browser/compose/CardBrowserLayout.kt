@@ -17,18 +17,44 @@
 package com.ichi2.anki.browser.compose
 
 import androidx.activity.compose.LocalActivity
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
@@ -45,7 +71,11 @@ import com.ichi2.anki.model.SortType
 import com.ichi2.anki.noteeditor.compose.NoteEditor
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3WindowSizeClassApi::class, ExperimentalMaterial3Api::class)
+@OptIn(
+    ExperimentalMaterial3WindowSizeClassApi::class,
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3ExpressiveApi::class
+)
 @Composable
 fun CardBrowserLayout(
     viewModel: CardBrowserViewModel,
@@ -85,98 +115,88 @@ fun CardBrowserLayout(
     Scaffold(
         topBar = {
             if (isSearchOpen) {
-                TopAppBar(
-                    title = {
-                        TextField(
-                            value = searchQuery,
-                            onValueChange = { query -> viewModel.setSearchQuery(query) },
-                            modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("Search") },
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                            keyboardActions = KeyboardActions(onSearch = { viewModel.search(searchQuery) })
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { isSearchOpen = false }) {
-                            Icon(Icons.Default.Close, contentDescription = "Close Search")
-                        }
+                TopAppBar(title = {
+                    TextField(
+                        value = searchQuery,
+                        onValueChange = { query -> viewModel.setSearchQuery(query) },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Search") },
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        keyboardActions = KeyboardActions(onSearch = {
+                            viewModel.search(searchQuery)
+                        })
+                    )
+                }, navigationIcon = {
+                    IconButton(onClick = { isSearchOpen = false }) {
+                        Icon(Icons.Default.Close, contentDescription = "Close Search")
                     }
-                )
+                })
             } else {
-                TopAppBar(
-                    title = {
-                        Row {
-                            TextButton(onClick = { showDeckMenu = true }) {
-                                val selectedDeck by viewModel.flowOfDeckSelection.collectAsStateWithLifecycle(null)
-                                val deckName = when (val deck = selectedDeck) {
-                                    is SelectableDeck.Deck -> deck.name
-                                    else -> stringResource(R.string.card_browser_all_decks)
-                                }
-                                Text(deckName)
-                                Icon(
-                                    Icons.Default.ArrowDropDown,
-                                    contentDescription = "Select Deck"
-                                )
+                TopAppBar(title = {
+                    Row {
+                        TextButton(onClick = { showDeckMenu = true }) {
+                            val selectedDeck by viewModel.flowOfDeckSelection.collectAsStateWithLifecycle(
+                                null
+                            )
+                            val deckName = when (val deck = selectedDeck) {
+                                is SelectableDeck.Deck -> deck.name
+                                else -> stringResource(R.string.card_browser_all_decks)
                             }
-                            DropdownMenu(
-                                expanded = showDeckMenu,
-                                onDismissRequest = { showDeckMenu = false }
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.card_browser_all_decks)) },
-                                    onClick = {
-                                        coroutineScope.launch {
-                                            viewModel.setSelectedDeck(SelectableDeck.AllDecks)
-                                        }
-                                        showDeckMenu = false
-                                    }
-                                )
-                                DeckHierarchyMenu(
-                                    deckHierarchy = deckHierarchy,
-                                    expandedDecks = expandedDecks,
-                                    onDeckSelected = { deck ->
-                                        coroutineScope.launch {
-                                            viewModel.setSelectedDeck(deck)
-                                        }
-                                        showDeckMenu = false
-                                    }
-                                )
-                            }
-                        }
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = onNavigateUp) {
+                            Text(deckName)
                             Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Navigate Up"
+                                Icons.Default.ArrowDropDown, contentDescription = "Select Deck"
                             )
                         }
-                    },
-                    actions = {
-                        IconButton(onClick = { isSearchOpen = true }) {
-                            Icon(Icons.Default.Search, contentDescription = "Search")
+                        DropdownMenu(
+                            expanded = showDeckMenu, onDismissRequest = { showDeckMenu = false }) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.card_browser_all_decks)) },
+                                onClick = {
+                                    coroutineScope.launch {
+                                        viewModel.setSelectedDeck(SelectableDeck.AllDecks)
+                                    }
+                                    showDeckMenu = false
+                                })
+                            DeckHierarchyMenu(
+                                deckHierarchy = deckHierarchy,
+                                expandedDecks = expandedDecks,
+                                onDeckSelected = { deck ->
+                                    coroutineScope.launch {
+                                        viewModel.setSelectedDeck(deck)
+                                    }
+                                    showDeckMenu = false
+                                })
                         }
-                        IconButton(onClick = onAddNote) {
-                            Icon(Icons.Default.Add, contentDescription = "Add Note")
-                        }
-                        IconButton(onClick = { showMoreMenu = true }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "More Options")
-                        }
-                        MoreOptionsActionItems(
-                            viewModel,
-                            showMoreMenu,
-                            onDismiss = { showMoreMenu = false },
-                            onPreview,
-                            onFilter,
-                            onSelectAll,
-                            onOptions,
-                            onCreateFilteredDeck
+                    }
+                }, navigationIcon = {
+                    IconButton(onClick = onNavigateUp) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Navigate Up"
                         )
                     }
-                )
+                }, actions = {
+                    IconButton(onClick = { isSearchOpen = true }) {
+                        Icon(Icons.Default.Search, contentDescription = "Search")
+                    }
+                    IconButton(onClick = onAddNote) {
+                        Icon(Icons.Default.Add, contentDescription = "Add Note")
+                    }
+                    IconButton(onClick = { showMoreMenu = true }) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "More Options")
+                    }
+                    MoreOptionsActionItems(
+                        viewModel,
+                        showMoreMenu,
+                        onDismiss = { showMoreMenu = false },
+                        onPreview,
+                        onFilter,
+                        onSelectAll,
+                        onOptions,
+                        onCreateFilteredDeck
+                    )
+                })
             }
-        }
-    ) { paddingValues ->
+        }) { paddingValues ->
         if (isTablet) {
             Row(
                 Modifier.padding(paddingValues)
@@ -222,96 +242,64 @@ private fun MoreOptionsActionItems(
     }
 
     DropdownMenu(
-        expanded = expanded,
-        onDismissRequest = onDismiss
+        expanded = expanded, onDismissRequest = onDismiss
     ) {
         DropdownMenuItem(
             text = { Text(stringResource(R.string.card_browser_change_display_order)) },
             onClick = {
                 showSortMenu = true
-            }
-        )
+            })
         if (showSortMenu) {
             SelectableSortOrder(
-                viewModel = viewModel,
-                onDismiss = {
+                viewModel = viewModel, onDismiss = {
                     showSortMenu = false
                     onDismiss()
-                }
-            )
+                })
         }
-        DropdownMenuItem(
-            text = { Text("Filter marked") },
-            onClick = {
-                onFilter("tag:marked")
-                onDismiss()
-            }
-        )
-        DropdownMenuItem(
-            text = { Text("Filter suspended") },
-            onClick = {
-                onFilter("is:suspended")
-                onDismiss()
-            }
-        )
-        DropdownMenuItem(
-            text = { Text("Filter by tag") },
-            onClick = {
-                // TODO
-                onDismiss()
-            }
-        )
-        DropdownMenuItem(
-            text = { Text("Filter by flag") },
-            onClick = { showFlagMenu = true }
-        )
+        DropdownMenuItem(text = { Text("Filter marked") }, onClick = {
+            onFilter("tag:marked")
+            onDismiss()
+        })
+        DropdownMenuItem(text = { Text("Filter suspended") }, onClick = {
+            onFilter("is:suspended")
+            onDismiss()
+        })
+        DropdownMenuItem(text = { Text("Filter by tag") }, onClick = {
+            // TODO
+            onDismiss()
+        })
+        DropdownMenuItem(text = { Text("Filter by flag") }, onClick = { showFlagMenu = true })
         if (showFlagMenu) {
             DropdownMenu(expanded = true, onDismissRequest = { showFlagMenu = false }) {
                 Flag.entries.filter { it != Flag.NONE }.forEach { flag ->
-                    DropdownMenuItem(
-                        text = { Text(flagLabels[flag] ?: "") },
-                        leadingIcon = {
-                            Icon(
-                                painter = painterResource(id = flag.drawableRes),
-                                contentDescription = "Filter by flag"
-                            )
-                        },
-                        onClick = {
-                            onFilter("flag:${flag.code}")
-                            onDismiss()
-                        }
-                    )
+                    DropdownMenuItem(text = { Text(flagLabels[flag] ?: "") }, leadingIcon = {
+                        Icon(
+                            painter = painterResource(id = flag.drawableRes),
+                            contentDescription = "Filter by flag"
+                        )
+                    }, onClick = {
+                        onFilter("flag:${flag.code}")
+                        onDismiss()
+                    })
                 }
             }
         }
-        DropdownMenuItem(
-            text = { Text("Preview") },
-            onClick = {
-                onPreview()
-                onDismiss()
-            }
-        )
-        DropdownMenuItem(
-            text = { Text("Select all") },
-            onClick = {
-                onSelectAll()
-                onDismiss()
-            }
-        )
-        DropdownMenuItem(
-            text = { Text("Options") },
-            onClick = {
-                onOptions()
-                onDismiss()
-            }
-        )
-        DropdownMenuItem(
-            text = { Text("Create Filtered Deck...") },
-            onClick = {
-                onCreateFilteredDeck()
-                onDismiss()
-            }
-        )
+        DropdownMenuItem(text = { Text("Preview") }, onClick = {
+            onPreview()
+            onDismiss()
+        })
+        DropdownMenuItem(text = { Text("Select all") }, onClick = {
+            onSelectAll()
+            onDismiss()
+        })
+        DropdownMenuItem(text = { Text("Options") }, onClick = {
+            onOptions()
+            onDismiss()
+        })
+        DropdownMenuItem(text = { Text("Create Filtered Deck...") }, onClick = {
+            onCreateFilteredDeck()
+            onDismiss()
+        })
     }
 }
 
@@ -321,24 +309,19 @@ fun SelectableSortOrder(viewModel: CardBrowserViewModel, onDismiss: () -> Unit) 
     val sortLabels = stringArrayResource(id = R.array.card_browser_order_labels)
     DropdownMenu(expanded = true, onDismissRequest = onDismiss) {
         SortType.entries.forEach { sortType ->
-            DropdownMenuItem(
-                text = {
-                    Row {
-                        RadioButton(
-                            selected = currentSortType == sortType,
-                            onClick = {
-                                viewModel.changeCardOrder(sortType)
-                                onDismiss()
-                            }
-                        )
-                        Text(text = sortLabels[sortType.cardBrowserLabelIndex])
-                    }
-                },
-                onClick = {
-                    viewModel.changeCardOrder(sortType)
-                    onDismiss()
+            DropdownMenuItem(text = {
+                Row {
+                    RadioButton(
+                        selected = currentSortType == sortType, onClick = {
+                            viewModel.changeCardOrder(sortType)
+                            onDismiss()
+                        })
+                    Text(text = sortLabels[sortType.cardBrowserLabelIndex])
                 }
-            )
+            }, onClick = {
+                viewModel.changeCardOrder(sortType)
+                onDismiss()
+            })
         }
     }
 }
@@ -374,26 +357,23 @@ private fun DeckHierarchyMenu(
         val isExpanded = expandedDecks[deck.name] ?: false
         val hasChildren = deckHierarchy.containsKey(deck.name)
 
-        DropdownMenuItem(
-            text = {
-                Row {
-                    if (hasChildren) {
-                        Icon(
-                            if (isExpanded) Icons.Default.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                            contentDescription = "Expand"
-                        )
-                    }
-                    Text(deck.name.substringAfterLast("::"))
-                }
-            },
-            onClick = {
+        DropdownMenuItem(text = {
+            Row {
                 if (hasChildren) {
-                    expandedDecks[deck.name] = !isExpanded
-                } else {
-                    onDeckSelected(deck)
+                    Icon(
+                        if (isExpanded) Icons.Default.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = "Expand"
+                    )
                 }
+                Text(deck.name.substringAfterLast("::"))
             }
-        )
+        }, onClick = {
+            if (hasChildren) {
+                expandedDecks[deck.name] = !isExpanded
+            } else {
+                onDeckSelected(deck)
+            }
+        })
         if (isExpanded && hasChildren) {
             Column(modifier = Modifier.padding(start = 16.dp)) {
                 DeckHierarchyMenu(deckHierarchy, expandedDecks, onDeckSelected, deck.name)
