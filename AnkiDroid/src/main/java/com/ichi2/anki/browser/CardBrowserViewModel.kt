@@ -1257,14 +1257,15 @@ class CardBrowserViewModel(
     }
 
     suspend fun queryPreviewIntentData(): PreviewIntentData {
-        val ids =
-            if (cardsOrNotes == CARDS) {
-                queryAllCardIds()
-            } else {
-                queryOneCardIdPerNote()
-            }
+        val ids = if (selectedRows.isNotEmpty()) {
+            queryAllSelectedCardIds()
+        } else if (cardsOrNotes == CARDS) {
+            queryAllCardIds()
+        } else {
+            queryOneCardIdPerNote()
+        }
         val idsFile = IdsFile(cacheDir, ids)
-        val currentIndex = indexOfFirstCheckedCard() ?: 0
+        val currentIndex = if (selectedRows.isNotEmpty()) 0 else indexOfFirstCheckedCard() ?: 0
         return PreviewIntentData(currentIndex, idsFile)
     }
 
