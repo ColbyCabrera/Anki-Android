@@ -38,7 +38,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -56,24 +55,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ichi2.anki.Flag
 import com.ichi2.anki.R
 import com.ichi2.anki.browser.BrowserRowWithId
 import com.ichi2.anki.browser.CardBrowserViewModel
-import com.ichi2.anki.browser.LastDeckIdRepository
 import com.ichi2.anki.model.SelectableDeck
-import com.ichi2.anki.model.SortType
 import com.ichi2.anki.noteeditor.compose.NoteEditor
-import com.ichi2.anki.preferences.SharedPreferencesProvider
 import kotlinx.coroutines.launch
 
 @OptIn(
@@ -183,21 +173,16 @@ fun CardBrowserLayout(
                     IconButton(onClick = { isSearchOpen = true }) {
                         Icon(Icons.Default.Search, contentDescription = "Search")
                     }
-                    IconButton(onClick = onAddNote) {
-                        Icon(Icons.Default.Add, contentDescription = "Add Note")
-                    }
                     IconButton(onClick = { showMoreMenu = true }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "More Options")
                     }
                     MoreOptionsActionItems(
-                        viewModel,
-                        showMoreMenu,
+                        expanded = showMoreMenu,
                         onDismiss = { showMoreMenu = false },
-                        onPreview,
-                        onFilter,
-                        onSelectAll,
-                        onOptions,
-                        onCreateFilteredDeck
+                        onPreview = onPreview,
+                        onSelectAll = onSelectAll,
+                        onOptions = onOptions,
+                        onCreateFilteredDeck = onCreateFilteredDeck
                     )
                 })
             }
@@ -238,68 +223,16 @@ fun CardBrowserLayout(
 
 @Composable
 private fun MoreOptionsActionItems(
-    viewModel: CardBrowserViewModel,
     expanded: Boolean,
     onDismiss: () -> Unit,
     onPreview: () -> Unit,
-    onFilter: (String) -> Unit,
     onSelectAll: () -> Unit,
     onOptions: () -> Unit,
     onCreateFilteredDeck: () -> Unit
 ) {
-    var showSortMenu by remember { mutableStateOf(false) }
-    var showFlagMenu by remember { mutableStateOf(false) }
-    var flagLabels by remember { mutableStateOf<Map<Flag, String>>(emptyMap()) }
-
-    LaunchedEffect(showFlagMenu) {
-        if (showFlagMenu) {
-            flagLabels = Flag.queryDisplayNames()
-        }
-    }
-
     DropdownMenu(
         expanded = expanded, onDismissRequest = onDismiss
     ) {
-        DropdownMenuItem(
-            text = { Text(stringResource(R.string.card_browser_change_display_order)) },
-            onClick = {
-                showSortMenu = true
-            })
-        if (showSortMenu) {
-            SelectableSortOrder(
-                viewModel = viewModel, onDismiss = {
-                    showSortMenu = false
-                    onDismiss()
-                })
-        }
-        DropdownMenuItem(text = { Text("Filter marked") }, onClick = {
-            onFilter("tag:marked")
-            onDismiss()
-        })
-        DropdownMenuItem(text = { Text("Filter suspended") }, onClick = {
-            onFilter("is:suspended")
-            onDismiss()
-        })
-        DropdownMenuItem(text = { Text("Filter by tag") }, onClick = {
-            // TODO
-            onDismiss()
-        })
-        DropdownMenuItem(text = { Text("Filter by flag") }, onClick = { showFlagMenu = true })
-        if (showFlagMenu) {
-            DropdownMenu(expanded = true, onDismissRequest = { showFlagMenu = false }) {
-                Flag.entries.filter { it != Flag.NONE }.forEach { flag ->
-                    DropdownMenuItem(text = { Text(flagLabels[flag] ?: "") }, leadingIcon = {
-                        Icon(
-                            painter = painterResource(id = flag.drawableRes),
-                            contentDescription = "Filter by flag"
-                        )
-                    }, onClick = {
-                        onFilter("flag:${flag.code}")
-                        onDismiss()
-                    })
-                }
-            }
-        }
         DropdownMenuItem(text = { Text("Preview") }, onClick = {
             onPreview()
             onDismiss()
@@ -316,29 +249,6 @@ private fun MoreOptionsActionItems(
             onCreateFilteredDeck()
             onDismiss()
         })
-    }
-}
-
-@Composable
-fun SelectableSortOrder(viewModel: CardBrowserViewModel, onDismiss: () -> Unit) {
-    val currentSortType = viewModel.order
-    val sortLabels = stringArrayResource(id = R.array.card_browser_order_labels)
-    DropdownMenu(expanded = true, onDismissRequest = onDismiss) {
-        SortType.entries.forEach { sortType ->
-            DropdownMenuItem(text = {
-                Row {
-                    RadioButton(
-                        selected = currentSortType == sortType, onClick = {
-                            viewModel.changeCardOrder(sortType)
-                            onDismiss()
-                        })
-                    Text(text = sortLabels[sortType.cardBrowserLabelIndex])
-                }
-            }, onClick = {
-                viewModel.changeCardOrder(sortType)
-                onDismiss()
-            })
-        }
     }
 }
 
