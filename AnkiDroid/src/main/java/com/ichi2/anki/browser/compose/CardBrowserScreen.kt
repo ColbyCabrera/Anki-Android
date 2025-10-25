@@ -160,7 +160,8 @@ fun CardBrowserScreen(
                 onEditTags = { /* TODO */ },
                 onGradeNow = { /* TODO */ },
                 onResetProgress = { /* TODO */ },
-                onExportCard = { /* TODO */ }
+                onExportCard = { /* TODO */ },
+                onUndoDeleteNote = { /* TODO */ }
             )
         }
 
@@ -414,7 +415,8 @@ fun MoreOptionsBottomSheet(
     onEditTags: () -> Unit,
     onGradeNow: () -> Unit,
     onResetProgress: () -> Unit,
-    onExportCard: () -> Unit
+    onExportCard: () -> Unit,
+    onUndoDeleteNote: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
@@ -489,6 +491,10 @@ fun MoreOptionsBottomSheet(
                         }
                     }
                 }
+            )
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.undo_delete_note)) },
+                modifier = Modifier.clickable { onUndoDeleteNote() }
             )
         }
     }

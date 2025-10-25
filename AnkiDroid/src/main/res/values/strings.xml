@@ -32,4 +32,5 @@
     <string name="deselect_all">Deselect all</string>
     <string name="reset_progress">Reset progress</string>
     <string name="export_card">Export card</string>
+    <string name="undo_delete_note">Undo delete note</string>
 </resources>
