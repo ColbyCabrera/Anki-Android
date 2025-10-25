@@ -207,6 +207,36 @@ open class CardBrowser :
                         },
                         onCreateFilteredDeck = {
                             showCreateFilteredDeckDialog()
+                        },
+                        onEditNote = {
+                            openNoteEditorForCard(viewModel.currentCardId)
+                        },
+                        onCardInfo = {
+                            // TODO
+                        },
+                        onChangeDeck = {
+                            // TODO
+                        },
+                        onReposition = {
+                            // TODO
+                        },
+                        onSetDueDate = {
+                            // TODO
+                        },
+                        onEditTags = {
+                            // TODO
+                        },
+                        onGradeNow = {
+                            // TODO
+                        },
+                        onResetProgress = {
+                            // TODO
+                        },
+                        onExportCard = {
+                            // TODO
+                        },
+                        onFilterByTag = {
+                            // TODO
                         }
                     )
                 }

@@ -79,7 +79,17 @@ fun CardBrowserLayout(
     onFilter: (String) -> Unit,
     onSelectAll: () -> Unit,
     onOptions: () -> Unit,
-    onCreateFilteredDeck: () -> Unit
+    onCreateFilteredDeck: () -> Unit,
+    onEditNote: () -> Unit,
+    onCardInfo: () -> Unit,
+    onChangeDeck: () -> Unit,
+    onReposition: () -> Unit,
+    onSetDueDate: () -> Unit,
+    onEditTags: () -> Unit,
+    onGradeNow: () -> Unit,
+    onResetProgress: () -> Unit,
+    onExportCard: () -> Unit,
+    onFilterByTag: () -> Unit
 ) {
     val activity = LocalActivity.current
     val isTablet = if (activity != null) {
@@ -186,7 +196,17 @@ fun CardBrowserLayout(
                     onFilter = onFilter,
                     onSelectAll = onSelectAll,
                     onOptions = onOptions,
-                    onCreateFilteredDeck = onCreateFilteredDeck
+                    onCreateFilteredDeck = onCreateFilteredDeck,
+                    onEditNote = onEditNote,
+                    onCardInfo = onCardInfo,
+                    onChangeDeck = onChangeDeck,
+                    onReposition = onReposition,
+                    onSetDueDate = onSetDueDate,
+                    onEditTags = onEditTags,
+                    onGradeNow = onGradeNow,
+                    onResetProgress = onResetProgress,
+                    onExportCard = onExportCard,
+                    onFilterByTag = onFilterByTag
                 )
                 NoteEditor(
                     modifier = Modifier.weight(1f)
@@ -207,7 +227,17 @@ fun CardBrowserLayout(
                     onFilter = onFilter,
                     onSelectAll = onSelectAll,
                     onOptions = onOptions,
-                    onCreateFilteredDeck = onCreateFilteredDeck
+                    onCreateFilteredDeck = onCreateFilteredDeck,
+                    onEditNote = onEditNote,
+                    onCardInfo = onCardInfo,
+                    onChangeDeck = onChangeDeck,
+                    onReposition = onReposition,
+                    onSetDueDate = onSetDueDate,
+                    onEditTags = onEditTags,
+                    onGradeNow = onGradeNow,
+                    onResetProgress = onResetProgress,
+                    onExportCard = onExportCard,
+                    onFilterByTag = onFilterByTag
                 )
             }
         }

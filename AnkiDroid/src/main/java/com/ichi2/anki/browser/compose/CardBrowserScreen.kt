@@ -65,7 +65,17 @@ fun CardBrowserScreen(
     onFilter: (String) -> Unit,
     onSelectAll: () -> Unit,
     onOptions: () -> Unit,
-    onCreateFilteredDeck: () -> Unit
+    onCreateFilteredDeck: () -> Unit,
+    onEditNote: () -> Unit,
+    onCardInfo: () -> Unit,
+    onChangeDeck: () -> Unit,
+    onReposition: () -> Unit,
+    onSetDueDate: () -> Unit,
+    onEditTags: () -> Unit,
+    onGradeNow: () -> Unit,
+    onResetProgress: () -> Unit,
+    onExportCard: () -> Unit,
+    onFilterByTag: () -> Unit
 ) {
     val browserRows by viewModel.browserRows.collectAsStateWithLifecycle()
     val columnHeadings by viewModel.flowOfColumnHeadings.collectAsStateWithLifecycle()
@@ -76,6 +86,7 @@ fun CardBrowserScreen(
     var showSortMenu by remember { mutableStateOf(false) }
     var showFlagMenu by remember { mutableStateOf(false) }
     var showSetFlagMenu by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     Box(modifier = modifier) {
         Column(modifier = modifier) {
@@ -133,7 +144,8 @@ fun CardBrowserScreen(
                 },
                 onFlagFilter = {
                     showFlagMenu = true
-                }
+                },
+                onFilterByTag = onFilterByTag
             )
         }
 
@@ -149,19 +161,66 @@ fun CardBrowserScreen(
                     showMoreOptionsMenu = false
                 },
                 hasSelection = hasSelection,
-                onEditNote = { /* TODO */ },
-                onDeleteNote = { /* TODO */ },
-                onCardInfo = { /* TODO */ },
-                onToggleSuspend = { /* TODO */ },
-                onToggleBury = { /* TODO */ },
-                onChangeDeck = { /* TODO */ },
-                onReposition = { /* TODO */ },
-                onSetDueDate = { /* TODO */ },
-                onEditTags = { /* TODO */ },
-                onGradeNow = { /* TODO */ },
-                onResetProgress = { /* TODO */ },
-                onExportCard = { /* TODO */ },
-                onUndoDeleteNote = { /* TODO */ }
+                onEditNote = {
+                    onEditNote()
+                    showMoreOptionsMenu = false
+                },
+                onDeleteNote = {
+                    scope.launch {
+                        viewModel.deleteSelectedNotes()
+                        showMoreOptionsMenu = false
+                    }
+                },
+                onCardInfo = {
+                    onCardInfo()
+                    showMoreOptionsMenu = false
+                },
+                onToggleSuspend = {
+                    scope.launch {
+                        viewModel.toggleSuspendCards()
+                        showMoreOptionsMenu = false
+                    }
+                },
+                onToggleBury = {
+                    scope.launch {
+                        viewModel.toggleBury()
+                        showMoreOptionsMenu = false
+                    }
+                },
+                onChangeDeck = {
+                    onChangeDeck()
+                    showMoreOptionsMenu = false
+                },
+                onReposition = {
+                    onReposition()
+                    showMoreOptionsMenu = false
+                },
+                onSetDueDate = {
+                    onSetDueDate()
+                    showMoreOptionsMenu = false
+                },
+                onEditTags = {
+                    onEditTags()
+                    showMoreOptionsMenu = false
+                },
+                onGradeNow = {
+                    onGradeNow()
+                    showMoreOptionsMenu = false
+                },
+                onResetProgress = {
+                    onResetProgress()
+                    showMoreOptionsMenu = false
+                },
+                onExportCard = {
+                    onExportCard()
+                    showMoreOptionsMenu = false
+                },
+                onUndoDeleteNote = {
+                    scope.launch {
+                        viewModel.undo()
+                        showMoreOptionsMenu = false
+                    }
+                }
             )
         }
 
@@ -346,7 +405,8 @@ fun BrowserToolbar(
 fun FilterBottomSheet(
     onDismissRequest: () -> Unit,
     onFilter: (String) -> Unit,
-    onFlagFilter: () -> Unit
+    onFlagFilter: () -> Unit,
+    onFilterByTag: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
@@ -382,7 +442,7 @@ fun FilterBottomSheet(
         ListItem(
             headlineContent = { Text("Filter by tag") },
             modifier = Modifier.clickable {
-                // TODO
+                onFilterByTag()
                 scope.launch { sheetState.hide() }.invokeOnCompletion {
                     if (!sheetState.isVisible) {
                         onDismissRequest()
