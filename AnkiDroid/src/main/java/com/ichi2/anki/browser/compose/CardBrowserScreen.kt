@@ -5,7 +5,7 @@
  * the terms of the GNU General Public License as published by the Free Software        *
  * Foundation; either version 3 of the License, or (at your option) any later           *
  * version.                                                                             *
- *                                                                                      *
+ *                                                                                      *\
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY      *
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A      *
  * PARTICULAR PURPOSE. See the GNU General Public License for more details.             *
@@ -31,6 +31,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.material3.FloatingToolbarDefaults.ScreenOffset
+import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -179,7 +180,7 @@ fun CardBrowserScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun BrowserToolbar(
     onAddNote: () -> Unit,
@@ -203,10 +204,21 @@ fun BrowserToolbar(
                 shape = FloatingActionButtonDefaults.smallShape,
             ) {
                 if (hasSelection) {
-                    Icon(
-                        painter = painterResource(R.drawable.deselect_24px),
-                        contentDescription = stringResource(R.string.card_browser_deselect_all)
-                    )
+                    TooltipBox(
+                        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+                            positioning = TooltipAnchorPosition.Above,
+                        ),
+                        tooltip = {
+                            PlainTooltip { Text(stringResource(R.string.deselect_all)) }
+                        },
+                        state = rememberTooltipState()
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.deselect_24px),
+                            contentDescription = stringResource(R.string.card_browser_deselect_all)
+                        )
+                    }
+
                 } else {
                     Icon(
                         painter = painterResource(R.drawable.add_24px),
@@ -218,43 +230,91 @@ fun BrowserToolbar(
         colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onPreview) {
-                Icon(
-                    painter = painterResource(R.drawable.preview_24px),
-                    contentDescription = stringResource(R.string.more_options)
-                )
+            TooltipBox(
+                positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+                    positioning = TooltipAnchorPosition.Above,
+                ), tooltip = {
+                    PlainTooltip { Text(stringResource(R.string.card_editor_preview_card)) }
+                }, state = rememberTooltipState()
+            ) {
+                IconButton(onClick = onPreview) {
+                    Icon(
+                        painter = painterResource(R.drawable.preview_24px),
+                        contentDescription = stringResource(R.string.card_editor_preview_card)
+                    )
+                }
             }
-            IconButton(onClick = onSelectAll) {
-                Icon(
-                    painter = painterResource(R.drawable.select_all_24px),
-                    contentDescription = stringResource(R.string.more_options)
-                )
-            }
-            if (hasSelection) {
-                IconButton(onClick = onMark) {
+            TooltipBox(
+                positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+                    positioning = TooltipAnchorPosition.Above,
+                ), tooltip = {
+                    PlainTooltip { Text(stringResource(R.string.more_options)) }
+                }, state = rememberTooltipState()
+            ) {
+                IconButton(onClick = onSelectAll) {
                     Icon(
-                        painter = painterResource(R.drawable.star_24px),
-                        contentDescription = stringResource(R.string.menu_mark_note)
-                    )
-                }
-                IconButton(onClick = onSetFlag) {
-                    Icon(
-                        painter = painterResource(R.drawable.flag_24px),
-                        contentDescription = stringResource(R.string.menu_flag)
-                    )
-                }
-            } else {
-                IconButton(onClick = onFilter) {
-                    Icon(
-                        painter = painterResource(R.drawable.filter_alt_24px),
-                        contentDescription = stringResource(R.string.filter)
-                    )
-                }
-                IconButton(onClick = onOptions) {
-                    Icon(
-                        painter = painterResource(R.drawable.tune_24px),
+                        painter = painterResource(R.drawable.select_all_24px),
                         contentDescription = stringResource(R.string.more_options)
                     )
+                }
+            }
+            if (hasSelection) {
+                TooltipBox(
+                    positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+                        positioning = TooltipAnchorPosition.Above,
+                    ), tooltip = {
+                        PlainTooltip { Text(stringResource(R.string.menu_mark_note)) }
+                    }, state = rememberTooltipState()
+                ) {
+                    IconButton(onClick = onMark) {
+                        Icon(
+                            painter = painterResource(R.drawable.star_24px),
+                            contentDescription = stringResource(R.string.menu_mark_note)
+                        )
+                    }
+                }
+                TooltipBox(
+                    positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+                        positioning = TooltipAnchorPosition.Above,
+                    ), tooltip = {
+                        PlainTooltip { Text(stringResource(R.string.menu_flag)) }
+                    }, state = rememberTooltipState()
+                ) {
+                    IconButton(onClick = onSetFlag) {
+                        Icon(
+                            painter = painterResource(R.drawable.flag_24px),
+                            contentDescription = stringResource(R.string.menu_flag)
+                        )
+                    }
+                }
+            } else {
+                TooltipBox(
+                    positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+                        positioning = TooltipAnchorPosition.Above,
+                    ), tooltip = {
+                        PlainTooltip { Text(stringResource(R.string.filter)) }
+                    }, state = rememberTooltipState()
+                ) {
+                    IconButton(onClick = onFilter) {
+                        Icon(
+                            painter = painterResource(R.drawable.filter_alt_24px),
+                            contentDescription = stringResource(R.string.filter)
+                        )
+                    }
+                }
+                TooltipBox(
+                    positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+                        positioning = TooltipAnchorPosition.Above,
+                    ), tooltip = {
+                        PlainTooltip { Text(stringResource(R.string.more_options)) }
+                    }, state = rememberTooltipState()
+                ) {
+                    IconButton(onClick = onOptions) {
+                        Icon(
+                            painter = painterResource(R.drawable.tune_24px),
+                            contentDescription = stringResource(R.string.more_options)
+                        )
+                    }
                 }
             }
             IconButton(onClick = onMoreOptions) {

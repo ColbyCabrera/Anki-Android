@@ -29,4 +29,5 @@
     <string name="syncing">Syncing…</string>
     <string name="filter">Filter</string>
     <string name="card_browser_deselect_all">Deselect all</string>
+    <string name="deselect_all">Deselect all</string>
 </resources>

@@ -588,20 +588,42 @@ class CardBrowserViewModel(
         if (!hasSelectedAnyRows()) {
             return@launch
         }
+        val selectedBefore = selectedRows.toList()
         toggleMark()
-        refreshSearch()
+        withCol {
+            val updatedRows = _browserRows.value.toMutableList()
+            for (rowId in selectedBefore) {
+                val newRow = backend.browserRowForId(rowId.cardOrNoteId)
+                val index = updatedRows.indexOfFirst { it.id == rowId.cardOrNoteId }
+                if (index != -1) {
+                    updatedRows[index] = BrowserRowWithId(newRow, rowId.cardOrNoteId)
+                }
+            }
+            _browserRows.value = updatedRows
+        }
     }
 
     fun setFlagForSelectedRows(flag: Flag) = viewModelScope.launch {
         if (!hasSelectedAnyRows()) {
             return@launch
         }
+        val selectedBefore = selectedRows.toList()
         val cardIds = queryAllSelectedCardIds()
         undoableOp<OpChanges> {
             setUserFlagForCards(cardIds, flag.code).changes
         }
         flowOfCardStateChanged.emit(Unit)
-        refreshSearch()
+        withCol {
+            val updatedRows = _browserRows.value.toMutableList()
+            for (rowId in selectedBefore) {
+                val newRow = backend.browserRowForId(rowId.cardOrNoteId)
+                val index = updatedRows.indexOfFirst { it.id == rowId.cardOrNoteId }
+                if (index != -1) {
+                    updatedRows[index] = BrowserRowWithId(newRow, rowId.cardOrNoteId)
+                }
+            }
+            _browserRows.value = updatedRows
+        }
     }
 
     /**
