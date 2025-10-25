@@ -306,13 +306,13 @@ fun BrowserToolbar(
                     positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
                         positioning = TooltipAnchorPosition.Above,
                     ), tooltip = {
-                        PlainTooltip { Text(stringResource(R.string.more_options)) }
+                        PlainTooltip { Text(stringResource(R.string.browser_options_dialog_heading)) }
                     }, state = rememberTooltipState()
                 ) {
                     IconButton(onClick = onOptions) {
                         Icon(
                             painter = painterResource(R.drawable.tune_24px),
-                            contentDescription = stringResource(R.string.more_options)
+                            contentDescription = stringResource(R.string.browser_options_dialog_heading)
                         )
                     }
                 }
