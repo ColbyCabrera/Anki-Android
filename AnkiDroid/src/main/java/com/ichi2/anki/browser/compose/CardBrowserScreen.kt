@@ -17,53 +17,42 @@ package com.ichi2.anki.browser.compose
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ButtonGroup
-import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FloatingActionButtonMenu
-import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.FloatingToolbarDefaults.ScreenOffset
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MaterialTheme.motionScheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.ToggleFloatingActionButton
-import androidx.compose.material3.ToggleFloatingActionButtonDefaults.animateIcon
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import anki.search.BrowserRow
@@ -71,17 +60,26 @@ import com.ichi2.anki.R
 import com.ichi2.anki.browser.BrowserRowWithId
 import com.ichi2.anki.browser.CardBrowserViewModel
 import com.ichi2.anki.browser.ColumnHeading
+import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun CardBrowserScreen(
     viewModel: CardBrowserViewModel,
     onCardClicked: (BrowserRowWithId) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onAddNote: () -> Unit,
+    onPreview: () -> Unit,
+    onFilter: (String) -> Unit,
+    onSelectAll: () -> Unit,
+    onOptions: () -> Unit,
+    onCreateFilteredDeck: () -> Unit
 ) {
     val browserRows by viewModel.browserRows.collectAsStateWithLifecycle()
     val columnHeadings by viewModel.flowOfColumnHeadings.collectAsStateWithLifecycle(initialValue = emptyList())
-    var fabExpanded by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState()
+    var showBottomSheet by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     Box(modifier = modifier) {
         Column(modifier = modifier) {
@@ -109,93 +107,87 @@ fun CardBrowserScreen(
                 .offset(y = -ScreenOffset - 16.dp),
             expanded = true,
             floatingActionButton = {
-                FloatingActionButtonMenu(
-                    expanded = fabExpanded, button = {
-                        ToggleFloatingActionButton(
-                            checked = fabExpanded, onCheckedChange = { fabExpanded = it }) {
-                            val imageVector by remember {
-                                derivedStateOf {
-                                    if (checkedProgress > 0.5f) Icons.Filled.Close else Icons.Filled.Add
-                                }
-                            }
-                            Icon(
-                                painter = rememberVectorPainter(imageVector),
-                                contentDescription = null, // decorative
-                                modifier = Modifier.animateIcon({ checkedProgress })
-                            )
-                        }
-                    }) {
-                    FloatingActionButtonMenuItem(
-                        onClick = { /* TODO */ },
-                        icon = { Icon(Icons.Filled.Download, contentDescription = null) },
-                        text = { Text(text = stringResource(R.string.get_shared)) })
-                    FloatingActionButtonMenuItem(onClick = { /* TODO */ }, icon = {
-                        Icon(
-                            painterResource(id = R.drawable.ic_add_filtered_deck),
-                            contentDescription = null
-                        )
-                    }, text = { Text(text = stringResource(R.string.new_dynamic_deck)) })
-                    FloatingActionButtonMenuItem(onClick = { /* TODO */ }, icon = {
-                        Icon(
-                            painterResource(id = R.drawable.ic_add_deck_filled),
-                            contentDescription = null
-                        )
-                    }, text = { Text(text = stringResource(R.string.new_deck)) })
-                    FloatingActionButtonMenuItem(onClick = { /* TODO */ }, icon = {
-                        Icon(
-                            painterResource(id = R.drawable.ic_add_note), contentDescription = null
-                        )
-                    }, text = { Text(text = stringResource(R.string.menu_add_note)) })
+                FloatingToolbarDefaults.VibrantFloatingActionButton(onClick = onAddNote) {
+                    Icon(
+                        painter = painterResource(R.drawable.add_24px),
+                        contentDescription = stringResource(R.string.add_card)
+                    )
                 }
             },
             colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(
-                    onClick = { },
-                    modifier = Modifier.height(48.dp),
+                    onClick = { showBottomSheet = true },
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.filter_alt_24px),
+                        contentDescription = stringResource(R.string.filter)
+                    )
+                }
+                IconButton(
+                    onClick = onPreview,
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.preview_24px),
+                        contentDescription = stringResource(R.string.more_options)
+                    )
+                }
+                IconButton(
+                    onClick = onSelectAll,
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.select_all_24px),
+                        contentDescription = stringResource(R.string.more_options)
+                    )
+                }
+                IconButton(
+                    onClick = {},
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.tune_24px),
+                        contentDescription = stringResource(R.string.more_options)
+                    )
+                }
+                IconButton(
+                    onClick = {},
                 ) {
                     Icon(
                         Icons.Filled.MoreVert,
                         contentDescription = stringResource(R.string.more_options)
                     )
                 }
-                Box(
-                    modifier = Modifier.animateContentSize(motionScheme.fastSpatialSpec())
-                ) {
 
-                    ButtonGroup(
-                        horizontalArrangement = Arrangement.spacedBy(2.dp),
-                        overflowIndicator = { }) {
-
-                        customItem(
-                            buttonGroupContent = {
-                                val interactionSource = remember { MutableInteractionSource() }
-                                Button(
-                                    onClick = {
-
-                                    },
-                                    modifier = Modifier
-                                        .animateWidth(interactionSource)
-                                        .height(56.dp),
-                                    contentPadding = ButtonDefaults.ExtraSmallContentPadding,
-                                    shape = ButtonGroupDefaults.connectedMiddleButtonShapes().shape,
-                                    interactionSource = interactionSource,
-                                    colors = ButtonDefaults.buttonColors(
-                                        MaterialTheme.colorScheme.secondaryContainer,
-                                        MaterialTheme.colorScheme.onSecondaryContainer
-                                    )
-                                ) {
-                                    Text(
-                                        text = "temp",
-                                        softWrap = false,
-                                        overflow = TextOverflow.Visible
-                                    )
+            }
+        }
+        if (showBottomSheet) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    showBottomSheet = false
+                },
+                sheetState = sheetState,
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+            ) {
+                val menuOptions = remember {
+                    listOf(
+                        Triple(R.string.redo, Icons.AutoMirrored.Filled.Undo) {
+                            // TODO
+                        },
+                    )
+                }
+                menuOptions.forEach { (textRes, icon, action) ->
+                    ListItem(
+                        headlineContent = { Text(stringResource(textRes)) },
+                        leadingContent = { Icon(icon, contentDescription = null) },
+                        modifier = Modifier.clickable {
+                            scope.launch { sheetState.hide() }.invokeOnCompletion {
+                                if (!sheetState.isVisible) {
+                                    showBottomSheet = false
                                 }
-                            },
-                            menuContent = {},
-                        )
-                    }
+                            }
+                            action()
+                        })
                 }
             }
         }

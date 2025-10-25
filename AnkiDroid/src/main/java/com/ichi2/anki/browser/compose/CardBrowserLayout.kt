@@ -56,19 +56,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ichi2.anki.Flag
 import com.ichi2.anki.R
 import com.ichi2.anki.browser.BrowserRowWithId
 import com.ichi2.anki.browser.CardBrowserViewModel
+import com.ichi2.anki.browser.LastDeckIdRepository
 import com.ichi2.anki.model.SelectableDeck
 import com.ichi2.anki.model.SortType
 import com.ichi2.anki.noteeditor.compose.NoteEditor
+import com.ichi2.anki.preferences.SharedPreferencesProvider
 import kotlinx.coroutines.launch
 
 @OptIn(
@@ -204,7 +209,13 @@ fun CardBrowserLayout(
                 CardBrowserScreen(
                     viewModel = viewModel,
                     onCardClicked = onCardClicked,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    onAddNote = onAddNote,
+                    onPreview = onPreview,
+                    onFilter = onFilter,
+                    onSelectAll = onSelectAll,
+                    onOptions = onOptions,
+                    onCreateFilteredDeck = onCreateFilteredDeck
                 )
                 NoteEditor(
                     modifier = Modifier.weight(1f)
@@ -214,7 +225,12 @@ fun CardBrowserLayout(
             CardBrowserScreen(
                 viewModel = viewModel,
                 onCardClicked = onCardClicked,
-                modifier = Modifier.padding(0.dp)
+                onAddNote = onAddNote,
+                onPreview = onPreview,
+                onFilter = onFilter,
+                onSelectAll = onSelectAll,
+                onOptions = onOptions,
+                onCreateFilteredDeck = onCreateFilteredDeck
             )
         }
     }

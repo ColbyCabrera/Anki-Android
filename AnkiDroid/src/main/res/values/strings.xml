@@ -27,4 +27,5 @@
     <string name="sync_now">Sync now</string>
     <string name="sync_starting">Sync starting…</string>
     <string name="syncing">Syncing…</string>
+    <string name="filter">Filter</string>
 </resources>
