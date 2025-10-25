@@ -92,7 +92,6 @@ fun CardBrowserLayout(
     }
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     var isSearchOpen by remember { mutableStateOf(false) }
-    var showMoreMenu by remember { mutableStateOf(false) }
     var showDeckMenu by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     var availableDecks by remember { mutableStateOf<List<SelectableDeck.Deck>>(emptyList()) }
@@ -173,17 +172,6 @@ fun CardBrowserLayout(
                     IconButton(onClick = { isSearchOpen = true }) {
                         Icon(Icons.Default.Search, contentDescription = "Search")
                     }
-                    IconButton(onClick = { showMoreMenu = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "More Options")
-                    }
-                    MoreOptionsActionItems(
-                        expanded = showMoreMenu,
-                        onDismiss = { showMoreMenu = false },
-                        onPreview = onPreview,
-                        onSelectAll = onSelectAll,
-                        onOptions = onOptions,
-                        onCreateFilteredDeck = onCreateFilteredDeck
-                    )
                 })
             }
         }) { paddingValues ->
@@ -218,37 +206,6 @@ fun CardBrowserLayout(
                 onCreateFilteredDeck = onCreateFilteredDeck
             )
         }
-    }
-}
-
-@Composable
-private fun MoreOptionsActionItems(
-    expanded: Boolean,
-    onDismiss: () -> Unit,
-    onPreview: () -> Unit,
-    onSelectAll: () -> Unit,
-    onOptions: () -> Unit,
-    onCreateFilteredDeck: () -> Unit
-) {
-    DropdownMenu(
-        expanded = expanded, onDismissRequest = onDismiss
-    ) {
-        DropdownMenuItem(text = { Text("Preview") }, onClick = {
-            onPreview()
-            onDismiss()
-        })
-        DropdownMenuItem(text = { Text("Select all") }, onClick = {
-            onSelectAll()
-            onDismiss()
-        })
-        DropdownMenuItem(text = { Text("Options") }, onClick = {
-            onOptions()
-            onDismiss()
-        })
-        DropdownMenuItem(text = { Text("Create Filtered Deck...") }, onClick = {
-            onCreateFilteredDeck()
-            onDismiss()
-        })
     }
 }
 

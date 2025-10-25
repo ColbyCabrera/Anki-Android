@@ -88,6 +88,7 @@ fun CardBrowserScreen(
     val scope = rememberCoroutineScope()
     var showSortMenu by remember { mutableStateOf(false) }
     var showFlagMenu by remember { mutableStateOf(false) }
+    var showMoreOptionsMenu by remember { mutableStateOf(false) }
 
     Box(modifier = modifier) {
         Column(modifier = modifier) {
@@ -158,7 +159,7 @@ fun CardBrowserScreen(
                     )
                 }
                 IconButton(
-                    onClick = ,
+                    onClick = { showMoreOptionsMenu = true },
                 ) {
                     Icon(
                         Icons.Filled.MoreVert,
@@ -177,17 +178,6 @@ fun CardBrowserScreen(
                 containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = MaterialTheme.colorScheme.onSurface,
             ) {
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.card_browser_change_display_order)) },
-                    modifier = Modifier.clickable {
-                        showSortMenu = true
-                    })
-                if (showSortMenu) {
-                    SelectableSortOrder(
-                        viewModel = viewModel, onDismiss = {
-                            showSortMenu = false
-                        })
-                }
                 ListItem(
                     headlineContent = { Text("Filter marked") },
                     modifier = Modifier.clickable {
@@ -246,6 +236,38 @@ fun CardBrowserScreen(
                         }
                     }
                 }
+            }
+        }
+        if (showMoreOptionsMenu) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    showMoreOptionsMenu = false
+                },
+                sheetState = sheetState,
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+            ) {
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.card_browser_change_display_order)) },
+                    modifier = Modifier.clickable {
+                        showSortMenu = true
+                    })
+                if (showSortMenu) {
+                    SelectableSortOrder(
+                        viewModel = viewModel, onDismiss = {
+                            showSortMenu = false
+                        })
+                }
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.new_dynamic_deck)) },
+                    modifier = Modifier.clickable {
+                        onCreateFilteredDeck()
+                        scope.launch { sheetState.hide() }.invokeOnCompletion {
+                            if (!sheetState.isVisible) {
+                                showMoreOptionsMenu = false
+                            }
+                        }
+                    })
             }
         }
     }
