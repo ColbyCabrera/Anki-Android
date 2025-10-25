@@ -15,6 +15,7 @@
  ****************************************************************************************/
 package com.ichi2.anki.browser.compose
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +29,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.material3.FloatingToolbarDefaults.ScreenOffset
@@ -47,6 +49,7 @@ import com.ichi2.anki.browser.CardBrowserViewModel
 import com.ichi2.anki.browser.CardOrNoteId
 import com.ichi2.anki.browser.ColumnHeading
 import com.ichi2.anki.model.SortType
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -65,6 +68,7 @@ fun CardBrowserScreen(
     val browserRows by viewModel.browserRows.collectAsStateWithLifecycle()
     val columnHeadings by viewModel.flowOfColumnHeadings.collectAsStateWithLifecycle()
     val selectedRows by viewModel.flowOfSelectedRows.collectAsStateWithLifecycle(initialValue = emptySet())
+    val hasSelection by viewModel.flowOfSelectedRows.map { it.isNotEmpty() }.collectAsStateWithLifecycle(initialValue = false)
     var showFilterSheet by remember { mutableStateOf(false) }
     var showMoreOptionsMenu by remember { mutableStateOf(false) }
     var showSortMenu by remember { mutableStateOf(false) }
@@ -113,6 +117,8 @@ fun CardBrowserScreen(
 
         BrowserToolbar(
             onAddNote = onAddNote,
+            onDeselect = { viewModel.deselectAll() },
+            hasSelection = hasSelection,
             onPreview = onPreview,
             onSelectAll = onSelectAll,
             onFilter = { showFilterSheet = true },
@@ -172,6 +178,8 @@ fun CardBrowserScreen(
 @Composable
 fun BrowserToolbar(
     onAddNote: () -> Unit,
+    onDeselect: () -> Unit,
+    hasSelection: Boolean,
     onPreview: () -> Unit,
     onSelectAll: () -> Unit,
     onFilter: () -> Unit,
@@ -184,13 +192,20 @@ fun BrowserToolbar(
         expanded = true,
         floatingActionButton = {
             FloatingToolbarDefaults.VibrantFloatingActionButton(
-                onClick = onAddNote,
+                onClick = if (hasSelection) onDeselect else onAddNote,
                 shape = FloatingActionButtonDefaults.smallShape,
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.add_24px),
-                    contentDescription = stringResource(R.string.add_card)
-                )
+                if (hasSelection) {
+                    Icon(
+                        painter = painterResource(R.drawable.deselect_24px),
+                        contentDescription = stringResource(R.string.card_browser_deselect_all)
+                    )
+                } else {
+                    Icon(
+                        painter = painterResource(R.drawable.add_24px),
+                        contentDescription = stringResource(R.string.add_card)
+                    )
+                }
             }
         },
         colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(),
@@ -208,17 +223,32 @@ fun BrowserToolbar(
                     contentDescription = stringResource(R.string.more_options)
                 )
             }
-            IconButton(onClick = onFilter) {
-                Icon(
-                    painter = painterResource(R.drawable.filter_alt_24px),
-                    contentDescription = stringResource(R.string.filter)
-                )
-            }
-            IconButton(onClick = onOptions) {
-                Icon(
-                    painter = painterResource(R.drawable.tune_24px),
-                    contentDescription = stringResource(R.string.more_options)
-                )
+            if (hasSelection) {
+                IconButton(onClick = onFilter) {
+                    Icon(
+                        painter = painterResource(R.drawable.star_24px),
+                        contentDescription = stringResource(R.string.menu_mark_note)
+                    )
+                }
+                IconButton(onClick = onFilter) {
+                    Icon(
+                        painter = painterResource(R.drawable.flag_24px),
+                        contentDescription = stringResource(R.string.menu_flag)
+                    )
+                }
+            } else {
+                IconButton(onClick = onFilter) {
+                    Icon(
+                        painter = painterResource(R.drawable.filter_alt_24px),
+                        contentDescription = stringResource(R.string.filter)
+                    )
+                }
+                IconButton(onClick = onOptions) {
+                    Icon(
+                        painter = painterResource(R.drawable.tune_24px),
+                        contentDescription = stringResource(R.string.more_options)
+                    )
+                }
             }
             IconButton(onClick = onMoreOptions) {
                 Icon(
@@ -408,7 +438,9 @@ fun FlagFilterBottomSheet(onDismiss: () -> Unit, onFilter: (String) -> Unit) {
 @Composable
 fun EmptyCardBrowser(modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.fillMaxSize().padding(16.dp),
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -426,7 +458,9 @@ fun CardBrowserEmpty(modifier: Modifier = Modifier) {
 @Composable
 fun CardBrowserHeader(columns: List<ColumnHeading>) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         columns.forEach { column ->

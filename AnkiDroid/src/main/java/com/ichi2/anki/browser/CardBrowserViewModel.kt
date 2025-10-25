@@ -44,6 +44,8 @@ import com.ichi2.anki.browser.CardBrowserViewModel.ChangeMultiSelectMode.MultiSe
 import com.ichi2.anki.browser.CardBrowserViewModel.ChangeMultiSelectMode.SingleSelectCause
 import com.ichi2.anki.browser.CardBrowserViewModel.ToggleSelectionState.SELECT_ALL
 import com.ichi2.anki.browser.CardBrowserViewModel.ToggleSelectionState.SELECT_NONE
+import com.ichi2.anki.browser.FindAndReplaceDialogFragment.Companion.ALL_FIELDS_AS_FIELD
+import com.ichi2.anki.browser.FindAndReplaceDialogFragment.Companion.TAGS_AS_FIELD
 import com.ichi2.anki.browser.RepositionCardsRequest.RepositionData
 import com.ichi2.anki.common.annotations.NeedsTest
 import com.ichi2.anki.export.ExportDialogFragment.ExportType
@@ -56,6 +58,7 @@ import com.ichi2.anki.libanki.QueueType
 import com.ichi2.anki.libanki.QueueType.ManuallyBuried
 import com.ichi2.anki.libanki.QueueType.SiblingBuried
 import com.ichi2.anki.libanki.notesOfCards
+import com.ichi2.anki.model.CardStateFilter
 import com.ichi2.anki.model.CardsOrNotes
 import com.ichi2.anki.model.CardsOrNotes.CARDS
 import com.ichi2.anki.model.CardsOrNotes.NOTES
@@ -63,8 +66,10 @@ import com.ichi2.anki.model.SelectableDeck
 import com.ichi2.anki.model.SortType
 import com.ichi2.anki.observability.ChangeManager
 import com.ichi2.anki.observability.undoableOp
+import com.ichi2.anki.pages.CardInfoDestination
 import com.ichi2.anki.preferences.SharedPreferencesProvider
 import com.ichi2.anki.utils.ext.normalizeForSearch
+import com.ichi2.anki.utils.ext.setUserFlagForCards
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -232,14 +237,14 @@ class CardBrowserViewModel(
 
     val flowOfToggleSelectionState: StateFlow<ToggleSelectionState> = combine(flowOfSelectedRows, browserRows) { selected, all ->
         if (all.isEmpty() || selected.size < all.size) {
-            SELECT_ALL
+            ToggleSelectionState.SELECT_ALL
         } else {
-            SELECT_NONE
+            ToggleSelectionState.SELECT_NONE
         }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.Eagerly,
-        initialValue = SELECT_ALL,
+        initialValue = ToggleSelectionState.SELECT_ALL,
     )
 
     val cardSelectionEventFlow = MutableSharedFlow<Unit>()
@@ -631,6 +636,10 @@ class CardBrowserViewModel(
         if (!_selectedRows.addAll(cards)) return null
         Timber.d("selecting all: %d item(s)", cards.size)
         return onAppendSelectedRows(MultiSelectCause.Other)
+    }
+
+    fun deselectAll() {
+        selectNone()
     }
 
     fun selectNone(): Job? {
