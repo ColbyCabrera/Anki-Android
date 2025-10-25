@@ -195,16 +195,23 @@ fun CardBrowserLayout(
                 )
             }
         } else {
-            CardBrowserScreen(
-                viewModel = viewModel,
-                onCardClicked = onCardClicked,
-                onAddNote = onAddNote,
-                onPreview = onPreview,
-                onFilter = onFilter,
-                onSelectAll = onSelectAll,
-                onOptions = onOptions,
-                onCreateFilteredDeck = onCreateFilteredDeck
-            )
+            Row(
+                modifier = Modifier.padding(
+                    top = paddingValues.calculateTopPadding(),
+                    bottom = 0.dp
+                )
+            ) {
+                CardBrowserScreen(
+                    viewModel = viewModel,
+                    onCardClicked = onCardClicked,
+                    onAddNote = onAddNote,
+                    onPreview = onPreview,
+                    onFilter = onFilter,
+                    onSelectAll = onSelectAll,
+                    onOptions = onOptions,
+                    onCreateFilteredDeck = onCreateFilteredDeck
+                )
+            }
         }
     }
 }
