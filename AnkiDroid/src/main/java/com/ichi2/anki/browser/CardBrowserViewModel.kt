@@ -633,11 +633,13 @@ class CardBrowserViewModel(
                 newValue.saveToCollection(this)
             }
             flowOfCardsOrNotes.update { newValue }
+            launchSearchForCards()
         }
 
     fun setTruncated(value: Boolean) {
         viewModelScope.launch {
             flowOfIsTruncated.emit(value)
+            launchSearchForCards()
         }
         sharedPrefs().edit {
             putBoolean("isTruncated", value)
@@ -649,6 +651,7 @@ class CardBrowserViewModel(
         viewModelScope.launch {
             shouldIgnoreAccents = value
             withCol { config.setBool(ConfigKey.Bool.IGNORE_ACCENTS_IN_SEARCH, value) }
+            launchSearchForCards()
         }
     }
 
