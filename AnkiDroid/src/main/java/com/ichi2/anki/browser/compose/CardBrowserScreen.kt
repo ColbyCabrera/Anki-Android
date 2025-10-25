@@ -117,14 +117,6 @@ fun CardBrowserScreen(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(
-                    onClick = { showBottomSheet = true },
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.filter_alt_24px),
-                        contentDescription = stringResource(R.string.filter)
-                    )
-                }
-                IconButton(
                     onClick = onPreview,
                 ) {
                     Icon(
@@ -138,6 +130,14 @@ fun CardBrowserScreen(
                     Icon(
                         painter = painterResource(R.drawable.select_all_24px),
                         contentDescription = stringResource(R.string.more_options)
+                    )
+                }
+                IconButton(
+                    onClick = { showBottomSheet = true },
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.filter_alt_24px),
+                        contentDescription = stringResource(R.string.filter)
                     )
                 }
                 IconButton(
