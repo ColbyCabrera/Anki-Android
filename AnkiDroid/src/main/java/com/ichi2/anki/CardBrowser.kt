@@ -27,10 +27,15 @@ import androidx.activity.result.contract.ActivityResultContracts.StartActivityFo
 import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModelProvider
 import anki.collection.OpChanges
 import com.ichi2.anim.ActivityTransitionAnimation.Direction
+import com.ichi2.anki.browser.BrowserColumnSelectionFragment
 import com.ichi2.anki.browser.CardBrowserLaunchOptions
 import com.ichi2.anki.browser.CardBrowserViewModel
 import com.ichi2.anki.browser.CardOrNoteId
@@ -40,6 +45,7 @@ import com.ichi2.anki.browser.compose.CardBrowserLayout
 import com.ichi2.anki.browser.toCardBrowserLaunchOptions
 import com.ichi2.anki.dialogs.BrowserOptionsDialog
 import com.ichi2.anki.dialogs.CreateDeckDialog
+import com.ichi2.anki.dialogs.FlagRenameDialog
 import com.ichi2.anki.libanki.CardId
 import com.ichi2.anki.libanki.Collection
 import com.ichi2.anki.noteeditor.NoteEditorLauncher
@@ -138,6 +144,28 @@ open class CardBrowser :
         setContent {
             AnkiDroidTheme {
                 Box(modifier = Modifier.fillMaxSize()) {
+                    var showBrowserOptionsDialog by rememberSaveable { mutableStateOf(false) }
+                    if (showBrowserOptionsDialog) {
+                        BrowserOptionsDialog(
+                            onDismissRequest = { showBrowserOptionsDialog = false },
+                            onConfirm = { cardsOrNotes, isTruncated, shouldIgnoreAccents ->
+                                viewModel.setCardsOrNotes(cardsOrNotes)
+                                viewModel.setTruncated(isTruncated)
+                                viewModel.setIgnoreAccents(shouldIgnoreAccents)
+                            },
+                            initialCardsOrNotes = viewModel.cardsOrNotes,
+                            initialIsTruncated = viewModel.isTruncated,
+                            initialShouldIgnoreAccents = viewModel.shouldIgnoreAccents,
+                            onManageColumnsClicked = {
+                                val dialog = BrowserColumnSelectionFragment.createInstance(viewModel.cardsOrNotes)
+                                dialog.show(supportFragmentManager, null)
+                            },
+                            onRenameFlagClicked = {
+                                val flagRenameDialog = FlagRenameDialog()
+                                flagRenameDialog.show(supportFragmentManager, "FlagRenameDialog")
+                            }
+                        )
+                    }
                     CardBrowserLayout(
                         viewModel = viewModel,
                         onNavigateUp = { finish() },
@@ -175,11 +203,7 @@ open class CardBrowser :
                             viewModel.toggleSelectAllOrNone()
                         },
                         onOptions = {
-                            val dialog = BrowserOptionsDialog.newInstance(
-                                viewModel.cardsOrNotes,
-                                viewModel.isTruncated
-                            )
-                            dialog.show(supportFragmentManager, "BrowserOptionsDialog")
+                            showBrowserOptionsDialog = true
                         },
                         onCreateFilteredDeck = {
                             showCreateFilteredDeckDialog()

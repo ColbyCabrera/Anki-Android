@@ -42,7 +42,6 @@ fun BrowserOptions(
 
     Column(
         modifier = Modifier
-            .padding(16.dp)
             .verticalScroll(rememberScrollState()),
     ) {
         Text(
@@ -56,9 +55,9 @@ fun BrowserOptions(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             RadioButton(
-                selected = selectedMode.value == 0,
+                selected = selectedMode.intValue == 0,
                 onClick = {
-                    selectedMode.value = 0
+                    selectedMode.intValue = 0
                     onCardsModeSelected()
                 },
             )
@@ -74,9 +73,9 @@ fun BrowserOptions(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             RadioButton(
-                selected = selectedMode.value == 1,
+                selected = selectedMode.intValue == 1,
                 onClick = {
-                    selectedMode.value = 1
+                    selectedMode.intValue = 1
                     onNotesModeSelected()
                 },
             )
