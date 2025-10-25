@@ -27,7 +27,6 @@ import androidx.activity.result.contract.ActivityResultContracts.StartActivityFo
 import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModelProvider
 import anki.collection.OpChanges
@@ -39,6 +38,7 @@ import com.ichi2.anki.browser.SharedPreferencesLastDeckIdRepository
 import com.ichi2.anki.browser.compose.CardBrowserLayout
 import com.ichi2.anki.browser.toCardBrowserLaunchOptions
 import com.ichi2.anki.dialogs.BrowserOptionsDialog
+import com.ichi2.anki.dialogs.CreateDeckDialog
 import com.ichi2.anki.libanki.CardId
 import com.ichi2.anki.libanki.Collection
 import com.ichi2.anki.noteeditor.NoteEditorLauncher
@@ -172,7 +172,7 @@ open class CardBrowser :
                             dialog.show(supportFragmentManager, "BrowserOptionsDialog")
                         },
                         onCreateFilteredDeck = {
-                            // TODO
+                            showCreateFilteredDeckDialog()
                         }
                     )
                 }
@@ -227,6 +227,23 @@ open class CardBrowser :
     fun openNoteEditorForCard(cardId: CardId) {
         viewModel.currentCardId = cardId
         onEditCardActivityResult.launch(editNoteLauncher.toIntent(this))
+    }
+
+    fun showCreateFilteredDeckDialog() {
+        val createFilteredDeckDialog = CreateDeckDialog(
+            this,
+            R.string.new_deck,
+            CreateDeckDialog.DeckDialogType.FILTERED_DECK,
+            null
+        )
+        createFilteredDeckDialog.onNewDeckCreated = {
+            // Do nothing, the deck will appear in the deck list.
+        }
+        launchCatchingTask {
+            withProgress {
+                createFilteredDeckDialog.showFilteredDeckDialog()
+            }
+        }
     }
 
     private fun createViewModel(
