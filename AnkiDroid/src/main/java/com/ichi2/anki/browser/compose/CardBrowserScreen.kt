@@ -501,11 +501,11 @@ fun MoreOptionsBottomSheet(
                 modifier = Modifier.clickable { onCardInfo() }
             )
             ListItem(
-                headlineContent = { Text(stringResource(R.string.menu_suspend_card)) },
+                headlineContent = { Text(stringResource(R.string.sentence_toggle_suspend)) },
                 modifier = Modifier.clickable { onToggleSuspend() }
             )
             ListItem(
-                headlineContent = { Text(stringResource(R.string.menu_bury_card)) },
+                headlineContent = { Text(stringResource(R.string.sentence_toggle_bury)) },
                 modifier = Modifier.clickable { onToggleBury() }
             )
             ListItem(

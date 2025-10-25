@@ -20,7 +20,6 @@ package com.ichi2.anki
 
 import android.os.Bundle
 import android.view.KeyEvent
-import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
@@ -32,6 +31,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.ViewModelProvider
 import anki.collection.OpChanges
 import com.ichi2.anim.ActivityTransitionAnimation.Direction
@@ -151,7 +151,8 @@ open class CardBrowser : AnkiActivity(), ChangeManager.Subscriber,
 
         startLoadingCollection()
 
-        setContent {
+        setContentView(R.layout.card_browser_activity)
+        findViewById<ComposeView>(R.id.compose_view).setContent {
             AnkiDroidTheme {
                 Box(modifier = Modifier.fillMaxSize()) {
                     var showBrowserOptionsDialog by rememberSaveable { mutableStateOf(false) }
