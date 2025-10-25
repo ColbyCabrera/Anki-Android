@@ -16,6 +16,7 @@
 package com.ichi2.anki.browser.compose
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,6 +44,7 @@ import com.ichi2.anki.Flag
 import com.ichi2.anki.R
 import com.ichi2.anki.browser.BrowserRowWithId
 import com.ichi2.anki.browser.CardBrowserViewModel
+import com.ichi2.anki.browser.CardOrNoteId
 import com.ichi2.anki.browser.ColumnHeading
 import com.ichi2.anki.model.SortType
 import kotlinx.coroutines.launch
@@ -61,7 +63,8 @@ fun CardBrowserScreen(
     onCreateFilteredDeck: () -> Unit
 ) {
     val browserRows by viewModel.browserRows.collectAsStateWithLifecycle()
-    val columnHeadings by viewModel.flowOfColumnHeadings.collectAsStateWithLifecycle(initialValue = emptyList())
+    val columnHeadings by viewModel.flowOfColumnHeadings.collectAsStateWithLifecycle()
+    val selectedRows by viewModel.flowOfSelectedRows.collectAsStateWithLifecycle(initialValue = emptySet())
     var showFilterSheet by remember { mutableStateOf(false) }
     var showMoreOptionsMenu by remember { mutableStateOf(false) }
     var showSortMenu by remember { mutableStateOf(false) }
@@ -81,7 +84,26 @@ fun CardBrowserScreen(
                         CardBrowserRow(
                             row = row.browserRow,
                             columns = columnHeadings,
-                            modifier = Modifier.clickable { onCardClicked(row) }
+                            isSelected = selectedRows.contains(CardOrNoteId(row.id)),
+                            onLongClick = {
+                                viewModel.handleRowLongPress(
+                                    CardBrowserViewModel.RowSelection(
+                                        rowId = CardOrNoteId(row.id),
+                                        topOffset = 0
+                                    )
+                                )
+                            },
+                            modifier = Modifier.combinedClickable(
+                                onClick = { onCardClicked(row) },
+                                onLongClick = {
+                                    viewModel.handleRowLongPress(
+                                        CardBrowserViewModel.RowSelection(
+                                            rowId = CardOrNoteId(row.id),
+                                            topOffset = 0
+                                        )
+                                    )
+                                }
+                            )
                         )
                         HorizontalDivider()
                     }
@@ -418,19 +440,32 @@ fun CardBrowserHeader(columns: List<ColumnHeading>) {
 fun CardBrowserRow(
     row: BrowserRow,
     columns: List<ColumnHeading>,
-    modifier: Modifier = Modifier
+    isSelected: Boolean,
+    modifier: Modifier = Modifier,
+    onLongClick: () -> Unit
 ) {
-    Row(
-        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+    val backgroundColor = if (isSelected) {
+        MaterialTheme.colorScheme.primaryContainer
+    } else {
+        MaterialTheme.colorScheme.surface
+    }
+
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = backgroundColor
     ) {
-        row.cellsList.forEach { cell ->
-            Text(
-                text = cell.text,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 1,
-                modifier = Modifier.weight(1f) // Basic weighting
-            )
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            row.cellsList.forEach { cell ->
+                Text(
+                    text = cell.text,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 1,
+                    modifier = Modifier.weight(1f) // Basic weighting
+                )
+            }
         }
     }
 }

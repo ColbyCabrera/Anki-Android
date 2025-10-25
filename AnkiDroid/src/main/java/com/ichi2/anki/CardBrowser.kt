@@ -33,6 +33,7 @@ import anki.collection.OpChanges
 import com.ichi2.anim.ActivityTransitionAnimation.Direction
 import com.ichi2.anki.browser.CardBrowserLaunchOptions
 import com.ichi2.anki.browser.CardBrowserViewModel
+import com.ichi2.anki.browser.CardOrNoteId
 import com.ichi2.anki.browser.MySearchesContract
 import com.ichi2.anki.browser.SharedPreferencesLastDeckIdRepository
 import com.ichi2.anki.browser.compose.CardBrowserLayout
@@ -141,9 +142,18 @@ open class CardBrowser :
                         viewModel = viewModel,
                         onNavigateUp = { finish() },
                         onCardClicked = { row ->
-                            launchCatchingTask {
-                                val cardId = viewModel.queryDataForCardEdit(row.id)
-                                openNoteEditorForCard(cardId)
+                            if (viewModel.isInMultiSelectMode) {
+                                viewModel.toggleRowSelection(
+                                    CardBrowserViewModel.RowSelection(
+                                        rowId = CardOrNoteId(row.id),
+                                        topOffset = 0
+                                    )
+                                )
+                            } else {
+                                launchCatchingTask {
+                                    val cardId = viewModel.queryDataForCardEdit(row.id)
+                                    openNoteEditorForCard(cardId)
+                                }
                             }
                         },
                         onAddNote = {
@@ -162,7 +172,7 @@ open class CardBrowser :
                         },
                         onFilter = viewModel::search,
                         onSelectAll = {
-                            // TODO
+                            viewModel.toggleSelectAllOrNone()
                         },
                         onOptions = {
                             val dialog = BrowserOptionsDialog.newInstance(
