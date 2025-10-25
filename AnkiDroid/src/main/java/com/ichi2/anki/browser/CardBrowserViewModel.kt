@@ -584,6 +584,14 @@ class CardBrowserViewModel(
         flowOfCardStateChanged.emit(Unit)
     }
 
+    fun toggleMarkForSelectedRows() = viewModelScope.launch {
+        if (!hasSelectedAnyRows()) {
+            return@launch
+        }
+        toggleMark()
+        refreshSearch()
+    }
+
     fun setFlagForSelectedRows(flag: Flag) = viewModelScope.launch {
         if (!hasSelectedAnyRows()) {
             return@launch
@@ -593,6 +601,7 @@ class CardBrowserViewModel(
             setUserFlagForCards(cardIds, flag.code).changes
         }
         flowOfCardStateChanged.emit(Unit)
+        refreshSearch()
     }
 
     /**

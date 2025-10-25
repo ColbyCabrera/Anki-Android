@@ -35,6 +35,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
@@ -113,6 +114,7 @@ fun CardBrowserScreen(
             onPreview = onPreview,
             onSelectAll = onSelectAll,
             onFilter = { showFilterSheet = true },
+            onMark = { viewModel.toggleMarkForSelectedRows() },
             onSetFlag = { showSetFlagMenu = true },
             onOptions = onOptions,
             onMoreOptions = { showMoreOptionsMenu = true },
@@ -185,6 +187,7 @@ fun BrowserToolbar(
     onPreview: () -> Unit,
     onSelectAll: () -> Unit,
     onFilter: () -> Unit,
+    onMark: () -> Unit,
     onSetFlag: () -> Unit,
     onOptions: () -> Unit,
     onMoreOptions: () -> Unit,
@@ -227,7 +230,7 @@ fun BrowserToolbar(
                 )
             }
             if (hasSelection) {
-                IconButton(onClick = onFilter) {
+                IconButton(onClick = onMark) {
                     Icon(
                         painter = painterResource(R.drawable.star_24px),
                         contentDescription = stringResource(R.string.menu_mark_note)
@@ -421,7 +424,11 @@ fun FlagFilterBottomSheet(onDismiss: () -> Unit, onFilter: (String) -> Unit) {
                     leadingContent = {
                         Icon(
                             painter = painterResource(id = flag.drawableRes),
-                            contentDescription = "Filter by flag"
+                            contentDescription = "Filter by flag",
+                            tint = colorResource(
+                                id = flag.browserColorRes
+                                    ?: R.color.transparent
+                            )
                         )
                     },
                     modifier = Modifier.clickable {
@@ -540,9 +547,24 @@ fun CardBrowserRow(
         else -> MaterialTheme.colorScheme.surface
     }
 
+    val contentColor: Color = when (backgroundColor) {
+        MaterialTheme.colorScheme.primaryContainer -> MaterialTheme.colorScheme.onPrimaryContainer
+        MaterialTheme.colorScheme.tertiaryContainer -> MaterialTheme.colorScheme.onTertiaryContainer
+        Color(0xFFFFCDD2), // COLOR_FLAG_RED
+        Color(0xFFFFE0B2), // COLOR_FLAG_ORANGE
+        Color(0xFFC8E6C9), // COLOR_FLAG_GREEN
+        Color(0xFFBBDEFB), // COLOR_FLAG_BLUE
+        Color(0xFFF8BBD0), // COLOR_FLAG_PINK
+        Color(0xFFB2EBF2), // COLOR_FLAG_TURQUOISE
+        Color(0xFFE1BEE7) // COLOR_FLAG_PURPLE
+        -> Color.Black
+        else -> MaterialTheme.colorScheme.onSurface
+    }
+
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = backgroundColor
+        color = backgroundColor,
+        contentColor = contentColor
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
