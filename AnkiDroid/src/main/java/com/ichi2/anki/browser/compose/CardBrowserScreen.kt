@@ -423,7 +423,7 @@ fun FlagFilterBottomSheet(onDismiss: () -> Unit, onFilter: (String) -> Unit) {
                     headlineContent = { Text(flagLabels[flag] ?: "") },
                     leadingContent = {
                         Icon(
-                            painter = painterResource(id = flag.drawableRes),
+                            painter = painterResource(id = R.drawable.flag_24px),
                             contentDescription = "Filter by flag",
                             tint = colorResource(
                                 id = flag.browserColorRes
@@ -467,8 +467,16 @@ fun SetFlagBottomSheet(onDismiss: () -> Unit, onSetFlag: (Flag) -> Unit) {
                     headlineContent = { Text(flagLabels[flag] ?: "") },
                     leadingContent = {
                         Icon(
-                            painter = painterResource(id = flag.drawableRes),
-                            contentDescription = "Set flag"
+                            painter = painterResource(id = R.drawable.flag_24px),
+                            contentDescription = "Set flag",
+                            tint = if (flag == Flag.NONE) {
+                                MaterialTheme.colorScheme.onSurface
+                            } else {
+                                colorResource(
+                                    id = flag.browserColorRes
+                                        ?: R.color.transparent
+                                )
+                            }
                         )
                     },
                     modifier = Modifier.clickable {
@@ -534,13 +542,13 @@ fun CardBrowserRow(
         row.color != BrowserRow.Color.COLOR_DEFAULT -> {
             when (row.color) {
                 BrowserRow.Color.COLOR_MARKED -> MaterialTheme.colorScheme.tertiaryContainer
-                BrowserRow.Color.COLOR_FLAG_RED -> Color(0xFFFFCDD2)
-                BrowserRow.Color.COLOR_FLAG_ORANGE -> Color(0xFFFFE0B2)
-                BrowserRow.Color.COLOR_FLAG_GREEN -> Color(0xFFC8E6C9)
-                BrowserRow.Color.COLOR_FLAG_BLUE -> Color(0xFFBBDEFB)
-                BrowserRow.Color.COLOR_FLAG_PINK -> Color(0xFFF8BBD0)
-                BrowserRow.Color.COLOR_FLAG_TURQUOISE -> Color(0xFFB2EBF2)
-                BrowserRow.Color.COLOR_FLAG_PURPLE -> Color(0xFFE1BEE7)
+                BrowserRow.Color.COLOR_FLAG_RED -> colorResource(Flag.RED.browserColorRes!!)
+                BrowserRow.Color.COLOR_FLAG_ORANGE -> colorResource(Flag.ORANGE.browserColorRes!!)
+                BrowserRow.Color.COLOR_FLAG_GREEN -> colorResource(Flag.GREEN.browserColorRes!!)
+                BrowserRow.Color.COLOR_FLAG_BLUE -> colorResource(Flag.BLUE.browserColorRes!!)
+                BrowserRow.Color.COLOR_FLAG_PINK -> colorResource(Flag.PINK.browserColorRes!!)
+                BrowserRow.Color.COLOR_FLAG_TURQUOISE -> colorResource(Flag.TURQUOISE.browserColorRes!!)
+                BrowserRow.Color.COLOR_FLAG_PURPLE -> colorResource(Flag.PURPLE.browserColorRes!!)
                 else -> MaterialTheme.colorScheme.surface
             }
         }
@@ -550,13 +558,13 @@ fun CardBrowserRow(
     val contentColor: Color = when (backgroundColor) {
         MaterialTheme.colorScheme.primaryContainer -> MaterialTheme.colorScheme.onPrimaryContainer
         MaterialTheme.colorScheme.tertiaryContainer -> MaterialTheme.colorScheme.onTertiaryContainer
-        Color(0xFFFFCDD2), // COLOR_FLAG_RED
-        Color(0xFFFFE0B2), // COLOR_FLAG_ORANGE
-        Color(0xFFC8E6C9), // COLOR_FLAG_GREEN
-        Color(0xFFBBDEFB), // COLOR_FLAG_BLUE
-        Color(0xFFF8BBD0), // COLOR_FLAG_PINK
-        Color(0xFFB2EBF2), // COLOR_FLAG_TURQUOISE
-        Color(0xFFE1BEE7) // COLOR_FLAG_PURPLE
+        colorResource(Flag.RED.browserColorRes!!),
+        colorResource(Flag.ORANGE.browserColorRes!!),
+        colorResource(Flag.GREEN.browserColorRes!!),
+        colorResource(Flag.BLUE.browserColorRes!!),
+        colorResource(Flag.PINK.browserColorRes!!),
+        colorResource(Flag.TURQUOISE.browserColorRes!!),
+        colorResource(Flag.PURPLE.browserColorRes!!)
         -> Color.Black
         else -> MaterialTheme.colorScheme.onSurface
     }
