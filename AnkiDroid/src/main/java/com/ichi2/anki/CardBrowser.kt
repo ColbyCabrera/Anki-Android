@@ -466,6 +466,7 @@ open class CardBrowser : AnkiActivity(), ChangeManager.Subscriber,
 
     private fun moveSelectedCardsToDeck(did: DeckId) = launchCatchingTask {
         val changed = withProgress { viewModel.moveSelectedCardsToDeck(did).await() }
+        viewModel.search(viewModel.searchQuery.value)
         val message = resources.getQuantityString(
             R.plurals.card_browser_cards_moved,
             changed.count,
