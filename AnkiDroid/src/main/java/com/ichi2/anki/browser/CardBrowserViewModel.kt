@@ -1306,7 +1306,10 @@ class CardBrowserViewModel(
 
     fun filterByTags(tags: Set<String>) {
         _selectedTags.value = tags
-        val tagsQuery = tags.joinToString(separator = " OR ") { "tag:$it" }
+        val tagsQuery = tags.joinToString(" OR ") {
+            val escaped = it.replace("\"", "\\\"")
+            """tag:"$escaped""""
+        }
         search(tagsQuery)
     }
 
