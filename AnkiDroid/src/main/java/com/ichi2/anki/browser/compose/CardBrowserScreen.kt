@@ -282,7 +282,7 @@ fun BrowserToolbar(
                             positioning = TooltipAnchorPosition.Above,
                         ),
                         tooltip = {
-                            PlainTooltip { Text(stringResource(R.string.deselect_all)) }
+                            PlainTooltip { Text(stringResource(R.string.card_browser_deselect_all)) }
                         },
                         state = rememberTooltipState()
                     ) {
