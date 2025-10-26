@@ -18,6 +18,7 @@ package com.ichi2.anki.browser.compose
 
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -36,6 +37,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -53,8 +55,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ichi2.anki.R
@@ -144,13 +149,16 @@ fun CardBrowserLayout(
                                 is SelectableDeck.Deck -> deck.name
                                 else -> stringResource(R.string.card_browser_all_decks)
                             }
-                            Text(deckName)
+                            Text(text = deckName, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Icon(
                                 Icons.Default.ArrowDropDown, contentDescription = "Select Deck"
                             )
                         }
                         DropdownMenu(
-                            expanded = showDeckMenu, onDismissRequest = { showDeckMenu = false }) {
+                            expanded = showDeckMenu,
+                            onDismissRequest = { showDeckMenu = false },
+                            shape = MaterialTheme.shapes.large
+                        ) {
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.card_browser_all_decks)) },
                                 onClick = {
@@ -275,23 +283,22 @@ private fun DeckHierarchyMenu(
         val isExpanded = expandedDecks[deck.name] ?: false
         val hasChildren = deckHierarchy.containsKey(deck.name)
 
-        DropdownMenuItem(text = {
-            Row {
+        DropdownMenuItem(
+            text = { Text(deck.name.substringAfterLast("::")) },
+            onClick = { onDeckSelected(deck) },
+            trailingIcon = {
                 if (hasChildren) {
-                    Icon(
-                        if (isExpanded) Icons.Default.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = "Expand"
-                    )
+                    IconButton(onClick = { expandedDecks[deck.name] = !isExpanded }) {
+                        Icon(
+                            painter = if (isExpanded) painterResource(R.drawable.keyboard_arrow_down_24px)
+                            else painterResource(
+                                R.drawable.keyboard_arrow_down_24px
+                            ), contentDescription = "Expand"
+                        )
+                    }
                 }
-                Text(deck.name.substringAfterLast("::"))
             }
-        }, onClick = {
-            if (hasChildren) {
-                expandedDecks[deck.name] = !isExpanded
-            } else {
-                onDeckSelected(deck)
-            }
-        })
+        )
         if (isExpanded && hasChildren) {
             Column(modifier = Modifier.padding(start = 16.dp)) {
                 DeckHierarchyMenu(deckHierarchy, expandedDecks, onDeckSelected, deck.name)
