@@ -74,9 +74,11 @@ fun FilterByTagsDialog(
                                     }
                                 },
                                 trailingIcon = {
-                                    if (tag in selection)
-                                        null
-                                    else Spacer(Modifier.size(FilterChipDefaults.IconSize / 2))
+                                    if (tag in selection) {
+                                        Spacer(Modifier.size(0.dp))
+                                    } else {
+                                        Spacer(Modifier.size(FilterChipDefaults.IconSize / 2))
+                                    }
                                 }
                             )
                         }
