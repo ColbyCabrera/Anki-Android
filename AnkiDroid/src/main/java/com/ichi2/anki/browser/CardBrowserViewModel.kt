@@ -590,42 +590,32 @@ class CardBrowserViewModel(
         if (!hasSelectedAnyRows()) {
             return@launch
         }
-        val selectedBefore = selectedRows.toList()
+        val selectedBefore = selectedRows.map { RowSelection(it, 0) }
         toggleMark()
-        withCol {
-            val updatedRows = _browserRows.value.toMutableList()
-            for (rowId in selectedBefore) {
-                val newRow = backend.browserRowForId(rowId.cardOrNoteId)
-                val index = updatedRows.indexOfFirst { it.id == rowId.cardOrNoteId }
-                if (index != -1) {
-                    updatedRows[index] = BrowserRowWithId(newRow, rowId.cardOrNoteId)
-                }
-            }
-            _browserRows.value = updatedRows
+        refreshRowsByIds(selectedBefore)
+    }
+
+    private suspend fun refreshRowsByIds(ids: List<RowSelection>) = withCol {
+        val updated = _browserRows.value.toMutableList()
+        for (rowId in ids) {
+            val newRow = backend.browserRowForId(rowId.rowId.cardOrNoteId)
+            val index = updated.indexOfFirst { it.id == rowId.rowId.cardOrNoteId }
+            if (index != -1) updated[index] = BrowserRowWithId(newRow, rowId.rowId.cardOrNoteId)
         }
+        _browserRows.value = updated
     }
 
     fun setFlagForSelectedRows(flag: Flag) = viewModelScope.launch {
         if (!hasSelectedAnyRows()) {
             return@launch
         }
-        val selectedBefore = selectedRows.toList()
+        val selectedBefore = selectedRows.map { RowSelection(it, 0) }
         val cardIds = queryAllSelectedCardIds()
         undoableOp<OpChanges> {
             setUserFlagForCards(cardIds, flag.code).changes
         }
         flowOfCardStateChanged.emit(Unit)
-        withCol {
-            val updatedRows = _browserRows.value.toMutableList()
-            for (rowId in selectedBefore) {
-                val newRow = backend.browserRowForId(rowId.cardOrNoteId)
-                val index = updatedRows.indexOfFirst { it.id == rowId.cardOrNoteId }
-                if (index != -1) {
-                    updatedRows[index] = BrowserRowWithId(newRow, rowId.cardOrNoteId)
-                }
-            }
-            _browserRows.value = updatedRows
-        }
+        refreshRowsByIds(selectedBefore)
     }
 
     /**
