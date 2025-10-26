@@ -349,10 +349,18 @@ class CardBrowserViewModel(
      *      "deck:\"hello\"" -> "hello"
      */
     private fun extractDeckNameFromSearch(search: String): String? {
-        // Matches: deck:"Foo Bar", deck:'Foo Bar', deck:Foo, stops at space or ')'
+        // (?i) makes the match case-insensitive.
+        // \bdeck: ensures we match the whole word "deck:"
+        // \s* matches zero or more whitespace characters.
+        // The rest of the regex captures the deck name, which can be in one of three forms:
+        // 1. "((?:\\.|[^"\\])*)" - A double-quoted string. It handles escaped quotes.
+        // 2. '((?:\\.|[^'\\])*)' - A single-quoted string. It also handles escaped quotes.
+        // 3. ([^\s)]+) - An unquoted string, which ends at the first space or closing parenthesis.
         val regex = Regex("""(?i)\bdeck:\s*(?:"((?:\\.|[^"\\])*)"|'((?:\\.|[^'\\])*)'|([^\s)]+))""")
         val m = regex.find(search) ?: return null
+        // The deck name is in one of the capturing groups.
         val raw = m.groups[1]?.value ?: m.groups[2]?.value ?: m.groups[3]?.value ?: return null
+        // Finally, un-escape any quotes in the deck name.
         return raw.replace("\\\"", "\"").replace("\\'", "'")
     }
 
