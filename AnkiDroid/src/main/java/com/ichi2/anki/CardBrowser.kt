@@ -452,9 +452,6 @@ open class CardBrowser : AnkiActivity(), ChangeManager.Subscriber,
         }
     }
 
-    private fun showFilterByTagsDialog() {
-    }
-
     /**
      * If the user is in notes only mode, and there are notes selected,
      * show a snackbar explaining that the operation is not possible.
