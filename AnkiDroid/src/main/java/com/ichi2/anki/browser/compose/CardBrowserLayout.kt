@@ -18,7 +18,6 @@ package com.ichi2.anki.browser.compose
 
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -26,10 +25,8 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -55,7 +52,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -290,7 +286,7 @@ private fun DeckHierarchyMenu(
                 if (hasChildren) {
                     IconButton(onClick = { expandedDecks[deck.name] = !isExpanded }) {
                         Icon(
-                            painter = if (isExpanded) painterResource(R.drawable.keyboard_arrow_down_24px)
+                            painter = if (isExpanded) painterResource(R.drawable.keyboard_arrow_right_24px)
                             else painterResource(
                                 R.drawable.keyboard_arrow_down_24px
                             ), contentDescription = "Expand"
