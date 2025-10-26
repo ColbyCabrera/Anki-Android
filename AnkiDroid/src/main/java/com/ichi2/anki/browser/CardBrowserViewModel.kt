@@ -415,6 +415,15 @@ class CardBrowserViewModel(
             emit(Unit)
         }
 
+    val allTags: List<String> by lazy {
+        runCatching {
+            CollectionManager.getColUnsafe().tags.all().sorted()
+        }.getOrDefault(emptyList())
+    }
+
+    private val _selectedTags = MutableStateFlow<Set<String>>(emptySet())
+    val selectedTags: StateFlow<Set<String>> = _selectedTags
+
     init {
         Timber.d("CardBrowserViewModel::init")
 
@@ -1292,6 +1301,12 @@ class CardBrowserViewModel(
         val idsFile = IdsFile(cacheDir, ids)
         val currentIndex = if (selectedRows.isNotEmpty()) 0 else indexOfFirstCheckedCard() ?: 0
         return PreviewIntentData(currentIndex, idsFile)
+    }
+
+    fun filterByTags(tags: Set<String>) {
+        _selectedTags.value = tags
+        val tagsQuery = tags.joinToString(separator = " OR ") { "tag:$it" }
+        search(tagsQuery)
     }
 
     data class PreviewIntentData(

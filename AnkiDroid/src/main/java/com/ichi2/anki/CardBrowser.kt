@@ -26,6 +26,7 @@ import androidx.activity.result.contract.ActivityResultContracts.StartActivityFo
 import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -44,6 +45,7 @@ import com.ichi2.anki.browser.RepositionCardFragment
 import com.ichi2.anki.browser.RepositionCardsRequest
 import com.ichi2.anki.browser.SharedPreferencesLastDeckIdRepository
 import com.ichi2.anki.browser.compose.CardBrowserLayout
+import com.ichi2.anki.browser.compose.FilterByTagsDialog
 import com.ichi2.anki.browser.toCardBrowserLaunchOptions
 import com.ichi2.anki.dialogs.BrowserOptionsDialog
 import com.ichi2.anki.dialogs.CreateDeckDialog
@@ -156,6 +158,9 @@ open class CardBrowser : AnkiActivity(), ChangeManager.Subscriber,
             AnkiDroidTheme {
                 Box(modifier = Modifier.fillMaxSize()) {
                     var showBrowserOptionsDialog by rememberSaveable { mutableStateOf(false) }
+                    var showFilterByTagsDialog by rememberSaveable { mutableStateOf(false) }
+                    val selectedTags by viewModel.selectedTags.collectAsState()
+
                     if (showBrowserOptionsDialog) {
                         BrowserOptionsDialog(
                             onDismissRequest = {
@@ -178,6 +183,17 @@ open class CardBrowser : AnkiActivity(), ChangeManager.Subscriber,
                                 val flagRenameDialog = FlagRenameDialog()
                                 flagRenameDialog.show(supportFragmentManager, "FlagRenameDialog")
                             })
+                    }
+                    if (showFilterByTagsDialog) {
+                        FilterByTagsDialog(
+                            onDismissRequest = { showFilterByTagsDialog = false },
+                            onConfirm = { tags ->
+                                viewModel.filterByTags(tags)
+                                showFilterByTagsDialog = false
+                            },
+                            allTags = viewModel.allTags,
+                            initialSelection = selectedTags
+                        )
                     }
                     CardBrowserLayout(
                         viewModel = viewModel,
@@ -247,7 +263,7 @@ open class CardBrowser : AnkiActivity(), ChangeManager.Subscriber,
                             exportSelected()
                         },
                         onFilterByTag = {
-                            showFilterByTagsDialog()
+                            showFilterByTagsDialog = true
                         })
                 }
             }
