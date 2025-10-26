@@ -693,7 +693,7 @@ class CardBrowserViewModel(
     }
 
     fun deselectAll() {
-        selectNone()
+        endMultiSelectMode(SingleSelectCause.Other)
     }
 
     fun selectNone(): Job? {
