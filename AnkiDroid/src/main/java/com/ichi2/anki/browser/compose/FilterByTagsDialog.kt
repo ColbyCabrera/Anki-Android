@@ -2,7 +2,7 @@ package com.ichi2.anki.browser.compose
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -22,7 +22,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ichi2.anki.R
 
@@ -44,8 +43,8 @@ fun FilterByTagsDialog(
                 item {
                     FlowRow(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         allTags.forEach { tag ->
                             FilterChip(
@@ -60,26 +59,25 @@ fun FilterByTagsDialog(
                                         selection + tag
                                     }
                                 },
-                                label = {
-                                    Text(
-                                        text = tag,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.defaultMinSize(
-                                                minHeight = 0.dp, minWidth = 16.dp
-                                            )
-                                    )
-                                },
-                                leadingIcon = if (tag in selection) {
-                                    {
+                                label = { Text(text = tag) },
+                                    leadingIcon = {
+                                    if (tag in selection) {
+
                                         Icon(
                                             painter = painterResource(R.drawable.check_24px),
                                             contentDescription = "Done icon",
                                             modifier = Modifier.size(FilterChipDefaults.IconSize)
                                         )
+
+                                    } else {
+                                        Spacer(Modifier.size(FilterChipDefaults.IconSize / 2))
                                     }
-                                } else {
-                                    null
                                 },
+                                trailingIcon = {
+                                    if (tag in selection)
+                                        null
+                                    else Spacer(Modifier.size(FilterChipDefaults.IconSize / 2))
+                                }
                             )
                         }
                     }
