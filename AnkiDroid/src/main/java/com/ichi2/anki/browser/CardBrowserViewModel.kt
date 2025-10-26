@@ -44,8 +44,6 @@ import com.ichi2.anki.browser.CardBrowserViewModel.ChangeMultiSelectMode.MultiSe
 import com.ichi2.anki.browser.CardBrowserViewModel.ChangeMultiSelectMode.SingleSelectCause
 import com.ichi2.anki.browser.CardBrowserViewModel.ToggleSelectionState.SELECT_ALL
 import com.ichi2.anki.browser.CardBrowserViewModel.ToggleSelectionState.SELECT_NONE
-import com.ichi2.anki.browser.FindAndReplaceDialogFragment.Companion.ALL_FIELDS_AS_FIELD
-import com.ichi2.anki.browser.FindAndReplaceDialogFragment.Companion.TAGS_AS_FIELD
 import com.ichi2.anki.browser.RepositionCardsRequest.RepositionData
 import com.ichi2.anki.common.annotations.NeedsTest
 import com.ichi2.anki.export.ExportDialogFragment.ExportType
@@ -58,7 +56,6 @@ import com.ichi2.anki.libanki.QueueType
 import com.ichi2.anki.libanki.QueueType.ManuallyBuried
 import com.ichi2.anki.libanki.QueueType.SiblingBuried
 import com.ichi2.anki.libanki.notesOfCards
-import com.ichi2.anki.model.CardStateFilter
 import com.ichi2.anki.model.CardsOrNotes
 import com.ichi2.anki.model.CardsOrNotes.CARDS
 import com.ichi2.anki.model.CardsOrNotes.NOTES
@@ -66,10 +63,8 @@ import com.ichi2.anki.model.SelectableDeck
 import com.ichi2.anki.model.SortType
 import com.ichi2.anki.observability.ChangeManager
 import com.ichi2.anki.observability.undoableOp
-import com.ichi2.anki.pages.CardInfoDestination
 import com.ichi2.anki.preferences.SharedPreferencesProvider
 import com.ichi2.anki.utils.ext.normalizeForSearch
-import com.ichi2.anki.utils.ext.setUserFlagForCards
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -237,14 +232,14 @@ class CardBrowserViewModel(
 
     val flowOfToggleSelectionState: StateFlow<ToggleSelectionState> = combine(flowOfSelectedRows, browserRows) { selected, all ->
         if (all.isEmpty() || selected.size < all.size) {
-            ToggleSelectionState.SELECT_ALL
+            SELECT_ALL
         } else {
-            ToggleSelectionState.SELECT_NONE
+            SELECT_NONE
         }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.Eagerly,
-        initialValue = ToggleSelectionState.SELECT_ALL,
+        initialValue = SELECT_ALL,
     )
 
     val cardSelectionEventFlow = MutableSharedFlow<Unit>()
@@ -354,23 +349,11 @@ class CardBrowserViewModel(
      *      "deck:\"hello\"" -> "hello"
      */
     private fun extractDeckNameFromSearch(search: String): String? {
-        val deckPrefix = "deck:"
-        val deckPrefixPos = search.indexOf(deckPrefix)
-        if (deckPrefixPos == -1) {
-            return null
-        }
-        var deckName = search.substring(deckPrefixPos + deckPrefix.length)
-        val deckNameEndPos = deckName.indexOf(" ")
-        if (deckNameEndPos != -1) {
-            deckName = deckName.substring(0, deckNameEndPos)
-        }
-        if (deckName.startsWith("'") && deckName.endsWith("'")) {
-            deckName = deckName.substring(1, deckName.length - 1)
-        }
-        if (deckName.startsWith("\"") && deckName.endsWith("\"")) {
-            deckName = deckName.substring(1, deckName.length - 1)
-        }
-        return deckName
+        // Matches: deck:"Foo Bar", deck:'Foo Bar', deck:Foo, stops at space or ')'
+        val regex = Regex("""(?i)\bdeck:\s*(?:"((?:\\.|[^"\\])*)"|'((?:\\.|[^'\\])*)'|([^\s)]+))""")
+        val m = regex.find(search) ?: return null
+        val raw = m.groups[1]?.value ?: m.groups[2]?.value ?: m.groups[3]?.value ?: return null
+        return raw.replace("\\\"", "\"").replace("\\'", "'")
     }
 
     val flowOfInitCompleted = MutableStateFlow(false)
