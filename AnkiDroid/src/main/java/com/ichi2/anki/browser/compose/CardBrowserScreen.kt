@@ -321,13 +321,13 @@ fun BrowserToolbar(
                 positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
                     positioning = TooltipAnchorPosition.Above,
                 ), tooltip = {
-                    PlainTooltip { Text(stringResource(R.string.more_options)) }
+                    PlainTooltip { Text(stringResource(R.string.card_browser_select_all)) }
                 }, state = rememberTooltipState()
             ) {
                 IconButton(onClick = onSelectAll) {
                     Icon(
                         painter = painterResource(R.drawable.select_all_24px),
-                        contentDescription = stringResource(R.string.more_options)
+                        contentDescription = stringResource(R.string.card_browser_select_all)
                     )
                 }
             }
