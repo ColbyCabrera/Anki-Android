@@ -23,6 +23,10 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+// The tag "tags" is excluded as it was appearing on every card, likely due to a legacy data issue
+// or a conflict with an internal representation.
+private const val EXCLUDED_TAG_NAME = "tags"
+
 /**
  * @param noteIds IDs of notes whose tags should be retrieved and marked as "checked"
  * @param checkedTags additional list of checked tags.
@@ -51,7 +55,7 @@ class TagsDialogViewModel(
                             withCol { getNote(nid) }.tags
                         }.apply {
                             addAll(checkedTags)
-                            remove("tags")
+                            remove(EXCLUDED_TAG_NAME)
                         }
                 _initProgress.emit(InitProgress.Processing)
                 val uncheckedTags = allTags - allCheckedTags
