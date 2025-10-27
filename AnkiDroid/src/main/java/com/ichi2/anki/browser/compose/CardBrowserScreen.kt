@@ -805,6 +805,8 @@ fun CardBrowserRow(
 ) {
     val backgroundColor: Color = when {
         isSelected && row.color == BrowserRow.Color.COLOR_DEFAULT -> MaterialTheme.colorScheme.primaryContainer
+        isSelected -> MaterialTheme.colorScheme.primary
+
         row.color != BrowserRow.Color.COLOR_DEFAULT -> {
             when (row.color) {
                 BrowserRow.Color.COLOR_MARKED -> MaterialTheme.colorScheme.tertiaryContainer
@@ -823,6 +825,7 @@ fun CardBrowserRow(
     }
 
     val contentColor: Color = when (backgroundColor) {
+        MaterialTheme.colorScheme.primary -> MaterialTheme.colorScheme.onPrimary
         MaterialTheme.colorScheme.primaryContainer -> MaterialTheme.colorScheme.onPrimaryContainer
         MaterialTheme.colorScheme.tertiaryContainer -> MaterialTheme.colorScheme.onTertiaryContainer
         colorResource(Flag.RED.browserColorRes!!),
