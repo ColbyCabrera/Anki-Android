@@ -93,10 +93,10 @@ fun CardBrowserScreen(
     var showFlagMenu by remember { mutableStateOf(false) }
     var showSetFlagMenu by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    var toolbarHeight by remember { mutableStateOf(0) }
+    var toolbarHeight by remember { mutableIntStateOf(0) }
 
     Box(modifier = modifier) {
-        Column(modifier = modifier) {
+        Column {
             CardBrowserHeader(columns = columnHeadings)
             HorizontalDivider()
             when (val state = searchState) {
