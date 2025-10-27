@@ -18,6 +18,7 @@
 
 package com.ichi2.anki
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
 import androidx.activity.enableEdgeToEdge
@@ -36,6 +37,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.ViewModelProvider
 import anki.collection.OpChanges
 import com.ichi2.anim.ActivityTransitionAnimation.Direction
+import com.ichi2.anki.CollectionManager.withCol
 import com.ichi2.anki.browser.BrowserColumnSelectionFragment
 import com.ichi2.anki.browser.CardBrowserLaunchOptions
 import com.ichi2.anki.browser.CardBrowserViewModel
@@ -65,7 +67,6 @@ import com.ichi2.anki.model.SelectableDeck
 import com.ichi2.anki.noteeditor.NoteEditorLauncher
 import com.ichi2.anki.observability.ChangeManager
 import com.ichi2.anki.pages.CardInfoDestination
-import com.ichi2.anki.pages.DeckOptions
 import com.ichi2.anki.previewer.PreviewerFragment
 import com.ichi2.anki.scheduling.ForgetCardsDialog
 import com.ichi2.anki.scheduling.SetDueDateDialog
@@ -354,7 +355,7 @@ open class CardBrowser :
         createFilteredDeckDialog.onNewDeckCreated = { deckId ->
             // a filtered deck was created
             launchCatchingTask {
-                val intent = DeckOptions.getIntent(this@CardBrowser, deckId)
+                val intent = FilteredDeckOptions.getIntent(this@CardBrowser, deckId)
                 startActivity(intent)
             }
         }
