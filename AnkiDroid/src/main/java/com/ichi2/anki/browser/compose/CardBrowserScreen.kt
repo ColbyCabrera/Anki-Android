@@ -628,7 +628,7 @@ fun FlagFilterBottomSheet(onDismiss: () -> Unit, onFilter: (String) -> Unit) {
                     leadingContent = {
                         Icon(
                             painter = painterResource(id = R.drawable.flag_24px),
-                            contentDescription = "Filter by flag",
+                            contentDescription = stringResource(R.string.card_browser_search_by_flag),
                             tint = colorResource(
                                 id = flag.browserColorRes
                                     ?: R.color.transparent
@@ -672,7 +672,7 @@ fun SetFlagBottomSheet(onDismiss: () -> Unit, onSetFlag: (Flag) -> Unit) {
                     leadingContent = {
                         Icon(
                             painter = painterResource(id = R.drawable.flag_24px),
-                            contentDescription = "Set flag",
+                            contentDescription = stringResource(R.string.menu_flag),
                             tint = if (flag == Flag.NONE) {
                                 MaterialTheme.colorScheme.onSurface
                             } else {
