@@ -351,11 +351,8 @@ open class CardBrowser :
             null
         )
         createFilteredDeckDialog.onNewDeckCreated = { deckId ->
-            // a filtered deck was created
-            launchCatchingTask {
-                val intent = FilteredDeckOptions.getIntent(this@CardBrowser, deckId)
-                startActivity(intent)
-            }
+            val intent = FilteredDeckOptions.getIntent(this@CardBrowser, deckId)
+            startActivity(intent)
         }
         launchCatchingTask {
             withProgress {
