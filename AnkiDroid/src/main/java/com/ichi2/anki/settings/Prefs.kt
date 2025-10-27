@@ -290,9 +290,6 @@ object Prefs {
 
     val isNewStudyScreenEnabled by booleanPref(R.string.new_reviewer_options_key, false)
 
-    val devIsCardBrowserFragmented: Boolean
-        get() = getBoolean(R.string.dev_card_browser_fragmented, false)
-
     val devUsingCardBrowserSearchView: Boolean by booleanPref(R.string.dev_card_browser_search_view, false)
 
     // **************************************** UI Config *************************************** //

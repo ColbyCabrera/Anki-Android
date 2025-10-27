@@ -13,23 +13,26 @@
  *  You should have received a copy of the GNU General Public License along with
  *  this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package com.ichi2.anki.browser
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.ichi2.anki.common.annotations.NeedsTest
-import com.ichi2.anki.model.SelectableDeck
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.launch
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import androidx.activity.result.contract.ActivityResultContract
+import com.ichi2.anki.CardBrowser
 
-class CardBrowserFragmentViewModel : ViewModel() {
-    val flowOfSearchForDecks = MutableSharedFlow<List<SelectableDeck>>()
+class MySearchesContract : ActivityResultContract<Unit, String?>() {
 
-    @NeedsTest("default usage")
-    fun openDeckSelectionDialog() =
-        viewModelScope.launch {
-            val decks = listOf(SelectableDeck.AllDecks) + SelectableDeck.fromCollection(includeFiltered = true)
-            flowOfSearchForDecks.emit(decks)
+    override fun createIntent(context: Context, input: Unit): Intent {
+        return Intent(context, CardBrowser::class.java).apply {
+            putExtra("target", "my_searches")
         }
+    }
+
+    override fun parseResult(resultCode: Int, intent: Intent?): String? {
+        if (resultCode != Activity.RESULT_OK) {
+            return null
+        }
+        return intent?.getStringExtra("search_query")
+    }
 }
