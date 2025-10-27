@@ -477,6 +477,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                 }
                 var selectedNavigationItem by remember { mutableIntStateOf(0) } // For NavigationRail
                 val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+                val scope = rememberCoroutineScope()
 
                 data class DrawerItem(
                     val icon: Int, @StringRes val labelResId: Int, val action: (() -> Unit)? = null
@@ -645,16 +646,21 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                         }
                                         NavigationDrawerItem(
                                             icon = {
-                                            Icon(
-                                                painterResource(item.icon),
-                                                contentDescription = null
-                                            )
-                                        },
+                                                Icon(
+                                                    painterResource(item.icon),
+                                                    contentDescription = null
+                                                )
+                                            },
                                             label = { Text(stringResource(item.labelResId)) },
                                             selected = selectedNavigationItem == index,
                                             onClick = {
                                                 selectedNavigationItem = index
-                                                item.action?.invoke()
+                                                scope.launch {
+                                                    drawerState.close()
+                                                    item.action?.invoke()
+                                                    selectedNavigationItem = 0
+                                                }
+
                                             })
                                     }
                                 }
