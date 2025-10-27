@@ -790,7 +790,8 @@ fun CardBrowserRow(
                     text = cell.text,
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 1,
-                    modifier = Modifier.weight(1f) // Basic weighting
+                    modifier = Modifier.weight(1f),
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
