@@ -598,29 +598,23 @@ fun SelectableSortOrderBottomSheet(viewModel: CardBrowserViewModel, onDismiss: (
     ) {
         LazyColumn {
             items(SortType.entries) { sortType ->
+                val onItemClick: () -> Unit = {
+                    viewModel.changeCardOrder(sortType)
+                    scope.launch { sheetState.hide() }.invokeOnCompletion {
+                        if (!sheetState.isVisible) {
+                            onDismiss()
+                        }
+                    }
+                }
                 ListItem(
                     headlineContent = { Text(text = sortLabels[sortType.cardBrowserLabelIndex]) },
                     leadingContent = {
                         RadioButton(
                             selected = currentSortType == sortType,
-                            onClick = {
-                                viewModel.changeCardOrder(sortType)
-                                scope.launch { sheetState.hide() }.invokeOnCompletion {
-                                    if (!sheetState.isVisible) {
-                                        onDismiss()
-                                    }
-                                }
-                            }
+                            onClick = onItemClick
                         )
                     },
-                    modifier = Modifier.clickable {
-                        viewModel.changeCardOrder(sortType)
-                        scope.launch { sheetState.hide() }.invokeOnCompletion {
-                            if (!sheetState.isVisible) {
-                                onDismiss()
-                            }
-                        }
-                    }
+                    modifier = Modifier.clickable(onClick = onItemClick)
                 )
             }
         }
