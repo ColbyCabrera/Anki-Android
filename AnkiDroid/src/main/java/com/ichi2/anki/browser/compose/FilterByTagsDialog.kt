@@ -33,7 +33,7 @@ fun FilterByTagsDialog(
     allTags: List<String>,
     initialSelection: Set<String>
 ) {
-    var selection by remember(initialSelection) { mutableStateOf(initialSelection) }
+    var selection by remember(initialSelection) { mutableStateOf(initialSelection.toSet()) }
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
