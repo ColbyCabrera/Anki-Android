@@ -123,7 +123,7 @@ fun CardBrowserLayout(
                         value = searchQuery,
                         onValueChange = { query -> viewModel.setSearchQuery(query) },
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Search") },
+                        placeholder = { Text(text = stringResource(R.string.card_browser_search_hint)) },
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                         keyboardActions = KeyboardActions(onSearch = {
                             viewModel.search(searchQuery)
@@ -131,7 +131,10 @@ fun CardBrowserLayout(
                     )
                 }, navigationIcon = {
                     IconButton(onClick = { isSearchOpen = false }) {
-                        Icon(Icons.Default.Close, contentDescription = "Close Search")
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = stringResource(R.string.close)
+                        )
                     }
                 })
             } else {
@@ -147,7 +150,8 @@ fun CardBrowserLayout(
                             }
                             Text(text = deckName, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Icon(
-                                Icons.Default.ArrowDropDown, contentDescription = "Select Deck"
+                                Icons.Default.ArrowDropDown,
+                                contentDescription = stringResource(R.string.select_deck)
                             )
                         }
                         DropdownMenu(
@@ -177,12 +181,18 @@ fun CardBrowserLayout(
                 }, navigationIcon = {
                     IconButton(onClick = onNavigateUp) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Navigate Up"
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(
+                                R.string.back
+                            )
                         )
                     }
                 }, actions = {
                     IconButton(onClick = { isSearchOpen = true }) {
-                        Icon(Icons.Default.Search, contentDescription = "Search")
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = stringResource(R.string.card_browser_search_hint)
+                        )
                     }
                 })
             }
