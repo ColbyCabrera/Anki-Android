@@ -125,7 +125,7 @@ fun CardBrowserScreen(
                     }
                 }
                 is SearchState.Error -> {
-                    // TODO: Show error message
+                    CardBrowserErrorState()
                 }
             }
         }
@@ -718,6 +718,26 @@ fun EmptyCardBrowser(modifier: Modifier = Modifier) {
     ) {
         CardBrowserEmpty()
     }
+}
+
+@Composable
+fun CardBrowserErrorState(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        CardBrowserError()
+    }
+}
+
+@Composable
+fun CardBrowserError(modifier: Modifier = Modifier) {
+    Text(
+        text = stringResource(id = R.string.card_browser_no_cards_in_deck), modifier = modifier
+    )
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
