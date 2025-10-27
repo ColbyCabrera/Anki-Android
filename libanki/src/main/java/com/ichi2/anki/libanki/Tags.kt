@@ -25,6 +25,8 @@ import anki.tags.TagTreeNode
 import com.ichi2.anki.libanki.utils.LibAnkiAlias
 import com.ichi2.anki.libanki.utils.join
 import java.util.AbstractSet
+import net.ankiweb.rsdroid.exceptions.BackendNotFoundException
+import timber.log.Timber
 
 /**
  * Anki maintains a cache of used tags so it can quickly present a list of tags
@@ -89,10 +91,9 @@ class Tags(
         val notes = noteIds.mapNotNull {
             try {
                 col.getNote(it)
-            } catch (e: RuntimeException) {
-                // This is broad, but seems to be what is thrown on failure.
-                // A more specific exception would be better.
-                // For now, assume any RuntimeException means "not found" or "deleted".
+            } catch (e: BackendNotFoundException) {
+                // The note was not found, probably deleted.
+                Timber.w("bulkUpdate: failed to get note %s, skipping", it)
                 null
             }
         }
