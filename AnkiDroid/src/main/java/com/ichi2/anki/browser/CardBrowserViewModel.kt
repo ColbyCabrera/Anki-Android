@@ -1416,6 +1416,9 @@ class CardBrowserViewModel(
 
     /** Whether [CardBrowserViewModel] is processing a search */
     sealed interface SearchState {
+        /** The view is initializing */
+        data object Initializing : SearchState
+
         /** A search is in progress */
         data object Searching : SearchState
 

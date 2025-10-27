@@ -5,7 +5,7 @@
  * the terms of the GNU General Public License as published by the Free Software        *
  * Foundation; either version 3 of the License, or (at your option) any later           *
  * version.                                                                             *
- *                                                                                      *\
+ *                                                                                      *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY      *
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A      *
  * PARTICULAR PURPOSE. See the GNU General Public License for more details.             *
@@ -53,6 +53,7 @@ import com.ichi2.anki.browser.ColumnHeading
 import com.ichi2.anki.model.SortType
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import com.ichi2.anki.browser.CardBrowserViewModel.SearchState
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -81,6 +82,7 @@ fun CardBrowserScreen(
     val columnHeadings by viewModel.flowOfColumnHeadings.collectAsStateWithLifecycle()
     val selectedRows by viewModel.flowOfSelectedRows.collectAsStateWithLifecycle(initialValue = emptySet())
     val hasSelection by viewModel.flowOfSelectedRows.map { it.isNotEmpty() }.collectAsStateWithLifecycle(initialValue = false)
+    val searchState by viewModel.flowOfSearchState.collectAsStateWithLifecycle(initialValue = SearchState.Initializing)
     var showFilterSheet by remember { mutableStateOf(false) }
     var showMoreOptionsMenu by remember { mutableStateOf(false) }
     var showSortMenu by remember { mutableStateOf(false) }
@@ -92,30 +94,38 @@ fun CardBrowserScreen(
         Column(modifier = modifier) {
             CardBrowserHeader(columns = columnHeadings)
             HorizontalDivider()
-            if (browserRows.isEmpty()) {
-                EmptyCardBrowser()
-            } else {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(
-                        items = browserRows, key = { it.id }
-                    ) { row ->
-                        CardBrowserRow(
-                            row = row.browserRow,
-                            isSelected = selectedRows.contains(CardOrNoteId(row.id)),
-                            modifier = Modifier.combinedClickable(
-                                onClick = { onCardClicked(row) },
-                                onLongClick = {
-                                    viewModel.handleRowLongPress(
-                                        CardBrowserViewModel.RowSelection(
-                                            rowId = CardOrNoteId(row.id),
-                                            topOffset = 0
-                                        )
+            when (searchState) {
+                is SearchState.Initializing, is SearchState.Searching -> CardBrowserLoading()
+                is SearchState.Completed -> {
+                    if (browserRows.isEmpty()) {
+                        EmptyCardBrowser()
+                    } else {
+                        LazyColumn(modifier = Modifier.fillMaxSize()) {
+                            items(
+                                items = browserRows, key = { it.id }
+                            ) { row ->
+                                CardBrowserRow(
+                                    row = row.browserRow,
+                                    isSelected = selectedRows.contains(CardOrNoteId(row.id)),
+                                    modifier = Modifier.combinedClickable(
+                                        onClick = { onCardClicked(row) },
+                                        onLongClick = {
+                                            viewModel.handleRowLongPress(
+                                                CardBrowserViewModel.RowSelection(
+                                                    rowId = CardOrNoteId(row.id),
+                                                    topOffset = 0
+                                                )
+                                            )
+                                        }
                                     )
-                                }
-                            )
-                        )
-                        HorizontalDivider()
+                                )
+                                HorizontalDivider()
+                            }
+                        }
                     }
+                }
+                is SearchState.Error -> {
+                    // TODO: Show error message
                 }
             }
         }
@@ -707,6 +717,23 @@ fun EmptyCardBrowser(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         CardBrowserEmpty()
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun CardBrowserLoading(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        LoadingIndicator(
+            color = LoadingIndicatorDefaults.indicatorColor,
+            polygons = LoadingIndicatorDefaults.IndeterminateIndicatorPolygons
+        )
     }
 }
 
