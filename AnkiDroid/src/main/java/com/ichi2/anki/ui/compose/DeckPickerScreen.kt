@@ -84,7 +84,6 @@ import androidx.graphics.shapes.Morph
 import com.ichi2.anki.R
 import com.ichi2.anki.SyncIconState
 import com.ichi2.anki.deckpicker.DisplayDeckNode
-import com.ichi2.anki.ui.compose.SyncIcon
 import com.ichi2.utils.MorphShape
 
 private val expandedDeckCardRadius = 24.dp
