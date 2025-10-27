@@ -645,16 +645,21 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                         }
                                         NavigationDrawerItem(
                                             icon = {
-                                            Icon(
-                                                painterResource(item.icon),
-                                                contentDescription = null
-                                            )
-                                        },
+                                                Icon(
+                                                    painterResource(item.icon),
+                                                    contentDescription = null
+                                                )
+                                            },
                                             label = { Text(stringResource(item.labelResId)) },
                                             selected = selectedNavigationItem == index,
                                             onClick = {
                                                 selectedNavigationItem = index
-                                                item.action?.invoke()
+                                                coroutineScope.launch {
+                                                    drawerState.close()
+                                                    item.action?.invoke()
+                                                    selectedNavigationItem = 0
+                                                }
+
                                             })
                                     }
                                 }
