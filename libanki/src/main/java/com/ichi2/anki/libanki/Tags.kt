@@ -70,7 +70,7 @@ class Tags(
         tags: String,
     ): OpChangesWithCount = col.backend.addNoteTags(noteIds = noteIds, tags = tags)
 
-    // Remove space-separated tags from provided notes.
+    /** Remove space-separated tags from provided notes. */
     fun bulkRemove(
         noteIds: List<Long>,
         tags: String,
@@ -79,6 +79,19 @@ class Tags(
             noteIds = noteIds,
             tags = tags,
         )
+
+    /** Update tags for the given notes. Notes not in the collection are ignored. */
+    @LibAnkiAlias("bulk_update")
+    fun bulkUpdate(
+        noteIds: List<NoteId>,
+        tags: String,
+    ): OpChanges {
+        val notes = noteIds.map { col.getNote(it) }
+        for (note in notes) {
+            note.tags = split(tags)
+        }
+        return col.updateNotes(notes)
+    }
 
     /*
      * Bulk addition/removal based on tag

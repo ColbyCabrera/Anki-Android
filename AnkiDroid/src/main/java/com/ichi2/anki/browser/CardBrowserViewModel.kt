@@ -1,3 +1,4 @@
+
 /*
  *  Copyright (c) 2023 David Allison <davidallisongithub@gmail.com>
  *
@@ -408,11 +409,8 @@ class CardBrowserViewModel(
             emit(Unit)
         }
 
-    val allTags: List<String> by lazy {
-        runCatching {
-            CollectionManager.getColUnsafe().tags.all().sorted()
-        }.getOrDefault(emptyList())
-    }
+    private val _allTags = MutableStateFlow<List<String>>(emptyList())
+    val allTags: StateFlow<List<String>> = _allTags
 
     private val _selectedTags = MutableStateFlow<Set<String>>(emptySet())
     val selectedTags: StateFlow<Set<String>> = _selectedTags
@@ -460,6 +458,11 @@ class CardBrowserViewModel(
             .onEach {
                 savedStateHandle[STATE_MULTISELECT] = it.resultedInMultiSelect
             }.launchIn(viewModelScope)
+
+        viewModelScope.launch {
+            val tags = runCatching { withCol { tags.all().sorted() } }.getOrDefault(emptyList())
+            _allTags.value = tags
+        }
 
         viewModelScope.launch {
             shouldIgnoreAccents = withCol { config.getBool(ConfigKey.Bool.IGNORE_ACCENTS_IN_SEARCH) }
@@ -1294,6 +1297,16 @@ class CardBrowserViewModel(
             """tag:"$escaped""""
         }
         search(tagsQuery)
+    }
+
+    fun updateTags(tags: List<String>) = viewModelScope.launch {
+        val noteIds = queryAllSelectedNoteIds()
+        undoableOp<OpChanges> {
+            this.tags.bulkUpdate(
+                noteIds = noteIds,
+                tags = tags.joinToString(" "),
+            )
+        }
     }
 
     data class PreviewIntentData(

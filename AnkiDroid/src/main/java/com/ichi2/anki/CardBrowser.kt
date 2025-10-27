@@ -8,7 +8,7 @@
  * Foundation; either version 3 of the License, or (at your option) any later           *
  * version.                                                                             *
  *                                                                                      *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY      *
+ * This program is distributed in a hope that it will be useful, but WITHOUT ANY      *
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A      *
  * PARTICULAR PURPOSE. See the GNU General Public License for more details.             *
  *                                                                                      *
@@ -168,6 +168,7 @@ open class CardBrowser :
                     var showBrowserOptionsDialog by rememberSaveable { mutableStateOf(false) }
                     var showFilterByTagsDialog by rememberSaveable { mutableStateOf(false) }
                     val selectedTags by viewModel.selectedTags.collectAsState()
+                    val allTags by viewModel.allTags.collectAsState()
 
                     if (showBrowserOptionsDialog) {
                         BrowserOptionsDialog(
@@ -200,7 +201,7 @@ open class CardBrowser :
                                 viewModel.filterByTags(tags)
                                 showFilterByTagsDialog = false
                             },
-                            allTags = viewModel.allTags,
+                            allTags = allTags,
                             initialSelection = selectedTags
                         )
                     }
@@ -480,9 +481,7 @@ open class CardBrowser :
         indeterminateTags: List<String>,
         stateFilter: CardStateFilter
     ) {
-        // In the future, we may want to do something with the state of the tags,
-        // but for now, we just want to update the view.
-        viewModel.search(viewModel.searchQuery.value)
+        viewModel.updateTags(selectedTags)
     }
 
     /**
