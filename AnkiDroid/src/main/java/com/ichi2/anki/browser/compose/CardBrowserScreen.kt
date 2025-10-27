@@ -96,7 +96,7 @@ fun CardBrowserScreen(
         Column(modifier = modifier) {
             CardBrowserHeader(columns = columnHeadings)
             HorizontalDivider()
-            when (searchState) {
+            when (val state = searchState) {
                 is SearchState.Initializing, is SearchState.Searching -> CardBrowserLoading()
                 is SearchState.Completed -> {
                     if (browserRows.isEmpty()) {
@@ -137,7 +137,7 @@ fun CardBrowserScreen(
                     }
                 }
                 is SearchState.Error -> {
-                    CardBrowserErrorState()
+                    CardBrowserErrorState(error = state)
                 }
             }
         }
@@ -733,7 +733,7 @@ fun EmptyCardBrowser(modifier: Modifier = Modifier, deckName: String) {
 }
 
 @Composable
-fun CardBrowserErrorState(modifier: Modifier = Modifier) {
+fun CardBrowserErrorState(modifier: Modifier = Modifier, error: SearchState.Error) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -741,14 +741,15 @@ fun CardBrowserErrorState(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        CardBrowserError()
+        CardBrowserError(error = error)
     }
 }
 
 @Composable
-fun CardBrowserError(modifier: Modifier = Modifier) {
+fun CardBrowserError(modifier: Modifier = Modifier, error: SearchState.Error) {
     Text(
-        text = stringResource(id = R.string.card_browser_no_cards_in_deck), modifier = modifier
+        text = (stringResource(id = R.string.vague_error) + ": " + error.error),
+        modifier = modifier
     )
 }
 
