@@ -418,7 +418,7 @@ fun FilterBottomSheet(
         contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
         ListItem(
-            headlineContent = { Text("Filter marked") },
+            headlineContent = { Text(stringResource(R.string.card_browser_show_marked)) },
             modifier = Modifier.clickable {
                 onFilter("tag:marked")
                 scope.launch { sheetState.hide() }.invokeOnCompletion {
@@ -429,7 +429,7 @@ fun FilterBottomSheet(
             }
         )
         ListItem(
-            headlineContent = { Text("Filter suspended") },
+            headlineContent = { Text(stringResource(R.string.card_browser_show_suspended)) },
             modifier = Modifier.clickable {
                 onFilter("is:suspended")
                 scope.launch { sheetState.hide() }.invokeOnCompletion {
@@ -440,7 +440,7 @@ fun FilterBottomSheet(
             }
         )
         ListItem(
-            headlineContent = { Text("Filter by tag") },
+            headlineContent = { Text(stringResource(R.string.filter_by_tag)) },
             modifier = Modifier.clickable {
                 onFilterByTag()
                 scope.launch { sheetState.hide() }.invokeOnCompletion {
@@ -451,7 +451,7 @@ fun FilterBottomSheet(
             }
         )
         ListItem(
-            headlineContent = { Text("Filter by flag") },
+            headlineContent = { Text(stringResource(R.string.card_browser_search_by_flag)) },
             modifier = Modifier.clickable { onFlagFilter() }
         )
     }
