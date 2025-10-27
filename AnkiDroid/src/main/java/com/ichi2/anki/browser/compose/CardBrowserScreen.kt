@@ -37,6 +37,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
@@ -91,6 +93,7 @@ fun CardBrowserScreen(
     var showFlagMenu by remember { mutableStateOf(false) }
     var showSetFlagMenu by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    var toolbarHeight by remember { mutableStateOf(0) }
 
     Box(modifier = modifier) {
         Column(modifier = modifier) {
@@ -109,9 +112,10 @@ fun CardBrowserScreen(
                         }
                         EmptyCardBrowser(deckName = deckName)
                     } else {
+                        val toolbarHeightInDp = with(LocalDensity.current) { toolbarHeight.toDp() }
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(top = 0.dp, bottom = 128.dp) // Padding for the bottom toolbar
+                            contentPadding = PaddingValues(top = 0.dp, bottom = toolbarHeightInDp + 32.dp)
                         ) {
                             items(
                                 items = browserRows, key = { it.id }
@@ -156,6 +160,7 @@ fun CardBrowserScreen(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .offset(y = -ScreenOffset - 16.dp)
+                .onSizeChanged { toolbarHeight = it.height }
         )
 
         if (showFilterSheet) {
@@ -598,29 +603,23 @@ fun SelectableSortOrderBottomSheet(viewModel: CardBrowserViewModel, onDismiss: (
     ) {
         LazyColumn {
             items(SortType.entries) { sortType ->
+                val onItemClick: () -> Unit = {
+                    viewModel.changeCardOrder(sortType)
+                    scope.launch { sheetState.hide() }.invokeOnCompletion {
+                        if (!sheetState.isVisible) {
+                            onDismiss()
+                        }
+                    }
+                }
                 ListItem(
                     headlineContent = { Text(text = sortLabels[sortType.cardBrowserLabelIndex]) },
                     leadingContent = {
                         RadioButton(
                             selected = currentSortType == sortType,
-                            onClick = {
-                                viewModel.changeCardOrder(sortType)
-                                scope.launch { sheetState.hide() }.invokeOnCompletion {
-                                    if (!sheetState.isVisible) {
-                                        onDismiss()
-                                    }
-                                }
-                            }
+                            onClick = onItemClick
                         )
                     },
-                    modifier = Modifier.clickable {
-                        viewModel.changeCardOrder(sortType)
-                        scope.launch { sheetState.hide() }.invokeOnCompletion {
-                            if (!sheetState.isVisible) {
-                                onDismiss()
-                            }
-                        }
-                    }
+                    modifier = Modifier.clickable(onClick = onItemClick)
                 )
             }
         }
