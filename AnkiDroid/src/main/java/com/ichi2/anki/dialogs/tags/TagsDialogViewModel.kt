@@ -51,6 +51,7 @@ class TagsDialogViewModel(
                             withCol { getNote(nid) }.tags
                         }.apply {
                             addAll(checkedTags)
+                            remove("tags")
                         }
                 _initProgress.emit(InitProgress.Processing)
                 val uncheckedTags = allTags - allCheckedTags

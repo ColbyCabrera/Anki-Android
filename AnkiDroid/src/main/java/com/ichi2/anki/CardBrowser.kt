@@ -52,10 +52,13 @@ import com.ichi2.anki.dialogs.CreateDeckDialog
 import com.ichi2.anki.dialogs.DeckSelectionDialog
 import com.ichi2.anki.dialogs.FlagRenameDialog
 import com.ichi2.anki.dialogs.SimpleMessageDialog
+import com.ichi2.anki.dialogs.tags.TagsDialog
+import com.ichi2.anki.dialogs.tags.TagsDialogListener
 import com.ichi2.anki.export.ExportDialogFragment
 import com.ichi2.anki.libanki.CardId
 import com.ichi2.anki.libanki.Collection
 import com.ichi2.anki.libanki.DeckId
+import com.ichi2.anki.model.CardStateFilter
 import com.ichi2.anki.model.CardsOrNotes
 import com.ichi2.anki.model.SelectableDeck
 import com.ichi2.anki.noteeditor.NoteEditorLauncher
@@ -75,8 +78,11 @@ import timber.log.Timber
  * Composable, which is responsible for rendering the UI. It retains the [CardBrowserViewModel]
  * for state management and business logic.
  */
-open class CardBrowser : AnkiActivity(), ChangeManager.Subscriber,
-    DeckSelectionDialog.DeckSelectionListener {
+open class CardBrowser :
+    AnkiActivity(),
+    ChangeManager.Subscriber,
+    DeckSelectionDialog.DeckSelectionListener,
+    TagsDialogListener {
 
     private lateinit var viewModel: CardBrowserViewModel
 
@@ -128,10 +134,12 @@ open class CardBrowser : AnkiActivity(), ChangeManager.Subscriber,
                 return@registerForActivityResult
             }
             val data = result.data
-            if (data != null && (data.getBooleanExtra(
+            if (data != null && (
+                data.getBooleanExtra(
                     NoteEditorFragment.RELOAD_REQUIRED_EXTRA_KEY,
                     false
-                ) || data.getBooleanExtra(NoteEditorFragment.NOTE_CHANGED_EXTRA_KEY, false))
+                ) || data.getBooleanExtra(NoteEditorFragment.NOTE_CHANGED_EXTRA_KEY, false)
+                )
             ) {
                 viewModel.search(viewModel.searchQuery.value)
             }
@@ -182,7 +190,8 @@ open class CardBrowser : AnkiActivity(), ChangeManager.Subscriber,
                             onRenameFlagClicked = {
                                 val flagRenameDialog = FlagRenameDialog()
                                 flagRenameDialog.show(supportFragmentManager, "FlagRenameDialog")
-                            })
+                            }
+                        )
                     }
                     if (showFilterByTagsDialog) {
                         FilterByTagsDialog(
@@ -202,7 +211,8 @@ open class CardBrowser : AnkiActivity(), ChangeManager.Subscriber,
                             if (viewModel.isInMultiSelectMode) {
                                 viewModel.toggleRowSelection(
                                     CardBrowserViewModel.RowSelection(
-                                        rowId = CardOrNoteId(row.id), topOffset = 0
+                                        rowId = CardOrNoteId(row.id),
+                                        topOffset = 0
                                     )
                                 )
                             } else {
@@ -219,7 +229,9 @@ open class CardBrowser : AnkiActivity(), ChangeManager.Subscriber,
                             launchCatchingTask {
                                 val intentData = viewModel.queryPreviewIntentData()
                                 val intent = PreviewerFragment.getIntent(
-                                    this@CardBrowser, intentData.idsFile, intentData.currentIndex
+                                    this@CardBrowser,
+                                    intentData.idsFile,
+                                    intentData.currentIndex
                                 )
                                 onPreviewCardsActivityResult.launch(intent)
                             }
@@ -264,7 +276,8 @@ open class CardBrowser : AnkiActivity(), ChangeManager.Subscriber,
                         },
                         onFilterByTag = {
                             showFilterByTagsDialog = true
-                        })
+                        }
+                    )
                 }
             }
         }
@@ -327,7 +340,10 @@ open class CardBrowser : AnkiActivity(), ChangeManager.Subscriber,
 
     fun showCreateFilteredDeckDialog() {
         val createFilteredDeckDialog = CreateDeckDialog(
-            this, R.string.new_deck, CreateDeckDialog.DeckDialogType.FILTERED_DECK, null
+            this,
+            R.string.new_deck,
+            CreateDeckDialog.DeckDialogType.FILTERED_DECK,
+            null
         )
         createFilteredDeckDialog.onNewDeckCreated = {}
         launchCatchingTask {
@@ -345,9 +361,9 @@ open class CardBrowser : AnkiActivity(), ChangeManager.Subscriber,
             lastDeckIdRepository = AnkiDroidApp.instance.sharedPrefsLastDeckIdRepository,
             cacheDir = cacheDir,
             options = launchOptions,
-            isFragmented = false,
+            isFragmented = false
         ),
-        defaultViewModelCreationExtras,
+        defaultViewModelCreationExtras
     )[CardBrowserViewModel::class.java]
 
     override fun opExecuted(changes: OpChanges, handler: Any?) {
@@ -368,7 +384,7 @@ open class CardBrowser : AnkiActivity(), ChangeManager.Subscriber,
         @VisibleForTesting
         fun createAddNoteLauncher(
             viewModel: CardBrowserViewModel,
-            inCardBrowserActivity: Boolean = false,
+            inCardBrowserActivity: Boolean = false
         ): NoteEditorLauncher =
             NoteEditorLauncher.AddNoteFromCardBrowser(viewModel, inCardBrowserActivity)
     }
@@ -383,7 +399,7 @@ open class CardBrowser : AnkiActivity(), ChangeManager.Subscriber,
             getString(R.string.move_all_to_deck),
             null,
             false,
-            selectableDecks,
+            selectableDecks
         )
         dialog.show(supportFragmentManager, "deck_selection_dialog")
     }
@@ -411,7 +427,7 @@ open class CardBrowser : AnkiActivity(), ChangeManager.Subscriber,
                     SimpleMessageDialog.newInstance(
                         title = getString(R.string.vague_error),
                         message = getString(R.string.reposition_card_not_new_error),
-                        reload = false,
+                        reload = false
                     ).show(supportFragmentManager, "reposition_error_dialog")
                     return@launchCatchingTask
                 }
@@ -426,7 +442,7 @@ open class CardBrowser : AnkiActivity(), ChangeManager.Subscriber,
                         queueTop = top,
                         queueBottom = bottom,
                         random = repositionCardsResult.random,
-                        shift = repositionCardsResult.shift,
+                        shift = repositionCardsResult.shift
                     )
                     repositionDialog.show(supportFragmentManager, "reposition_dialog")
                 }
@@ -446,10 +462,27 @@ open class CardBrowser : AnkiActivity(), ChangeManager.Subscriber,
             .show(supportFragmentManager, "exportDialog")
     }
 
-    private fun showEditTagsDialog() {
+    private fun showEditTagsDialog() = launchCatchingTask {
         if (!viewModel.hasSelectedAnyRows()) {
             Timber.d("showEditTagsDialog: called with empty selection")
+            return@launchCatchingTask
         }
+
+        val noteIds = viewModel.queryAllSelectedNoteIds()
+
+        TagsDialog(this@CardBrowser)
+            .withArguments(this@CardBrowser, TagsDialog.DialogType.EDIT_TAGS, noteIds)
+            .show(supportFragmentManager, "edit_tags_dialog")
+    }
+
+    override fun onSelectedTags(
+        selectedTags: List<String>,
+        indeterminateTags: List<String>,
+        stateFilter: CardStateFilter
+    ) {
+        // In the future, we may want to do something with the state of the tags,
+        // but for now, we just want to update the view.
+        viewModel.search(viewModel.searchQuery.value)
     }
 
     /**
@@ -461,7 +494,7 @@ open class CardBrowser : AnkiActivity(), ChangeManager.Subscriber,
         if (viewModel.cardsOrNotes == CardsOrNotes.NOTES && viewModel.hasSelectedAnyRows()) {
             showSnackbar(
                 getString(R.string.card_browser_unavailable_when_notes_mode),
-                duration = 5000,
+                duration = 5000
             ) {
                 setAction(getString(R.string.cards)) {
                     viewModel.setCardsOrNotes(CardsOrNotes.CARDS)
