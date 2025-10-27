@@ -65,7 +65,7 @@ fun FilterByTagsDialog(
 
                                         Icon(
                                             painter = painterResource(R.drawable.check_24px),
-                                            contentDescription = "Done icon",
+                                            contentDescription = stringResource(R.string.done_icon),
                                             modifier = Modifier.size(FilterChipDefaults.IconSize)
                                         )
 
