@@ -8,7 +8,7 @@
  * Foundation; either version 3 of the License, or (at your option) any later           *
  * version.                                                                             *
  *                                                                                      *
- * This program is distributed in a hope that it will be useful, but WITHOUT ANY      *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY      *
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A      *
  * PARTICULAR PURPOSE. See the GNU General Public License for more details.             *
  *                                                                                      *
@@ -18,7 +18,6 @@
 
 package com.ichi2.anki
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
 import androidx.activity.enableEdgeToEdge
@@ -37,7 +36,6 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.ViewModelProvider
 import anki.collection.OpChanges
 import com.ichi2.anim.ActivityTransitionAnimation.Direction
-import com.ichi2.anki.CollectionManager.withCol
 import com.ichi2.anki.browser.BrowserColumnSelectionFragment
 import com.ichi2.anki.browser.CardBrowserLaunchOptions
 import com.ichi2.anki.browser.CardBrowserViewModel
