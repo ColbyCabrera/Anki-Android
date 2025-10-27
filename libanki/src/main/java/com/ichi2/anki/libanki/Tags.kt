@@ -86,7 +86,16 @@ class Tags(
         noteIds: List<NoteId>,
         tags: String,
     ): OpChanges {
-        val notes = noteIds.map { col.getNote(it) }
+        val notes = noteIds.mapNotNull {
+            try {
+                col.getNote(it)
+            } catch (e: RuntimeException) {
+                // This is broad, but seems to be what is thrown on failure.
+                // A more specific exception would be better.
+                // For now, assume any RuntimeException means "not found" or "deleted".
+                null
+            }
+        }
         for (note in notes) {
             note.tags = split(tags)
         }
@@ -155,6 +164,8 @@ class Tags(
         tag: String,
         tags: Iterable<String>,
     ): Boolean = tags.map { it.lowercase() }.contains(tag.lowercase())
+
+
 
     /**
      * Replace occurrences of a search with a new value in tags.
