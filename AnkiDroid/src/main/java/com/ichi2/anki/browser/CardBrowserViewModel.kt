@@ -325,6 +325,11 @@ class CardBrowserViewModel(
         return CardInfoDestination(firstSelectedCard, TR.cardStatsCurrentCard(TR.qtMiscBrowse()))
     }
 
+    /**
+     * Converts a [CardOrNoteId] to a [CardId].
+     *
+     * This is not a trivial operation when in notes mode, as a database lookup is required.
+     */
     suspend fun queryDataForCardEdit(id: CardOrNoteId): CardId = id.toCardId(cardsOrNotes)
 
     private suspend fun getInitialDeck(): SelectableDeck {
