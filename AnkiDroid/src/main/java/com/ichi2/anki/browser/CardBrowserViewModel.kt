@@ -508,9 +508,12 @@ class CardBrowserViewModel(
         }
         tagsLoading = true
         viewModelScope.launch {
-            val tags = runCatching { withCol { tags.all().sorted() } }.getOrDefault(emptyList())
-            _allTags.value = TagsState.Loaded(tags)
-            tagsLoading = false
+            try {
+                val tags = runCatching { withCol { tags.all().sorted() } }.getOrDefault(emptyList())
+                _allTags.value = TagsState.Loaded(tags)
+            } finally {
+                tagsLoading = false
+            }
         }
     }
 
@@ -1314,12 +1317,13 @@ class CardBrowserViewModel(
 
     fun updateTags(tags: List<String>) = viewModelScope.launch {
         val noteIds = queryAllSelectedNoteIds()
-        undoableOp<OpChanges> {
+        undoableOp {
             this.tags.bulkUpdate(
                 noteIds = noteIds,
                 tags = tags.joinToString(" "),
             )
         }
+        refreshSearch()
     }
 
     data class PreviewIntentData(
