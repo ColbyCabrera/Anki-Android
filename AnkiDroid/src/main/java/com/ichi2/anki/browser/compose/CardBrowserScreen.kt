@@ -54,7 +54,6 @@ import com.ichi2.anki.browser.CardBrowserViewModel
 import com.ichi2.anki.browser.CardOrNoteId
 import com.ichi2.anki.browser.ColumnHeading
 import com.ichi2.anki.model.SortType
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import com.ichi2.anki.browser.CardBrowserViewModel.SearchState
 import com.ichi2.anki.model.SelectableDeck
