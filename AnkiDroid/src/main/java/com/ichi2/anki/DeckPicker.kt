@@ -477,7 +477,6 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                 }
                 var selectedNavigationItem by remember { mutableIntStateOf(0) } // For NavigationRail
                 val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-                val scope = rememberCoroutineScope()
 
                 data class DrawerItem(
                     val icon: Int, @StringRes val labelResId: Int, val action: (() -> Unit)? = null
@@ -655,7 +654,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                             selected = selectedNavigationItem == index,
                                             onClick = {
                                                 selectedNavigationItem = index
-                                                scope.launch {
+                                                coroutineScope.launch {
                                                     drawerState.close()
                                                     item.action?.invoke()
                                                     selectedNavigationItem = 0
