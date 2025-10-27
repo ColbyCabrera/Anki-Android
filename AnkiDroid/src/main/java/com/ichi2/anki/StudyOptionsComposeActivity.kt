@@ -3,6 +3,7 @@ package com.ichi2.anki
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.*
+import com.ichi2.anki.CollectionManager.withCol
 import com.ichi2.anki.dialogs.customstudy.CustomStudyDialog
 import com.ichi2.anki.ui.compose.StudyOptionsData
 import com.ichi2.anki.ui.compose.StudyOptionsScreen
@@ -19,7 +20,9 @@ class StudyOptionsComposeActivity : AnkiActivity() {
             LaunchedEffect(Unit) {
                 studyOptionsData =
                     withContext(Dispatchers.IO) {
-                        CollectionManager.withCol {
+                        withCol {
+                            val deckId = intent.getLongExtra(DECK_ID, decks.current().id)
+                            decks.select(deckId)
                             val deck = decks.current()
                             val counts = sched.counts()
                             var buriedNew = 0
@@ -60,5 +63,8 @@ class StudyOptionsComposeActivity : AnkiActivity() {
                 },
             )
         }
+    }
+    companion object {
+        const val DECK_ID = "deck_id"
     }
 }

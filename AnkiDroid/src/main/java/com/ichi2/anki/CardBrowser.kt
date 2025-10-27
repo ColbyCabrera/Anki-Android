@@ -51,6 +51,7 @@ import com.ichi2.anki.dialogs.BrowserOptionsDialog
 import com.ichi2.anki.dialogs.CreateDeckDialog
 import com.ichi2.anki.dialogs.DeckSelectionDialog
 import com.ichi2.anki.dialogs.FlagRenameDialog
+import com.ichi2.anki.dialogs.GradeNowDialog
 import com.ichi2.anki.dialogs.SimpleMessageDialog
 import com.ichi2.anki.dialogs.tags.TagsDialog
 import com.ichi2.anki.dialogs.tags.TagsDialogListener
@@ -64,6 +65,7 @@ import com.ichi2.anki.model.SelectableDeck
 import com.ichi2.anki.noteeditor.NoteEditorLauncher
 import com.ichi2.anki.observability.ChangeManager
 import com.ichi2.anki.pages.CardInfoDestination
+import com.ichi2.anki.pages.DeckOptions
 import com.ichi2.anki.previewer.PreviewerFragment
 import com.ichi2.anki.scheduling.ForgetCardsDialog
 import com.ichi2.anki.scheduling.SetDueDateDialog
@@ -220,7 +222,7 @@ open class CardBrowser :
                                 launchCatchingTask {
                                     val cardId = viewModel.queryDataForCardEdit(row.id)
                                     openNoteEditorForCard(cardId)
-                                }
+                                 }
                             }
                         },
                         onAddNote = {
@@ -268,7 +270,9 @@ open class CardBrowser :
                         onEditTags = {
                             showEditTagsDialog()
                         },
-                        onGradeNow = {},
+                        onGradeNow = {
+                            onGradeNow()
+                        },
                         onResetProgress = {
                             onResetProgress()
                         },
@@ -347,7 +351,13 @@ open class CardBrowser :
             CreateDeckDialog.DeckDialogType.FILTERED_DECK,
             null
         )
-        createFilteredDeckDialog.onNewDeckCreated = {}
+        createFilteredDeckDialog.onNewDeckCreated = { deckId ->
+            // a filtered deck was created
+            launchCatchingTask {
+                val intent = DeckOptions.getIntent(this@CardBrowser, deckId)
+                startActivity(intent)
+            }
+        }
         launchCatchingTask {
             withProgress {
                 createFilteredDeckDialog.showFilteredDeckDialog()
@@ -456,6 +466,14 @@ open class CardBrowser :
     private fun onResetProgress() {
         if (warnUserIfInNotesOnlyMode()) return
         ForgetCardsDialog().show(supportFragmentManager, "reset_progress_dialog")
+    }
+
+    private fun onGradeNow() {
+        if (warnUserIfInNotesOnlyMode()) return
+        launchCatchingTask {
+            val cids = viewModel.queryAllSelectedCardIds()
+            GradeNowDialog.showDialog(this@CardBrowser, cids)
+        }
     }
 
     private fun exportSelected() {
