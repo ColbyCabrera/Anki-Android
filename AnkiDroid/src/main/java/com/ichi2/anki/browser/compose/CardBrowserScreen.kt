@@ -592,7 +592,7 @@ fun MoreOptionsBottomSheet(
 fun SelectableSortOrderBottomSheet(viewModel: CardBrowserViewModel, onDismiss: () -> Unit) {
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
-    val currentSortType = viewModel.order
+    val currentSortType by viewModel.sortTypeFlow.collectAsStateWithLifecycle()
     val sortLabels = stringArrayResource(id = R.array.card_browser_order_labels)
 
     ModalBottomSheet(

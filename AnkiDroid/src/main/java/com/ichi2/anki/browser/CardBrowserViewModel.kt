@@ -168,8 +168,9 @@ class CardBrowserViewModel(
     // card that was clicked (not marked)
     var currentCardId: CardId = 0
 
-    private val sortTypeFlow = MutableStateFlow(SortType.NO_SORTING)
-    val order get() = sortTypeFlow.value
+    private val _sortTypeFlow = MutableStateFlow(SortType.NO_SORTING)
+    val sortTypeFlow: StateFlow<SortType> = _sortTypeFlow
+    val order get() = _sortTypeFlow.value
 
     private val reverseDirectionFlow = MutableStateFlow(ReverseDirection(orderAsc = false))
     val orderAsc get() = reverseDirectionFlow.value.orderAsc
@@ -449,7 +450,7 @@ class CardBrowserViewModel(
             .onEach { newValue -> withCol { newValue.updateConfig(config) } }
             .launchIn(viewModelScope)
 
-        sortTypeFlow
+        _sortTypeFlow
             .ignoreValuesFromViewModelLaunch()
             .onEach { sortType -> withCol { sortType.save(config, sharedPrefs()) } }
             .launchIn(viewModelScope)
@@ -477,7 +478,7 @@ class CardBrowserViewModel(
             flowOfCardsOrNotes.update { cardsOrNotes }
 
             withCol {
-                sortTypeFlow.update { SortType.fromCol(config, cardsOrNotes, sharedPrefs()) }
+                _sortTypeFlow.update { SortType.fromCol(config, cardsOrNotes, sharedPrefs()) }
                 reverseDirectionFlow.update { ReverseDirection.fromConfig(config) }
             }
             Timber.i("initCompleted")
@@ -831,7 +832,7 @@ class CardBrowserViewModel(
 
         when (changeType) {
             is ChangeCardOrder.OrderChange -> {
-                sortTypeFlow.update { which }
+                _sortTypeFlow.update { which }
                 reverseDirectionFlow.update { ReverseDirection(orderAsc = false) }
                 launchSearchForCards()
             }
