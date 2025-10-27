@@ -410,6 +410,11 @@ opening the system text to speech settings fails">Failed to open text to speech 
         <item quantity="other">%d cards unburied</item>
     </plurals>
 
+    <plurals name="card_browser_cards_moved">
+        <item quantity="one">%d card moved</item>
+        <item quantity="other">%d cards moved</item>
+    </plurals>
+
     <string name="card_template_reposition_template" comment="move a card template to a new position" maxLength="28">Reposition</string>
     <string name="previewer_next" comment="Name of the next button in the previewer" maxLength="28">Next</string>
     <string name="previewer_back" comment="Name of the back button in the previewer" maxLength="28">Back</string>

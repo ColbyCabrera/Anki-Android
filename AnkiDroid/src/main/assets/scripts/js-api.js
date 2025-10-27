@@ -52,7 +52,6 @@ const jsApiList = {
     ankiMarkCard: "markCard",
     ankiToggleFlag: "toggleFlag",
     ankiSearchCard: "searchCard",
-    ankiSearchCardWithCallback: "searchCardWithCallback",
     ankiTtsSpeak: "ttsSpeak",
     ankiTtsSetLanguage: "ttsSetLanguage",
     ankiTtsSetPitch: "ttsSetPitch",

@@ -21,13 +21,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.setFragmentResult
-import com.google.android.material.snackbar.Snackbar
 import com.ichi2.anki.CardBrowser
 import com.ichi2.anki.R
-import com.ichi2.anki.dialogs.SaveBrowserSearchDialogFragment.Companion.ARG_SEARCH_QUERY
-import com.ichi2.anki.dialogs.SaveBrowserSearchDialogFragment.Companion.ARG_SEARCH_QUERY_NAME
-import com.ichi2.anki.launchCatchingTask
-import com.ichi2.anki.snackbar.showSnackbar
 import com.ichi2.utils.input
 import com.ichi2.utils.negativeButton
 import com.ichi2.utils.positiveButton
@@ -91,34 +86,5 @@ class SaveBrowserSearchDialogFragment : DialogFragment() {
                         ARG_SEARCH_QUERY to searchQuery,
                     )
             }
-    }
-}
-
-/**
- * Registers a fragment result listener to update [CardBrowser] after the user successfully saves a
- * previously made search from the toolbar.
- */
-fun CardBrowser.registerSaveSearchHandler() {
-    supportFragmentManager.setFragmentResultListener(
-        SaveBrowserSearchDialogFragment.REQUEST_SAVE_SEARCH,
-        this,
-    ) { _, bundle ->
-        val savedSearchName =
-            bundle.getString(ARG_SEARCH_QUERY_NAME)
-        if (savedSearchName.isNullOrEmpty()) {
-            showSnackbar(
-                R.string.card_browser_list_my_searches_new_search_error_empty_name,
-                Snackbar.LENGTH_SHORT,
-            )
-            return@setFragmentResultListener
-        }
-        val savedSearchQuery =
-            bundle.getString(ARG_SEARCH_QUERY)
-                ?: return@setFragmentResultListener
-
-        launchCatchingTask {
-            val saveStatus = viewModel.saveSearch(savedSearchName, savedSearchQuery)
-            updateAfterUserSearchIsSaved(saveStatus)
-        }
     }
 }
