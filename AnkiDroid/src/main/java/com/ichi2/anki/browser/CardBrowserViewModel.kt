@@ -768,8 +768,8 @@ class CardBrowserViewModel(
         val begin = min(startPos, endPos)
         val end = max(startPos, endPos)
         Timber.d("selecting indices between %d and %d", begin, end)
-        val cards = (begin..end).map { cards[it] }
-        if (_selectedRows.addAll(cards)) {
+        val idsInRange = (begin..end).map { cards[it] }
+        if (_selectedRows.addAll(idsInRange)) {
             onAppendSelectedRows(MultiSelectCause.Other)
         }
     }
