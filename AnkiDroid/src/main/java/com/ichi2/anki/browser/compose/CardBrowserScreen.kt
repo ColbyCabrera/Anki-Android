@@ -55,6 +55,7 @@ import com.ichi2.anki.model.SortType
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import com.ichi2.anki.browser.CardBrowserViewModel.SearchState
+import com.ichi2.anki.model.SelectableDeck
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -99,7 +100,14 @@ fun CardBrowserScreen(
                 is SearchState.Initializing, is SearchState.Searching -> CardBrowserLoading()
                 is SearchState.Completed -> {
                     if (browserRows.isEmpty()) {
-                        EmptyCardBrowser()
+                        val selectedDeck by viewModel.flowOfDeckSelection.collectAsStateWithLifecycle(
+                            null
+                        )
+                        val deckName = when (val deck = selectedDeck) {
+                            is SelectableDeck.Deck -> deck.name
+                            else -> stringResource(R.string.card_browser_all_decks)
+                        }
+                        EmptyCardBrowser(deckName = deckName)
                     } else {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
@@ -712,7 +720,7 @@ fun SetFlagBottomSheet(onDismiss: () -> Unit, onSetFlag: (Flag) -> Unit) {
 }
 
 @Composable
-fun EmptyCardBrowser(modifier: Modifier = Modifier) {
+fun EmptyCardBrowser(modifier: Modifier = Modifier, deckName: String) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -720,7 +728,7 @@ fun EmptyCardBrowser(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        CardBrowserEmpty()
+        CardBrowserEmpty(deckName = deckName)
     }
 }
 
@@ -762,9 +770,9 @@ fun CardBrowserLoading(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun CardBrowserEmpty(modifier: Modifier = Modifier) {
+fun CardBrowserEmpty(deckName: String, modifier: Modifier = Modifier) {
     Text(
-        text = stringResource(id = R.string.card_browser_no_cards_in_deck), modifier = modifier
+        text = stringResource(id = R.string.card_browser_no_cards_in_deck, deckName), modifier = modifier
     )
 }
 
