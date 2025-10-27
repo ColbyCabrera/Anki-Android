@@ -221,7 +221,7 @@ open class CardBrowser :
                                 )
                             } else {
                                 launchCatchingTask {
-                                    val cardId = viewModel.queryDataForCardEdit(row.id)
+                                    val cardId = viewModel.queryDataForCardEdit(CardOrNoteId(row.id))
                                     openNoteEditorForCard(cardId)
                                  }
                             }
