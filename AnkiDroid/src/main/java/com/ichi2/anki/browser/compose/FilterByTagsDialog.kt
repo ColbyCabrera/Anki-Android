@@ -1,6 +1,7 @@
 package com.ichi2.anki.browser.compose
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -19,18 +21,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.ichi2.anki.R
+import com.ichi2.anki.browser.CardBrowserViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FilterByTagsDialog(
     onDismissRequest: () -> Unit,
     onConfirm: (Set<String>) -> Unit,
-    allTags: List<String>,
+    allTags: CardBrowserViewModel.TagsState,
     initialSelection: Set<String>
 ) {
     var selection by remember(initialSelection) { mutableStateOf(initialSelection.toSet()) }
@@ -41,46 +45,58 @@ fun FilterByTagsDialog(
         text = {
             LazyColumn {
                 item {
-                    FlowRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        allTags.forEach { tag ->
-                            FilterChip(
-                                modifier = Modifier.height(
-                                    FilterChipDefaults.Height
-                                ),
-                                selected = tag in selection,
-                                onClick = {
-                                    selection = if (tag in selection) {
-                                        selection - tag
-                                    } else {
-                                        selection + tag
-                                    }
-                                },
-                                label = { Text(text = tag) },
-                                    leadingIcon = {
-                                    if (tag in selection) {
+                    when (allTags) {
+                        is CardBrowserViewModel.TagsState.Loading -> {
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
+                            }
+                        }
+                        is CardBrowserViewModel.TagsState.Loaded -> {
+                            FlowRow(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                allTags.tags.forEach { tag ->
+                                    FilterChip(
+                                        modifier = Modifier.height(
+                                            FilterChipDefaults.Height
+                                        ),
+                                        selected = tag in selection,
+                                        onClick = {
+                                            selection = if (tag in selection) {
+                                                selection - tag
+                                            } else {
+                                                selection + tag
+                                            }
+                                        },
+                                        label = { Text(text = tag) },
+                                        leadingIcon = {
+                                            if (tag in selection) {
 
-                                        Icon(
-                                            painter = painterResource(R.drawable.check_24px),
-                                            contentDescription = stringResource(R.string.done_icon),
-                                            modifier = Modifier.size(FilterChipDefaults.IconSize)
-                                        )
+                                                Icon(
+                                                    painter = painterResource(R.drawable.check_24px),
+                                                    contentDescription = stringResource(R.string.done_icon),
+                                                    modifier = Modifier.size(FilterChipDefaults.IconSize)
+                                                )
 
-                                    } else {
-                                        Spacer(Modifier.size(FilterChipDefaults.IconSize / 2))
-                                    }
-                                },
-                                trailingIcon = {
-                                    if (tag in selection) {
-                                        Spacer(Modifier.size(0.dp))
-                                    } else {
-                                        Spacer(Modifier.size(FilterChipDefaults.IconSize / 2))
-                                    }
+                                            } else {
+                                                Spacer(Modifier.size(FilterChipDefaults.IconSize / 2))
+                                            }
+                                        },
+                                        trailingIcon = {
+                                            if (tag in selection) {
+                                                Spacer(Modifier.size(0.dp))
+                                            } else {
+                                                Spacer(Modifier.size(FilterChipDefaults.IconSize / 2))
+                                            }
+                                        }
+                                    )
                                 }
-                            )
+                            }
                         }
                     }
                 }

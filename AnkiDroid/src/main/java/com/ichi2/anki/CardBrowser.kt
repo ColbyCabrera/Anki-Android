@@ -168,7 +168,7 @@ open class CardBrowser :
                     var showBrowserOptionsDialog by rememberSaveable { mutableStateOf(false) }
                     var showFilterByTagsDialog by rememberSaveable { mutableStateOf(false) }
                     val selectedTags by viewModel.selectedTags.collectAsState()
-                    val allTags by viewModel.allTags.collectAsState()
+                    val allTagsState by viewModel.allTags.collectAsState()
 
                     if (showBrowserOptionsDialog) {
                         BrowserOptionsDialog(
@@ -201,7 +201,7 @@ open class CardBrowser :
                                 viewModel.filterByTags(tags)
                                 showFilterByTagsDialog = false
                             },
-                            allTags = allTags,
+                            allTags = allTagsState,
                             initialSelection = selectedTags
                         )
                     }
@@ -276,6 +276,7 @@ open class CardBrowser :
                             exportSelected()
                         },
                         onFilterByTag = {
+                            viewModel.loadAllTags()
                             showFilterByTagsDialog = true
                         }
                     )

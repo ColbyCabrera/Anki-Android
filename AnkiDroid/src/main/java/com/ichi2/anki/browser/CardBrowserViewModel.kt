@@ -409,11 +409,17 @@ class CardBrowserViewModel(
             emit(Unit)
         }
 
-    private val _allTags = MutableStateFlow<List<String>>(emptyList())
-    val allTags: StateFlow<List<String>> = _allTags
+    sealed class TagsState {
+        data object Loading : TagsState()
+        data class Loaded(val tags: List<String>) : TagsState()
+    }
+
+    private val _allTags = MutableStateFlow<TagsState>(TagsState.Loading)
+    val allTags: StateFlow<TagsState> = _allTags
 
     private val _selectedTags = MutableStateFlow<Set<String>>(emptySet())
     val selectedTags: StateFlow<Set<String>> = _selectedTags
+    private var tagsLoading = false
 
     init {
         Timber.d("CardBrowserViewModel::init")
@@ -460,11 +466,6 @@ class CardBrowserViewModel(
             }.launchIn(viewModelScope)
 
         viewModelScope.launch {
-            val tags = runCatching { withCol { tags.all().sorted() } }.getOrDefault(emptyList())
-            _allTags.value = tags
-        }
-
-        viewModelScope.launch {
             shouldIgnoreAccents = withCol { config.getBool(ConfigKey.Bool.IGNORE_ACCENTS_IN_SEARCH) }
 
             val initialDeckId = if (selectAllDecks) SelectableDeck.AllDecks else getInitialDeck()
@@ -498,6 +499,18 @@ class CardBrowserViewModel(
         savedStateHandle.setSavedStateProvider(STATE_MULTISELECT_VALUES) {
             Timber.d("setSavedStateProvider executed")
             generateExpensiveSavedState()
+        }
+    }
+
+    fun loadAllTags() {
+        if (tagsLoading) {
+            return
+        }
+        tagsLoading = true
+        viewModelScope.launch {
+            val tags = runCatching { withCol { tags.all().sorted() } }.getOrDefault(emptyList())
+            _allTags.value = TagsState.Loaded(tags)
+            tagsLoading = false
         }
     }
 
