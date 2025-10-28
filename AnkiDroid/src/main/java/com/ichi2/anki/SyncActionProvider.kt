@@ -27,6 +27,14 @@ import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.ichi2.compat.setTooltipTextCompat
 import com.ichi2.ui.RtlCompliantActionProvider.Companion.unwrapContext
 
+/**
+ * Hosts the sync button action view and exposes helpers (e.g., tooltip, progress visibility).
+ *
+ * Progress visibility and the badge are controlled by DeckPicker
+ * (see [DeckPicker.updateSyncIconFromState] and setupMediaSyncMenuItem), not by this provider.
+ *
+ * The badge is shown when the collection is "dirty" (local changes not yet synced).
+ */
 class SyncActionProvider(
     context: Context,
 ) : ActionProviderCompat(context) {
@@ -64,5 +72,9 @@ class SyncActionProvider(
 
     fun setTooltipText(value: CharSequence) {
         syncButton?.setTooltipTextCompat(value)
+    }
+
+    fun setContentDescription(value: CharSequence) {
+        syncButton?.contentDescription = value
     }
 }
