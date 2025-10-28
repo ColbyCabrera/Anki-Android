@@ -1287,7 +1287,9 @@ class CardBrowserViewModel(
             flowOfSaveSearchNamePrompt.emit(query)
         }
 
-    suspend fun getAvailableDecks(): List<SelectableDeck.Deck> = SelectableDeck.fromCollection(includeFiltered = false)
+    suspend fun getAvailableDecks(): List<SelectableDeck.Deck> =
+        SelectableDeck.fromCollection(includeFiltered = false)
+            .filter { it.name != "Default"  } // Hide empty default deck
 
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
