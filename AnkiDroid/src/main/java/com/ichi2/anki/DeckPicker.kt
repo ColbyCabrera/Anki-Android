@@ -209,7 +209,6 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.ankiweb.rsdroid.Translations
-import net.ankiweb.rsdroid.exceptions.BackendNetworkException
 import org.json.JSONException
 import timber.log.Timber
 import java.io.File
@@ -1101,6 +1100,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
             SyncIconState.NotLoggedIn -> R.string.sync_menu_title_no_account
         }
         provider.setTooltipText(getString(tooltipText))
+        provider.setContentDescription(getString(tooltipText))
         when (state.syncIcon) {
             SyncIconState.Normal -> {
                 BadgeDrawableBuilder.removeBadge(provider)

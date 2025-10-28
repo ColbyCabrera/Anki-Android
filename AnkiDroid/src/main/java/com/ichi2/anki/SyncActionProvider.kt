@@ -73,4 +73,8 @@ class SyncActionProvider(
     fun setTooltipText(value: CharSequence) {
         syncButton?.setTooltipTextCompat(value)
     }
+
+    fun setContentDescription(value: CharSequence) {
+        syncButton?.contentDescription = value
+    }
 }
