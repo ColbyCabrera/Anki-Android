@@ -28,16 +28,12 @@ import com.ichi2.compat.setTooltipTextCompat
 import com.ichi2.ui.RtlCompliantActionProvider.Companion.unwrapContext
 
 /**
- * A provider for the sync button in the toolbar.
+ * Hosts the sync button action view and exposes helpers (e.g., tooltip, progress visibility).
  *
+ * Progress visibility and the badge are controlled by DeckPicker
+ * (see [DeckPicker.updateSyncIconFromState] and setupMediaSyncMenuItem), not by this provider.
  *
- * This provider is responsible for the entire lifecycle of the view, including showing/hiding the progress indicator
- * and the badge.
- *
- *
- * The badge is shown when the collection is "dirty" - i.e. when there are local changes that have not been synced.
- *
- * @see DeckPicker.updateSyncIconFromState
+ * The badge is shown when the collection is "dirty" (local changes not yet synced).
  */
 class SyncActionProvider(
     context: Context,
