@@ -2212,7 +2212,7 @@ data class OptionsMenuState(
 /**
  * The state of the sync icon in the toolbar.
  *
- * This is used to show a badge when the collection is "dirty" (i.e. has pending changes).
+ * This is used to show a badge when the collection is "dirty" (i.e. has [PendingChanges]).
  *
  * @see DeckPicker.updateSyncIconFromState
  * @see DeckPickerViewModel.fetchSyncIconState
