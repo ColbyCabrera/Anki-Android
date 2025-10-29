@@ -1,10 +1,5 @@
 /* **************************************************************************************
- * Copyright (c) 2009 Andrew Dubya <andrewdubya@gmail.com>                              *
- * Copyright (c) 2009 Nicolas Raoul <nicolas.raoul@gmail.com>                           *
- * Copyright (c) 2009 Edu Zamora <edu.zasu@gmail.com>                                   *
- * Copyright (c) 2009 Daniel Svard <daniel.svard@gmail.com>                             *
- * Copyright (c) 2010 Norbert Nagold <norbert.nagold@gmail.com>                         *
- * Copyright (c) 2014 Timothy Rae <perceptualchaos2@gmail.com>
+ * Copyright (c) 2025 Colby Cabrera <gdthyispro@gmail.com>                              *
  *                                                                                      *
  * This program is free software; you can redistribute it and/or modify it under        *
  * the terms of the GNU General Public License as published by the Free Software        *
@@ -18,6 +13,7 @@
  * You should have received a copy of the GNU General Public License along with         *
  * this program.  If not, see <http://www.gnu.org/licenses/>.                           *
  ****************************************************************************************/
+
 package com.ichi2.anki.ui.compose
 
 import androidx.compose.foundation.Image
@@ -25,7 +21,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Text
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
