@@ -16,6 +16,54 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.                           *
  ****************************************************************************************/
 
+/**
+ * COMPOSE MIGRATION STATUS & CLEANUP PLAN
+ * ========================================
+ * 
+ * This file is undergoing a gradual migration from XML-based Views to Jetpack Compose.
+ * The Compose UI is now functional for the core note editor, toolbar, fields, deck/notetype
+ * selectors, and tags/cards buttons. Legacy XML code paths remain as fallback references
+ * and are guarded or commented out.
+ * 
+ * TRACKED MIGRATION ISSUE:
+ * See: https://github.com/ankidroid/Anki-Android/issues/XXXXX
+ * "Complete NoteEditorFragment XML→Compose migration and remove legacy code"
+ * 
+ * AREAS WITH PENDING CLEANUP (with line references as of latest commit):
+ * - Lines ~489-493:   Snackbar anchor (toolbar reference) - migrate to Compose scaffold
+ * - Lines ~840-851:   Field/Tags/Cards button XML references - now in Compose
+ * - Lines ~963-966:   Note type and deck selector XML comments
+ * - Lines ~1032-1040: Tags button and note type spinner listeners
+ * - Lines ~2080-2083: Tab order/focus handling for deck spinner (Android <O compatibility)
+ * - Lines ~2972-2983: Note type change listener and tags button enable/disable
+ * 
+ * MIGRATION PLAN & TIMELINE:
+ * 1. ✅ Phase 1 (Completed): Core Compose UI for fields, toolbar, selectors
+ * 2. 🔄 Phase 2 (In Progress): Add integration tests for both XML fallback and Compose paths
+ *    - Test snackbar anchoring in both modes
+ *    - Test field layout, sticky buttons, multimedia buttons
+ *    - Test image occlusion buttons and workflows
+ *    - Test note type/deck selection and persistence
+ *    - Test tags dialog integration
+ *    - Test keyboard shortcuts and tab order
+ * 3. ⏳ Phase 3 (Q1 2026): Remove all legacy XML references once tests pass
+ *    - Remove commented XML view lookups
+ *    - Remove legacy field container and toolbar XML
+ *    - Clean up conditional fallback code
+ *    - Verify all functionality migrated and tested
+ * 4. ⏳ Phase 4 (Q2 2026): Full Compose adoption
+ *    - Remove feature flags/preferences guarding Compose
+ *    - Archive legacy layout XML files
+ *    - Final performance and accessibility audit
+ * 
+ * TESTING REQUIREMENTS BEFORE REMOVAL:
+ * - Integration tests covering both legacy and Compose code paths
+ * - Accessibility testing (TalkBack, Switch Access)
+ * - Performance benchmarks (layout inflation, memory)
+ * - Compatibility testing across Android versions (API 23+)
+ * - Regression testing for multimedia, image occlusion, cloze deletions
+ */
+
 package com.ichi2.anki
 
 import android.annotation.SuppressLint
@@ -486,7 +534,9 @@ class NoteEditorFragment :
             }
 
     override val baseSnackbarBuilder: SnackbarBuilder = {
-        // TODO: Re-implement with Compose
+        // TODO(Compose Migration): Re-implement snackbar anchor with Compose scaffold
+        // See: https://github.com/ankidroid/Anki-Android/issues/XXXXX
+        // Legacy XML anchor code kept as reference:
         // if (sharedPrefs().getBoolean(PREF_NOTE_EDITOR_SHOW_TOOLBAR, true)) {
         //     anchorView = requireView().findViewById<Toolbar>(R.id.editor_toolbar)
         // }
@@ -852,7 +902,10 @@ class NoteEditorFragment :
         val intent = requireActivity().intent
         Timber.d("NoteEditor() onCollectionLoaded: caller: %s", caller)
         requireAnkiActivity().registerReceiver()
-        // TODO: These XML view references need to be migrated to Compose/ViewModel
+        // TODO(Compose Migration): Remove legacy XML view references once migration complete
+        // See: https://github.com/ankidroid/Anki-Android/issues/XXXXX
+        // These are now handled by Compose UI in setupComposeEditor()
+        // Legacy code kept as reference:
         // fieldsLayoutContainer = requireView().findViewById(R.id.CardEditorEditFieldsLayout)
         // tagsButton = requireView().findViewById(R.id.CardEditorTagButton)
         // cardsButton = requireView().findViewById(R.id.CardEditorCardsButton)
@@ -975,7 +1028,10 @@ class NoteEditorFragment :
             }
         }
 
-        // TODO: Note type and Deck selectors are now in Compose - remove these XML references
+        // TODO(Compose Migration): Note type and Deck selectors now in Compose
+        // See: https://github.com/ankidroid/Anki-Android/issues/XXXXX
+        // Remove these XML spinner references after tests verify Compose implementation
+        // Legacy code kept as reference:
         // Note type Selector
         // noteTypeSpinner = requireView().findViewById(R.id.note_type_spinner)
         // allNoteTypeIds = setupNoteTypeSpinner(requireContext(), noteTypeSpinner!!, col)
@@ -1044,11 +1100,14 @@ class NoteEditorFragment :
             // If the activity was called to handle an image addition, launch a coroutine to process the image intent.
             if (caller == NoteEditorCaller.ADD_IMAGE) lifecycleScope.launch { handleImageIntent(intent) }
         } else {
-            // TODO: Note type selector is now in Compose
-            // noteTypeSpinner!!.onItemSelectedListener = EditNoteTypeListener()
+            // TODO(Compose Migration): Note type selector now in Compose via ViewModel
+            // See: https://github.com/ankidroid/Anki-Android/issues/XXXXX
+            // Legacy code: noteTypeSpinner!!.onItemSelectedListener = EditNoteTypeListener()
             requireAnkiActivity().setTitle(R.string.cardeditor_title_edit_card)
         }
-        // TODO: Tags button is now in Compose
+        // TODO(Compose Migration): Tags button now in Compose
+        // See: https://github.com/ankidroid/Anki-Android/issues/XXXXX
+        // Legacy code kept as reference:
         // requireView().findViewById<View>(R.id.CardEditorTagButton).setOnClickListener {
         //     Timber.i("NoteEditor:: Tags button pressed... opening tags editor")
         //     showTagsDialog()
@@ -2087,6 +2146,9 @@ class NoteEditorFragment :
                 onReceiveContentListener,
             )
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                // TODO(Compose Migration): Handle tab order in Compose for Android <O
+                // See: https://github.com/ankidroid/Anki-Android/issues/XXXXX
+                // Legacy XML focus chain - may need Compose equivalent for accessibility
                 if (i == 0) {
                     requireView().findViewById<View>(R.id.note_deck_spinner).nextFocusForwardId = newEditText.id
                 }
@@ -3027,9 +3089,10 @@ class NoteEditorFragment :
                 // Don't let the user change any other values at the same time as changing note type
                 selectedTags = editorNote!!.tags
                 updateTags()
-                // TODO: Tags button is now in Compose - handle enabling/disabling through ViewModel
-                // requireView().findViewById<View>(R.id.CardEditorTagButton).isEnabled = false
-                // ((LinearLayout) findViewById(R.id.CardEditorCardsButton)).setEnabled(false);
+                // TODO(Compose Migration): Handle button enable/disable through ViewModel state
+                // See: https://github.com/ankidroid/Anki-Android/issues/XXXXX
+                // Legacy code: requireView().findViewById<View>(R.id.CardEditorTagButton).isEnabled = false
+                // Compose implementation should disable tags button via state flow
                 deckSpinnerSelection!!.setEnabledActionBarSpinner(false)
                 deckSpinnerSelection!!.updateDeckPosition(currentEditedCard!!.did)
                 updateFieldsFromStickyText()
