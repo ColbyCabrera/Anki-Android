@@ -1299,11 +1299,13 @@ class NoteEditorFragment :
 
     private fun handleClozeInsertion(mode: ClozeInsertionMode) {
         val isClozeType = noteEditorViewModel.noteEditorState.value.isClozeType
-        noteEditorViewModel.insertCloze(mode)
-        // Edit state now managed by ViewModel
         if (!isClozeType) {
             showSnackbar(R.string.note_editor_insert_cloze_no_cloze_note_type)
+            return
         }
+        // Only insert cloze if note type is valid
+        // Edit state is automatically set by ViewModel when insertion succeeds
+        noteEditorViewModel.insertCloze(mode)
     }
 
     private fun handleToolbarShortcut(event: KeyEvent): Boolean {
