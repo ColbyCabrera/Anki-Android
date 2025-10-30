@@ -137,11 +137,13 @@ import com.google.android.material.snackbar.Snackbar
 import com.ichi2.anim.ActivityTransitionAnimation
 import com.ichi2.anki.CollectionManager.TR
 import com.ichi2.anki.CollectionManager.withCol
+import com.ichi2.anki.CrashReportService
 import com.ichi2.anki.NoteEditorFragment.Companion.NoteEditorCaller.Companion.fromValue
 import com.ichi2.anki.OnContextAndLongClickListener.Companion.setOnContextAndLongClickListener
 import com.ichi2.anki.android.input.ShortcutGroup
 import com.ichi2.anki.android.input.ShortcutGroupProvider
 import com.ichi2.anki.android.input.shortcut
+import com.ichi2.anki.backend.exception.BackendException
 import com.ichi2.anki.bottomsheet.ImageOcclusionBottomSheetFragment
 import com.ichi2.anki.common.annotations.NeedsTest
 import com.ichi2.anki.common.utils.annotation.KotlinCleanup
@@ -587,8 +589,20 @@ class NoteEditorFragment :
         
         try {
             setupComposeEditor(getColUnsafe)
-        } catch (ex: RuntimeException) {
-            Timber.w(ex, "setupComposeEditor")
+        } catch (ex: BackendException) {
+            // Specific backend exceptions (database locked, corrupt, etc.)
+            Timber.w(ex, "setupComposeEditor - backend exception")
+            requireAnkiActivity().onCollectionLoadError()
+            return
+        } catch (ex: IllegalStateException) {
+            // State errors (invalid card ID, missing note, etc.)
+            Timber.w(ex, "setupComposeEditor - illegal state")
+            requireAnkiActivity().onCollectionLoadError()
+            return
+        } catch (ex: Exception) {
+            // Catch-all for unexpected errors during setup
+            Timber.e(ex, "setupComposeEditor - unexpected error")
+            CrashReportService.sendExceptionReport(ex, "NoteEditorFragment::setupComposeEditor")
             requireAnkiActivity().onCollectionLoadError()
             return
         }
