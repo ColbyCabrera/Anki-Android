@@ -206,6 +206,7 @@
     <!-- Deckpicker Background -->
     <string name="background_image_title" maxLength="41">Background</string>
     <string name="choose_an_image" maxLength="41">Select image</string>
+    <string name="paste_image_from_clipboard">Paste Image from Clipboard</string>
     <string name="remove_wallpaper_image" maxLength="41">Remove background</string>
     <string name="remove_background_image">Remove background?</string>
     <!-- Card Template Browser Appearance -->

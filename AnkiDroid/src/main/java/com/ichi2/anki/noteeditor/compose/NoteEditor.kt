@@ -105,6 +105,7 @@ data class NoteEditorState(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteEditorScreen(
+    modifier: Modifier = Modifier,
     state: NoteEditorState,
     availableDecks: List<String>,
     availableNoteTypes: List<String>,
@@ -133,7 +134,6 @@ fun NoteEditorScreen(
     onAddCustomButtonClick: () -> Unit,
     customToolbarButtons: List<ToolbarButtonModel>,
     isToolbarVisible: Boolean,
-    modifier: Modifier = Modifier,
     onImageOcclusionSelectImage: () -> Unit = {},
     onImageOcclusionPasteImage: () -> Unit = {},
     onImageOcclusionEdit: () -> Unit = {},
@@ -507,7 +507,7 @@ fun ImageOcclusionButtons(
                 contentDescription = null,
                 modifier = Modifier.padding(end = 8.dp)
             )
-            Text("Paste Image from Clipboard")
+            Text(stringResource(R.string.paste_image_from_clipboard))
         }
     }
 }
