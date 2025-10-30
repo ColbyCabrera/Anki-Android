@@ -145,7 +145,11 @@ fun NoteEditorScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (state.isAddingNote) stringResource(R.string.menu_add) else stringResource(R.string.cardeditor_title_edit_card),
+                        text = if (state.isAddingNote) {
+                            stringResource(R.string.cardeditor_title_add_note)
+                        } else {
+                            stringResource(R.string.cardeditor_title_edit_card)
+                        },
                         style = MaterialTheme.typography.titleLarge
                     )
                 },
