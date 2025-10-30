@@ -76,6 +76,9 @@ class NoteEditorViewModel : ViewModel() {
     private val _showToolbar = MutableStateFlow(true)
     val showToolbar: StateFlow<Boolean> = _showToolbar.asStateFlow()
 
+    private val _isFieldEdited = MutableStateFlow(false)
+    val isFieldEdited: StateFlow<Boolean> = _isFieldEdited.asStateFlow()
+
     private val _currentNote = MutableStateFlow<Note?>(null)
     private val _currentCard = MutableStateFlow<Card?>(null)
     private val _deckId = MutableStateFlow<DeckId>(0L)
@@ -131,6 +134,8 @@ class NoteEditorViewModel : ViewModel() {
             val focusedIndex = currentState.focusedFieldIndex ?: index
             currentState.copy(fields = updatedFields, focusedFieldIndex = focusedIndex)
         }
+        // Mark as edited whenever a field value changes
+        _isFieldEdited.value = true
     }
 
     /**
@@ -265,7 +270,7 @@ class NoteEditorViewModel : ViewModel() {
 
     fun formatSelection(prefix: String, suffix: String): Boolean {
         val targetIndex = determineFocusIndex() ?: return false
-        return updateFieldValueInternal(targetIndex) { value ->
+        val result = updateFieldValueInternal(targetIndex) { value ->
             val text = value.text
             val selection = value.selection
             val start = selection.start.coerceIn(0, text.length)
@@ -298,6 +303,10 @@ class NoteEditorViewModel : ViewModel() {
                 value.copy(text = newText, selection = TextRange(newStart, newEnd))
             }
         }
+        if (result) {
+            _isFieldEdited.value = true
+        }
+        return result
     }
 
     fun insertCloze(mode: ClozeInsertionMode): Boolean {
@@ -381,6 +390,13 @@ class NoteEditorViewModel : ViewModel() {
      */
     fun toggleToolbarVisibility() {
         _showToolbar.update { !it }
+    }
+
+    /**
+     * Reset the field edited flag (e.g., after successful save)
+     */
+    fun resetFieldEditedFlag() {
+        _isFieldEdited.value = false
     }
 
     private fun determineFocusIndex(): Int? {

@@ -273,7 +273,7 @@ class NoteEditorFragment :
     /** Whether any change are saved. E.g. multimedia, new card added, field changed and saved. */
     private var changed = false
     private var isTagsEdited = false
-    private var isFieldEdited = false
+    // Note: isFieldEdited is now managed by NoteEditorViewModel as single source of truth
 
     private var multimediaActionJob: Job? = null
 
@@ -675,7 +675,7 @@ class NoteEditorFragment :
                     availableNoteTypes = availableNoteTypes,
                     onFieldValueChange = { index, value ->
                         noteEditorViewModel.updateFieldValue(index, value)
-                        isFieldEdited = true
+                        // Edit state now managed by ViewModel
                     },
                     onFieldFocus = { index ->
                         noteEditorViewModel.onFieldFocus(index)
@@ -736,9 +736,8 @@ class NoteEditorFragment :
                         handleClozeInsertion(ClozeInsertionMode.INCREMENT_NUMBER)
                     },
                     onCustomButtonClick = { button ->
-                        if (noteEditorViewModel.applyToolbarButton(button)) {
-                            isFieldEdited = true
-                        }
+                        noteEditorViewModel.applyToolbarButton(button)
+                        // Edit state now managed by ViewModel
                     },
                     onCustomButtonLongClick = { button ->
                         displayEditToolbarDialog(button.toCustomToolbarButton())
@@ -1251,9 +1250,8 @@ class NoteEditorFragment :
     }
 
     private fun applyFormatter(prefix: String, suffix: String) {
-        if (noteEditorViewModel.formatSelection(prefix, suffix)) {
-            isFieldEdited = true
-        }
+        noteEditorViewModel.formatSelection(prefix, suffix)
+        // Edit state now managed by ViewModel
     }
 
     private fun displayFontSizeDialog() {
@@ -1301,9 +1299,8 @@ class NoteEditorFragment :
 
     private fun handleClozeInsertion(mode: ClozeInsertionMode) {
         val isClozeType = noteEditorViewModel.noteEditorState.value.isClozeType
-        if (noteEditorViewModel.insertCloze(mode)) {
-            isFieldEdited = true
-        }
+        noteEditorViewModel.insertCloze(mode)
+        // Edit state now managed by ViewModel
         if (!isClozeType) {
             showSnackbar(R.string.note_editor_insert_cloze_no_cloze_note_type)
         }
@@ -1328,9 +1325,7 @@ class NoteEditorFragment :
                 else -> return false
             }
         val applied = noteEditorViewModel.applyToolbarShortcut(digit)
-        if (applied) {
-            isFieldEdited = true
-        }
+        // Edit state now managed by ViewModel
         return applied
     }
 
@@ -1521,6 +1516,7 @@ class NoteEditorFragment :
             return true
         }
         // changed fields?
+        val isFieldEdited = noteEditorViewModel.isFieldEdited.value
         if (isFieldEdited) {
             for (value in editFields!!) {
                 if (value.text.toString() != "") {
@@ -1565,7 +1561,7 @@ class NoteEditorFragment :
             closeNoteEditor(closeIntent ?: Intent())
         } else {
             // Reset check for changes to fields
-            isFieldEdited = false
+            noteEditorViewModel.resetFieldEditedFlag()
             isTagsEdited = false
         }
     }
@@ -3172,7 +3168,7 @@ class NoteEditorFragment :
     ) : TextWatcher {
         override fun afterTextChanged(arg0: Editable) {
             if (!loadingStickyFields) {
-                isFieldEdited = true
+                // Edit state is tracked by ViewModel through updateFieldValue
             }
             if (index == 0) {
                 setDuplicateFieldStyles()
