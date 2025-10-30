@@ -143,7 +143,6 @@ import com.ichi2.anki.OnContextAndLongClickListener.Companion.setOnContextAndLon
 import com.ichi2.anki.android.input.ShortcutGroup
 import com.ichi2.anki.android.input.ShortcutGroupProvider
 import com.ichi2.anki.android.input.shortcut
-import com.ichi2.anki.backend.exception.BackendException
 import com.ichi2.anki.bottomsheet.ImageOcclusionBottomSheetFragment
 import com.ichi2.anki.common.annotations.NeedsTest
 import com.ichi2.anki.common.utils.annotation.KotlinCleanup
@@ -240,6 +239,7 @@ import com.ichi2.widget.WidgetStatus
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import net.ankiweb.rsdroid.BackendException
 import org.json.JSONArray
 import timber.log.Timber
 import java.io.File
