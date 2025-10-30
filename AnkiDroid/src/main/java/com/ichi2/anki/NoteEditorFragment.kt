@@ -669,6 +669,13 @@ class NoteEditorFragment :
             isAddingNote = addNote
         )
 
+        // Set toolbar title
+        if (addNote) {
+            requireAnkiActivity().setTitle(R.string.cardeditor_title_add_note)
+        } else {
+            requireAnkiActivity().setTitle(R.string.cardeditor_title_edit_card)
+        }
+
         updateToolbar()
 
         // Replace the view with ComposeView
