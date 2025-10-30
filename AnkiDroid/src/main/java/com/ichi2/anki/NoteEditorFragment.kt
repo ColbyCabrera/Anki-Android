@@ -1599,6 +1599,18 @@ class NoteEditorFragment :
     @NeedsTest("14664: 'first field must not be empty' no longer applies after saving the note")
     @KotlinCleanup("fix !! on oldNoteType/newNoteType")
     suspend fun saveNote() {
+        // Compose UI - delegate to ViewModel
+        if (editFields == null) {
+            val success = noteEditorViewModel.saveNote()
+            if (success) {
+                closeNoteEditor()
+            } else {
+                showSnackbar(R.string.something_wrong)
+            }
+            return
+        }
+        
+        // Legacy XML UI path
         val res = resources
         if (selectedTags == null) {
             selectedTags = ArrayList(0)
