@@ -2892,6 +2892,14 @@ class NoteEditorFragment :
             )
 
     private fun updateTags() {
+        // Tags are now managed by Compose UI and ViewModel
+        // This method is kept for legacy XML compatibility but is a no-op for Compose
+        if (tagsButton == null) {
+            // Compose UI - tags are displayed through noteEditorViewModel state
+            return
+        }
+        
+        // Legacy XML UI path
         if (selectedTags == null) {
             selectedTags = ArrayList(0)
         }
