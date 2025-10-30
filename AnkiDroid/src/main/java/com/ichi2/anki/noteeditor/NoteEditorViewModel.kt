@@ -99,10 +99,8 @@ class NoteEditorViewModel : ViewModel() {
                 // Load note
                 _currentNote.value = if (cardId != null && !isAddingNote) {
                     val card = col.getCard(cardId)
-                    run {
-                        _currentCard.value = card
-                        card.note(col)
-                    }
+                    _currentCard.value = card
+                    card.note(col)
                 } else {
                     val notetype = col.notetypes.current()
                     Note.fromNotetypeId(col, notetype.id)
