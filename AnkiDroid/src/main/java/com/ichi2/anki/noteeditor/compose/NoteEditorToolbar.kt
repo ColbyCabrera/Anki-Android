@@ -53,6 +53,7 @@ import com.ichi2.anki.noteeditor.ToolbarButtonModel
  */
 @Composable
 fun NoteEditorToolbar(
+    modifier: Modifier = Modifier,
     isClozeType: Boolean,
     onBoldClick: () -> Unit,
     onItalicClick: () -> Unit,
@@ -69,7 +70,6 @@ fun NoteEditorToolbar(
     onAddCustomButtonClick: () -> Unit = {},
     customButtons: List<ToolbarButtonModel> = emptyList(),
     isVisible: Boolean = true,
-    modifier: Modifier = Modifier
 ) {
     if (!isVisible) return
 
@@ -90,17 +90,17 @@ fun NoteEditorToolbar(
             // Basic formatting buttons
             ToolbarIconButton(
                 icon = Icons.Default.FormatBold,
-                contentDescription = "Bold",
+                contentDescription = stringResource(R.string.format_insert_bold),
                 onClick = onBoldClick
             )
             ToolbarIconButton(
                 icon = Icons.Default.FormatItalic,
-                contentDescription = "Italic",
+                contentDescription = stringResource(R.string.format_insert_italic),
                 onClick = onItalicClick
             )
             ToolbarIconButton(
                 icon = Icons.Default.FormatUnderlined,
-                contentDescription = "Underline",
+                contentDescription = stringResource(R.string.format_insert_underline),
                 onClick = onUnderlineClick
             )
 
@@ -170,13 +170,13 @@ fun NoteEditorToolbar(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ToolbarIconButton(
+    modifier: Modifier = Modifier,
     icon: ImageVector? = null,
     painter: androidx.compose.ui.graphics.painter.Painter? = null,
     text: String? = null,
     contentDescription: String,
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null,
-    modifier: Modifier = Modifier
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     Box(
