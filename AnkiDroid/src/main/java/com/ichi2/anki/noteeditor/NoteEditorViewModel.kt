@@ -256,7 +256,8 @@ class NoteEditorViewModel : ViewModel() {
             if (_noteEditorState.value.isAddingNote) {
                 col.addNote(note, _deckId.value)
             } else {
-                col.updateNote(note)
+                // Explicitly ignore OpChanges - UI updates happen through reactive state
+                col.updateNote(note).let { }
             }
 
             true
