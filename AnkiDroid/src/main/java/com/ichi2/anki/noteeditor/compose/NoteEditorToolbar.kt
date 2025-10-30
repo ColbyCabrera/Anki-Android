@@ -19,22 +19,23 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FormatBold
 import androidx.compose.material.icons.filled.FormatItalic
 import androidx.compose.material.icons.filled.FormatUnderlined
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.ripple
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -45,7 +46,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material3.Text
 import com.ichi2.anki.R
 import com.ichi2.anki.noteeditor.ToolbarButtonModel
 
@@ -147,7 +147,7 @@ fun NoteEditorToolbar(
             // Custom toolbar buttons
             customButtons.forEach { button ->
                 val displayText = button.text.ifEmpty { (button.index + 1).toString() }
-                ToolbarIconButton(
+                ToolbarTextButton(
                     text = displayText,
                     contentDescription = displayText,
                     onClick = { onCustomButtonClick(button) },
@@ -166,48 +166,99 @@ fun NoteEditorToolbar(
 }
 
 /**
- * Icon button for toolbar
+ * Icon button for toolbar using Material3 IconButton
  */
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalFoundationApi::class)
 @Composable
 private fun ToolbarIconButton(
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
     painter: androidx.compose.ui.graphics.painter.Painter? = null,
-    text: String? = null,
+    contentDescription: String,
+    onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null,
+) {
+    if (onLongClick != null) {
+        // For buttons with long click, we still need combinedClickable
+        val interactionSource = remember { MutableInteractionSource() }
+        IconButton(
+            onClick = onClick,
+            shapes = IconButtonDefaults.shapes(),
+            modifier = modifier.combinedClickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+                onLongClick = onLongClick
+            ),
+            colors = IconButtonDefaults.iconButtonColors(
+                contentColor = MaterialTheme.colorScheme.onSurface
+            )
+        ) {
+            when {
+                icon != null -> Icon(
+                    imageVector = icon,
+                    contentDescription = contentDescription
+                )
+                painter != null -> Icon(
+                    painter = painter,
+                    contentDescription = contentDescription
+                )
+            }
+        }
+    } else {
+        // Standard IconButton for buttons without long click
+        IconButton(
+            onClick = onClick,
+            shapes = IconButtonDefaults.shapes(),
+            modifier = modifier,
+            colors = IconButtonDefaults.iconButtonColors(
+                contentColor = MaterialTheme.colorScheme.onSurface
+            )
+        ) {
+            when {
+                icon != null -> Icon(
+                    imageVector = icon,
+                    contentDescription = contentDescription
+                )
+                painter != null -> Icon(
+                    painter = painter,
+                    contentDescription = contentDescription
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Text button for custom toolbar buttons (still needs combinedClickable for long press)
+ */
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun ToolbarTextButton(
+    modifier: Modifier = Modifier,
+    text: String,
     contentDescription: String,
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    Box(
-        modifier = modifier
-            .size(48.dp)
-            .combinedClickable(
-                interactionSource = interactionSource,
-                indication = ripple(bounded = false),
-                onClick = onClick,
-                onLongClick = onLongClick
-            ),
-        contentAlignment = Alignment.Center
+    IconButton(
+        onClick = onClick,
+        shapes = IconButtonDefaults.shapes(),
+        modifier = modifier.combinedClickable(
+            interactionSource = interactionSource,
+            indication = null,
+            onClick = onClick,
+            onLongClick = onLongClick
+        ),
+        colors = IconButtonDefaults.iconButtonColors(
+            contentColor = MaterialTheme.colorScheme.onSurface
+        )
     ) {
-        when {
-            icon != null -> Icon(
-                imageVector = icon,
-                contentDescription = contentDescription,
-                tint = MaterialTheme.colorScheme.onSurface
-            )
-            painter != null -> Icon(
-                painter = painter,
-                contentDescription = contentDescription,
-                tint = MaterialTheme.colorScheme.onSurface
-            )
-            text != null -> Text(
-                text = text,
-                style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        }
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp)
+        )
     }
 }
 
