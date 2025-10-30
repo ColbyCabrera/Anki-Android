@@ -1919,7 +1919,18 @@ class NoteEditorFragment :
         val convertNewlines = shouldReplaceNewlines()
 
         fun String?.toFieldText(): String = NoteService.convertToHtmlNewline(this.toString(), convertNewlines)
-        val fields = editFields?.mapTo(mutableListOf()) { it.fieldText.toFieldText() } ?: mutableListOf()
+        
+        // Get fields from Compose ViewModel or legacy XML editFields
+        val fields = if (editFields == null) {
+            // Compose UI - get fields from ViewModel state
+            noteEditorViewModel.noteEditorState.value.fields.map { fieldState ->
+                fieldState.value.text.toFieldText()
+            }.toMutableList()
+        } else {
+            // Legacy XML UI
+            editFields?.mapTo(mutableListOf()) { it.fieldText.toFieldText() } ?: mutableListOf()
+        }
+        
         val tags = selectedTags ?: mutableListOf()
 
         val ord =
