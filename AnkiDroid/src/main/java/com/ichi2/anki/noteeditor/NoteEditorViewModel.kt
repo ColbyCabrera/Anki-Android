@@ -76,9 +76,9 @@ class NoteEditorViewModel : ViewModel() {
     private val _showToolbar = MutableStateFlow(true)
     val showToolbar: StateFlow<Boolean> = _showToolbar.asStateFlow()
 
-    private var currentNote: Note? = null
-    private var currentCard: Card? = null
-    private var deckId: DeckId = 0L
+    private val _currentNote = MutableStateFlow<Note?>(null)
+    private val _currentCard = MutableStateFlow<Card?>(null)
+    private val _deckId = MutableStateFlow<DeckId>(0L)
 
     /**
      * Initialize the editor with a new or existing note
@@ -91,12 +91,15 @@ class NoteEditorViewModel : ViewModel() {
     ) {
         viewModelScope.launch {
             try {
-                this@NoteEditorViewModel.deckId = deckId ?: 1L
+                _deckId.value = deckId ?: 1L
                 
                 // Load note
-                currentNote = if (cardId != null && !isAddingNote) {
-                    currentCard = col.getCard(cardId)
-                    currentCard!!.note(col)
+                _currentNote.value = if (cardId != null && !isAddingNote) {
+                    val card = col.getCard(cardId)
+                    run {
+                        _currentCard.value = card
+                        card.note(col)
+                    }
                 } else {
                     val notetype = col.notetypes.current()
                     Note.fromNotetypeId(col, notetype.id)
@@ -167,7 +170,18 @@ class NoteEditorViewModel : ViewModel() {
      * Select a deck
      */
     fun selectDeck(deckName: String) {
-        _noteEditorState.update { it.copy(selectedDeckName = deckName) }
+        viewModelScope.launch {
+            try {
+                val col = CollectionManager.getColUnsafe()
+                val deck = col.decks.allNamesAndIds().find { it.name == deckName }
+                if (deck != null) {
+                    _deckId.value = deck.id
+                    _noteEditorState.update { it.copy(selectedDeckName = deckName) }
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error selecting deck")
+            }
+        }
     }
 
     /**
@@ -179,7 +193,26 @@ class NoteEditorViewModel : ViewModel() {
                 val col = CollectionManager.getColUnsafe()
                 val notetype = col.notetypes.all().find { it.name == noteTypeName }
                 if (notetype != null) {
-                    currentNote = Note.fromNotetypeId(col, notetype.id)
+                    // Capture existing note to preserve matching field values
+                    val oldNote = _currentNote.value
+                    val newNote = Note.fromNotetypeId(col, notetype.id)
+                    
+                    // Copy field values from old note to new note where field names match
+                    if (oldNote != null) {
+                        val oldNotetype = oldNote.notetype
+                        oldNotetype.fields.forEachIndexed { oldIndex, oldField ->
+                            if (oldIndex < oldNote.fields.size) {
+                                val oldValue = oldNote.fields[oldIndex]
+                                // Find matching field in new notetype
+                                val newIndex = newNote.notetype.fields.indexOfFirst { it.name == oldField.name }
+                                if (newIndex >= 0 && newIndex < newNote.fields.size) {
+                                    newNote.fields[newIndex] = oldValue
+                                }
+                            }
+                        }
+                    }
+                    
+                    _currentNote.value = newNote
                     updateStateFromNote(col, _noteEditorState.value.isAddingNote)
                 }
             } catch (e: Exception) {
@@ -202,13 +235,14 @@ class NoteEditorViewModel : ViewModel() {
     suspend fun saveNote(): Boolean {
         return try {
             val col = CollectionManager.getColUnsafe()
-            val note = currentNote ?: return false
+            val note = _currentNote.value ?: return false
 
             // Update note fields from state
             val fields = _noteEditorState.value.fields
-            fields.forEachIndexed { index, fieldState ->
-                if (index < note.fields.size) {
-                    note.fields[index] = fieldState.value.text
+            fields.forEach { fieldState ->
+                val fieldIndex = fieldState.index
+                if (fieldIndex in note.fields.indices) {
+                    note.fields[fieldIndex] = fieldState.value.text
                 }
             }
 
@@ -217,7 +251,7 @@ class NoteEditorViewModel : ViewModel() {
 
             // Save the note
             if (_noteEditorState.value.isAddingNote) {
-                col.addNote(note, deckId)
+                col.addNote(note, _deckId.value)
             } else {
                 col.updateNote(note)
             }
@@ -299,7 +333,7 @@ class NoteEditorViewModel : ViewModel() {
      * Update state from the current note
      */
     private fun updateStateFromNote(col: Collection, isAddingNote: Boolean) {
-        val note = currentNote ?: return
+        val note = _currentNote.value ?: return
         val notetype = note.notetype
 
         val fields = note.fields.mapIndexed { index, value ->
@@ -314,7 +348,7 @@ class NoteEditorViewModel : ViewModel() {
         }
 
         val deckName = try {
-            col.decks.name(deckId)
+            col.decks.name(_deckId.value)
         } catch (e: Exception) {
             "Default"
         }
