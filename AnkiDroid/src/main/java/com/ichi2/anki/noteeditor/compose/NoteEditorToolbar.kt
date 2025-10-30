@@ -1,0 +1,236 @@
+/* **************************************************************************************
+ * Copyright (c) 2025 Colby Cabrera <colbycabrera@gmail.com>                            *
+ *                                                                                      *
+ * This program is free software; you can redistribute it and/or modify it under        *
+ * the terms of the GNU General Public License as published by the Free Software        *
+ * Foundation; either version 3 of the License, or (at your option) any later           *
+ * version.                                                                             *
+ *                                                                                      *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY      *
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A      *
+ * PARTICULAR PURPOSE. See the GNU General Public License for more details.             *
+ *                                                                                      *
+ * You should have received a copy of the GNU General Public License along with         *
+ * this program.  If not, see <http://www.gnu.org/licenses/>.                           *
+ ****************************************************************************************/
+package com.ichi2.anki.noteeditor.compose
+
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.FormatBold
+import androidx.compose.material.icons.filled.FormatItalic
+import androidx.compose.material.icons.filled.FormatUnderlined
+import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.material3.Text
+import com.ichi2.anki.R
+import com.ichi2.anki.noteeditor.ToolbarButtonModel
+
+/**
+ * Formatting toolbar for the note editor
+ */
+@Composable
+fun NoteEditorToolbar(
+    isClozeType: Boolean,
+    onBoldClick: () -> Unit,
+    onItalicClick: () -> Unit,
+    onUnderlineClick: () -> Unit,
+    onHorizontalRuleClick: () -> Unit = {},
+    onHeadingClick: () -> Unit = {},
+    onFontSizeClick: () -> Unit = {},
+    onMathjaxClick: () -> Unit = {},
+    onMathjaxLongClick: (() -> Unit)? = null,
+    onClozeClick: () -> Unit = {},
+    onClozeIncrementClick: () -> Unit = {},
+    onCustomButtonClick: (ToolbarButtonModel) -> Unit = {},
+    onCustomButtonLongClick: (ToolbarButtonModel) -> Unit = {},
+    onAddCustomButtonClick: () -> Unit = {},
+    customButtons: List<ToolbarButtonModel> = emptyList(),
+    isVisible: Boolean = true,
+    modifier: Modifier = Modifier
+) {
+    if (!isVisible) return
+
+    BottomAppBar(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.onSurface
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp),
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Basic formatting buttons
+            ToolbarIconButton(
+                icon = Icons.Default.FormatBold,
+                contentDescription = "Bold",
+                onClick = onBoldClick
+            )
+            ToolbarIconButton(
+                icon = Icons.Default.FormatItalic,
+                contentDescription = "Italic",
+                onClick = onItalicClick
+            )
+            ToolbarIconButton(
+                icon = Icons.Default.FormatUnderlined,
+                contentDescription = "Underline",
+                onClick = onUnderlineClick
+            )
+
+            ToolbarIconButton(
+                painter = painterResource(R.drawable.ic_horizontal_rule_black_24dp),
+                contentDescription = stringResource(R.string.insert_horizontal_line),
+                onClick = onHorizontalRuleClick
+            )
+
+            ToolbarIconButton(
+                painter = painterResource(R.drawable.ic_format_title_black_24dp),
+                contentDescription = stringResource(R.string.insert_heading),
+                onClick = onHeadingClick
+            )
+
+            ToolbarIconButton(
+                painter = painterResource(R.drawable.ic_format_font_size_24dp),
+                contentDescription = stringResource(R.string.format_font_size),
+                onClick = onFontSizeClick
+            )
+
+            ToolbarIconButton(
+                painter = painterResource(R.drawable.ic_add_equation_black_24dp),
+                contentDescription = stringResource(R.string.insert_mathjax),
+                onClick = onMathjaxClick,
+                onLongClick = onMathjaxLongClick
+            )
+
+            // Cloze buttons (if cloze note type)
+            if (isClozeType) {
+                ToolbarIconButton(
+                    painter = painterResource(R.drawable.ic_cloze_new_card),
+                    contentDescription = stringResource(R.string.multimedia_editor_popup_cloze),
+                    onClick = onClozeIncrementClick
+                )
+                ToolbarIconButton(
+                    painter = painterResource(R.drawable.ic_cloze_same_card),
+                    contentDescription = stringResource(R.string.multimedia_editor_popup_cloze),
+                    onClick = onClozeClick
+                )
+            }
+
+            // Custom toolbar buttons
+            customButtons.forEach { button ->
+                val displayText = button.text.ifEmpty { (button.index + 1).toString() }
+                ToolbarIconButton(
+                    text = displayText,
+                    contentDescription = displayText,
+                    onClick = { onCustomButtonClick(button) },
+                    onLongClick = { onCustomButtonLongClick(button) }
+                )
+            }
+
+            // Add custom button
+            ToolbarIconButton(
+                icon = Icons.Default.Add,
+                contentDescription = stringResource(R.string.add_toolbar_item),
+                onClick = onAddCustomButtonClick
+            )
+        }
+    }
+}
+
+/**
+ * Icon button for toolbar
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun ToolbarIconButton(
+    icon: ImageVector? = null,
+    painter: androidx.compose.ui.graphics.painter.Painter? = null,
+    text: String? = null,
+    contentDescription: String,
+    onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null,
+    modifier: Modifier = Modifier
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    Box(
+        modifier = modifier
+            .size(48.dp)
+            .combinedClickable(
+                interactionSource = interactionSource,
+                onClick = onClick,
+                onLongClick = onLongClick
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        when {
+            icon != null -> Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                tint = MaterialTheme.colorScheme.onSurface
+            )
+            painter != null -> Icon(
+                painter = painter,
+                contentDescription = contentDescription,
+                tint = MaterialTheme.colorScheme.onSurface
+            )
+            text != null -> Text(
+                text = text,
+                style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+fun NoteEditorToolbarPreview() {
+    MaterialTheme {
+        Surface {
+            NoteEditorToolbar(
+                isClozeType = true,
+                onBoldClick = {},
+                onItalicClick = {},
+                onUnderlineClick = {},
+                onHorizontalRuleClick = {},
+                onHeadingClick = {},
+                onFontSizeClick = {},
+                onMathjaxClick = {},
+                onMathjaxLongClick = {},
+                onClozeClick = {},
+                onClozeIncrementClick = {},
+                customButtons = listOf(
+                    ToolbarButtonModel(index = 0, text = "1", prefix = "<b>", suffix = "</b>"),
+                    ToolbarButtonModel(index = 1, text = "2", prefix = "<i>", suffix = "</i>")
+                )
+            )
+        }
+    }
+}
