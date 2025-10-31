@@ -19,23 +19,31 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FormatBold
 import androidx.compose.material.icons.filled.FormatItalic
 import androidx.compose.material.icons.filled.FormatUnderlined
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -166,9 +174,9 @@ fun NoteEditorToolbar(
 }
 
 /**
- * Icon button for toolbar using Material3 IconButton
+ * Icon button for toolbar using Material3 IconButton with tooltip
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun ToolbarIconButton(
     modifier: Modifier = Modifier,
@@ -178,61 +186,69 @@ private fun ToolbarIconButton(
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null,
 ) {
-    if (onLongClick != null) {
-        // For buttons with long click, we still need combinedClickable
-        val interactionSource = remember { MutableInteractionSource() }
-        IconButton(
-            onClick = onClick,
-            shapes = IconButtonDefaults.shapes(),
-            modifier = modifier.combinedClickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick,
-                onLongClick = onLongClick
-            ),
-            colors = IconButtonDefaults.iconButtonColors(
-                contentColor = MaterialTheme.colorScheme.onSurface
-            )
-        ) {
-            when {
-                icon != null -> Icon(
-                    imageVector = icon,
-                    contentDescription = contentDescription
-                )
-                painter != null -> Icon(
-                    painter = painter,
-                    contentDescription = contentDescription
-                )
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+            positioning = TooltipAnchorPosition.Above
+        ),
+        tooltip = { PlainTooltip { Text(contentDescription) } },
+        state = rememberTooltipState()
+    ) {
+        if (onLongClick != null) {
+            // For buttons with long click, we need a wrapper Box with combinedClickable
+            val interactionSource = remember { MutableInteractionSource() }
+            Box(
+                modifier = modifier
+                    .size(48.dp)
+                    .combinedClickable(
+                        interactionSource = interactionSource,
+                        indication = null,
+                        onClick = onClick,
+                        onLongClick = onLongClick
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                when {
+                    icon != null -> Icon(
+                        imageVector = icon,
+                        contentDescription = contentDescription,
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                    painter != null -> Icon(
+                        painter = painter,
+                        contentDescription = contentDescription,
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             }
-        }
-    } else {
-        // Standard IconButton for buttons without long click
-        IconButton(
-            onClick = onClick,
-            shapes = IconButtonDefaults.shapes(),
-            modifier = modifier,
-            colors = IconButtonDefaults.iconButtonColors(
-                contentColor = MaterialTheme.colorScheme.onSurface
-            )
-        ) {
-            when {
-                icon != null -> Icon(
-                    imageVector = icon,
-                    contentDescription = contentDescription
+        } else {
+            // Standard IconButton for buttons without long click
+            IconButton(
+                onClick = onClick,
+                shapes = IconButtonDefaults.shapes(),
+                modifier = modifier,
+                colors = IconButtonDefaults.iconButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onSurface
                 )
-                painter != null -> Icon(
-                    painter = painter,
-                    contentDescription = contentDescription
-                )
+            ) {
+                when {
+                    icon != null -> Icon(
+                        imageVector = icon,
+                        contentDescription = contentDescription
+                    )
+                    painter != null -> Icon(
+                        painter = painter,
+                        contentDescription = contentDescription
+                    )
+                }
             }
         }
     }
 }
 
 /**
- * Text button for custom toolbar buttons (still needs combinedClickable for long press)
+ * Text button for custom toolbar buttons (needs combinedClickable for long press)
  */
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun ToolbarTextButton(
     modifier: Modifier = Modifier,
@@ -242,23 +258,30 @@ private fun ToolbarTextButton(
     onLongClick: (() -> Unit)? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    IconButton(
-        onClick = onClick,
-        shapes = IconButtonDefaults.shapes(),
-        modifier = modifier.combinedClickable(
-            interactionSource = interactionSource,
-            indication = null,
-            onClick = onClick,
-            onLongClick = onLongClick
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+            positioning = TooltipAnchorPosition.Above
         ),
-        colors = IconButtonDefaults.iconButtonColors(
-            contentColor = MaterialTheme.colorScheme.onSurface
-        )
+        tooltip = { PlainTooltip { Text(contentDescription) } },
+        state = rememberTooltipState()
     ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp)
-        )
+        Box(
+            modifier = modifier
+                .size(48.dp)
+                .combinedClickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = onClick,
+                    onLongClick = onLongClick
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
     }
 }
 
