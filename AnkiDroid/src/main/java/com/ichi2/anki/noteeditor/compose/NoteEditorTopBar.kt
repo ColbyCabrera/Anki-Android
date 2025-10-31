@@ -46,10 +46,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.ichi2.anki.R
 
 /**
  * Represents an item displayed in the overflow menu of the note editor top app bar.
@@ -124,7 +126,7 @@ fun NoteEditorTopAppBar(
 
             ) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    painter = painterResource(R.drawable.arrow_back_24px),
                     contentDescription = null,
                 )
             }
