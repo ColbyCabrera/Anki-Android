@@ -93,7 +93,6 @@ fun NoteEditorToolbar(
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
                 .horizontalScroll(rememberScrollState())
                 .padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.Start,
