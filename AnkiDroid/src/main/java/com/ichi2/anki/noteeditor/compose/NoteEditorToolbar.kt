@@ -35,6 +35,8 @@ import androidx.compose.material.icons.filled.FormatUnderlined
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -62,6 +64,7 @@ import com.ichi2.anki.noteeditor.ToolbarButtonModel
 /**
  * Formatting toolbar for the note editor
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun NoteEditorToolbar(
     modifier: Modifier = Modifier,
@@ -166,11 +169,20 @@ fun NoteEditorToolbar(
             }
 
             // Add custom button
-            ToolbarIconButton(
-                icon = Icons.Default.Add,
-                contentDescription = stringResource(R.string.add_toolbar_item),
-                onClick = onAddCustomButtonClick
-            )
+            FilledIconButton(
+                onClick = onAddCustomButtonClick,
+                shapes = IconButtonDefaults.shapes(),
+                modifier = modifier,
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = stringResource(R.string.add_toolbar_item),
+                )
+            }
         }
     }
 }
