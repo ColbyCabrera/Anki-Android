@@ -15,8 +15,10 @@
  ****************************************************************************************/
 package com.ichi2.anki.noteeditor.compose
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material.icons.Icons
@@ -24,6 +26,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.RemoveRedEye
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -132,31 +136,15 @@ fun NoteEditorTopAppBar(
             }
         },
         actions = {
-            if (showSaveAction && onSaveClick != null) {
-                IconButton(
-                    onClick = onSaveClick,
-                    enabled = saveEnabled,
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Save,
-                        contentDescription = null,
-                    )
-                }
-            }
-            if (showPreviewAction && onPreviewClick != null) {
-                IconButton(
-                    onClick = onPreviewClick,
-                    enabled = previewEnabled,
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.RemoveRedEye,
-                        contentDescription = null,
-                    )
-                }
-            }
             primaryActions()
             if (visibleOverflowItems.isNotEmpty()) {
-                IconButton(onClick = { overflowExpanded = true }) {
+                FilledIconButton(
+                    onClick = { overflowExpanded = true },
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                    ),
+                ) {
                     Icon(
                         imageVector = Icons.Filled.MoreVert,
                         contentDescription = null,
@@ -178,6 +166,7 @@ fun NoteEditorTopAppBar(
                                     },
                                 )
                             }
+
                             is NoteEditorToggleOverflowItem -> {
                                 DropdownMenuItem(
                                     text = { Text(item.title) },
@@ -205,6 +194,35 @@ fun NoteEditorTopAppBar(
                     }
                 }
             }
+            if (showPreviewAction && onPreviewClick != null) {
+                FilledIconButton(
+                    onClick = onPreviewClick,
+                    enabled = previewEnabled,
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                    ),
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.visibility_24px),
+                        contentDescription = null,
+                    )
+                }
+            }
+            if (showSaveAction && onSaveClick != null) {
+                Button(
+                    modifier = Modifier
+                        .padding(start = 6.dp, end = 12.dp)
+                        .height(48.dp),
+                    onClick = onSaveClick,
+                    enabled = saveEnabled,
+                    contentPadding = PaddingValues(horizontal = 24.dp),
+                    shapes = ButtonDefaults.shapes()
+                ) {
+                    Text("Save")
+                }
+            }
+
         },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.surface,
