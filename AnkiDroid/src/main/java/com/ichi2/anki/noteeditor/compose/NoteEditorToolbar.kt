@@ -90,7 +90,7 @@ fun NoteEditorToolbar(
     BottomAppBar(
         modifier = modifier
             .fillMaxWidth()
-            .height(56.dp),
+            .height(72.dp).padding(top = 4.dp),
         containerColor = MaterialTheme.colorScheme.surface,
         contentColor = MaterialTheme.colorScheme.onSurface
     ) {
