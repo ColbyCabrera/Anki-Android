@@ -438,4 +438,13 @@ class NoteEditorViewModel : ViewModel() {
             Timber.w(e, "Error calculating next cloze index")
             1
         }
+
+    /**
+     * Update the cards info display after template changes
+     */
+    fun updateCardsInfo(cardsInfo: String) {
+        _noteEditorState.update { currentState ->
+            currentState.copy(cardsInfo = cardsInfo)
+        }
+    }
 }

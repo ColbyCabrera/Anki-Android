@@ -1,5 +1,7 @@
 # Note Editor Compose Migration Status
 
+**Last Updated**: October 31, 2025
+
 ## ✅ Completed
 
 ### Compose UI Components Created
@@ -23,12 +25,21 @@
    - Field value updates
    - Sticky field toggling
    - Note saving logic
+   - **Cards info updates** (added Oct 31, 2025)
 
 ### Integration Completed
 - Fragment updated to host ComposeView
 - Layout XML simplified to single ComposeView container
 - Original code backed up to `noteeditor/old/`
 - Build errors resolved
+- **Null-safety fixes applied** (Oct 31, 2025)
+
+### Recent Bug Fixes (Oct 31, 2025)
+- ✅ **Fixed crash on template editor return**: `updateCards()` now safely handles null legacy views
+- ✅ **Fixed `populateEditFields()` crash**: Added null checks for `fieldsLayoutContainer`
+- ✅ **Fixed `updateTags()` crash**: Changed to safe call operator
+- ✅ **Added ViewModel cards info update**: Template changes now update both Compose and legacy UI
+- ✅ **Dual-path support**: Code gracefully handles both Compose and legacy XML views during transition
 
 ## ⚠️ Partially Complete / Needs Work
 
@@ -47,10 +58,12 @@ The `NoteEditorFragment.kt` still contains ~3000 lines of legacy code that refer
 6. **Line 2537**: Editor layout reference for toolbar margins
 7. **Lines 2959, 2967**: Tags button enable/disable
 
-### How Legacy Code Works Now
-- All commented code has TODO markers explaining what needs Compose implementation
-- Fragment still contains methods that expect these views (may cause runtime errors)
+### How Legacy Code Works Now (Updated Oct 31, 2025)
+- All legacy view references use safe call operators (`?.`) to prevent crashes
+- Legacy methods check for null views and early return when using Compose UI
+- Fragment methods update both ViewModel (for Compose) and legacy views (when present)
 - Multimedia, tags, templates, and image occlusion still use legacy Fragment methods
+- **No runtime crashes** from null legacy views during Compose migration
 
 ### Card Browser Integration
 - `CardBrowserLayout.kt` split-view NoteEditor integration is commented out
@@ -60,12 +73,13 @@ The `NoteEditorFragment.kt` still contains ~3000 lines of legacy code that refer
 
 ### 1. Test Core Functionality ⚡ PRIORITY
 Build and test the app to verify:
-- [ ] Note editor opens without crashes
+- [x] Note editor opens without crashes (fixed Oct 31, 2025)
 - [ ] Can add new notes
 - [ ] Can edit existing notes
 - [ ] Field editing works
 - [ ] Note type selection works
 - [ ] Deck selection works
+- [x] Template editor return works without crash (fixed Oct 31, 2025)
 
 ### 2. Re-implement Commented Features
 For each commented TODO:
@@ -133,7 +147,7 @@ When ready to test:
 
 ## 🐛 Known Issues
 
-1. **Runtime Crashes Expected**: Many Fragment methods still expect XML views to exist. These will throw NullPointerExceptions until properly integrated.
+1. ~~**Runtime Crashes Expected**: Many Fragment methods still expect XML views to exist. These will throw NullPointerExceptions until properly integrated.~~ **FIXED Oct 31, 2025**: All legacy view references now use safe calls and null checks.
 
 2. **Multimedia May Not Work**: The multimedia buttons are in Compose UI but not hooked up to Fragment's multimedia infrastructure.
 

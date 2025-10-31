@@ -2242,8 +2242,13 @@ class NoteEditorFragment :
         type: FieldChangeType,
         editNoteTypeMode: Boolean,
     ) {
+        // Legacy XML UI - skip if using Compose
+        if (fieldsLayoutContainer == null) {
+            return
+        }
+        
         val editLines = fieldState.loadFieldEditLines(type)
-        fieldsLayoutContainer!!.removeAllViews()
+        fieldsLayoutContainer?.removeAllViews()
         customViewIds.clear()
         imageOcclusionButtonsContainer?.isVisible = currentNotetypeIsImageOcclusion()
 
@@ -2352,7 +2357,7 @@ class NoteEditorFragment :
                 getString(R.string.note_editor_toggle_sticky, editLineView.name)
 
             editLineView.isVisible = i !in indicesToHide
-            fieldsLayoutContainer!!.addView(editLineView)
+            fieldsLayoutContainer?.addView(editLineView)
         }
     }
 
@@ -3036,7 +3041,7 @@ class NoteEditorFragment :
         if (selectedTags == null) {
             selectedTags = ArrayList(0)
         }
-        tagsButton!!.text =
+        tagsButton?.text =
             resources.getString(
                 R.string.CardEditorTags,
                 getColUnsafe.tags
@@ -3074,9 +3079,16 @@ class NoteEditorFragment :
         if (!addNote && tmpls.length() < editorNote!!.notetype.templates.length()) {
             cardsList = StringBuilder("<font color='red'>$cardsList</font>")
         }
-        cardsButton!!.text =
+        
+        val cardsInfoText = resources.getString(R.string.CardEditorCards, cardsList.toString())
+        
+        // Update ViewModel for Compose UI
+        noteEditorViewModel.updateCardsInfo(cardsInfoText)
+        
+        // Legacy XML view - may be null during Compose migration
+        cardsButton?.text =
             HtmlCompat.fromHtml(
-                resources.getString(R.string.CardEditorCards, cardsList.toString()),
+                cardsInfoText,
                 HtmlCompat.FROM_HTML_MODE_LEGACY,
             )
     }
