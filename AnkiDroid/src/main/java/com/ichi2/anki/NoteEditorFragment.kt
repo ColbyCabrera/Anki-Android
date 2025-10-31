@@ -111,7 +111,10 @@ import androidx.appcompat.widget.AppCompatButton
 import androidx.appcompat.widget.PopupMenu
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
 import androidx.core.content.FileProvider
 import androidx.core.content.IntentCompat
 import androidx.core.content.edit
@@ -120,7 +123,6 @@ import androidx.core.os.BundleCompat
 import androidx.core.text.HtmlCompat
 import androidx.core.util.component1
 import androidx.core.util.component2
-import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.core.view.OnReceiveContentListener
 import androidx.core.view.WindowInsetsControllerCompat
@@ -128,7 +130,6 @@ import androidx.core.view.isVisible
 import androidx.draganddrop.DropHelper
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import anki.config.ConfigKey
 import anki.notes.NoteFieldsCheckResponse
@@ -189,6 +190,9 @@ import com.ichi2.anki.noteeditor.CustomToolbarButton
 import com.ichi2.anki.noteeditor.FieldState
 import com.ichi2.anki.noteeditor.FieldState.FieldChangeType
 import com.ichi2.anki.noteeditor.NoteEditorLauncher
+import com.ichi2.anki.noteeditor.compose.NoteEditorSimpleOverflowItem
+import com.ichi2.anki.noteeditor.compose.NoteEditorToggleOverflowItem
+import com.ichi2.anki.noteeditor.compose.NoteEditorTopAppBar
 import com.ichi2.anki.noteeditor.NoteEditorViewModel
 import com.ichi2.anki.noteeditor.ToolbarButtonModel
 import com.ichi2.anki.noteeditor.ClozeInsertionMode
@@ -257,7 +261,7 @@ const val CALLER_KEY = "caller"
  * sides: a question and an answer. Any number of fields can appear on each side. When you add a note to Anki, cards
  * which show that note are generated. Some models generate one card, others generate more than one.
  * Features:
- * - Implements [MenuHost] ([onCreateMenu]/[onPrepareMenu]) to handle toolbar menu item clicks.
+ * - Hosts the Compose note editor screen and associated top app bar actions.
  * - Implements [DispatchKeyEventListener] to handle key events.
  *
  * @see [the Anki Desktop manual](https://docs.ankiweb.net/getting-started.html.cards)
@@ -582,9 +586,6 @@ class NoteEditorFragment :
         view: View,
         savedInstanceState: Bundle?,
     ) {
-        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = false
-        @Suppress("deprecation", "API35 properly handle edge-to-edge")
-        requireActivity().window.statusBarColor = Themes.getColorFromAttr(requireContext(), R.attr.appBarColor)
         super.onViewCreated(view, savedInstanceState)
         
         try {
@@ -613,17 +614,6 @@ class NoteEditorFragment :
             Timber.i("NoteEditor:: onBackPressed()")
             closeCardEditorWithCheck()
         }
-
-        @Suppress("deprecation", "API35 properly handle edge-to-edge")
-        requireActivity().window.navigationBarColor =
-            Themes.getColorFromAttr(requireContext(), R.attr.toolbarBackgroundColor)
-
-        // Register this fragment as a menu provider with the activity
-        (requireActivity() as MenuHost).addMenuProvider(
-            this,
-            viewLifecycleOwner,
-            Lifecycle.State.RESUMED,
-        )
     }
     
     /**
@@ -689,6 +679,8 @@ class NoteEditorFragment :
                 val toolbarButtons by noteEditorViewModel.toolbarButtons.collectAsState()
                 val showToolbar by noteEditorViewModel.showToolbar.collectAsState()
                 val snackbarHostState = remember { androidx.compose.material3.SnackbarHostState() }
+                var capitalizeChecked by remember { mutableStateOf(sharedPrefs().getBoolean(PREF_NOTE_EDITOR_CAPITALIZE, true)) }
+                var scrollToolbarChecked by remember { mutableStateOf(sharedPrefs().getBoolean(PREF_NOTE_EDITOR_SCROLL_TOOLBAR, true)) }
 
                 com.ichi2.anki.noteeditor.compose.NoteEditorScreen(
                     state = noteEditorState,
@@ -768,6 +760,89 @@ class NoteEditorFragment :
                     },
                     customToolbarButtons = toolbarButtons,
                     isToolbarVisible = showToolbar,
+                    topBar = {
+                        val title = stringResource(
+                            if (noteEditorState.isAddingNote) {
+                                R.string.cardeditor_title_add_note
+                            } else {
+                                R.string.cardeditor_title_edit_card
+                            },
+                        )
+                        val allowSaveAndPreview = !(noteEditorState.isAddingNote && noteEditorState.isImageOcclusion)
+                        val copyEnabled = noteEditorState.fields.any { it.value.text.isNotBlank() }
+
+                        val overflowItems = listOf(
+                            NoteEditorSimpleOverflowItem(
+                                id = "add_note",
+                                title = stringResource(R.string.menu_add),
+                                visible = !inCardBrowserActivity && !noteEditorState.isAddingNote,
+                            ) {
+                                addNewNote()
+                            },
+                            NoteEditorSimpleOverflowItem(
+                                id = "copy_note",
+                                title = stringResource(R.string.note_editor_copy_note),
+                                visible = !noteEditorState.isAddingNote,
+                                enabled = copyEnabled,
+                            ) {
+                                copyNote()
+                            },
+                            NoteEditorSimpleOverflowItem(
+                                id = "font_size",
+                                title = stringResource(R.string.menu_font_size),
+                            ) {
+                                displayFontSizeDialog()
+                            },
+                            NoteEditorToggleOverflowItem(
+                                id = "show_toolbar",
+                                title = stringResource(R.string.menu_show_toolbar),
+                                checked = showToolbar,
+                                onCheckedChange = { isChecked ->
+                                    sharedPrefs().edit {
+                                        putBoolean(PREF_NOTE_EDITOR_SHOW_TOOLBAR, isChecked)
+                                    }
+                                    updateToolbar()
+                                },
+                            ),
+                            NoteEditorToggleOverflowItem(
+                                id = "capitalize",
+                                title = stringResource(R.string.note_editor_capitalize),
+                                checked = capitalizeChecked,
+                                onCheckedChange = { isChecked ->
+                                    capitalizeChecked = isChecked
+                                    toggleCapitalize(isChecked)
+                                },
+                            ),
+                            NoteEditorToggleOverflowItem(
+                                id = "scroll_toolbar",
+                                title = stringResource(R.string.menu_scroll_toolbar),
+                                checked = scrollToolbarChecked,
+                                onCheckedChange = { isChecked ->
+                                    scrollToolbarChecked = isChecked
+                                    sharedPrefs().edit {
+                                        putBoolean(PREF_NOTE_EDITOR_SCROLL_TOOLBAR, isChecked)
+                                    }
+                                    updateToolbar()
+                                },
+                            ),
+                        )
+
+                        NoteEditorTopAppBar(
+                            title = title,
+                            onBackClick = { requireActivity().onBackPressedDispatcher.onBackPressed() },
+                            showSaveAction = allowSaveAndPreview,
+                            saveEnabled = allowSaveAndPreview,
+                            onSaveClick = {
+                                launchCatchingTask { saveNote() }
+                            },
+                            showPreviewAction = allowSaveAndPreview,
+                            previewEnabled = allowSaveAndPreview,
+                            onPreviewClick = {
+                                launchCatchingTask { performPreview() }
+                            },
+                            overflowItems = overflowItems,
+                        )
+                    },
                     onImageOcclusionSelectImage = {
                         try {
                             ioEditorLauncher.launch("image/*")
@@ -1868,8 +1943,8 @@ class NoteEditorFragment :
         this.sharedPrefs().edit {
             putBoolean(PREF_NOTE_EDITOR_CAPITALIZE, value)
         }
-        for (f in editFields!!) {
-            f.setCapitalize(value)
+        editFields?.forEach { field ->
+            field.setCapitalize(value)
         }
     }
 
@@ -2067,17 +2142,45 @@ class NoteEditorFragment :
     private fun showCardTemplateEditor() {
         val intent = Intent(requireContext(), CardTemplateEditor::class.java)
         // Pass the note type ID
-        intent.putExtra("noteTypeId", currentlySelectedNotetype!!.id)
+        val noteTypeId = if (editFields == null) {
+            // Compose mode: get from ViewModel state via note type name
+            val noteTypeName = noteEditorViewModel.noteEditorState.value.selectedNoteTypeName
+            getColUnsafe.notetypes.all().find { it.name == noteTypeName }?.id
+        } else {
+            // Legacy XML mode: use currentlySelectedNotetype
+            currentlySelectedNotetype?.id
+        }
+        
+        if (noteTypeId == null) {
+            Timber.w("showCardTemplateEditor(): noteTypeId is null")
+            return
+        }
+        
+        intent.putExtra("noteTypeId", noteTypeId)
         Timber.d(
             "showCardTemplateEditor() for model %s",
             intent.getLongExtra("noteTypeId", NOT_FOUND_NOTE_TYPE),
         )
         // Also pass the note id and ord if not adding new note
-        if (!addNote && currentEditedCard != null) {
-            intent.putExtra("noteId", currentEditedCard!!.nid)
-            Timber.d("showCardTemplateEditor() with note %s", currentEditedCard!!.nid)
-            intent.putExtra("ordId", currentEditedCard!!.ord)
-            Timber.d("showCardTemplateEditor() with ord %s", currentEditedCard!!.ord)
+        if (!addNote) {
+            val cardInfo = if (editFields == null) {
+                // Compose mode: Parse from cardsInfo in state (format: "Card: 1/2")
+                // This is a workaround since we don't have direct card access
+                // We need currentEditedCard which is set during initialization
+                Triple(currentEditedCard?.id, currentEditedCard?.ord, currentEditedCard?.nid)
+            } else {
+                // Legacy XML mode: use currentEditedCard
+                Triple(currentEditedCard?.id, currentEditedCard?.ord, currentEditedCard?.nid)
+            }
+            
+            if (cardInfo.third != null) {
+                intent.putExtra("noteId", cardInfo.third)
+                Timber.d("showCardTemplateEditor() with note %s", cardInfo.third)
+            }
+            if (cardInfo.second != null) {
+                intent.putExtra("ordId", cardInfo.second)
+                Timber.d("showCardTemplateEditor() with ord %s", cardInfo.second)
+            }
         }
         requestTemplateEditLauncher.launch(intent)
     }
