@@ -104,7 +104,9 @@ data class NoteEditorState(
     val isClozeType: Boolean = false,
     val isImageOcclusion: Boolean = false,
     val cardsInfo: String = "",
-    val focusedFieldIndex: Int? = null
+    val focusedFieldIndex: Int? = null,
+    val isTagsButtonEnabled: Boolean = true,
+    val isCardsButtonEnabled: Boolean = true
 )
 
 /**
@@ -239,7 +241,8 @@ fun NoteEditorScreen(
             // Tags Button
             Button(
                 onClick = onTagsClick,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = state.isTagsButtonEnabled
             ) {
                 Text(
                     text = if (state.tags.isEmpty()) {
@@ -253,7 +256,8 @@ fun NoteEditorScreen(
             // Cards Button
             Button(
                 onClick = onCardsClick,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = state.isCardsButtonEnabled
             ) {
                 Text(state.cardsInfo.ifEmpty { stringResource(R.string.CardEditorCards) })
             }

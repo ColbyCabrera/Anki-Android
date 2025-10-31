@@ -1,6 +1,6 @@
 # Note Editor Compose Migration Status
 
-**Last Updated**: October 31, 2025
+**Last Updated**: October 31, 2025 (Session 2)
 
 ## ✅ Completed
 
@@ -12,6 +12,7 @@
    - NoteFieldEditor (field cards with multimedia and sticky buttons)
    - ImageOcclusionButtons (for IO notes)
    - State management with data classes
+   - **Button enable/disable states** (added Oct 31, 2025)
 
 2. **NoteEditorToolbar.kt** - Bottom toolbar with:
    - Text formatting buttons (bold, italic, underline)
@@ -26,6 +27,7 @@
    - Sticky field toggling
    - Note saving logic
    - **Cards info updates** (added Oct 31, 2025)
+   - **Button enable/disable control** (added Oct 31, 2025)
 
 ### Integration Completed
 - Fragment updated to host ComposeView
@@ -35,11 +37,19 @@
 - **Null-safety fixes applied** (Oct 31, 2025)
 
 ### Recent Bug Fixes (Oct 31, 2025)
+**Session 1**:
 - ✅ **Fixed crash on template editor return**: `updateCards()` now safely handles null legacy views
 - ✅ **Fixed `populateEditFields()` crash**: Added null checks for `fieldsLayoutContainer`
 - ✅ **Fixed `updateTags()` crash**: Changed to safe call operator
 - ✅ **Added ViewModel cards info update**: Template changes now update both Compose and legacy UI
 - ✅ **Dual-path support**: Code gracefully handles both Compose and legacy XML views during transition
+
+**Session 2**:
+- ✅ **Added button enable/disable states**: Tags and Cards buttons can now be enabled/disabled through ViewModel
+- ✅ **Implemented state control methods**: `setTagsButtonEnabled()` and `setCardsButtonEnabled()` in ViewModel
+- ✅ **Connected note type change logic**: Buttons properly disable/enable during note type changes
+- ✅ **Fixed deckSpinnerSelection null safety**: Changed `!!` to `?.` for safer legacy spinner access
+- ✅ **Removed 2 TODO markers**: Replaced with working Compose implementations
 
 ## ⚠️ Partially Complete / Needs Work
 
@@ -97,10 +107,10 @@ For each commented TODO:
 
 #### Medium Priority:
 - [ ] **Toolbar visibility/margins** - Handle compose toolbar layout
-- [ ] **Enable/disable states** - Implement in ViewModel
-  - Tags button during note type change
-  - Other button states
-- [ ] **Snackbar anchoring** - Use Compose Scaffold snackbar host
+- [x] **Enable/disable states** - Implement in ViewModel (✅ DONE Oct 31, 2025)
+  - [x] Tags button during note type change
+  - [x] Cards button state control
+- [ ] **Snackbar anchoring** - Use Compose Scaffold snackbar host (already in place, needs testing)
 
 #### Low Priority:
 - [ ] **Tab order/accessibility** - Implement Compose focus management

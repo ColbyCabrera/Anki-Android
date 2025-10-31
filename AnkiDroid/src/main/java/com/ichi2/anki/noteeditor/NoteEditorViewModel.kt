@@ -59,7 +59,9 @@ class NoteEditorViewModel : ViewModel() {
             isClozeType = false,
             isImageOcclusion = false,
             cardsInfo = "",
-            focusedFieldIndex = null
+            focusedFieldIndex = null,
+            isTagsButtonEnabled = true,
+            isCardsButtonEnabled = true
         )
     )
     val noteEditorState: StateFlow<NoteEditorState> = _noteEditorState.asStateFlow()
@@ -445,6 +447,24 @@ class NoteEditorViewModel : ViewModel() {
     fun updateCardsInfo(cardsInfo: String) {
         _noteEditorState.update { currentState ->
             currentState.copy(cardsInfo = cardsInfo)
+        }
+    }
+
+    /**
+     * Enable or disable the Tags button
+     */
+    fun setTagsButtonEnabled(enabled: Boolean) {
+        _noteEditorState.update { currentState ->
+            currentState.copy(isTagsButtonEnabled = enabled)
+        }
+    }
+
+    /**
+     * Enable or disable the Cards button
+     */
+    fun setCardsButtonEnabled(enabled: Boolean) {
+        _noteEditorState.update { currentState ->
+            currentState.copy(isCardsButtonEnabled = enabled)
         }
     }
 }

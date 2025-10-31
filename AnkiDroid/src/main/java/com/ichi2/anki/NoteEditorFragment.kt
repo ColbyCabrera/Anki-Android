@@ -3254,20 +3254,17 @@ class NoteEditorFragment :
                 // Don't let the user change any other values at the same time as changing note type
                 selectedTags = editorNote!!.tags
                 updateTags()
-                // TODO(Compose Migration): Handle button enable/disable through ViewModel state
-                // See: https://github.com/ankidroid/Anki-Android/issues/XXXXX
-                // Legacy code: requireView().findViewById<View>(R.id.CardEditorTagButton).isEnabled = false
-                // Compose implementation should disable tags button via state flow
-                deckSpinnerSelection!!.setEnabledActionBarSpinner(false)
-                deckSpinnerSelection!!.updateDeckPosition(currentEditedCard!!.did)
+                // Disable tags button during note type change (Compose UI)
+                noteEditorViewModel.setTagsButtonEnabled(false)
+                deckSpinnerSelection?.setEnabledActionBarSpinner(false)
+                deckSpinnerSelection?.updateDeckPosition(currentEditedCard!!.did)
                 updateFieldsFromStickyText()
             } else {
                 populateEditFields(FieldChangeType.refresh(shouldReplaceNewlines()), false)
                 updateCards(currentEditedCard!!.noteType(getColUnsafe))
-                // TODO: Tags button is now in Compose - handle enabling/disabling through ViewModel
-                // requireView().findViewById<View>(R.id.CardEditorTagButton).isEnabled = true
-                // ((LinearLayout) findViewById(R.id.CardEditorCardsButton)).setEnabled(false);
-                deckSpinnerSelection!!.setEnabledActionBarSpinner(true)
+                // Re-enable tags button after note type change (Compose UI)
+                noteEditorViewModel.setTagsButtonEnabled(true)
+                deckSpinnerSelection?.setEnabledActionBarSpinner(true)
             }
         }
 
