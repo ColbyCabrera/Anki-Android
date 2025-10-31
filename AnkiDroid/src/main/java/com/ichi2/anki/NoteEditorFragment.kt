@@ -2044,6 +2044,8 @@ class NoteEditorFragment :
 
     private fun setTags(tags: Array<String>) {
         selectedTags = tags.toCollection(ArrayList())
+        // Update ViewModel state for Compose UI
+        noteEditorViewModel.updateTags(tags.toList())
         updateTags()
     }
 
@@ -2115,7 +2117,14 @@ class NoteEditorFragment :
     }
 
     private fun showTagsDialog() {
-        val selTags = selectedTags?.let { ArrayList(it) } ?: arrayListOf()
+        // Get tags from ViewModel state (single source of truth for Compose UI)
+        val currentTags = noteEditorViewModel.noteEditorState.value.tags
+        val selTags = if (currentTags.isNotEmpty()) {
+            ArrayList(currentTags)
+        } else {
+            selectedTags?.let { ArrayList(it) } ?: arrayListOf()
+        }
+        
         val dialog =
             with(requireContext()) {
                 tagsDialogFactory!!.newTagsDialog().withArguments(
@@ -2136,6 +2145,8 @@ class NoteEditorFragment :
             isTagsEdited = true
         }
         this.selectedTags = selectedTags as ArrayList<String>?
+        // Update ViewModel state for Compose UI
+        noteEditorViewModel.updateTags(selectedTags)
         updateTags()
     }
 
@@ -2857,6 +2868,8 @@ class NoteEditorFragment :
             }
         if (selectedTags == null) {
             selectedTags = editorNote!!.tags
+            // Update ViewModel state for Compose UI
+            noteEditorViewModel.updateTags(editorNote!!.tags)
         }
         // nb: setOnItemSelectedListener and populateEditFields need to occur after this
         setNoteTypePosition()
@@ -3253,6 +3266,8 @@ class NoteEditorFragment :
                 updateFieldsFromMap(newNoteType)
                 // Don't let the user change any other values at the same time as changing note type
                 selectedTags = editorNote!!.tags
+                // Update ViewModel state for Compose UI
+                noteEditorViewModel.updateTags(editorNote!!.tags)
                 updateTags()
                 // Disable tags button during note type change (Compose UI)
                 noteEditorViewModel.setTagsButtonEnabled(false)
