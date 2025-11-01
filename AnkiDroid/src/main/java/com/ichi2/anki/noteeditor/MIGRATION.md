@@ -159,7 +159,7 @@ This migration follows the pattern established by:
 
 If critical issues are discovered:
 1. Restore `NoteEditorFragment.kt` from `noteeditor/old/NoteEditorFragment.kt.old`
-2. Restore `note_editor_fragment.xml` from `layout-old/note_editor_fragment.xml.old`
+2. Restore `note_editor_fragment.xml` from `noteeditor/old/layouts/note_editor_fragment.xml.backup`
 3. Remove or comment out the new Compose files
 4. Test thoroughly before releasing
 
