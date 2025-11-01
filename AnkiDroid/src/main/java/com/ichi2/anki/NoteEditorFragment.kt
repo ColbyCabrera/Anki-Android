@@ -2705,15 +2705,16 @@ class NoteEditorFragment :
                             TextFieldValue(text = formattedValue)
                         )
                     } else {
-                        // For media fields, insert at cursor position
+                        // For media fields, insert at cursor position or replace selection
                         val currentValue = fieldState.value
-                        val cursorPosition = currentValue.selection.start
+                        val start = currentValue.selection.start
+                        val end = currentValue.selection.end
                         val newText = buildString {
-                            append(currentValue.text.substring(0, cursorPosition))
+                            append(currentValue.text.substring(0, start))
                             append(formattedValue)
-                            append(currentValue.text.substring(cursorPosition))
+                            append(currentValue.text.substring(end))
                         }
-                        val newCursor = cursorPosition + formattedValue.length
+                        val newCursor = start + formattedValue.length
                         noteEditorViewModel.updateFieldValue(
                             index,
                             TextFieldValue(
