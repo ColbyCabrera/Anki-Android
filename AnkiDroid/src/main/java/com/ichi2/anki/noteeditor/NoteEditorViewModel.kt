@@ -96,16 +96,18 @@ class NoteEditorViewModel : ViewModel() {
     ) {
         viewModelScope.launch {
             try {
-                _deckId.value = deckId ?: 1L
-                
-                // Load note
-                _currentNote.value = if (cardId != null && !isAddingNote) {
+                // Load note and determine deck
+                if (cardId != null && !isAddingNote) {
+                    // Editing an existing card - use the card's deck
                     val card = col.getCard(cardId)
                     _currentCard.value = card
-                    card.note(col)
+                    _currentNote.value = card.note(col)
+                    _deckId.value = card.currentDeckId()
                 } else {
+                    // Adding a new note - use the provided deckId or calculate it
                     val notetype = col.notetypes.current()
-                    Note.fromNotetypeId(col, notetype.id)
+                    _currentNote.value = Note.fromNotetypeId(col, notetype.id)
+                    _deckId.value = calculateDeckIdForNewNote(col, deckId, notetype)
                 }
 
                 // Load available decks and note types
@@ -117,6 +119,48 @@ class NoteEditorViewModel : ViewModel() {
             } catch (e: Exception) {
                 Timber.e(e, "Error initializing note editor")
             }
+        }
+    }
+    
+    /**
+     * Calculate the deck ID for a new note based on preferences and context
+     */
+    private fun calculateDeckIdForNewNote(
+        col: Collection,
+        providedDeckId: Long?,
+        notetype: NotetypeJson
+    ): Long {
+        // If a specific deck was provided and it's valid, use it
+        if (providedDeckId != null && providedDeckId != 0L) {
+            return providedDeckId
+        }
+        
+        // Check if we should use the current deck or the note type's deck
+        val useCurrentDeck = try {
+            col.config.getBool(anki.config.ConfigKey.Bool.ADDING_DEFAULTS_TO_CURRENT_DECK)
+        } catch (e: Exception) {
+            Timber.w(e, "Error reading config, defaulting to current deck")
+            true
+        }
+        
+        if (!useCurrentDeck) {
+            // Use the note type's default deck
+            return notetype.did
+        }
+        
+        // Use the current deck
+        val currentDeckId = try {
+            col.config.get(com.ichi2.anki.libanki.Decks.Companion.CURRENT_DECK) ?: 1L
+        } catch (e: Exception) {
+            Timber.w(e, "Error getting current deck, using default")
+            1L
+        }
+        
+        // If current deck is filtered, use default deck instead
+        return if (col.decks.isFiltered(currentDeckId)) {
+            1L
+        } else {
+            currentDeckId
         }
     }
 
@@ -358,9 +402,21 @@ class NoteEditorViewModel : ViewModel() {
         }
 
         val deckName = try {
-            col.decks.name(_deckId.value)
+            if (_deckId.value == 0L) {
+                // If deckId is not set, use the default deck
+                col.decks.name(1L)
+            } else {
+                col.decks.name(_deckId.value)
+            }
         } catch (e: Exception) {
-            "Default"
+            Timber.w(e, "Error getting deck name for deck ID ${_deckId.value}, using default deck")
+            try {
+                // Fall back to the default deck (ID 1)
+                col.decks.name(1L)
+            } catch (e2: Exception) {
+                Timber.e(e2, "Error getting default deck name")
+                "Default"
+            }
         }
 
         _noteEditorState.update { currentState ->
