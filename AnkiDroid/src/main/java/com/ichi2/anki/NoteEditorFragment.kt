@@ -113,6 +113,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.TextRange
 import androidx.core.content.FileProvider
 import androidx.core.content.IntentCompat
 import androidx.core.content.edit
@@ -2605,15 +2607,8 @@ class NoteEditorFragment :
         field: IField,
     ) {
         lifecycleScope.launch {
-            // Check if editFields is initialized
-            if (editFields == null) {
-                Timber.w("addMediaFileToField: editFields is null, cannot add media")
-                return@launch
-            }
-            
             val note = getCurrentMultimediaEditableNote()
             note.setField(index, field)
-            val fieldEditText = editFields!![index]
 
             // Import field media
             // This goes before setting formattedValue to update
@@ -2622,13 +2617,59 @@ class NoteEditorFragment :
                 NoteService.importMediaToDirectory(this, field)
             }
 
-            // Completely replace text for text fields (because current text was passed in)
-            val formattedValue = field.formattedValue
-            if (field.type === EFieldType.TEXT) {
-                fieldEditText.setText(formattedValue)
-            } else if (fieldEditText.text != null) {
-                insertStringInField(fieldEditText, formattedValue)
+            // Get the formatted value to insert
+            val formattedValue = field.formattedValue ?: ""
+            
+            if (isComposeMode) {
+                // Compose UI - update field through ViewModel
+                val currentState = noteEditorViewModel.noteEditorState.value
+                val fieldState = currentState.fields.find { it.index == index }
+                
+                if (fieldState != null) {
+                    if (field.type === EFieldType.TEXT) {
+                        // Completely replace text for text fields (because current text was passed in)
+                        noteEditorViewModel.updateFieldValue(
+                            index,
+                            TextFieldValue(text = formattedValue)
+                        )
+                    } else {
+                        // For media fields, insert at cursor position
+                        val currentValue = fieldState.value
+                        val cursorPosition = currentValue.selection.start
+                        val newText = buildString {
+                            append(currentValue.text.substring(0, cursorPosition))
+                            append(formattedValue)
+                            append(currentValue.text.substring(cursorPosition))
+                        }
+                        val newCursor = cursorPosition + formattedValue.length
+                        noteEditorViewModel.updateFieldValue(
+                            index,
+                            TextFieldValue(
+                                text = newText,
+                                selection = TextRange(newCursor)
+                            )
+                        )
+                    }
+                } else {
+                    Timber.w("addMediaFileToField: field state not found for index $index")
+                }
+            } else {
+                // Legacy XML UI
+                if (editFields == null) {
+                    Timber.w("addMediaFileToField: editFields is null in XML mode")
+                    return@launch
+                }
+                
+                val fieldEditText = editFields!![index]
+                
+                // Completely replace text for text fields (because current text was passed in)
+                if (field.type === EFieldType.TEXT) {
+                    fieldEditText.setText(formattedValue)
+                } else if (fieldEditText.text != null) {
+                    insertStringInField(fieldEditText, formattedValue)
+                }
             }
+            
             changed = true
         }
     }
