@@ -21,7 +21,6 @@
  ****************************************************************************************/
 package com.ichi2.anki.noteeditor.compose
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -42,8 +41,6 @@ import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -188,7 +185,7 @@ fun NoteEditorScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+                .padding(horizontal = 16.dp, vertical = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Surface(
@@ -259,11 +256,13 @@ fun NoteEditorScreen(
             }
 
 
-            Row() {
+            Row(modifier = Modifier.fillMaxWidth()) {
                 // Tags Button
                 Button(
                     onClick = onTagsClick,
-                    modifier = Modifier.height(52.dp),
+                    modifier = Modifier
+                        .height(52.dp)
+                        .weight(1f),
                     enabled = state.isTagsButtonEnabled,
                     colors = ButtonDefaults.filledTonalButtonColors()
                 ) {
