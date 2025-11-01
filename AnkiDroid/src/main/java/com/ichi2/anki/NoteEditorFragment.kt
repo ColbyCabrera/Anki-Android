@@ -1707,6 +1707,9 @@ class NoteEditorFragment :
         if (isComposeMode) {
             val success = noteEditorViewModel.saveNote()
             if (success) {
+                // Mark as changed so the caller knows to refresh
+                changed = true
+                reloadRequired = true
                 closeNoteEditor()
             } else {
                 showSnackbar(R.string.something_wrong)
