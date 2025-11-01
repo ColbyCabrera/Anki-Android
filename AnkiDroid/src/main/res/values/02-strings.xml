@@ -319,6 +319,7 @@
 
     <!--  Note Editor Toggle Sticky  -->
     <string name="note_editor_toggle_sticky">Make field %s sticky</string>
+    <string name="note_editor_toggle_sticky_field">Toggle sticky field</string>
 
     <string name="scoped_storage_learn_more">Learn More</string>
 
