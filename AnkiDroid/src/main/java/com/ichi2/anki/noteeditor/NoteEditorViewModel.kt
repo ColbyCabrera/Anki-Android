@@ -28,7 +28,6 @@ import com.ichi2.anki.libanki.NotetypeJson
 import com.ichi2.anki.libanki.Note.ClozeUtils
 import com.ichi2.anki.noteeditor.compose.NoteEditorState
 import com.ichi2.anki.noteeditor.compose.NoteFieldState
-import com.ichi2.anki.noteeditor.ToolbarButtonModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -92,7 +91,8 @@ class NoteEditorViewModel : ViewModel() {
         col: Collection,
         cardId: Long? = null,
         deckId: Long? = null,
-        isAddingNote: Boolean = true
+        isAddingNote: Boolean = true,
+        onComplete: (() -> Unit)? = null
     ) {
         viewModelScope.launch {
             try {
@@ -118,6 +118,8 @@ class NoteEditorViewModel : ViewModel() {
                 updateStateFromNote(col, isAddingNote)
             } catch (e: Exception) {
                 Timber.e(e, "Error initializing note editor")
+            } finally {
+                onComplete?.invoke()
             }
         }
     }
@@ -334,7 +336,7 @@ class NoteEditorViewModel : ViewModel() {
             val end = selection.end.coerceIn(0, text.length)
             val rangeStart = min(start, end)
             val rangeEnd = max(start, end)
-            val before = text.substring(0, rangeStart)
+            val before = text.take(rangeStart)
             val selected = text.substring(rangeStart, rangeEnd)
             val after = text.substring(rangeEnd)
 
