@@ -678,11 +678,10 @@ class NoteEditorFragment :
 
         // Replace the view with ComposeView
         val composeView = view?.findViewById<androidx.compose.ui.platform.ComposeView>(R.id.note_editor_compose)
-        
-        if (composeView != null) {
-            composeView.setContent {
-                com.ichi2.anki.ui.compose.theme.AnkiDroidTheme {
-                    val noteEditorState by noteEditorViewModel.noteEditorState.collectAsState()
+
+        composeView?.setContent {
+            com.ichi2.anki.ui.compose.theme.AnkiDroidTheme {
+                val noteEditorState by noteEditorViewModel.noteEditorState.collectAsState()
                 val availableDecks by noteEditorViewModel.availableDecks.collectAsState()
                 val availableNoteTypes by noteEditorViewModel.availableNoteTypes.collectAsState()
                 val toolbarButtons by noteEditorViewModel.toolbarButtons.collectAsState()
@@ -890,7 +889,6 @@ class NoteEditorFragment :
                     snackbarHostState = snackbarHostState
                 )
             }
-        }
         }
     }
 
@@ -1199,7 +1197,7 @@ class NoteEditorFragment :
                     contents =
                         sourceText!![1]!!
                             .replaceFirst("\\[".toRegex(), "\u001f" + sourceText!![0] + "\u001f")
-                    contents = contents.substring(0, contents.length - 1)
+                    contents = contents.dropLast(1)
                 } else if (!editFields!!.isEmpty()) {
                     editFields!![0].setText(sourceText!![0])
                     if (editFields!!.size > 1) {
@@ -1351,7 +1349,7 @@ class NoteEditorFragment :
         val text = textBox.text?.toString() ?: ""
 
         // Split the text in the places where the formatting will take place
-        val beforeText = text.substring(0, start)
+        val beforeText = text.take(start)
         val selectedText = text.substring(start, end)
         val afterText = text.substring(end)
         val (newText, newStart, newEnd) = formatter.format(selectedText)
