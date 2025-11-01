@@ -51,6 +51,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
@@ -66,6 +67,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
@@ -184,7 +186,7 @@ fun NoteEditorScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Surface(
                 color = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -383,6 +385,7 @@ fun DeckSelector(
 /**
  * Individual Field Editor with multimedia and sticky support
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun NoteFieldEditor(
     field: NoteFieldState,
@@ -394,76 +397,70 @@ fun NoteFieldEditor(
     isFocused: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val defaultContainerColor = MaterialTheme.colorScheme.surfaceVariant
-    val focusedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-    val containerColor by animateColorAsState(
-        targetValue = if (isFocused) focusedContainerColor else defaultContainerColor,
-        label = "noteFieldBackground"
-    )
-
-    Card(
-        modifier = modifier.fillMaxWidth(), colors = CardDefaults.cardColors(
-            containerColor = containerColor
-        )
+    Column(
+        modifier = modifier
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = field.name,
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Row {
-                    IconButton(onClick = onMultimediaClick) {
+            Text(
+                text = field.name,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = if (isFocused) {
+                    MaterialTheme.colorScheme.tertiary
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                }
+            )
+            Row {
+                IconButton(onClick = onMultimediaClick) {
+                    Icon(
+                        imageVector = Icons.Default.Attachment,
+                        contentDescription = "Add multimedia",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                if (showStickyButton) {
+                    IconButton(onClick = onToggleStickyClick) {
                         Icon(
-                            imageVector = Icons.Default.Attachment,
-                            contentDescription = "Add multimedia",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            imageVector = Icons.Default.PushPin,
+                            contentDescription = "Toggle sticky",
+                            tint = if (field.isSticky) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                            }
                         )
-                    }
-                    if (showStickyButton) {
-                        IconButton(onClick = onToggleStickyClick) {
-                            Icon(
-                                imageVector = Icons.Default.PushPin,
-                                contentDescription = "Toggle sticky",
-                                tint = if (field.isSticky) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                                }
-                            )
-                        }
                     }
                 }
             }
-
-            OutlinedTextField(
-                value = field.value,
-                onValueChange = onValueChange,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .onFocusChanged { focusState ->
-                        if (focusState.isFocused) {
-                            onFocus()
-                        }
-                    },
-                placeholder = { Text(field.hint) },
-                minLines = 2,
-                maxLines = 10,
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
-                )
-            )
         }
+
+        OutlinedTextField(
+            value = field.value,
+            onValueChange = onValueChange,
+            modifier = Modifier
+                .fillMaxWidth()
+                .onFocusChanged { focusState ->
+                    if (focusState.isFocused) {
+                        onFocus()
+                    }
+                },
+            placeholder = { Text(field.hint) },
+            shape = MaterialTheme.shapes.medium,
+            minLines = 2,
+            maxLines = 10,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                focusedBorderColor = MaterialTheme.colorScheme.tertiaryContainer,
+                unfocusedBorderColor = Color.Transparent,
+                focusedTextColor = MaterialTheme.colorScheme.tertiary
+            )
+        )
     }
 }
 
