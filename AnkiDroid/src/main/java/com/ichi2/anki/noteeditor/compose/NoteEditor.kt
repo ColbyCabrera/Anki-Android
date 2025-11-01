@@ -66,6 +66,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -318,6 +319,13 @@ fun NoteTypeSelector(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
+    // Ensure dropdown is dismissed when composable is disposed
+    DisposableEffect(Unit) {
+        onDispose {
+            expanded = false
+        }
+    }
+
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = it },
@@ -370,6 +378,13 @@ fun DeckSelector(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
+    
+    // Ensure dropdown is dismissed when composable is disposed
+    DisposableEffect(Unit) {
+        onDispose {
+            expanded = false
+        }
+    }
     
     // Build deck hierarchy from flat list
     val deckHierarchy = remember(availableDecks) {
@@ -521,7 +536,7 @@ fun NoteFieldEditor(
                 IconButton(onClick = onMultimediaClick) {
                     Icon(
                         imageVector = Icons.Default.Attachment,
-                        contentDescription = "Add multimedia",
+                        contentDescription = stringResource(R.string.multimedia_editor_attach_tooltip),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -529,7 +544,7 @@ fun NoteFieldEditor(
                     IconButton(onClick = onToggleStickyClick) {
                         Icon(
                             imageVector = Icons.Default.PushPin,
-                            contentDescription = "Toggle sticky",
+                            contentDescription = stringResource(R.string.note_editor_toggle_sticky_field),
                             tint = if (field.isSticky) {
                                 MaterialTheme.colorScheme.primary
                             } else {

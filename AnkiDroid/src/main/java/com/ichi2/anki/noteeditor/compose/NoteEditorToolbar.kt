@@ -49,6 +49,7 @@ import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -202,12 +203,21 @@ private fun ToolbarIconButton(
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null,
 ) {
+    val tooltipState = rememberTooltipState()
+    
+    // Ensure tooltip is dismissed when the composable is disposed
+    DisposableEffect(Unit) {
+        onDispose {
+            tooltipState.dismiss()
+        }
+    }
+    
     TooltipBox(
         positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
             positioning = TooltipAnchorPosition.Above
         ),
         tooltip = { PlainTooltip { Text(contentDescription) } },
-        state = rememberTooltipState()
+        state = tooltipState
     ) {
         if (onLongClick != null) {
             // For buttons with long click, we need a wrapper Box with combinedClickable
@@ -263,12 +273,21 @@ private fun ToolbarTextButton(
     onLongClick: (() -> Unit)? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
+    val tooltipState = rememberTooltipState()
+    
+    // Ensure tooltip is dismissed when the composable is disposed
+    DisposableEffect(Unit) {
+        onDispose {
+            tooltipState.dismiss()
+        }
+    }
+    
     TooltipBox(
         positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
             positioning = TooltipAnchorPosition.Above
         ),
         tooltip = { PlainTooltip { Text(contentDescription) } },
-        state = rememberTooltipState()
+        state = tooltipState
     ) {
         Box(
             modifier = modifier

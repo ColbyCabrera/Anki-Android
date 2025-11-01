@@ -43,6 +43,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -108,6 +109,13 @@ fun NoteEditorTopAppBar(
 ) {
     var overflowExpanded by remember { mutableStateOf(false) }
     val visibleOverflowItems = remember(overflowItems) { overflowItems.filter { it.visible } }
+
+    // Ensure dropdown is dismissed when composable is disposed
+    DisposableEffect(Unit) {
+        onDispose {
+            overflowExpanded = false
+        }
+    }
 
     TopAppBar(
         modifier = modifier,

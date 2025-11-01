@@ -44,6 +44,7 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -105,6 +106,13 @@ fun CardBrowserLayout(
     var showDeckMenu by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     var availableDecks by remember { mutableStateOf<List<SelectableDeck.Deck>>(emptyList()) }
+
+    // Ensure dropdown is dismissed when composable is disposed
+    DisposableEffect(Unit) {
+        onDispose {
+            showDeckMenu = false
+        }
+    }
 
     LaunchedEffect(Unit) {
         availableDecks = viewModel.getAvailableDecks()
