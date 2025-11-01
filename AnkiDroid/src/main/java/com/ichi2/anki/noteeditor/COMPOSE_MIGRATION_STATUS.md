@@ -83,13 +83,11 @@ The `NoteEditorFragment.kt` still contains ~3000 lines of legacy code that refer
 
 ### 1. Test Core Functionality ⚡ PRIORITY
 Build and test the app to verify:
-- [x] Note editor opens without crashes (fixed Oct 31, 2025)
 - [ ] Can add new notes
 - [ ] Can edit existing notes
 - [ ] Field editing works
 - [ ] Note type selection works
 - [ ] Deck selection works
-- [x] Template editor return works without crash (fixed Oct 31, 2025)
 
 ### 2. Re-implement Commented Features
 For each commented TODO:
@@ -107,9 +105,6 @@ For each commented TODO:
 
 #### Medium Priority:
 - [ ] **Toolbar visibility/margins** - Handle compose toolbar layout
-- [x] **Enable/disable states** - Implement in ViewModel (✅ DONE Oct 31, 2025)
-  - [x] Tags button during note type change
-  - [x] Cards button state control
 - [ ] **Snackbar anchoring** - Use Compose Scaffold snackbar host (already in place, needs testing)
 
 #### Low Priority:
@@ -122,7 +117,6 @@ Expand `NoteEditorViewModel` to handle:
 - [ ] Tags management
 - [ ] Template editing triggers
 - [ ] Image Occlusion operations
-- [ ] Button enable/disable states
 
 ### 4. Remove Legacy Code
 Once all functionality is re-implemented in Compose/ViewModel:
@@ -154,6 +148,15 @@ When ready to test:
 - [ ] Test on different screen sizes
 - [ ] Test dark mode
 - [ ] Test accessibility features
+
+## ✅ Completed Items
+
+### Core Stability (Oct 31, 2025)
+- [x] **Note editor opens without crashes** - Fixed legacy view null pointer issues with safe calls and null checks
+- [x] **Template editor return works without crash** - Proper handling of activity results without relying on XML views
+- [x] **Enable/disable states in ViewModel** - Implemented button state control
+  - Tags button during note type change
+  - Cards button state control
 
 ## 🐛 Known Issues
 
