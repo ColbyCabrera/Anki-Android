@@ -22,19 +22,15 @@
 package com.ichi2.anki.noteeditor.compose
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -47,23 +43,21 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExposedDropdownMenuAnchorType.Companion.PrimaryNotEditable
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -71,8 +65,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
@@ -184,8 +176,7 @@ fun NoteEditorScreen(
                 customButtons = customToolbarButtons,
                 isVisible = isToolbarVisible
             )
-        }
-    ) { paddingValues ->
+        }) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -231,8 +222,7 @@ fun NoteEditorScreen(
                 )
             } else if (state.isImageOcclusion && !state.isAddingNote) {
                 Button(
-                    onClick = onImageOcclusionEdit,
-                    modifier = Modifier.fillMaxWidth()
+                    onClick = onImageOcclusionEdit, modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(stringResource(R.string.edit_occlusions))
                 }
@@ -270,7 +260,7 @@ fun NoteEditorScreen(
 /**
  * Note Type Selector Dropdown
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun NoteTypeSelector(
     selectedNoteType: String,
@@ -280,49 +270,34 @@ fun NoteTypeSelector(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+        modifier = modifier.fillMaxWidth()
     ) {
-        Text(
-            text = stringResource(R.string.CardEditorModel),
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(end = 8.dp)
-        )
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded },
-            modifier = Modifier.weight(1f)
-        ) {
-            TextField(
-                value = selectedNoteType,
-                onValueChange = {},
-                readOnly = true,
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                modifier = Modifier
-                    .menuAnchor(
-                        type = PrimaryNotEditable,
-                        enabled = true
-                    )
-                    .fillMaxWidth(),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant
+        OutlinedTextField(
+            value = selectedNoteType,
+            label = { Text(stringResource(R.string.CardEditorModel)) },
+            onValueChange = {},
+            readOnly = true,
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier
+                .menuAnchor(
+                    type = PrimaryNotEditable, enabled = true
                 )
+                .fillMaxWidth(),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface
             )
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                availableNoteTypes.forEach { noteType ->
-                    DropdownMenuItem(
-                        text = { Text(noteType) },
-                        onClick = {
-                            onNoteTypeSelected(noteType)
-                            expanded = false
-                        }
-                    )
-                }
+        )
+        ExposedDropdownMenu(
+            expanded = expanded, onDismissRequest = { expanded = false }) {
+            availableNoteTypes.forEach { noteType ->
+                DropdownMenuItem(text = { Text(noteType) }, onClick = {
+                    onNoteTypeSelected(noteType)
+                    expanded = false
+                })
             }
         }
     }
@@ -341,49 +316,34 @@ fun DeckSelector(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+        modifier = modifier.fillMaxWidth()
     ) {
-        Text(
-            text = stringResource(R.string.CardEditorNoteDeck),
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(end = 8.dp)
-        )
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded },
-            modifier = Modifier.weight(1f)
-        ) {
-            TextField(
-                value = selectedDeck,
-                onValueChange = {},
-                readOnly = true,
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                modifier = Modifier
-                    .menuAnchor(
-                        type = PrimaryNotEditable,
-                        enabled = true
-                    )
-                    .fillMaxWidth(),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant
+        OutlinedTextField(
+            value = selectedDeck,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(stringResource(R.string.CardEditorNoteDeck)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier
+                .menuAnchor(
+                    type = PrimaryNotEditable, enabled = true
                 )
+                .fillMaxWidth(),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface
             )
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                availableDecks.forEach { deck ->
-                    DropdownMenuItem(
-                        text = { Text(deck) },
-                        onClick = {
-                            onDeckSelected(deck)
-                            expanded = false
-                        }
-                    )
-                }
+        )
+        ExposedDropdownMenu(
+            expanded = expanded, onDismissRequest = { expanded = false }) {
+            availableDecks.forEach { deck ->
+                DropdownMenuItem(text = { Text(deck) }, onClick = {
+                    onDeckSelected(deck)
+                    expanded = false
+                })
             }
         }
     }
@@ -411,8 +371,7 @@ fun NoteFieldEditor(
     )
 
     Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
+        modifier = modifier.fillMaxWidth(), colors = CardDefaults.cardColors(
             containerColor = containerColor
         )
     ) {
@@ -454,8 +413,8 @@ fun NoteFieldEditor(
                     }
                 }
             }
-            
-            androidx.compose.material3.OutlinedTextField(
+
+            OutlinedTextField(
                 value = field.value,
                 onValueChange = onValueChange,
                 modifier = Modifier
@@ -482,17 +441,13 @@ fun NoteFieldEditor(
  */
 @Composable
 fun ImageOcclusionButtons(
-    onSelectImage: () -> Unit,
-    onPasteImage: () -> Unit,
-    modifier: Modifier = Modifier
+    onSelectImage: () -> Unit, onPasteImage: () -> Unit, modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Button(
-            onClick = onSelectImage,
-            modifier = Modifier.fillMaxWidth()
+            onClick = onSelectImage, modifier = Modifier.fillMaxWidth()
         ) {
             Icon(
                 imageVector = Icons.Default.AddAPhoto,
@@ -502,8 +457,7 @@ fun ImageOcclusionButtons(
             Text(stringResource(R.string.choose_an_image))
         }
         Button(
-            onClick = onPasteImage,
-            modifier = Modifier.fillMaxWidth()
+            onClick = onPasteImage, modifier = Modifier.fillMaxWidth()
         ) {
             Icon(
                 imageVector = Icons.Default.ContentPaste,
@@ -526,14 +480,9 @@ fun NoteEditorScreenPreview() {
             state = NoteEditorState(
                 fields = listOf(
                     NoteFieldState(
-                        name = "Front",
-                        value = TextFieldValue("Sample front text"),
-                        index = 0
-                    ),
-                    NoteFieldState(
-                        name = "Back",
-                        value = TextFieldValue("Sample back text"),
-                        index = 1
+                        name = "Front", value = TextFieldValue("Sample front text"), index = 0
+                    ), NoteFieldState(
+                        name = "Back", value = TextFieldValue("Sample back text"), index = 1
                     )
                 ),
                 tags = listOf("Tag1", "Tag2"),
