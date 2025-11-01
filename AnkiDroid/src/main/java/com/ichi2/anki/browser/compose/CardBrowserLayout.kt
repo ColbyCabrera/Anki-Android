@@ -107,13 +107,6 @@ fun CardBrowserLayout(
     val coroutineScope = rememberCoroutineScope()
     var availableDecks by remember { mutableStateOf<List<SelectableDeck.Deck>>(emptyList()) }
 
-    // Ensure dropdown is dismissed when composable is disposed
-    DisposableEffect(Unit) {
-        onDispose {
-            showDeckMenu = false
-        }
-    }
-
     LaunchedEffect(Unit) {
         availableDecks = viewModel.getAvailableDecks()
     }
