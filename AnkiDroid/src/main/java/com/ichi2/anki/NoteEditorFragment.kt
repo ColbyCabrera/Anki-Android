@@ -384,6 +384,37 @@ class NoteEditorFragment :
             NoteEditorActivityResultCallback {
                 // Note type can change regardless of exit type - update ourselves and CardBrowser
                 reloadRequired = true
+                
+                if (isComposeMode) {
+                    // In Compose mode, the note is managed by the ViewModel
+                    // We need to reload the editor state after template changes
+                    Timber.d("onActivityResult() template edit return in Compose mode")
+                    lifecycleScope.launch {
+                        try {
+                            // Reinitialize the editor to pick up template changes
+                            val col = getColUnsafe
+                            noteEditorViewModel.initializeEditor(
+                                col = col,
+                                cardId = currentEditedCard?.id,
+                                deckId = deckId,
+                                isAddingNote = addNote
+                            )
+                        } catch (e: Exception) {
+                            Timber.e(e, "Error reloading editor after template edit")
+                            showSnackbar(R.string.something_wrong)
+                        }
+                    }
+                    return@NoteEditorActivityResultCallback
+                }
+                
+                // Legacy XML mode
+                if (editorNote == null) {
+                    Timber.w("onActivityResult() template edit return - editorNote is null")
+                    showSnackbar(R.string.something_wrong)
+                    closeNoteEditor()
+                    return@NoteEditorActivityResultCallback
+                }
+                
                 editorNote!!.notetype = getColUnsafe.notetypes.get(editorNote!!.noteTypeId)!!
                 if (currentEditedCard == null ||
                     !editorNote!!
