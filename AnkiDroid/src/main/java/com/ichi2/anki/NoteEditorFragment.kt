@@ -88,7 +88,6 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.View.OnFocusChangeListener
-import android.view.ViewGroup.MarginLayoutParams
 import android.view.WindowManager
 import android.widget.AdapterView
 import android.widget.AdapterView.OnItemSelectedListener
@@ -103,7 +102,6 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.CheckResult
-import androidx.annotation.DrawableRes
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -118,14 +116,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.core.content.FileProvider
 import androidx.core.content.IntentCompat
 import androidx.core.content.edit
-import androidx.core.content.res.ResourcesCompat
 import androidx.core.os.BundleCompat
 import androidx.core.text.HtmlCompat
 import androidx.core.util.component1
 import androidx.core.util.component2
 import androidx.core.view.MenuProvider
 import androidx.core.view.OnReceiveContentListener
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
 import androidx.draganddrop.DropHelper
 import androidx.fragment.app.Fragment
@@ -138,9 +134,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.ichi2.anim.ActivityTransitionAnimation
 import com.ichi2.anki.CollectionManager.TR
 import com.ichi2.anki.CollectionManager.withCol
-import com.ichi2.anki.CrashReportService
 import com.ichi2.anki.NoteEditorFragment.Companion.NoteEditorCaller.Companion.fromValue
-import com.ichi2.anki.OnContextAndLongClickListener.Companion.setOnContextAndLongClickListener
 import com.ichi2.anki.android.input.ShortcutGroup
 import com.ichi2.anki.android.input.ShortcutGroupProvider
 import com.ichi2.anki.android.input.shortcut
@@ -209,18 +203,13 @@ import com.ichi2.anki.servicelayer.NoteService
 import com.ichi2.anki.snackbar.BaseSnackbarBuilderProvider
 import com.ichi2.anki.snackbar.SnackbarBuilder
 import com.ichi2.anki.snackbar.showSnackbar
-import com.ichi2.anki.ui.setupNoteTypeSpinner
 import com.ichi2.anki.utils.ext.sharedPrefs
 import com.ichi2.anki.utils.ext.showDialogFragment
-import com.ichi2.anki.utils.ext.window
 import com.ichi2.anki.utils.openUrl
 import com.ichi2.compat.CompatHelper.Companion.getSerializableCompat
-import com.ichi2.compat.setTooltipTextCompat
 import com.ichi2.imagecropper.ImageCropper
 import com.ichi2.imagecropper.ImageCropper.Companion.CROP_IMAGE_RESULT
 import com.ichi2.imagecropper.ImageCropperLauncher
-import com.ichi2.themes.Themes
-import com.ichi2.utils.AndroidUiUtils.showSoftInput
 import com.ichi2.utils.ClipboardUtil
 import com.ichi2.utils.ClipboardUtil.MEDIA_MIME_TYPES
 import com.ichi2.utils.ClipboardUtil.hasMedia
@@ -332,6 +321,13 @@ class NoteEditorFragment :
 
     // indicates which activity called Note Editor
     private var caller = NoteEditorCaller.NO_CALLER
+    
+    /** 
+     * Indicates whether the Compose UI is being used (true) or the legacy XML UI (false).
+     * Set during initialization and used to deterministically route UI operations.
+     */
+    private var isComposeMode = false
+    
     private var editFields: LinkedList<FieldEditText>? = null
     private var sourceText: Array<String?>? = null
     private val fieldState = FieldState.fromEditor(this)
@@ -630,6 +626,10 @@ class NoteEditorFragment :
     private fun setupComposeEditor(col: Collection) {
         val intent = requireActivity().intent
         Timber.d("NoteEditor() setupComposeEditor: caller: %s", caller)
+        
+        // Set Compose mode flag
+        isComposeMode = true
+        
         requireAnkiActivity().registerReceiver()
 
         try {
@@ -1701,7 +1701,7 @@ class NoteEditorFragment :
     @KotlinCleanup("fix !! on oldNoteType/newNoteType")
     suspend fun saveNote() {
         // Compose UI - delegate to ViewModel
-        if (editFields == null) {
+        if (isComposeMode) {
             val success = noteEditorViewModel.saveNote()
             if (success) {
                 closeNoteEditor()
@@ -1712,6 +1712,12 @@ class NoteEditorFragment :
         }
         
         // Legacy XML UI path
+        if (editFields == null) {
+            Timber.w("saveNote: editFields is null in XML mode")
+            showSnackbar(R.string.something_wrong)
+            return
+        }
+        
         val res = resources
         if (selectedTags == null) {
             selectedTags = ArrayList(0)
@@ -2022,13 +2028,18 @@ class NoteEditorFragment :
         fun String?.toFieldText(): String = NoteService.convertToHtmlNewline(this.toString(), convertNewlines)
         
         // Get fields from Compose ViewModel or legacy XML editFields
-        val fields = if (editFields == null) {
+        val fields = if (isComposeMode) {
             // Compose UI - get fields from ViewModel state
             noteEditorViewModel.noteEditorState.value.fields.map { fieldState ->
                 fieldState.value.text.toFieldText()
             }.toMutableList()
         } else {
             // Legacy XML UI
+            if (editFields == null) {
+                Timber.w("performPreview: editFields is null in XML mode")
+                showSnackbar(R.string.something_wrong)
+                return
+            }
             editFields?.mapTo(mutableListOf()) { it.fieldText.toFieldText() } ?: mutableListOf()
         }
         
@@ -2189,7 +2200,7 @@ class NoteEditorFragment :
     private fun showCardTemplateEditor() {
         val intent = Intent(requireContext(), CardTemplateEditor::class.java)
         // Pass the note type ID
-        val noteTypeId = if (editFields == null) {
+        val noteTypeId = if (isComposeMode) {
             // Compose mode: get from ViewModel state via note type name
             val noteTypeName = noteEditorViewModel.noteEditorState.value.selectedNoteTypeName
             getColUnsafe.notetypes.all().find { it.name == noteTypeName }?.id
@@ -2216,7 +2227,7 @@ class NoteEditorFragment :
         )
         // Also pass the note id and ord if not adding new note
         if (!addNote) {
-            val cardInfo = if (editFields == null) {
+            val cardInfo = if (isComposeMode) {
                 // Compose mode: Parse from cardsInfo in state (format: "Card: 1/2")
                 // This is a workaround since we don't have direct card access
                 // We need currentEditedCard which is set during initialization
@@ -2281,7 +2292,14 @@ class NoteEditorFragment :
     @get:CheckResult
     val currentFieldStrings: Array<String?>
         get() {
+            if (isComposeMode) {
+                // Compose mode: get from ViewModel
+                val fields = noteEditorViewModel.noteEditorState.value.fields
+                return Array(fields.size) { i -> fields[i].value.text }
+            }
+            
             if (editFields == null) {
+                Timber.w("currentFieldStrings: editFields is null in XML mode")
                 return arrayOfNulls(0)
             }
             val ret = arrayOfNulls<String>(editFields!!.size)
@@ -2318,6 +2336,8 @@ class NoteEditorFragment :
             }
         }
 
+        // Set XML mode flag (legacy UI)
+        isComposeMode = false
         editFields = LinkedList()
 
         var previous: FieldEditLine? = null
@@ -2823,8 +2843,14 @@ class NoteEditorFragment :
     }
 
     private fun setDuplicateFieldStyles() {
+        // Compose mode doesn't use this method - duplicate checking is handled in ViewModel
+        if (isComposeMode) return
+        
         // #15579 can be null if switching between two image occlusion types
-        if (editFields == null) return
+        if (editFields == null) {
+            Timber.w("setDuplicateFieldStyles: editFields is null in XML mode")
+            return
+        }
         val field = editFields!![0]
         // Keep copy of current internal value for this field.
         val oldValue = editorNote!!.fields[0]
