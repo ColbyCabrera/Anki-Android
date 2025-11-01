@@ -679,9 +679,10 @@ class NoteEditorFragment :
         // Replace the view with ComposeView
         val composeView = view?.findViewById<androidx.compose.ui.platform.ComposeView>(R.id.note_editor_compose)
         
-        composeView?.setContent {
-            com.ichi2.anki.ui.compose.theme.AnkiDroidTheme {
-                val noteEditorState by noteEditorViewModel.noteEditorState.collectAsState()
+        if (composeView != null) {
+            composeView.setContent {
+                com.ichi2.anki.ui.compose.theme.AnkiDroidTheme {
+                    val noteEditorState by noteEditorViewModel.noteEditorState.collectAsState()
                 val availableDecks by noteEditorViewModel.availableDecks.collectAsState()
                 val availableNoteTypes by noteEditorViewModel.availableNoteTypes.collectAsState()
                 val toolbarButtons by noteEditorViewModel.toolbarButtons.collectAsState()
@@ -889,6 +890,7 @@ class NoteEditorFragment :
                     snackbarHostState = snackbarHostState
                 )
             }
+        }
         }
     }
 
@@ -2198,6 +2200,12 @@ class NoteEditorFragment :
         
         if (noteTypeId == null) {
             Timber.w("showCardTemplateEditor(): noteTypeId is null")
+            requireActivity().runOnUiThread {
+                showSnackbar(
+                    getString(R.string.note_type_not_found_for_template_editor),
+                    Snackbar.LENGTH_SHORT
+                )
+            }
             return
         }
         
