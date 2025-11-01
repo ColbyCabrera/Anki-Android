@@ -52,6 +52,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -221,18 +223,12 @@ private fun ToolbarIconButton(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                when {
-                    icon != null -> Icon(
-                        imageVector = icon,
-                        contentDescription = contentDescription,
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                    painter != null -> Icon(
-                        painter = painter,
-                        contentDescription = contentDescription,
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                }
+                ToolbarIcon(
+                    icon = icon,
+                    painter = painter,
+                    contentDescription = contentDescription,
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
             }
         } else {
             // Standard IconButton for buttons without long click
@@ -244,16 +240,11 @@ private fun ToolbarIconButton(
                     contentColor = MaterialTheme.colorScheme.onSurface
                 )
             ) {
-                when {
-                    icon != null -> Icon(
-                        imageVector = icon,
-                        contentDescription = contentDescription
-                    )
-                    painter != null -> Icon(
-                        painter = painter,
-                        contentDescription = contentDescription
-                    )
-                }
+                ToolbarIcon(
+                    icon = icon,
+                    painter = painter,
+                    contentDescription = contentDescription
+                )
             }
         }
     }
@@ -296,6 +287,30 @@ private fun ToolbarTextButton(
                 color = MaterialTheme.colorScheme.onSurface
             )
         }
+    }
+}
+
+/**
+ * Helper composable to render an icon from either an ImageVector or a Painter
+ */
+@Composable
+private fun ToolbarIcon(
+    icon: ImageVector? = null,
+    painter: Painter? = null,
+    contentDescription: String? = null,
+    tint: Color = MaterialTheme.colorScheme.onSurface
+) {
+    when {
+        icon != null -> Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = tint
+        )
+        painter != null -> Icon(
+            painter = painter,
+            contentDescription = contentDescription,
+            tint = tint
+        )
     }
 }
 
