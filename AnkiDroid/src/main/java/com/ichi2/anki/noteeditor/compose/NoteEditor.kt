@@ -22,6 +22,7 @@
 package com.ichi2.anki.noteeditor.compose
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,6 +32,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -39,6 +41,7 @@ import androidx.compose.material.icons.filled.Attachment
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -247,34 +250,46 @@ fun NoteEditorScreen(
                 )
             } else if (state.isImageOcclusion && !state.isAddingNote) {
                 Button(
-                    onClick = onImageOcclusionEdit, modifier = Modifier.fillMaxWidth()
+                    onClick = onImageOcclusionEdit,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.filledTonalButtonColors()
                 ) {
                     Text(stringResource(R.string.edit_occlusions))
                 }
             }
 
-            // Tags Button
-            Button(
-                onClick = onTagsClick,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = state.isTagsButtonEnabled
-            ) {
-                Text(
-                    text = if (state.tags.isEmpty()) {
-                        stringResource(R.string.add_tag)
-                    } else {
-                        "Tags: ${state.tags.joinToString(", ")}"
-                    }
-                )
-            }
 
-            // Cards Button
-            Button(
-                onClick = onCardsClick,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = state.isCardsButtonEnabled
-            ) {
-                Text(state.cardsInfo.ifEmpty { stringResource(R.string.CardEditorCards) })
+            Row() {
+                // Tags Button
+                Button(
+                    onClick = onTagsClick,
+                    modifier = Modifier.height(52.dp),
+                    enabled = state.isTagsButtonEnabled,
+                    colors = ButtonDefaults.filledTonalButtonColors()
+                ) {
+                    Text(
+                        text = if (state.tags.isEmpty()) {
+                            stringResource(R.string.add_tag)
+                        } else {
+                            "Tags: ${state.tags.joinToString(", ")}"
+                        }
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // Cards Button
+                Button(
+                    onClick = onCardsClick,
+                    modifier = Modifier.height(52.dp),
+                    enabled = state.isCardsButtonEnabled,
+                    colors = ButtonDefaults.filledTonalButtonColors()
+                ) {
+                    Text(
+                        text = state.cardsInfo.ifEmpty { stringResource(R.string.CardEditorCards) },
+                        modifier = Modifier.basicMarquee()
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
