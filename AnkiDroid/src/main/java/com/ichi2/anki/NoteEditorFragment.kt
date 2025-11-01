@@ -399,6 +399,15 @@ class NoteEditorFragment :
                                 deckId = deckId,
                                 isAddingNote = addNote
                             )
+                            
+                            // Update cards info after reinitialization
+                            if (editorNote != null) {
+                                updateCards(editorNote!!.notetype)
+                            } else {
+                                // For new notes, get the note type from the collection
+                                val currentNotetype = col.notetypes.current()
+                                updateCards(currentNotetype)
+                            }
                         } catch (e: Exception) {
                             Timber.e(e, "Error reloading editor after template edit")
                             showSnackbar(R.string.something_wrong)
@@ -699,6 +708,15 @@ class NoteEditorFragment :
             deckId = requireArguments().getLong(EXTRA_DID, 0L),
             isAddingNote = addNote
         )
+        
+        // Update cards info for the selected note type
+        if (editorNote != null) {
+            updateCards(editorNote!!.notetype)
+        } else {
+            // For new notes, get the note type from the ViewModel state
+            val currentNotetype = col.notetypes.current()
+            updateCards(currentNotetype)
+        }
 
         // Set toolbar title
         if (addNote) {
