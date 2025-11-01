@@ -285,6 +285,7 @@ class NoteEditorViewModel : ViewModel() {
         return try {
             val col = CollectionManager.getColUnsafe()
             val note = _currentNote.value ?: return false
+            val currentCard = _currentCard.value
 
             // Update note fields from state
             val fields = _noteEditorState.value.fields
@@ -302,6 +303,17 @@ class NoteEditorViewModel : ViewModel() {
             if (_noteEditorState.value.isAddingNote) {
                 col.addNote(note, _deckId.value)
             } else {
+                // When editing an existing card, check if deck changed
+                if (currentCard != null && currentCard.currentDeckId() != _deckId.value) {
+                    // Move card to new deck
+                    col.setDeck(listOf(currentCard.id), _deckId.value)
+                    // Refresh the card object to reflect database changes
+                    currentCard.load(col)
+                    // Update the cached card
+                    _currentCard.value = currentCard
+                    Timber.d("Card deck updated to %d", _deckId.value)
+                }
+                
                 // Explicitly ignore OpChanges - UI updates happen through reactive state
                 col.updateNote(note).let { }
             }
