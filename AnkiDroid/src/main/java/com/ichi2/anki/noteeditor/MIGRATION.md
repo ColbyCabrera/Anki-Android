@@ -75,6 +75,19 @@ The `NoteEditorFragment` has been updated to use a `ComposeView` while maintaini
 
 1. **Initialization**: The `setupComposeEditor()` method initializes the ViewModel and sets up the Compose UI
 2. **State Management**: The ViewModel is shared using `activityViewModels()`
+   - **Scope**: The ViewModel is scoped to the parent Activity, allowing state to be shared across fragments within the same Activity
+   - **Lifecycle**: The ViewModel is cleared when the Activity is destroyed or the process is killed. It persists across configuration changes (e.g., screen rotation) and fragment recreation
+   - **State Persistence**: The following state persists across note editor sessions within the same Activity lifecycle:
+     - Current note draft (field values, tags)
+     - Selected deck and note type
+     - Media selections and attachments
+     - Custom toolbar buttons and preferences
+     - Sticky field configurations
+   - **Navigation Handling**: When navigating away and back to the note editor:
+     - Save transient UI state (e.g., field focus, scroll position) into the ViewModel in `onPause()` or `onStop()`
+     - Reset or clear transient fields when starting a new note creation session to avoid stale state
+     - Call `ViewModel.clear()` or `reset()` method when the hosting Activity or fragments initiate a fresh session (e.g., "Add New Note" action) to prevent state conflicts
+     - The ViewModel should provide a `clear()` or `reset()` method that resets all mutable state to defaults while preserving configuration preferences
 3. **Callbacks**: Existing multimedia, tags, and card template functionality is preserved through callbacks
 4. **Navigation**: Activity result launchers for multimedia, image occlusion, and templates remain unchanged
 
