@@ -47,6 +47,7 @@ import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -171,7 +172,7 @@ fun NoteEditorToolbar(
             FilledIconButton(
                 onClick = onAddCustomButtonClick,
                 shapes = IconButtonDefaults.shapes(),
-                modifier = modifier,
+                modifier = Modifier,
                 colors = IconButtonDefaults.iconButtonColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -214,7 +215,7 @@ private fun ToolbarIconButton(
                     .size(48.dp)
                     .combinedClickable(
                         interactionSource = interactionSource,
-                        indication = null,
+                        indication = ripple(),
                         onClick = onClick,
                         onLongClick = onLongClick
                     ),
@@ -283,7 +284,7 @@ private fun ToolbarTextButton(
                 .size(48.dp)
                 .combinedClickable(
                     interactionSource = interactionSource,
-                    indication = null,
+                    indication = ripple(),
                     onClick = onClick,
                     onLongClick = onLongClick
                 ),
