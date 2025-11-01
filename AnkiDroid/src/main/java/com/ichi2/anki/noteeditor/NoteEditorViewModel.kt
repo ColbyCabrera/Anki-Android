@@ -20,6 +20,8 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ichi2.anki.CollectionManager
+import com.ichi2.anki.NoteFieldsCheckResult
+import com.ichi2.anki.checkNoteFieldsResponse
 import com.ichi2.anki.libanki.Card
 import com.ichi2.anki.libanki.Collection
 import com.ichi2.anki.libanki.DeckId
@@ -282,11 +284,12 @@ class NoteEditorViewModel : ViewModel() {
 
     /**
      * Save the note
+     * @return NoteFieldsCheckResult indicating success or failure with error details
      */
-    suspend fun saveNote(): Boolean {
+    suspend fun saveNote(): NoteFieldsCheckResult {
         return try {
             val col = CollectionManager.getColUnsafe()
-            val note = _currentNote.value ?: return false
+            val note = _currentNote.value ?: return NoteFieldsCheckResult.Failure(null)
             val currentCard = _currentCard.value
 
             // Update note fields from state
@@ -301,8 +304,12 @@ class NoteEditorViewModel : ViewModel() {
             // Update tags
             note.setTagsFromStr(col, _noteEditorState.value.tags.joinToString(" "))
 
-            // Save the note
+            // For new notes, validate fields before saving
             if (_noteEditorState.value.isAddingNote) {
+                val validationResult = checkNoteFieldsResponse(note)
+                if (validationResult is NoteFieldsCheckResult.Failure) {
+                    return validationResult
+                }
                 col.addNote(note, _deckId.value)
             } else {
                 // When editing an existing card, check if deck changed
@@ -320,10 +327,10 @@ class NoteEditorViewModel : ViewModel() {
                 col.updateNote(note).let { }
             }
 
-            true
+            NoteFieldsCheckResult.Success
         } catch (e: Exception) {
             Timber.e(e, "Error saving note")
-            false
+            NoteFieldsCheckResult.Failure(null)
         }
     }
 

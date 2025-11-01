@@ -1751,14 +1751,54 @@ class NoteEditorFragment :
     suspend fun saveNote() {
         // Compose UI - delegate to ViewModel
         if (isComposeMode) {
-            val success = noteEditorViewModel.saveNote()
-            if (success) {
-                // Mark as changed so the caller knows to refresh
-                changed = true
-                reloadRequired = true
-                closeNoteEditor()
-            } else {
-                showSnackbar(R.string.something_wrong)
+            when (val result = noteEditorViewModel.saveNote()) {
+                is NoteFieldsCheckResult.Success -> {
+                    // Mark as changed so the caller knows to refresh
+                    changed = true
+                    reloadRequired = true
+                    
+                    // Handle post-save actions for new notes
+                    if (addNote) {
+                        // Clear source text so it doesn't get reused
+                        sourceText = null
+                        // Show success message
+                        showSnackbar(TR.addingAdded(), Snackbar.LENGTH_SHORT)
+                        // Update sticky fields from the saved note
+                        updateFieldsFromStickyText()
+                        
+                        // Determine if we should close the editor
+                        val shouldClose = when (caller) {
+                            NoteEditorCaller.NOTEEDITOR,
+                            NoteEditorCaller.NOTEEDITOR_INTENT_ADD -> true
+                            else -> aedictIntent
+                        }
+                        
+                        if (shouldClose) {
+                            if (caller == NoteEditorCaller.NOTEEDITOR_INTENT_ADD || aedictIntent) {
+                                showThemedToast(requireContext(), R.string.note_message, shortLength = true)
+                            }
+                            val closeIntent = if (caller == NoteEditorCaller.NOTEEDITOR_INTENT_ADD) {
+                                Intent().apply { putExtra(EXTRA_ID, requireArguments().getString(EXTRA_ID)) }
+                            } else {
+                                null
+                            }
+                            closeNoteEditor(closeIntent ?: Intent())
+                        } else {
+                            // Reset edit state for next note
+                            noteEditorViewModel.resetFieldEditedFlag()
+                            isTagsEdited = false
+                        }
+                    } else {
+                        // Editing existing note - just close
+                        closeNoteEditor()
+                    }
+                }
+                is NoteFieldsCheckResult.Failure -> {
+                    // Set the error message for the snackbar error text
+                    addNoteErrorMessage = result.localizedMessage
+                    // Display the error with the same logic as XML mode (includes cloze dialog)
+                    displayErrorSavingNote()
+                }
             }
             return
         }
