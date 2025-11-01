@@ -393,20 +393,21 @@ class NoteEditorFragment :
                         try {
                             // Reinitialize the editor to pick up template changes
                             val col = getColUnsafe
+                            
                             noteEditorViewModel.initializeEditor(
                                 col = col,
                                 cardId = currentEditedCard?.id,
                                 deckId = deckId,
                                 isAddingNote = addNote
-                            )
-                            
-                            // Update cards info after reinitialization
-                            if (editorNote != null) {
-                                updateCards(editorNote!!.notetype)
-                            } else {
-                                // For new notes, get the note type from the collection
-                                val currentNotetype = col.notetypes.current()
-                                updateCards(currentNotetype)
+                            ) {
+                                // This callback ensures updateCards is called after initialization is complete
+                                if (editorNote != null) {
+                                    updateCards(editorNote!!.notetype)
+                                } else {
+                                    // For new notes, get the note type from the collection
+                                    val currentNotetype = col.notetypes.current()
+                                    updateCards(currentNotetype)
+                                }
                             }
                         } catch (e: Exception) {
                             Timber.e(e, "Error reloading editor after template edit")
