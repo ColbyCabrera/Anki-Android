@@ -55,6 +55,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -185,33 +186,55 @@ fun NoteEditorScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Note Type Selector
-            NoteTypeSelector(
-                selectedNoteType = state.selectedNoteTypeName,
-                availableNoteTypes = availableNoteTypes,
-                onNoteTypeSelected = onNoteTypeSelected
-            )
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Note Type Selector
+                    NoteTypeSelector(
+                        selectedNoteType = state.selectedNoteTypeName,
+                        availableNoteTypes = availableNoteTypes,
+                        onNoteTypeSelected = onNoteTypeSelected
+                    )
 
-            // Deck Selector
-            DeckSelector(
-                selectedDeck = state.selectedDeckName,
-                availableDecks = availableDecks,
-                onDeckSelected = onDeckSelected
-            )
+                    // Deck Selector
+                    DeckSelector(
+                        selectedDeck = state.selectedDeckName,
+                        availableDecks = availableDecks,
+                        onDeckSelected = onDeckSelected
+                    )
+                }
+            }
 
             // Fields Editor
-            state.fields.forEach { field ->
-                NoteFieldEditor(
-                    field = field,
-                    onValueChange = { newValue ->
-                        onFieldValueChange(field.index, newValue)
-                    },
-                    onMultimediaClick = { onMultimediaClick(field.index) },
-                    onToggleStickyClick = { onToggleStickyClick(field.index) },
-                    showStickyButton = state.isAddingNote,
-                    onFocus = { onFieldFocus(field.index) },
-                    isFocused = state.focusedFieldIndex == field.index
-                )
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceContainer,
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    state.fields.forEach { field ->
+                        NoteFieldEditor(
+                            field = field,
+                            onValueChange = { newValue ->
+                                onFieldValueChange(field.index, newValue)
+                            },
+                            onMultimediaClick = { onMultimediaClick(field.index) },
+                            onToggleStickyClick = { onToggleStickyClick(field.index) },
+                            showStickyButton = state.isAddingNote,
+                            onFocus = { onFieldFocus(field.index) },
+                            isFocused = state.focusedFieldIndex == field.index
+                        )
+                    }
+                }
             }
 
             // Image Occlusion Buttons (if applicable)
@@ -281,18 +304,22 @@ fun NoteTypeSelector(
             onValueChange = {},
             readOnly = true,
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            shape = MaterialTheme.shapes.small,
             modifier = Modifier
                 .menuAnchor(
                     type = PrimaryNotEditable, enabled = true
                 )
                 .fillMaxWidth(),
             colors = TextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
             )
         )
         ExposedDropdownMenu(
-            expanded = expanded, onDismissRequest = { expanded = false }) {
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            shape = MaterialTheme.shapes.large
+        ) {
             availableNoteTypes.forEach { noteType ->
                 DropdownMenuItem(text = { Text(noteType) }, onClick = {
                     onNoteTypeSelected(noteType)
@@ -327,18 +354,22 @@ fun DeckSelector(
             readOnly = true,
             label = { Text(stringResource(R.string.CardEditorNoteDeck)) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            shape = MaterialTheme.shapes.small,
             modifier = Modifier
                 .menuAnchor(
                     type = PrimaryNotEditable, enabled = true
                 )
                 .fillMaxWidth(),
             colors = TextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
             )
         )
         ExposedDropdownMenu(
-            expanded = expanded, onDismissRequest = { expanded = false }) {
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            shape = MaterialTheme.shapes.large
+        ) {
             availableDecks.forEach { deck ->
                 DropdownMenuItem(text = { Text(deck) }, onClick = {
                     onDeckSelected(deck)
