@@ -99,7 +99,11 @@ fun CardBrowserScreen(
             CardBrowserHeader(columns = columnHeadings)
             HorizontalDivider()
             when (val state = searchState) {
-                is SearchState.Initializing, is SearchState.Searching -> CardBrowserLoading()
+                is SearchState.Initializing, is SearchState.Searching -> CardBrowserLoading(
+                    Modifier.padding(
+                        bottom = toolbarHeight.dp
+                    )
+                )
                 is SearchState.Completed -> {
                     if (browserRows.isEmpty()) {
                         val selectedDeck by viewModel.flowOfDeckSelection.collectAsStateWithLifecycle(
