@@ -25,10 +25,6 @@
  * selectors, and tags/cards buttons. Legacy XML code paths remain as fallback references
  * and are guarded or commented out.
  * 
- * TRACKED MIGRATION ISSUE:
- * See: https://github.com/ankidroid/Anki-Android/issues/XXXXX
- * "Complete NoteEditorFragment XML→Compose migration and remove legacy code"
- * 
  * AREAS WITH PENDING CLEANUP (with line references as of latest commit):
  * - Lines ~489-493:   Snackbar anchor (toolbar reference) - migrate to Compose scaffold
  * - Lines ~840-851:   Field/Tags/Cards button XML references - now in Compose
@@ -2101,9 +2097,19 @@ class NoteEditorFragment :
         
         val tags = selectedTags ?: mutableListOf()
 
+        // Get the note type - either from editorNote or from collection for new notes
+        val notetype = if (editorNote != null) {
+            editorNote!!.notetype
+        } else {
+            withCol { notetypes.current() }
+        }
+        
+        // Get the note ID - use 0 for new notes (not yet saved)
+        val noteId = editorNote?.id ?: 0L
+
         val ord =
-            if (editorNote!!.notetype.isCloze) {
-                val tempNote = withCol { Note.fromNotetypeId(this@withCol, editorNote!!.notetype.id) }
+            if (notetype.isCloze) {
+                val tempNote = withCol { Note.fromNotetypeId(this@withCol, notetype.id) }
                 tempNote.fields = fields // makes possible to get the cloze numbers from the fields
                 val clozeNumbers = withCol { clozeNumbersInNote(tempNote) }
                 if (clozeNumbers.isNotEmpty()) {
@@ -2117,10 +2123,10 @@ class NoteEditorFragment :
 
         val args =
             TemplatePreviewerArguments(
-                notetypeFile = NotetypeFile(requireContext(), editorNote!!.notetype),
+                notetypeFile = NotetypeFile(requireContext(), notetype),
                 fields = fields,
                 tags = tags,
-                id = editorNote!!.id,
+                id = noteId,
                 ord = ord,
                 fillEmpty = false,
             )
@@ -2332,9 +2338,19 @@ class NoteEditorFragment :
     }
 
     private suspend fun getCurrentMultimediaEditableNote(): MultimediaEditableNote {
-        val note = NoteService.createEmptyNote(editorNote!!.notetype)
+        // Get the note type - either from editorNote or from collection for new notes
+        val notetype = if (editorNote != null) {
+            editorNote!!.notetype
+        } else {
+            withCol { notetypes.current() }
+        }
+        
+        val note = NoteService.createEmptyNote(notetype)
         val fields = currentFieldStrings.requireNoNulls()
-        withCol { NoteService.updateMultimediaNoteFromFields(this@withCol, fields, editorNote!!.noteTypeId, note) }
+        
+        // Get the note type ID - either from editorNote or from the notetype
+        val noteTypeId = editorNote?.noteTypeId ?: notetype.id
+        withCol { NoteService.updateMultimediaNoteFromFields(this@withCol, fields, noteTypeId, note) }
 
         return note
     }
