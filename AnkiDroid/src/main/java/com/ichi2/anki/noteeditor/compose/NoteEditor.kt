@@ -151,7 +151,7 @@ fun NoteEditorScreen(
     onImageOcclusionSelectImage: () -> Unit = {},
     onImageOcclusionPasteImage: () -> Unit = {},
     onImageOcclusionEdit: () -> Unit = {},
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    snackbarHostState: SnackbarHostState = SnackbarHostState(),
     topBar: (@Composable () -> Unit)? = null,
 ) {
     Scaffold(
@@ -605,6 +605,7 @@ fun ImageOcclusionButtons(
 @Preview(showBackground = true)
 @Composable
 fun NoteEditorScreenPreview() {
+    val snackbarHostState = remember { SnackbarHostState() }
     MaterialTheme {
         NoteEditorScreen(
             state = NoteEditorState(
@@ -646,7 +647,8 @@ fun NoteEditorScreenPreview() {
             onCustomButtonLongClick = {},
             onAddCustomButtonClick = {},
             customToolbarButtons = emptyList(),
-            isToolbarVisible = true
+            isToolbarVisible = true,
+            snackbarHostState = snackbarHostState
         )
     }
 }
