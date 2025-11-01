@@ -37,4 +37,5 @@
     <string name="undo_delete_note">Undo delete note</string>
     <string name="done_icon">Done icon</string>
     <string name="filter_by_tag">Filter by tag</string>
+    <string name="deck_not_found">Deck not found</string>
 </resources>

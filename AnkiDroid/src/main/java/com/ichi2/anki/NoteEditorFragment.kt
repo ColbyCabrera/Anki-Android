@@ -715,10 +715,13 @@ class NoteEditorFragment :
                             val deck = withCol {
                                 decks.allNamesAndIds().find { it.name == deckName }
                             }
-                            if (deck != null) {
-                                deckId = deck.id
-                                noteEditorViewModel.selectDeck(deckName)
+                            if (deck == null) {
+                                Timber.w("onDeckSelected: Deck not found for name '%s'", deckName)
+                                showSnackbar(getString(R.string.deck_not_found))
+                                return@launchCatchingTask
                             }
+                            deckId = deck.id
+                            noteEditorViewModel.selectDeck(deckName)
                         }
                     },
                     onNoteTypeSelected = { noteTypeName ->
