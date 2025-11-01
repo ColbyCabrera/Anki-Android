@@ -101,7 +101,7 @@ fun CardBrowserScreen(
             when (val state = searchState) {
                 is SearchState.Initializing, is SearchState.Searching -> CardBrowserLoading(
                     Modifier.padding(
-                        bottom = toolbarHeight.dp
+                        bottom = with(LocalDensity.current) { toolbarHeight.toDp() }
                     )
                 )
                 is SearchState.Completed -> {
