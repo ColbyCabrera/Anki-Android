@@ -2605,6 +2605,12 @@ class NoteEditorFragment :
         field: IField,
     ) {
         lifecycleScope.launch {
+            // Check if editFields is initialized
+            if (editFields == null) {
+                Timber.w("addMediaFileToField: editFields is null, cannot add media")
+                return@launch
+            }
+            
             val note = getCurrentMultimediaEditableNote()
             note.setField(index, field)
             val fieldEditText = editFields!![index]
