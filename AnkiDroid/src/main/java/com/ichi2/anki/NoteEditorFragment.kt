@@ -148,6 +148,7 @@ import com.ichi2.anki.bottomsheet.ImageOcclusionBottomSheetFragment
 import com.ichi2.anki.common.annotations.NeedsTest
 import com.ichi2.anki.common.utils.annotation.KotlinCleanup
 import com.ichi2.anki.dialogs.ConfirmationDialog
+import com.ichi2.anki.dialogs.DeckSelectionDialog
 import com.ichi2.anki.dialogs.DeckSelectionDialog.DeckSelectionListener
 import com.ichi2.anki.dialogs.DiscardChangesDialog
 import com.ichi2.anki.dialogs.IntegerDialog
@@ -492,10 +493,17 @@ class NoteEditorFragment :
         }
         require(deck is SelectableDeck.Deck)
         deckId = deck.deckId
-        // this is called because DeckSpinnerSelection.onDeckAdded doesn't update the list
-        deckSpinnerSelection!!.initializeNoteEditorDeckSpinner(getColUnsafe)
-        launchCatchingTask {
-            deckSpinnerSelection!!.selectDeckById(deckId, false)
+        
+        // Update ViewModel for Compose UI
+        noteEditorViewModel.selectDeck(deck.name)
+        
+        // Update legacy spinner if it exists
+        if (deckSpinnerSelection != null) {
+            // this is called because DeckSpinnerSelection.onDeckAdded doesn't update the list
+            deckSpinnerSelection!!.initializeNoteEditorDeckSpinner(getColUnsafe)
+            launchCatchingTask {
+                deckSpinnerSelection!!.selectDeckById(deckId, false)
+            }
         }
     }
 
@@ -700,7 +708,16 @@ class NoteEditorFragment :
                         showCardTemplateEditor()
                     },
                     onDeckSelected = { deckName ->
-                        noteEditorViewModel.selectDeck(deckName)
+                        // Find the deck ID and update both fragment and ViewModel
+                        launchCatchingTask {
+                            val deck = withCol {
+                                decks.allNamesAndIds().find { it.name == deckName }
+                            }
+                            if (deck != null) {
+                                deckId = deck.id
+                                noteEditorViewModel.selectDeck(deckName)
+                            }
+                        }
                     },
                     onNoteTypeSelected = { noteTypeName ->
                         noteEditorViewModel.selectNoteType(noteTypeName)
@@ -2113,6 +2130,23 @@ class NoteEditorFragment :
             } else {
                 finish()
             }
+        }
+    }
+
+    private fun showDeckSelectionDialog() {
+        launchCatchingTask {
+            val selectableDecks = withCol {
+                decks.allNamesAndIds()
+                    .map { SelectableDeck.Deck(it.id, it.name) }
+            }
+            
+            val dialog = DeckSelectionDialog.newInstance(
+                title = getString(R.string.select_deck_title),
+                summaryMessage = null,
+                keepRestoreDefaultButton = false,
+                decks = selectableDecks
+            )
+            dialog.show(parentFragmentManager, "deck_selection_dialog")
         }
     }
 

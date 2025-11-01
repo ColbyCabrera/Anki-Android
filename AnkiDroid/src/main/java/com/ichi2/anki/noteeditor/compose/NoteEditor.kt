@@ -22,7 +22,9 @@
 package com.ichi2.anki.noteeditor.compose
 
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -36,11 +38,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddAPhoto
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Attachment
 import androidx.compose.material.icons.filled.ContentPaste
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -58,9 +63,11 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -68,9 +75,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ichi2.anki.R
@@ -349,7 +358,10 @@ fun NoteTypeSelector(
 /**
  * Deck Selector Dropdown
  */
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Deck selector dropdown with hierarchy support (matches Note Type Selector style)
+ */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun DeckSelector(
     selectedDeck: String,
@@ -358,6 +370,13 @@ fun DeckSelector(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
+    
+    // Build deck hierarchy from flat list
+    val deckHierarchy = remember(availableDecks) {
+        buildDeckHierarchy(availableDecks)
+    }
+    
+    val expandedDecks = remember { mutableStateMapOf<String, Boolean>() }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -386,11 +405,80 @@ fun DeckSelector(
             onDismissRequest = { expanded = false },
             shape = MaterialTheme.shapes.large
         ) {
-            availableDecks.forEach { deck ->
-                DropdownMenuItem(text = { Text(deck) }, onClick = {
-                    onDeckSelected(deck)
+            DeckHierarchyMenuItems(
+                deckHierarchy = deckHierarchy,
+                expandedDecks = expandedDecks,
+                onDeckSelected = { deckName ->
+                    onDeckSelected(deckName)
                     expanded = false
-                })
+                }
+            )
+        }
+    }
+}
+
+/**
+ * Build a hierarchical map of decks from a flat list
+ */
+private fun buildDeckHierarchy(deckNames: List<String>): Map<String, List<String>> {
+    val hierarchy = mutableMapOf<String, MutableList<String>>()
+    val topLevelDecks = mutableListOf<String>()
+
+    for (deckName in deckNames) {
+        val parts = deckName.split("::")
+        if (parts.size > 1) {
+            val parentName = parts.dropLast(1).joinToString("::")
+            hierarchy.getOrPut(parentName) { mutableListOf() }.add(deckName)
+        } else {
+            topLevelDecks.add(deckName)
+        }
+    }
+
+    hierarchy[""] = topLevelDecks
+    return hierarchy
+}
+
+/**
+ * Recursive composable to render deck hierarchy with expand/collapse
+ */
+@Composable
+private fun DeckHierarchyMenuItems(
+    deckHierarchy: Map<String, List<String>>,
+    expandedDecks: MutableMap<String, Boolean>,
+    onDeckSelected: (String) -> Unit,
+    parentName: String = ""
+) {
+    val children = deckHierarchy[parentName] ?: return
+
+    for (deckName in children) {
+        val isExpanded = expandedDecks[deckName] ?: false
+        val hasChildren = deckHierarchy.containsKey(deckName)
+
+        DropdownMenuItem(
+            text = { Text(deckName.substringAfterLast("::")) },
+            onClick = { onDeckSelected(deckName) },
+            trailingIcon = {
+                if (hasChildren) {
+                    IconButton(onClick = { expandedDecks[deckName] = !isExpanded }) {
+                        Icon(
+                            painter = if (isExpanded) {
+                                painterResource(R.drawable.keyboard_arrow_down_24px)
+                            } else {
+                                painterResource(R.drawable.keyboard_arrow_right_24px)
+                            },
+                            contentDescription = if (isExpanded) {
+                                stringResource(R.string.collapse)
+                            } else {
+                                stringResource(R.string.expand)
+                            }
+                        )
+                    }
+                }
+            }
+        )
+        if (isExpanded && hasChildren) {
+            Column(modifier = Modifier.padding(start = 16.dp)) {
+                DeckHierarchyMenuItems(deckHierarchy, expandedDecks, onDeckSelected, deckName)
             }
         }
     }
