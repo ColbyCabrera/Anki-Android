@@ -69,7 +69,7 @@ sealed interface NoteEditorOverflowItem {
 }
 
 @Immutable
-data class NoteEditorSimpleOverflowItem(
+class NoteEditorSimpleOverflowItem(
     override val id: String,
     override val title: String,
     override val enabled: Boolean = true,
@@ -78,7 +78,7 @@ data class NoteEditorSimpleOverflowItem(
 ) : NoteEditorOverflowItem
 
 @Immutable
-data class NoteEditorToggleOverflowItem(
+class NoteEditorToggleOverflowItem(
     override val id: String,
     override val title: String,
     val checked: Boolean,
