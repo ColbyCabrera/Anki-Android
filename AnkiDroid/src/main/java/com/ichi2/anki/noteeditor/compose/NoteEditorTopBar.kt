@@ -153,6 +153,7 @@ fun NoteEditorTopAppBar(
                 DropdownMenu(
                     expanded = overflowExpanded,
                     onDismissRequest = { overflowExpanded = false },
+                    shape = MaterialTheme.shapes.large,
                 ) {
                     visibleOverflowItems.forEach { item ->
                         when (item) {
