@@ -18,7 +18,6 @@ package com.ichi2.anki.model
 
 import android.content.Context
 import android.os.Parcelable
-import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.CollectionManager.withCol
 import com.ichi2.anki.R
 import com.ichi2.anki.libanki.DeckId
@@ -73,11 +72,15 @@ sealed class SelectableDeck : Parcelable {
     companion object {
         /**
          * @param includeFiltered Whether to include filtered decks in the output
+         * @param skipEmptyDefault Whether to skip the empty default deck
          * @return all [SelectableDecks][SelectableDeck] in the collection satisfying the filter
          */
-        suspend fun fromCollection(includeFiltered: Boolean): List<Deck> =
-            CollectionManager
-                .withCol { decks.allNamesAndIds(includeFiltered = includeFiltered) }
-                .map { nameAndId -> Deck(nameAndId) }
+        suspend fun fromCollection(
+            includeFiltered: Boolean, skipEmptyDefault: Boolean = true
+        ): List<Deck> = withCol {
+            decks.allNamesAndIds(
+                includeFiltered = includeFiltered, skipEmptyDefault = skipEmptyDefault
+            )
+        }.map { nameAndId -> Deck(nameAndId) }
     }
 }

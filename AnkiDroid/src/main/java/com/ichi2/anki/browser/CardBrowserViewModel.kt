@@ -1288,8 +1288,7 @@ class CardBrowserViewModel(
         }
 
     suspend fun getAvailableDecks(): List<SelectableDeck.Deck> =
-        SelectableDeck.fromCollection(includeFiltered = false)
-            .filter { it.name != "Default"  } // Hide empty default deck
+        SelectableDeck.fromCollection(includeFiltered = false, skipEmptyDefault = true)
 
     fun setSearchQuery(query: String) {
         _searchQuery.value = query

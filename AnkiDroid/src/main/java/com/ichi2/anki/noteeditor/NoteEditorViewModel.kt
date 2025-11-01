@@ -113,7 +113,7 @@ class NoteEditorViewModel : ViewModel() {
                 }
 
                 // Load available decks and note types
-                _availableDecks.value = col.decks.allNamesAndIds().map { it.name }
+                _availableDecks.value = col.decks.allNamesAndIds(skipEmptyDefault = true).map { it.name }
                 _availableNoteTypes.value = col.notetypes.all().map { it.name }
 
                 // Update UI state
