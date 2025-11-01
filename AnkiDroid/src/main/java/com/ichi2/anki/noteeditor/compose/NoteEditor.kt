@@ -311,7 +311,7 @@ fun NoteTypeSelector(
 
     ExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = { expanded = !expanded },
+        onExpandedChange = { expanded = it },
         modifier = modifier.fillMaxWidth()
     ) {
         OutlinedTextField(
@@ -361,7 +361,7 @@ fun DeckSelector(
 
     ExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = { expanded = !expanded },
+        onExpandedChange = { expanded = it },
         modifier = modifier.fillMaxWidth()
     ) {
         OutlinedTextField(
