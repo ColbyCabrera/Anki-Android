@@ -383,35 +383,33 @@ class NoteEditorFragment :
                 
                 if (isComposeMode) {
                     // In Compose mode, the note is managed by the ViewModel
-                    // We need to reload the editor state after template changes
+                    // We need to update cards info after template changes
                     Timber.d("onActivityResult() template edit return in Compose mode")
                     lifecycleScope.launch {
                         try {
-                            // Reinitialize the editor to pick up template changes
                             val col = getColUnsafe
                             
-                            noteEditorViewModel.initializeEditor(
-                                col = col,
-                                cardId = currentEditedCard?.id,
-                                deckId = deckId,
-                                isAddingNote = addNote
-                            ) { success, error ->
-                                if (!success) {
-                                    Timber.e("Error initializing editor: $error")
-                                    showSnackbar(R.string.something_wrong)
-                                    return@initializeEditor
-                                }
-                                // This callback ensures updateCards is called after initialization is complete
-                                if (editorNote != null) {
-                                    updateCards(editorNote!!.notetype)
+                            // Get the current note from ViewModel (which has the correct note type)
+                            val currentNote = noteEditorViewModel.currentNote.value
+                            if (currentNote != null) {
+                                // Sync the fragment's editorNote with the ViewModel's current note
+                                editorNote = currentNote
+                                // Reload the note type to ensure we have the latest version
+                                val notetype = col.notetypes.get(currentNote.noteTypeId)
+                                if (notetype != null) {
+                                    // Update cards display
+                                    updateCards(notetype)
+                                    Timber.d("Updated cards for note type: %s", notetype.name)
                                 } else {
-                                    // For new notes, get the note type from the collection
-                                    val currentNotetype = col.notetypes.current()
-                                    updateCards(currentNotetype)
+                                    Timber.w("Note type not found for note")
+                                    showSnackbar(R.string.something_wrong)
                                 }
+                            } else {
+                                Timber.w("Current note is null after template edit")
+                                showSnackbar(R.string.something_wrong)
                             }
                         } catch (e: Exception) {
-                            Timber.e(e, "Error reloading editor after template edit")
+                            Timber.e(e, "Error updating editor after template edit")
                             showSnackbar(R.string.something_wrong)
                         }
                     }

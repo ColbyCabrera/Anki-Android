@@ -116,6 +116,8 @@ class NoteEditorViewModel(
     val isFieldEdited: StateFlow<Boolean> = _isFieldEdited.asStateFlow()
 
     private val _currentNote = MutableStateFlow<Note?>(null)
+    val currentNote: StateFlow<Note?> = _currentNote.asStateFlow()
+    
     private val _currentCard = MutableStateFlow<Card?>(null)
     private val _deckId = MutableStateFlow<DeckId>(0L)
 
