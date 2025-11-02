@@ -189,10 +189,7 @@ fun NoteEditorTopAppBar(
                                         Checkbox(
                                             checked = item.checked,
                                             enabled = item.enabled,
-                                            onCheckedChange = { isChecked ->
-                                                overflowExpanded = false
-                                                item.onCheckedChange(isChecked)
-                                            },
+                                            onCheckedChange = null,
                                             modifier = Modifier.semantics {
                                                 contentDescription = item.title
                                             },
