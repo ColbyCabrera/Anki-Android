@@ -696,9 +696,29 @@ class NoteEditorFragment :
                 editorNote = currentEditedCard!!.note(col)
                 addNote = false
             }
+            NoteEditorCaller.NOTEEDITOR_INTENT_ADD,
+            NoteEditorCaller.INSTANT_NOTE_EDITOR,
+            -> {
+                fetchIntentInformation(intent)
+                if (sourceText == null) {
+                    requireActivity().finish()
+                    return
+                }
+                if ("Aedict Notepad" == sourceText!![0] && addFromAedict(sourceText!![1])) {
+                    requireActivity().finish()
+                    return
+                }
+                addNote = true
+            }
             else -> {
                 addNote = true
             }
+        }
+
+        // Extract text from intent for ACTION_PROCESS_TEXT or similar intents
+        val initialFieldText: String? = when {
+            sourceText != null && sourceText!![0] != null -> sourceText!![0]
+            else -> null
         }
 
         // Initialize ViewModel
@@ -706,7 +726,8 @@ class NoteEditorFragment :
             col = col,
             cardId = currentEditedCard?.id,
             deckId = requireArguments().getLong(EXTRA_DID, 0L),
-            isAddingNote = addNote
+            isAddingNote = addNote,
+            initialFieldText = initialFieldText
         )
         
         // Update cards info for the selected note type

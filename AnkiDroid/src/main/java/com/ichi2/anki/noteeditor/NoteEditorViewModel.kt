@@ -129,6 +129,7 @@ class NoteEditorViewModel(
         cardId: Long? = null,
         deckId: Long? = null,
         isAddingNote: Boolean = true,
+        initialFieldText: String? = null,
         onComplete: ((success: Boolean, error: String?) -> Unit)? = null
     ) {
         viewModelScope.launch {
@@ -162,6 +163,11 @@ class NoteEditorViewModel(
                             newNote.fields[index] = value
                         }
                         ensureActive() // Check cancellation after field restoration
+                    } else if (initialFieldText != null && newNote.fields.isNotEmpty()) {
+                        // If no restored values but initial text is provided (e.g., from ACTION_PROCESS_TEXT),
+                        // set it as the first field's content
+                        newNote.fields[0] = initialFieldText
+                        Timber.d("Set initial field text from intent: %s", initialFieldText)
                     }
                     
                     _currentNote.value = newNote
