@@ -102,11 +102,6 @@ class NoteEditorViewModel : ViewModel() {
                 if (cardId != null && !isAddingNote) {
                     // Editing an existing card - use the card's deck
                     val card = col.getCard(cardId)
-                    if (card == null) {
-                        Timber.e("Card not found with id: $cardId")
-                        onComplete?.invoke(false, "Card not found")
-                        return@launch
-                    }
                     _currentCard.value = card
                     _currentNote.value = card.note(col)
                     _deckId.value = card.currentDeckId()
