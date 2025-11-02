@@ -21,6 +21,7 @@
  ****************************************************************************************/
 package com.ichi2.anki.noteeditor.compose
 
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -30,10 +31,12 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.Attachment
@@ -148,9 +151,21 @@ fun NoteEditorScreen(
     snackbarHostState: SnackbarHostState = SnackbarHostState(),
     topBar: (@Composable () -> Unit)? = null,
 ) {
+
+    // Observe keyboard state for auto-scrolling
+    val imeState = rememberImeState()
+    val scrollState = rememberScrollState()
+
+    // Auto-scroll when keyboard appears
+    LaunchedEffect(key1 = imeState.value) {
+        if (imeState.value) {
+            // Scroll to bottom with smooth animation when keyboard opens
+            scrollState.animateScrollTo(scrollState.maxValue, tween(300))
+        }
+    }
+
     Scaffold(
-        modifier = modifier,
-        contentWindowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp),
+        modifier = modifier.imePadding(),
         topBar = {
             topBar?.invoke()
         },
@@ -187,7 +202,7 @@ fun NoteEditorScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
                 .padding(horizontal = 16.dp, vertical = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
