@@ -775,6 +775,14 @@ class NoteEditorFragment :
                     },
                     onNoteTypeSelected = { noteTypeName ->
                         noteEditorViewModel.selectNoteType(noteTypeName)
+                        // Update cards info after note type change
+                        launchCatchingTask {
+                            val col = getColUnsafe
+                            val notetype = col.notetypes.all().find { it.name == noteTypeName }
+                            if (notetype != null) {
+                                updateCards(notetype)
+                            }
+                        }
                     },
                     onMultimediaClick = { index ->
                         showMultimediaBottomSheet()

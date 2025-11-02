@@ -710,11 +710,8 @@ class NoteEditorViewModel(
                 isAddingNote = isAddingNote,
                 isClozeType = notetype.isCloze,
                 isImageOcclusion = notetype.isImageOcclusion,
-                cardsInfo = if (isAddingNote) {
-                    ""
-                } else {
-                    "Cards: ${note.numberOfCards(col)}"
-                },
+                // Don't update cardsInfo here - let the Fragment's updateCards() handle it
+                // cardsInfo = currentState.cardsInfo,
                 focusedFieldIndex = newFocus
             )
         }
