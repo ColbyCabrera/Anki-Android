@@ -343,34 +343,94 @@ class NoteEditorViewModel(
             try {
                 val col = collectionProvider()
                 ensureActive() // Check cancellation after getting collection
+                
                 val notetype = col.notetypes.all().find { it.name == noteTypeName }
-                if (notetype != null) {
-                    ensureActive() // Check cancellation after notetype lookup
-                    // Capture existing note to preserve matching field values
-                    val oldNote = _currentNote.value
-                    val newNote = Note.fromNotetypeId(col, notetype.id)
-                    
-                    // Copy field values from old note to new note where field names match
-                    if (oldNote != null) {
-                        ensureActive()
-                        val oldNotetype = oldNote.notetype
-                        oldNotetype.fields.forEachIndexed { oldIndex, oldField ->
-                            if (oldIndex < oldNote.fields.size) {
-                                val oldValue = oldNote.fields[oldIndex]
-                                // Find matching field in new notetype
-                                val newIndex = newNote.notetype.fields.indexOfFirst { it.name == oldField.name }
-                                if (newIndex >= 0 && newIndex < newNote.fields.size) {
-                                    newNote.fields[newIndex] = oldValue
-                                }
+                if (notetype == null) {
+                    Timber.w("Note type '%s' not found", noteTypeName)
+                    return@launch
+                }
+                
+                // Check if we're already using this note type
+                val currentNote = _currentNote.value
+                if (currentNote != null) {
+                    Timber.d("Current note type: '%s' (id: %d)", currentNote.notetype.name, currentNote.notetype.id)
+                    if (currentNote.notetype.id == notetype.id) {
+                        Timber.d("Note type '%s' is already selected, skipping change", noteTypeName)
+                        return@launch
+                    }
+                }
+                
+                ensureActive() // Check cancellation after notetype lookup
+                
+                Timber.i("Changing note type from '%s' to '%s' (id: %d)", 
+                    currentNote?.notetype?.name ?: "null", noteTypeName, notetype.id)
+                
+                // Set the current note type in the collection
+                col.notetypes.setCurrent(notetype)
+                
+                // Clear notetype cache to ensure we get the fresh notetype
+                col.notetypes.clearCache()
+                
+                // Re-fetch the notetype to ensure we have the latest version
+                val freshNotetype = col.notetypes.get(notetype.id)
+                if (freshNotetype == null) {
+                    Timber.e("Failed to fetch fresh notetype after cache clear")
+                    return@launch
+                }
+                
+                Timber.d("Fresh notetype: name='%s', id=%d, fields=%d", 
+                    freshNotetype.name, freshNotetype.id, freshNotetype.fields.length())
+                
+                // Update the current deck to use this note type
+                val currentDeck = col.decks.current()
+                currentDeck.put("mid", freshNotetype.id)
+                col.decks.save(currentDeck)
+                
+                // Update deck ID if configuration says to use note type's default deck
+                if (!col.config.getBool(anki.config.ConfigKey.Bool.ADDING_DEFAULTS_TO_CURRENT_DECK)) {
+                    _deckId.value = freshNotetype.did
+                    Timber.d("Updated deck ID to note type's default deck: %d", freshNotetype.did)
+                }
+                
+                // Capture existing note to preserve matching field values
+                val oldNote = _currentNote.value
+                val newNote = Note.fromNotetypeId(col, freshNotetype.id)
+                
+                Timber.d("After Note.fromNotetypeId: newNote.notetype.name='%s', newNote.notetype.id=%d", 
+                    newNote.notetype.name, newNote.notetype.id)
+                Timber.d("Expected notetype.name='%s', notetype.id=%d", freshNotetype.name, freshNotetype.id)
+                
+                // Copy field values from old note to new note where field names match
+                if (oldNote != null) {
+                    ensureActive()
+                    val oldNotetype = oldNote.notetype
+                    oldNotetype.fields.forEachIndexed { oldIndex, oldField ->
+                        if (oldIndex < oldNote.fields.size) {
+                            val oldValue = oldNote.fields[oldIndex]
+                            // Find matching field in new notetype
+                            val newIndex = freshNotetype.fields.indexOfFirst { it.name == oldField.name }
+                            if (newIndex >= 0 && newIndex < newNote.fields.size) {
+                                newNote.fields[newIndex] = oldValue
+                                Timber.v("Copied field '%s' -> '%s': %s", oldField.name, freshNotetype.fields[newIndex].name, oldValue)
                             }
                         }
-                        ensureActive() // Check cancellation after field copying
                     }
-                    
-                    _currentNote.value = newNote
-                    updateStateFromNote(col, _noteEditorState.value.isAddingNote)
-                    persistDraftState()
+                    ensureActive() // Check cancellation after field copying
                 }
+                
+                Timber.d("About to set _currentNote.value: newNote object id=%s, notetype.name='%s', notetype.id=%d, fields=%d",
+                    System.identityHashCode(newNote), newNote.notetype.name, newNote.notetype.id, newNote.fields.size)
+                
+                _currentNote.value = newNote
+                
+                Timber.d("After setting _currentNote.value: _currentNote.value object id=%s, notetype.name='%s', notetype.id=%d",
+                    System.identityHashCode(_currentNote.value), _currentNote.value?.notetype?.name, _currentNote.value?.notetype?.id)
+                
+                // Pass the fresh notetype directly to avoid cache issues
+                updateStateFromNoteWithNotetype(col, _noteEditorState.value.isAddingNote, freshNotetype)
+                persistDraftState()
+                
+                Timber.d("Successfully changed note type to '%s'", noteTypeName)
             } catch (e: Exception) {
                 val errorMessage = "Failed to change note type: ${e.message ?: "Unknown error"}"
                 Timber.e(e, "Error changing note type")
@@ -520,6 +580,9 @@ class NoteEditorViewModel(
     private fun updateStateFromNote(col: Collection, isAddingNote: Boolean) {
         val note = _currentNote.value ?: return
         val notetype = note.notetype
+        
+        Timber.d("updateStateFromNote: note object id=%s, notetype.name='%s', notetype.id=%d", 
+            System.identityHashCode(note), notetype.name, notetype.id)
 
         val fields = note.fields.mapIndexed { index, value ->
             val field = notetype.fields[index]
@@ -550,11 +613,17 @@ class NoteEditorViewModel(
             }
         }
 
+        Timber.d("updateStateFromNote: Updating state with note type '%s', %d fields", notetype.name, fields.size)
+        
         _noteEditorState.update { currentState ->
             val newFocus =
                 currentState.focusedFieldIndex?.takeIf { focus ->
                     fields.any { it.index == focus }
                 } ?: fields.firstOrNull()?.index
+            
+            Timber.d("updateStateFromNote: Old state note type='%s', New state note type='%s'", 
+                currentState.selectedNoteTypeName, notetype.name)
+            
             currentState.copy(
                 fields = fields,
                 tags = note.tags,
@@ -571,6 +640,85 @@ class NoteEditorViewModel(
                 focusedFieldIndex = newFocus
             )
         }
+        
+        Timber.d("updateStateFromNote: State updated, current selectedNoteTypeName='%s'", 
+            _noteEditorState.value.selectedNoteTypeName)
+    }
+
+    /**
+     * Update state from the current note using an explicitly provided notetype
+     * This avoids cache issues when the note's notetype property might be stale
+     */
+    private fun updateStateFromNoteWithNotetype(col: Collection, isAddingNote: Boolean, notetype: NotetypeJson) {
+        val note = _currentNote.value ?: return
+        
+        Timber.d("updateStateFromNoteWithNotetype: note object id=%s, provided notetype.name='%s', notetype.id=%d", 
+            System.identityHashCode(note), notetype.name, notetype.id)
+        Timber.d("updateStateFromNoteWithNotetype: note has %d fields, notetype defines %d fields", 
+            note.fields.size, notetype.fields.length())
+
+        // Map based on the notetype's field definitions (not the note's current fields)
+        // This ensures we get the correct number of fields
+        val fields = (0 until notetype.fields.length()).map { index ->
+            val field = notetype.fields[index]
+            val value = if (index < note.fields.size) note.fields[index] else ""
+            NoteFieldState(
+                name = field.name,
+                value = TextFieldValue(value),
+                isSticky = field.sticky,
+                hint = "",
+                index = index
+            )
+        }
+
+        val deckName = try {
+            if (_deckId.value == 0L) {
+                // If deckId is not set, use the default deck
+                col.decks.name(1L)
+            } else {
+                col.decks.name(_deckId.value)
+            }
+        } catch (e: Exception) {
+            Timber.w(e, "Error getting deck name for deck ID ${_deckId.value}, using default deck")
+            try {
+                // Fall back to the default deck (ID 1)
+                col.decks.name(1L)
+            } catch (e2: Exception) {
+                Timber.e(e2, "Error getting default deck name")
+                "Default"
+            }
+        }
+
+        Timber.d("updateStateFromNoteWithNotetype: Updating state with note type '%s', %d fields", notetype.name, fields.size)
+        
+        _noteEditorState.update { currentState ->
+            val newFocus =
+                currentState.focusedFieldIndex?.takeIf { focus ->
+                    fields.any { it.index == focus }
+                } ?: fields.firstOrNull()?.index
+            
+            Timber.d("updateStateFromNoteWithNotetype: Old state note type='%s', New state note type='%s'", 
+                currentState.selectedNoteTypeName, notetype.name)
+            
+            currentState.copy(
+                fields = fields,
+                tags = note.tags,
+                selectedDeckName = deckName,
+                selectedNoteTypeName = notetype.name,
+                isAddingNote = isAddingNote,
+                isClozeType = notetype.isCloze,
+                isImageOcclusion = notetype.isImageOcclusion,
+                cardsInfo = if (isAddingNote) {
+                    ""
+                } else {
+                    "Cards: ${note.numberOfCards(col)}"
+                },
+                focusedFieldIndex = newFocus
+            )
+        }
+        
+        Timber.d("updateStateFromNoteWithNotetype: State updated, current selectedNoteTypeName='%s'", 
+            _noteEditorState.value.selectedNoteTypeName)
     }
 
     /**

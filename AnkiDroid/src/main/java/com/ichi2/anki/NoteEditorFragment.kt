@@ -1225,7 +1225,8 @@ class NoteEditorFragment :
         setDid(editorNote)
         setNote(editorNote, FieldChangeType.onActivityCreation(shouldReplaceNewlines()))
         if (addNote) {
-            noteTypeSpinner!!.onItemSelectedListener = SetNoteTypeListener()
+            // TODO(Compose Migration): Note type listener now handled by Compose
+            // noteTypeSpinner!!.onItemSelectedListener = SetNoteTypeListener()
             requireAnkiActivity().setToolbarTitle(R.string.menu_add)
             // set information transferred by intent
             var contents: String? = null
