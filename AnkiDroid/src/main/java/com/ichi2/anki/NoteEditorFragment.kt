@@ -3498,14 +3498,26 @@ class NoteEditorFragment :
                 // Disable tags button during note type change (Compose UI)
                 noteEditorViewModel.setTagsButtonEnabled(false)
                 deckSpinnerSelection?.setEnabledActionBarSpinner(false)
-                deckSpinnerSelection?.updateDeckPosition(currentEditedCard!!.did)
-                updateFieldsFromStickyText()
+                try {
+                    deckSpinnerSelection?.updateDeckPosition(currentEditedCard!!.did)
+                    updateFieldsFromStickyText()
+                } finally {
+                    // Always re-enable tags button and spinner even on error
+                    noteEditorViewModel.setTagsButtonEnabled(true)
+                    deckSpinnerSelection?.setEnabledActionBarSpinner(true)
+                }
             } else {
-                populateEditFields(FieldChangeType.refresh(shouldReplaceNewlines()), false)
-                updateCards(currentEditedCard!!.noteType(getColUnsafe))
-                // Re-enable tags button after note type change (Compose UI)
-                noteEditorViewModel.setTagsButtonEnabled(true)
-                deckSpinnerSelection?.setEnabledActionBarSpinner(true)
+                // Disable UI controls during note type change
+                noteEditorViewModel.setTagsButtonEnabled(false)
+                deckSpinnerSelection?.setEnabledActionBarSpinner(false)
+                try {
+                    populateEditFields(FieldChangeType.refresh(shouldReplaceNewlines()), false)
+                    updateCards(currentEditedCard!!.noteType(getColUnsafe))
+                } finally {
+                    // Always re-enable tags button and spinner even on error
+                    noteEditorViewModel.setTagsButtonEnabled(true)
+                    deckSpinnerSelection?.setEnabledActionBarSpinner(true)
+                }
             }
         }
 
