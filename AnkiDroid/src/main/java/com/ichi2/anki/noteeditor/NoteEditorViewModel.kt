@@ -17,6 +17,7 @@ package com.ichi2.anki.noteeditor
 
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ichi2.anki.CollectionManager
@@ -30,10 +31,12 @@ import com.ichi2.anki.libanki.NotetypeJson
 import com.ichi2.anki.libanki.Note.ClozeUtils
 import com.ichi2.anki.noteeditor.compose.NoteEditorState
 import com.ichi2.anki.noteeditor.compose.NoteFieldState
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import kotlin.math.max
@@ -47,8 +50,35 @@ enum class ClozeInsertionMode {
 /**
  * ViewModel for the Note Editor screen
  * Manages note editing state and business logic
+ * 
+ * @param savedStateHandle Handles state persistence across process death (optional for backward compatibility).
+ *                         When null, draft state persistence is disabled but the ViewModel remains functional.
+ *                         To enable persistence, provide SavedStateHandle via a ViewModelFactory.
+ * @param collectionProvider Provides access to the Anki collection, defaults to unsafe global access for compatibility.
+ *                           In production or tests, inject a proper Collection provider for better testability.
  */
-class NoteEditorViewModel : ViewModel() {
+class NoteEditorViewModel(
+    private val savedStateHandle: SavedStateHandle? = null,
+    private val collectionProvider: suspend () -> Collection = { CollectionManager.getColUnsafe() }
+) : ViewModel() {
+    
+    companion object {
+        // Keys for SavedStateHandle persistence
+        private const val KEY_FIELD_VALUES = "note_editor_field_values"
+        private const val KEY_TAGS = "note_editor_tags"
+        private const val KEY_SELECTED_DECK_NAME = "note_editor_selected_deck_name"
+        private const val KEY_FOCUSED_FIELD_INDEX = "note_editor_focused_field_index"
+        
+        /**
+         * Note: SavedStateHandle is nullable to maintain backward compatibility with existing code
+         * that creates the ViewModel without providing dependencies. When SavedStateHandle is null,
+         * draft state persistence is disabled, but all other functionality works normally.
+         * 
+         * To enable full production features including process death recovery:
+         * - Provide SavedStateHandle through a ViewModelFactory
+         * - Inject a Collection provider for testability
+         */
+    }
     
     private val _noteEditorState = MutableStateFlow(
         NoteEditorState(
@@ -66,6 +96,9 @@ class NoteEditorViewModel : ViewModel() {
         )
     )
     val noteEditorState: StateFlow<NoteEditorState> = _noteEditorState.asStateFlow()
+
+    private val _errorState = MutableStateFlow<String?>(null)
+    val errorState: StateFlow<String?> = _errorState.asStateFlow()
 
     private val _availableDecks = MutableStateFlow<List<String>>(emptyList())
     val availableDecks: StateFlow<List<String>> = _availableDecks.asStateFlow()
@@ -98,6 +131,12 @@ class NoteEditorViewModel : ViewModel() {
     ) {
         viewModelScope.launch {
             try {
+                // Attempt to restore draft state from SavedStateHandle
+                val restoredFieldValues = savedStateHandle?.get<Array<String>>(KEY_FIELD_VALUES)
+                val restoredTags = savedStateHandle?.get<Array<String>>(KEY_TAGS)
+                val restoredDeckName = savedStateHandle?.get<String>(KEY_SELECTED_DECK_NAME)
+                val restoredFocusedIndex = savedStateHandle?.get<Int>(KEY_FOCUSED_FIELD_INDEX)
+                
                 // Load note and determine deck
                 if (cardId != null && !isAddingNote) {
                     // Editing an existing card - use the card's deck
@@ -108,21 +147,59 @@ class NoteEditorViewModel : ViewModel() {
                 } else {
                     // Adding a new note - use the provided deckId or calculate it
                     val notetype = col.notetypes.current()
-                    _currentNote.value = Note.fromNotetypeId(col, notetype.id)
+                    val newNote = Note.fromNotetypeId(col, notetype.id)
+                    
+                    // Restore field values if available
+                    if (restoredFieldValues != null && restoredFieldValues.size == newNote.fields.size) {
+                        restoredFieldValues.forEachIndexed { index, value ->
+                            if (index < newNote.fields.size) {
+                                newNote.fields[index] = value
+                            }
+                        }
+                    }
+                    
+                    _currentNote.value = newNote
                     _deckId.value = calculateDeckIdForNewNote(col, deckId, notetype)
+                    
+                    // Restore deck if available
+                    if (restoredDeckName != null) {
+                        val restoredDeck = col.decks.allNamesAndIds().find { it.name == restoredDeckName }
+                        if (restoredDeck != null) {
+                            _deckId.value = restoredDeck.id
+                        }
+                    }
                 }
 
                 // Load available decks and note types
+                ensureActive()
                 _availableDecks.value = col.decks.allNamesAndIds(skipEmptyDefault = true).map { it.name }
                 _availableNoteTypes.value = col.notetypes.all().map { it.name }
 
                 // Update UI state
                 updateStateFromNote(col, isAddingNote)
                 
+                // Restore tags if available
+                if (restoredTags != null) {
+                    _noteEditorState.update { it.copy(tags = restoredTags.toList()) }
+                }
+                
+                // Restore focused field if available and valid
+                if (restoredFocusedIndex != null) {
+                    _noteEditorState.update { currentState ->
+                        if (currentState.fields.any { it.index == restoredFocusedIndex }) {
+                            currentState.copy(focusedFieldIndex = restoredFocusedIndex)
+                        } else {
+                            currentState
+                        }
+                    }
+                }
+                
                 onComplete?.invoke(true, null)
             } catch (e: Exception) {
+                val errorMessage = "Failed to initialize editor: ${e.message ?: "Unknown error"}"
                 Timber.e(e, "Error initializing note editor")
-                onComplete?.invoke(false, e.message)
+                _errorState.value = errorMessage
+                onComplete?.invoke(false, errorMessage)
             }
         }
     }
@@ -185,6 +262,9 @@ class NoteEditorViewModel : ViewModel() {
         }
         // Mark as edited whenever a field value changes
         _isFieldEdited.value = true
+        
+        // Persist field values to SavedStateHandle
+        persistDraftState()
     }
 
     /**
@@ -208,6 +288,7 @@ class NoteEditorViewModel : ViewModel() {
      */
     fun updateTags(tags: List<String>) {
         _noteEditorState.update { it.copy(tags = tags) }
+        persistDraftState()
     }
 
     fun onFieldFocus(index: Int) {
@@ -218,6 +299,7 @@ class NoteEditorViewModel : ViewModel() {
                 currentState
             }
         }
+        persistDraftState()
     }
 
     /**
@@ -226,14 +308,17 @@ class NoteEditorViewModel : ViewModel() {
     fun selectDeck(deckName: String) {
         viewModelScope.launch {
             try {
-                val col = CollectionManager.getColUnsafe()
+                val col = collectionProvider()
                 val deck = col.decks.allNamesAndIds().find { it.name == deckName }
                 if (deck != null) {
                     _deckId.value = deck.id
                     _noteEditorState.update { it.copy(selectedDeckName = deckName) }
+                    persistDraftState()
                 }
             } catch (e: Exception) {
+                val errorMessage = "Failed to select deck: ${e.message ?: "Unknown error"}"
                 Timber.e(e, "Error selecting deck")
+                _errorState.value = errorMessage
             }
         }
     }
@@ -244,7 +329,7 @@ class NoteEditorViewModel : ViewModel() {
     fun selectNoteType(noteTypeName: String) {
         viewModelScope.launch {
             try {
-                val col = CollectionManager.getColUnsafe()
+                val col = collectionProvider()
                 val notetype = col.notetypes.all().find { it.name == noteTypeName }
                 if (notetype != null) {
                     // Capture existing note to preserve matching field values
@@ -253,6 +338,7 @@ class NoteEditorViewModel : ViewModel() {
                     
                     // Copy field values from old note to new note where field names match
                     if (oldNote != null) {
+                        ensureActive()
                         val oldNotetype = oldNote.notetype
                         oldNotetype.fields.forEachIndexed { oldIndex, oldField ->
                             if (oldIndex < oldNote.fields.size) {
@@ -268,9 +354,12 @@ class NoteEditorViewModel : ViewModel() {
                     
                     _currentNote.value = newNote
                     updateStateFromNote(col, _noteEditorState.value.isAddingNote)
+                    persistDraftState()
                 }
             } catch (e: Exception) {
+                val errorMessage = "Failed to change note type: ${e.message ?: "Unknown error"}"
                 Timber.e(e, "Error changing note type")
+                _errorState.value = errorMessage
             }
         }
     }
@@ -289,7 +378,7 @@ class NoteEditorViewModel : ViewModel() {
      */
     suspend fun saveNote(): NoteFieldsCheckResult {
         return try {
-            val col = CollectionManager.getColUnsafe()
+            val col = collectionProvider()
             val note = _currentNote.value ?: return NoteFieldsCheckResult.Failure(null)
             val currentCard = _currentCard.value
 
@@ -309,6 +398,7 @@ class NoteEditorViewModel : ViewModel() {
             if (_noteEditorState.value.isAddingNote) {
                 val validationResult = checkNoteFieldsResponse(note)
                 if (validationResult is NoteFieldsCheckResult.Failure) {
+                    _errorState.value = "Note validation failed: Please check required fields"
                     return validationResult
                 }
                 col.addNote(note, _deckId.value)
@@ -328,9 +418,13 @@ class NoteEditorViewModel : ViewModel() {
                 col.updateNote(note).let { }
             }
 
+            // Clear draft state after successful save
+            clearDraftState()
             NoteFieldsCheckResult.Success
         } catch (e: Exception) {
+            val errorMessage = "Failed to save note: ${e.message ?: "Unknown error"}"
             Timber.e(e, "Error saving note")
+            _errorState.value = errorMessage
             NoteFieldsCheckResult.Failure(null)
         }
     }
@@ -510,14 +604,63 @@ class NoteEditorViewModel : ViewModel() {
         return applied
     }
 
-    private fun calculateNextClozeIndex(): Int =
-        try {
+    private fun calculateNextClozeIndex(): Int {
+        return try {
             val values = _noteEditorState.value.fields.map { it.value.text }
+            // Check for cancellation before potentially expensive operation
+            if (!viewModelScope.coroutineContext.isActive) {
+                Timber.d("Coroutine cancelled during cloze index calculation")
+                return 1
+            }
             ClozeUtils.getNextClozeIndex(values)
         } catch (e: Exception) {
             Timber.w(e, "Error calculating next cloze index")
             1
         }
+    }
+
+    /**
+     * Persist draft state to SavedStateHandle for process death recovery
+     */
+    private fun persistDraftState() {
+        if (savedStateHandle == null) {
+            Timber.d("SavedStateHandle not available, skipping draft state persistence")
+            return
+        }
+        try {
+            val state = _noteEditorState.value
+            savedStateHandle[KEY_FIELD_VALUES] = state.fields.map { it.value.text }.toTypedArray()
+            savedStateHandle[KEY_TAGS] = state.tags.toTypedArray()
+            savedStateHandle[KEY_SELECTED_DECK_NAME] = state.selectedDeckName
+            state.focusedFieldIndex?.let { savedStateHandle[KEY_FOCUSED_FIELD_INDEX] = it }
+        } catch (e: Exception) {
+            Timber.w(e, "Error persisting draft state")
+        }
+    }
+
+    /**
+     * Clear draft state from SavedStateHandle after successful save
+     */
+    private fun clearDraftState() {
+        if (savedStateHandle == null) {
+            return
+        }
+        try {
+            savedStateHandle.remove<Array<String>>(KEY_FIELD_VALUES)
+            savedStateHandle.remove<Array<String>>(KEY_TAGS)
+            savedStateHandle.remove<String>(KEY_SELECTED_DECK_NAME)
+            savedStateHandle.remove<Int>(KEY_FOCUSED_FIELD_INDEX)
+        } catch (e: Exception) {
+            Timber.w(e, "Error clearing draft state")
+        }
+    }
+
+    /**
+     * Clear the current error state (e.g., after user acknowledges the error)
+     */
+    fun clearError() {
+        _errorState.value = null
+    }
 
     /**
      * Update the cards info display after template changes
