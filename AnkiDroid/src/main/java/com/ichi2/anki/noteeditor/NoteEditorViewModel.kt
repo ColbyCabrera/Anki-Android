@@ -94,7 +94,7 @@ class NoteEditorViewModel : ViewModel() {
         cardId: Long? = null,
         deckId: Long? = null,
         isAddingNote: Boolean = true,
-        onComplete: (() -> Unit)? = null
+        onComplete: ((success: Boolean, error: String?) -> Unit)? = null
     ) {
         viewModelScope.launch {
             try {
@@ -102,6 +102,11 @@ class NoteEditorViewModel : ViewModel() {
                 if (cardId != null && !isAddingNote) {
                     // Editing an existing card - use the card's deck
                     val card = col.getCard(cardId)
+                    if (card == null) {
+                        Timber.e("Card not found with id: $cardId")
+                        onComplete?.invoke(false, "Card not found")
+                        return@launch
+                    }
                     _currentCard.value = card
                     _currentNote.value = card.note(col)
                     _deckId.value = card.currentDeckId()
@@ -118,10 +123,11 @@ class NoteEditorViewModel : ViewModel() {
 
                 // Update UI state
                 updateStateFromNote(col, isAddingNote)
+                
+                onComplete?.invoke(true, null)
             } catch (e: Exception) {
                 Timber.e(e, "Error initializing note editor")
-            } finally {
-                onComplete?.invoke()
+                onComplete?.invoke(false, e.message)
             }
         }
     }
