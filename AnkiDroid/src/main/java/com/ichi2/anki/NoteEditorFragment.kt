@@ -395,7 +395,12 @@ class NoteEditorFragment :
                                 cardId = currentEditedCard?.id,
                                 deckId = deckId,
                                 isAddingNote = addNote
-                            ) {
+                            ) { success, error ->
+                                if (!success) {
+                                    Timber.e("Error initializing editor: $error")
+                                    showSnackbar(R.string.something_wrong)
+                                    return@initializeEditor
+                                }
                                 // This callback ensures updateCards is called after initialization is complete
                                 if (editorNote != null) {
                                     updateCards(editorNote!!.notetype)
