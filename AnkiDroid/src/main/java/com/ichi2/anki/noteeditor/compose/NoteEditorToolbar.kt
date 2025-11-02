@@ -220,25 +220,35 @@ private fun ToolbarIconButton(
         state = tooltipState
     ) {
         if (onLongClick != null) {
-            // For buttons with long click, we need a wrapper Box with combinedClickable
+            // For buttons with long click, wrap IconButton behavior with combinedClickable
             val interactionSource = remember { MutableInteractionSource() }
-            Box(
-                modifier = modifier
-                    .size(48.dp)
-                    .combinedClickable(
-                        interactionSource = interactionSource,
-                        indication = ripple(),
-                        onClick = onClick,
-                        onLongClick = onLongClick
-                    ),
-                contentAlignment = Alignment.Center
+            Surface(
+                onClick = onClick,
+                modifier = modifier,
+                interactionSource = interactionSource,
+                shape = IconButtonDefaults.shapes().shape,
+                color = Color.Transparent,
             ) {
-                ToolbarIcon(
-                    icon = icon,
-                    painter = painter,
-                    contentDescription = contentDescription,
-                    tint = MaterialTheme.colorScheme.onSurface
-                )
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .combinedClickable(
+                            interactionSource = interactionSource,
+                            indication = ripple(
+                                bounded = false,
+                                radius = 20.dp
+                            ),
+                            onClick = onClick,
+                            onLongClick = onLongClick
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    ToolbarIcon(
+                        icon = icon,
+                        painter = painter,
+                        contentDescription = contentDescription
+                    )
+                }
             }
         } else {
             // Standard IconButton for buttons without long click
@@ -263,7 +273,9 @@ private fun ToolbarIconButton(
 /**
  * Text button for custom toolbar buttons (needs combinedClickable for long press)
  */
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3ExpressiveApi::class
+)
 @Composable
 private fun ToolbarTextButton(
     modifier: Modifier = Modifier,
@@ -289,22 +301,33 @@ private fun ToolbarTextButton(
         tooltip = { PlainTooltip { Text(contentDescription) } },
         state = tooltipState
     ) {
-        Box(
-            modifier = modifier
-                .size(48.dp)
-                .combinedClickable(
-                    interactionSource = interactionSource,
-                    indication = ripple(),
-                    onClick = onClick,
-                    onLongClick = onLongClick
-                ),
-            contentAlignment = Alignment.Center
+        Surface(
+            onClick = onClick,
+            modifier = modifier,
+            interactionSource = interactionSource,
+            shape = IconButtonDefaults.shapes().shape,
+            color = Color.Transparent,
         ) {
-            Text(
-                text = text,
-                style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp),
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .combinedClickable(
+                        interactionSource = interactionSource,
+                        indication = ripple(
+                            bounded = false,
+                            radius = 24.dp
+                        ),
+                        onClick = onClick,
+                        onLongClick = onLongClick
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
         }
     }
 }
