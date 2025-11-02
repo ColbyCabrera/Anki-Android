@@ -243,18 +243,20 @@ fun NoteEditorScreen(
             }
 
             // Image Occlusion Buttons (if applicable)
-            if (state.isImageOcclusion && state.isAddingNote) {
-                ImageOcclusionButtons(
-                    onSelectImage = onImageOcclusionSelectImage,
-                    onPasteImage = onImageOcclusionPasteImage
-                )
-            } else if (state.isImageOcclusion && !state.isAddingNote) {
-                Button(
-                    onClick = onImageOcclusionEdit,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.filledTonalButtonColors()
-                ) {
-                    Text(stringResource(R.string.edit_occlusions))
+            if (state.isImageOcclusion) {
+                if (state.isAddingNote) {
+                    ImageOcclusionButtons(
+                        onSelectImage = onImageOcclusionSelectImage,
+                        onPasteImage = onImageOcclusionPasteImage
+                    )
+                } else {
+                    Button(
+                        onClick = onImageOcclusionEdit,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.filledTonalButtonColors()
+                    ) {
+                        Text(stringResource(R.string.edit_occlusions))
+                    }
                 }
             }
 
