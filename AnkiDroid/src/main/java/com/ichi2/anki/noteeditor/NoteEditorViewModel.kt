@@ -137,16 +137,21 @@ class NoteEditorViewModel(
                 val restoredDeckName = savedStateHandle?.get<String>(KEY_SELECTED_DECK_NAME)
                 val restoredFocusedIndex = savedStateHandle?.get<Int>(KEY_FOCUSED_FIELD_INDEX)
                 
+                // Check cancellation after reading saved state
+                ensureActive()
+                
                 // Load note and determine deck
                 if (cardId != null && !isAddingNote) {
                     // Editing an existing card - use the card's deck
                     val card = col.getCard(cardId)
+                    ensureActive() // Check cancellation after DB access
                     _currentCard.value = card
                     _currentNote.value = card.note(col)
                     _deckId.value = card.currentDeckId()
                 } else {
                     // Adding a new note - use the provided deckId or calculate it
                     val notetype = col.notetypes.current()
+                    ensureActive() // Check cancellation after DB access
                     val newNote = Note.fromNotetypeId(col, notetype.id)
                     
                     // Restore field values if available
@@ -154,6 +159,7 @@ class NoteEditorViewModel(
                         restoredFieldValues.forEachIndexed { index, value ->
                             newNote.fields[index] = value
                         }
+                        ensureActive() // Check cancellation after field restoration
                     }
                     
                     _currentNote.value = newNote
@@ -161,6 +167,7 @@ class NoteEditorViewModel(
                     
                     // Restore deck if available
                     if (restoredDeckName != null) {
+                        ensureActive() // Check cancellation before deck lookup
                         val restoredDeck = col.decks.allNamesAndIds().find { it.name == restoredDeckName }
                         if (restoredDeck != null) {
                             _deckId.value = restoredDeck.id
@@ -173,8 +180,14 @@ class NoteEditorViewModel(
                 _availableDecks.value = col.decks.allNamesAndIds(skipEmptyDefault = true).map { it.name }
                 _availableNoteTypes.value = col.notetypes.all().map { it.name }
 
+                // Check cancellation after loading deck/notetype lists
+                ensureActive()
+                
                 // Update UI state
                 updateStateFromNote(col, isAddingNote)
+                
+                // Check cancellation after state update
+                ensureActive()
                 
                 // Restore tags if available
                 if (restoredTags != null) {
@@ -307,6 +320,7 @@ class NoteEditorViewModel(
         viewModelScope.launch {
             try {
                 val col = collectionProvider()
+                ensureActive() // Check cancellation after getting collection
                 val deck = col.decks.allNamesAndIds().find { it.name == deckName }
                 if (deck != null) {
                     _deckId.value = deck.id
@@ -328,8 +342,10 @@ class NoteEditorViewModel(
         viewModelScope.launch {
             try {
                 val col = collectionProvider()
+                ensureActive() // Check cancellation after getting collection
                 val notetype = col.notetypes.all().find { it.name == noteTypeName }
                 if (notetype != null) {
+                    ensureActive() // Check cancellation after notetype lookup
                     // Capture existing note to preserve matching field values
                     val oldNote = _currentNote.value
                     val newNote = Note.fromNotetypeId(col, notetype.id)
@@ -348,6 +364,7 @@ class NoteEditorViewModel(
                                 }
                             }
                         }
+                        ensureActive() // Check cancellation after field copying
                     }
                     
                     _currentNote.value = newNote
@@ -411,7 +428,7 @@ class NoteEditorViewModel(
                     _currentCard.value = currentCard
                     Timber.d("Card deck updated to %d", _deckId.value)
                 }
-                
+
                 // Explicitly ignore OpChanges - UI updates happen through reactive state
                 col.updateNote(note).let { }
             }
