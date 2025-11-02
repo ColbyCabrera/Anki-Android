@@ -152,9 +152,7 @@ class NoteEditorViewModel(
                     // Restore field values if available
                     if (restoredFieldValues != null && restoredFieldValues.size == newNote.fields.size) {
                         restoredFieldValues.forEachIndexed { index, value ->
-                            if (index < newNote.fields.size) {
-                                newNote.fields[index] = value
-                            }
+                            newNote.fields[index] = value
                         }
                     }
                     
