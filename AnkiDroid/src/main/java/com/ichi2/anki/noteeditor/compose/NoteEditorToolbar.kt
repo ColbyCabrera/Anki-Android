@@ -198,7 +198,7 @@ fun NoteEditorToolbar(
 private fun ToolbarIconButton(
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
-    painter: androidx.compose.ui.graphics.painter.Painter? = null,
+    painter: Painter? = null,
     contentDescription: String,
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null,
