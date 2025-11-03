@@ -159,7 +159,6 @@ fun NoteEditorScreen(
     // Auto-scroll when keyboard appears
     LaunchedEffect(key1 = imeState.value) {
         if (imeState.value) {
-            // Scroll to bottom with smooth animation when keyboard opens
             scrollState.animateScrollTo(scrollState.maxValue, tween(300))
         }
     }
