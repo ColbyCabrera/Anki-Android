@@ -1563,7 +1563,11 @@ class NoteEditorFragment :
                 }
             KeyEvent.KEYCODE_D -> // null check in case Spinner is moved into options menu in the future
                 if (event.isCtrlPressed) {
-                    launchCatchingTask { deckSpinnerSelection!!.displayDeckSelectionDialog() }
+                    if (isComposeMode) {
+                        showDeckSelectionDialog()
+                    } else if (deckSpinnerSelection != null) {
+                        launchCatchingTask { deckSpinnerSelection!!.displayDeckSelectionDialog() }
+                    }
                     return true
                 }
             KeyEvent.KEYCODE_L ->
@@ -1600,6 +1604,9 @@ class NoteEditorFragment :
 
         // 7573: Ctrl+Shift+[Num] to select a field
         if (event.isCtrlPressed && event.isShiftPressed) {
+            if (isComposeMode) {
+                return false
+            }
             val digit = KeyUtils.getDigit(event) ?: return false
             // '0' is after '9' on the keyboard, so a user expects '10'
             val humanReadableDigit = if (digit == 0) 10 else digit
