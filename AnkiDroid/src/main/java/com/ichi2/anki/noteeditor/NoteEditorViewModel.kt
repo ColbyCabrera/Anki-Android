@@ -603,23 +603,7 @@ class NoteEditorViewModel(
             )
         }
 
-        val deckName = try {
-            if (_deckId.value == 0L) {
-                // If deckId is not set, use the default deck
-                col.decks.name(1L)
-            } else {
-                col.decks.name(_deckId.value)
-            }
-        } catch (e: Exception) {
-            Timber.w(e, "Error getting deck name for deck ID ${_deckId.value}, using default deck")
-            try {
-                // Fall back to the default deck (ID 1)
-                col.decks.name(1L)
-            } catch (e2: Exception) {
-                Timber.e(e2, "Error getting default deck name")
-                "Default"
-            }
-        }
+        val deckName = getDeckNameSafely(col, _deckId.value)
 
         Timber.d("updateStateFromNote: Updating state with note type '%s', %d fields", notetype.name, fields.size)
         
@@ -854,6 +838,29 @@ class NoteEditorViewModel(
     fun setCardsButtonEnabled(enabled: Boolean) {
         _noteEditorState.update { currentState ->
             currentState.copy(isCardsButtonEnabled = enabled)
+        }
+    }
+
+    /**
+     * Safely retrieve the deck name for a given deck ID, with fallback to default deck
+     */
+    private fun getDeckNameSafely(col: Collection, deckId: Long): String {
+        return try {
+            if (deckId == 0L) {
+                // If deckId is not set, use the default deck
+                col.decks.name(1L)
+            } else {
+                col.decks.name(deckId)
+            }
+        } catch (e: Exception) {
+            Timber.w(e, "Error getting deck name for deck ID $deckId, using default deck")
+            try {
+                // Fall back to the default deck (ID 1)
+                col.decks.name(1L)
+            } catch (e2: Exception) {
+                Timber.e(e2, "Error getting default deck name")
+                "Default"
+            }
         }
     }
 }
