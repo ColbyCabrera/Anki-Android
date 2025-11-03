@@ -188,17 +188,13 @@ suspend fun <T> FragmentActivity.runCatching(
                 Timber.w(exc, errorMessage)
                 exc.localizedMessage?.let {
                     // Only show snackbar if activity is still valid and has the required view
-                    val activityFinishing = isFinishing
-                    val activityDestroyed = isDestroyed
-                    val canShowSnackbars = canProperlyShowSnackbars()
-                    
-                    if (!activityFinishing && !activityDestroyed && canShowSnackbars) {
+                    if (!isFinishing && !isDestroyed && canProperlyShowSnackbars()) {
                         showSnackbar(it)
                     } else {
                         val reasons = buildList {
-                            if (activityFinishing) add("isFinishing")
-                            if (activityDestroyed) add("isDestroyed")
-                            if (!canShowSnackbars) add("!canProperlyShowSnackbars()")
+                            if (isFinishing) add("isFinishing")
+                            if (isDestroyed) add("isDestroyed")
+                            if (!canProperlyShowSnackbars()) add("!canProperlyShowSnackbars()")
                         }
                         Timber.i("Cannot show snackbar due to: ${reasons.joinToString(", ")}")
                     }
