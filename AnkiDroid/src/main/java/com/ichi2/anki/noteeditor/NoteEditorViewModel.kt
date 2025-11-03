@@ -426,6 +426,11 @@ class NoteEditorViewModel(
                 // Copy field values from old note to new note where field names match
                 if (oldNote != null) {
                     ensureActive()
+                    
+                    // Preserve original note ID so updateNote targets the correct record
+                    // Note: guId, mod, usn have private setters and will be updated by col.updateNote()
+                    newNote.id = oldNote.id
+
                     val oldNotetype = oldNote.notetype
                     oldNotetype.fields.forEachIndexed { oldIndex, oldField ->
                         if (oldIndex < oldNote.fields.size) {
@@ -438,12 +443,23 @@ class NoteEditorViewModel(
                             }
                         }
                     }
-                    ensureActive() // Check cancellation after field copying
+                    
+                    // Reapply current draft tags from the UI state
+                    val currentTags = _noteEditorState.value.tags
+                    if (currentTags.isNotEmpty()) {
+                        newNote.setTagsFromStr(col, currentTags.joinToString(" "))
+                        Timber.d("Reapplied tags to new note: %s", currentTags.joinToString(", "))
+                    }
+                    
+                    ensureActive() // Check cancellation after field copying and tag restoration
                 }
                 
                 Timber.d("About to set _currentNote.value: newNote object id=%s, notetype.name='%s', notetype.id=%d, fields=%d",
                     System.identityHashCode(newNote), newNote.notetype.name, newNote.notetype.id, newNote.fields.size)
                 
+                // Force StateFlow update by creating a new reference
+                // Note: StateFlow uses equals() which only compares IDs, so we need to force the update
+                _currentNote.value = null
                 _currentNote.value = newNote
                 
                 Timber.d("After setting _currentNote.value: _currentNote.value object id=%s, notetype.name='%s', notetype.id=%d",
