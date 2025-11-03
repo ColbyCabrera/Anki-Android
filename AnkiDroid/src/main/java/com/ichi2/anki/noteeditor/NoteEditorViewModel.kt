@@ -95,27 +95,42 @@ class NoteEditorViewModel(
             isCardsButtonEnabled = true
         )
     )
+    /**
+     * Immutable stream of the current editor UI state consumed by the Compose UI.
+     * Includes fields, tags, selected deck/type, flags (cloze/image occlusion),
+     * cards info, focus, and button enabled state.
+     */
     val noteEditorState: StateFlow<NoteEditorState> = _noteEditorState.asStateFlow()
 
     private val _errorState = MutableStateFlow<String?>(null)
+    /**
+     * One-shot or sticky error messages surfaced to the UI layer for snackbars/dialogs.
+     * Null indicates no current error to display.
+     */
     val errorState: StateFlow<String?> = _errorState.asStateFlow()
 
     private val _availableDecks = MutableStateFlow<List<String>>(emptyList())
+    /** List of deck names available for selection in the editor. */
     val availableDecks: StateFlow<List<String>> = _availableDecks.asStateFlow()
 
     private val _availableNoteTypes = MutableStateFlow<List<String>>(emptyList())
+    /** List of note type names available for selection in the editor. */
     val availableNoteTypes: StateFlow<List<String>> = _availableNoteTypes.asStateFlow()
 
     private val _toolbarButtons = MutableStateFlow<List<ToolbarButtonModel>>(emptyList())
+    /** Custom toolbar buttons available in the formatting toolbar. */
     val toolbarButtons: StateFlow<List<ToolbarButtonModel>> = _toolbarButtons.asStateFlow()
 
     private val _showToolbar = MutableStateFlow(true)
+    /** Whether the formatting toolbar should be visible. */
     val showToolbar: StateFlow<Boolean> = _showToolbar.asStateFlow()
 
     private val _isFieldEdited = MutableStateFlow(false)
+    /** True if any field content has been modified and not yet saved. */
     val isFieldEdited: StateFlow<Boolean> = _isFieldEdited.asStateFlow()
 
     private val _currentNote = MutableStateFlow<Note?>(null)
+    /** The underlying Note being edited (null when creating a new, not yet initialized). */
     val currentNote: StateFlow<Note?> = _currentNote.asStateFlow()
     
     private val _currentCard = MutableStateFlow<Card?>(null)
