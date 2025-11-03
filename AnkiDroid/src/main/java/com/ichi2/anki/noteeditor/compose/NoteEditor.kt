@@ -289,7 +289,10 @@ fun NoteEditorScreen(
                         text = if (state.tags.isEmpty()) {
                             stringResource(R.string.add_tag)
                         } else {
-                            "Tags: ${state.tags.joinToString(", ")}"
+                            stringResource(
+                                R.string.note_editor_tags_list,
+                                state.tags.joinToString(", ")
+                            )
                         }
                     )
                 }
