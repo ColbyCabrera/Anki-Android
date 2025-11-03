@@ -104,13 +104,6 @@ fun NoteEditorTopAppBar(
     var overflowExpanded by remember { mutableStateOf(false) }
     val visibleOverflowItems = remember(overflowItems) { overflowItems.filter { it.visible } }
 
-    // Ensure dropdown is dismissed when composable is disposed
-    DisposableEffect(Unit) {
-        onDispose {
-            overflowExpanded = false
-        }
-    }
-
     TopAppBar(
         modifier = modifier,
         windowInsets = WindowInsets.statusBars,
