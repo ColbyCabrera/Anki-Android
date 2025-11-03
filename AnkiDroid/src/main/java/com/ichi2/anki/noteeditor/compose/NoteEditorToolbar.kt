@@ -175,7 +175,6 @@ fun NoteEditorToolbar(
             FilledIconButton(
                 onClick = onAddCustomButtonClick,
                 shapes = IconButtonDefaults.shapes(),
-                modifier = Modifier,
                 colors = IconButtonDefaults.iconButtonColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant
