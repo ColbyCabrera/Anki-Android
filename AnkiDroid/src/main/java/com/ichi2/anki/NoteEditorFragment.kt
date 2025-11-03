@@ -1716,6 +1716,10 @@ class NoteEditorFragment :
         }
         // changed fields?
         val isFieldEdited = noteEditorViewModel.isFieldEdited.value
+        if (isComposeMode) {
+            val result = isFieldEdited || isTagsEdited
+            return result
+        }
         if (isFieldEdited) {
             for (value in editFields!!) {
                 if (value.text.toString() != "") {
@@ -1723,13 +1727,19 @@ class NoteEditorFragment :
                 }
             }
             return false
-        } else {
-            return isTagsEdited
         }
+        return isTagsEdited
         // changed tags?
     }
 
-    private fun collectionHasLoaded(): Boolean = allNoteTypeIds != null
+    private fun collectionHasLoaded(): Boolean {
+        // In Compose mode, check if ViewModel has a note loaded
+        if (isComposeMode) {
+            return noteEditorViewModel.currentNote.value != null
+        }
+        // In legacy mode, check if note type IDs are loaded
+        return allNoteTypeIds != null
+    }
 
     // ----------------------------------------------------------------------------
     // SAVE NOTE METHODS
