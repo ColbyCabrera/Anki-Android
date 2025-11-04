@@ -516,6 +516,25 @@ class NoteEditorViewModel(
                     return validationResult
                 }
                 col.addNote(note, _deckId.value)
+
+                // Reset to a fresh blank note for the next add, preserving sticky field values
+                val currentState = _noteEditorState.value
+                val stickyValues = currentState.fields.filter { it.isSticky }
+                    .mapIndexed { index, field -> index to field.value.text }.toMap()
+
+                val freshNote = Note.fromNotetypeId(col, note.notetype.id)
+                // Apply sticky field values to the new note
+                stickyValues.forEach { (index, value) ->
+                    if (index < freshNote.fields.size) {
+                        freshNote.fields[index] = value
+                    }
+                }
+
+                // Update the current note reference
+                _currentNote.value = freshNote
+
+                // Update state with the fresh note (which includes sticky values)
+                updateStateFromNote(col, isAddingNote = true)
             } else {
                 // When editing an existing card, check if deck changed
                 if (currentCard != null && currentCard.currentDeckId() != _deckId.value) {
