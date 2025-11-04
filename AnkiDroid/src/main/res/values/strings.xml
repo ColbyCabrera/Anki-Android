@@ -21,6 +21,8 @@
     <string name="fab_menu_collapsed">Collapsed</string>
     <string name="fab_menu_toggle">Toggle menu</string>
     <string name="back">back</string>
+    <string name="preview">Preview</string>
+    <string name="note_type_not_found_for_template_editor">Unable to open card template editor: note type not found</string>
     <string name="daily_limit_reached">There are more new cards available, but the daily limit has been reached. You can increase the limit in options, but please bear in mind that the more new cards you introduce, the higher your short-term review workload will become.</string>
     <string name="study_more">If you wish to study outside of the regular schedule, you can use the custom study feature.</string>
     <string name="next_review_in">Next review in:</string>
@@ -35,4 +37,6 @@
     <string name="undo_delete_note">Undo delete note</string>
     <string name="done_icon">Done icon</string>
     <string name="filter_by_tag">Filter by tag</string>
+    <string name="deck_not_found">Deck not found</string>
+    <string name="note_editor_tags_list">Tags: %s</string>
 </resources>

@@ -43,6 +43,7 @@ import com.ichi2.anki.common.annotations.UseContextParameter
 import com.ichi2.anki.exception.StorageAccessException
 import com.ichi2.anki.libanki.Collection
 import com.ichi2.anki.pages.DeckOptionsDestination
+import com.ichi2.anki.snackbar.canProperlyShowSnackbars
 import com.ichi2.anki.snackbar.showSnackbar
 import com.ichi2.anki.utils.openUrl
 import com.ichi2.utils.create
@@ -185,7 +186,19 @@ suspend fun <T> FragmentActivity.runCatching(
             }
             is BackendInterruptedException -> {
                 Timber.w(exc, errorMessage)
-                exc.localizedMessage?.let { showSnackbar(it) }
+                exc.localizedMessage?.let {
+                    // Only show snackbar if activity is still valid and has the required view
+                    if (!isFinishing && !isDestroyed && canProperlyShowSnackbars()) {
+                        showSnackbar(it)
+                    } else {
+                        val reasons = buildList {
+                            if (isFinishing) add("isFinishing")
+                            if (isDestroyed) add("isDestroyed")
+                            if (!canProperlyShowSnackbars()) add("!canProperlyShowSnackbars()")
+                        }
+                        Timber.i("Cannot show snackbar due to: ${reasons.joinToString(", ")}")
+                    }
+                }
             }
             is BackendNetworkException, is BackendSyncException, is StorageAccessException -> {
                 // these exceptions do not generate worthwhile crash reports

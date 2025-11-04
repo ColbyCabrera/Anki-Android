@@ -101,6 +101,7 @@
     <string name="studyoptions_total_label">Total cards</string>
 
     <!-- Card editor -->
+    <string name="cardeditor_title_add_note" maxLength="28">Add note</string>
     <string name="cardeditor_title_edit_card" maxLength="28">Edit note</string>
     <string name="discard">Discard</string>
     <string name="note_editor_no_cards_created">No cards created. Please fill in more fields</string>
@@ -206,6 +207,7 @@
     <!-- Deckpicker Background -->
     <string name="background_image_title" maxLength="41">Background</string>
     <string name="choose_an_image" maxLength="41">Select image</string>
+    <string name="paste_image_from_clipboard">Paste Image from Clipboard</string>
     <string name="remove_wallpaper_image" maxLength="41">Remove background</string>
     <string name="remove_background_image">Remove background?</string>
     <!-- Card Template Browser Appearance -->
@@ -317,6 +319,7 @@
 
     <!--  Note Editor Toggle Sticky  -->
     <string name="note_editor_toggle_sticky">Make field %s sticky</string>
+    <string name="note_editor_toggle_sticky_field">Toggle sticky field</string>
 
     <string name="scoped_storage_learn_more">Learn More</string>
 

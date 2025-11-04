@@ -62,7 +62,8 @@ import com.ichi2.anki.R
 import com.ichi2.anki.browser.BrowserRowWithId
 import com.ichi2.anki.browser.CardBrowserViewModel
 import com.ichi2.anki.model.SelectableDeck
-import com.ichi2.anki.noteeditor.compose.NoteEditor
+// TODO: Re-enable NoteEditor in split view after migration is complete
+// import com.ichi2.anki.noteeditor.compose.NoteEditor
 import kotlinx.coroutines.launch
 
 @OptIn(
@@ -222,9 +223,10 @@ fun CardBrowserLayout(
                     onExportCard = onExportCard,
                     onFilterByTag = onFilterByTag
                 )
-                NoteEditor(
-                    modifier = Modifier.weight(1f)
-                )
+                // TODO: Re-enable NoteEditor split view after migration is complete
+                // NoteEditor(
+                //     modifier = Modifier.weight(1f)
+                // )
             }
         } else {
             Row(

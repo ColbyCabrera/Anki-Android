@@ -19,6 +19,8 @@ package com.ichi2.anki
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
+import androidx.activity.enableEdgeToEdge
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
 import com.ichi2.anki.android.input.ShortcutGroup
@@ -51,6 +53,7 @@ class NoteEditorActivity :
         get() = findViewById(R.id.toolbar)
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         if (showedActivityFailedScreen(savedInstanceState)) {
             return
         }
@@ -122,6 +125,8 @@ class NoteEditorActivity :
         }
 
         enableToolbar()
+        // Hide legacy toolbar in favor of the Compose top app bar managed by the fragment
+        mainToolbar.visibility = View.GONE
 
         // R.id.home is handled in setNavigationOnClickListener
         // Set a listener for back button clicks in the toolbar
