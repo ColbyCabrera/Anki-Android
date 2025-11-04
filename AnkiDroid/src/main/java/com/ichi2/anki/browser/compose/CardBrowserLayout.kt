@@ -17,6 +17,7 @@
 package com.ichi2.anki.browser.compose
 
 import androidx.activity.compose.LocalActivity
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,6 +34,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.motionScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
@@ -51,6 +53,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -103,6 +107,12 @@ fun CardBrowserLayout(
     var showDeckMenu by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     var availableDecks by remember { mutableStateOf<List<SelectableDeck.Deck>>(emptyList()) }
+    val searchAnim by animateFloatAsState(
+        targetValue = if (isSearchOpen) 1f else 0f,
+        animationSpec = motionScheme.defaultEffectsSpec()
+    )
+    val density = LocalDensity.current
+    val searchOffsetPx = with(density) { (-8).dp.toPx() }
 
     LaunchedEffect(Unit) {
         availableDecks = viewModel.getAvailableDecks()
@@ -118,7 +128,9 @@ fun CardBrowserLayout(
         topBar = {
             TopAppBar(
                 title = {
-                    Row {
+                    Row(modifier = Modifier.graphicsLayer {
+                        alpha = 1f - searchAnim
+                    }) {
                         TextButton(onClick = { showDeckMenu = true }) {
                             val selectedDeck by viewModel.flowOfDeckSelection.collectAsStateWithLifecycle(
                                 null
@@ -179,7 +191,12 @@ fun CardBrowserLayout(
                                     onSearch = { viewModel.search(searchQuery) },
                                     expanded = true,
                                     onExpandedChange = { },
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier.fillMaxWidth().graphicsLayer {
+                                        alpha = searchAnim
+                                        translationY = searchOffsetPx * (1f - searchAnim)
+                                        scaleX = 0.98f + 0.02f * searchAnim
+                                        scaleY = 0.98f + 0.02f * searchAnim
+                                    },
                                     placeholder = { Text(text = stringResource(R.string.card_browser_search_hint)) },
                                     leadingIcon = {
                                         Icon(
