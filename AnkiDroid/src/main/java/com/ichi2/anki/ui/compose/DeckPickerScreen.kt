@@ -20,6 +20,7 @@ package com.ichi2.anki.ui.compose
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -69,6 +70,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
@@ -318,6 +320,12 @@ fun DeckPickerScreen(
     onFabMenuExpandedChange: (Boolean) -> Unit
 ) {
     var isSearchOpen by remember { mutableStateOf(false) }
+    val searchAnim by animateFloatAsState(
+        targetValue = if (isSearchOpen) 1f else 0f,
+        animationSpec = motionScheme.defaultEffectsSpec()
+    )
+    val density = LocalDensity.current
+    val searchOffsetPx = with(density) { (-8).dp.toPx() }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val listState = rememberLazyListState()
 
@@ -343,7 +351,10 @@ fun DeckPickerScreen(
                     title = {
                         if (!isSearchOpen) Text(
                             stringResource(R.string.app_name),
-                            style = MaterialTheme.typography.displayMediumEmphasized
+                            style = MaterialTheme.typography.displayMediumEmphasized,
+                            modifier = Modifier.graphicsLayer {
+                                alpha = 1f - searchAnim
+                            }
                         )
                     },
                     navigationIcon = {
@@ -364,7 +375,15 @@ fun DeckPickerScreen(
                                         onSearch = { /* Search is performed as user types */ },
                                         expanded = true,
                                         onExpandedChange = { },
-                                        modifier = Modifier.focusRequester(searchFocusRequester),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .focusRequester(searchFocusRequester)
+                                            .graphicsLayer {
+                                                alpha = searchAnim
+                                                translationY = searchOffsetPx * (1f - searchAnim)
+                                                scaleX = 0.98f + 0.02f * searchAnim
+                                                scaleY = 0.98f + 0.02f * searchAnim
+                                            },
                                         placeholder = { Text(stringResource(R.string.search_decks)) },
                                         leadingIcon = {
                                             Icon(
@@ -387,19 +406,35 @@ fun DeckPickerScreen(
                                 },
                                 expanded = false,
                                 onExpandedChange = { },
-                                modifier = Modifier.weight(1f).padding(top = 0.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                                    .graphicsLayer {
+                                        alpha = searchAnim
+                                    },
                                 shape = SearchBarDefaults.inputFieldShape,
                                 content = { }
                             )
                         } else {
-                            IconButton(onClick = { isSearchOpen = true }) {
+                            IconButton(
+                                onClick = { isSearchOpen = true },
+                                modifier = Modifier.graphicsLayer {
+                                    alpha = 1f - searchAnim
+                                }
+                            ) {
                                 Icon(
                                     painter = painterResource(R.drawable.search_24px),
                                     contentDescription = stringResource(R.string.search_decks)
                                 )
                             }
                             BadgedBox(
-                                modifier = Modifier.height(40.dp).width(48.dp).padding(end = 8.dp),
+                                modifier = Modifier
+                                    .height(40.dp)
+                                    .width(48.dp)
+                                    .padding(end = 8.dp)
+                                    .graphicsLayer {
+                                        alpha = 1f - searchAnim
+                                    },
                                 badge = {
                                     when (syncState) {
                                         SyncIconState.PendingChanges -> Badge()
