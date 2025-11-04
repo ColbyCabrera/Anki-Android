@@ -173,6 +173,7 @@ fun DeckItem(
             DropdownMenu(
                 expanded = isContextMenuOpen,
                 onDismissRequest = { isContextMenuOpen = false },
+                shape = MaterialTheme.shapes.large
             ) {
                 if (deck.filtered) {
                     DropdownMenuItem(
