@@ -109,6 +109,13 @@ fun DeckItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .then(
+                    if (deck.depth == 0) {
+                        Modifier.clip(RoundedCornerShape(cornerRadius))
+                    } else {
+                        Modifier
+                    }
+                )
                 .combinedClickable(
                     onClick = { onDeckClick() },
                     onLongClick = { isContextMenuOpen = true }
