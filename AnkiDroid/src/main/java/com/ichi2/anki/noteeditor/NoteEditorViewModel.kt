@@ -517,15 +517,19 @@ class NoteEditorViewModel(
                 }
                 col.addNote(note, _deckId.value)
 
-                // Reset to a fresh blank note for the next add, preserving sticky field values
+                // Reset to a fresh blank note for the next add, preserving sticky field values and state
                 val currentState = _noteEditorState.value
-                val stickyValues = currentState.fields.filter { it.isSticky }
-                    .mapIndexed { index, field -> index to field.value.text }.toMap()
+
+                // Capture both sticky values and sticky state flags from the current UI
+                val stickyInfo = currentState.fields.associate { field ->
+                    field.index to (field.isSticky to field.value.text)
+                }
 
                 val freshNote = Note.fromNotetypeId(col, note.notetype.id)
                 // Apply sticky field values to the new note
-                stickyValues.forEach { (index, value) ->
-                    if (index < freshNote.fields.size) {
+                stickyInfo.forEach { (index, stickyData) ->
+                    val (isSticky, value) = stickyData
+                    if (isSticky && index < freshNote.fields.size) {
                         freshNote.fields[index] = value
                     }
                 }
@@ -533,8 +537,21 @@ class NoteEditorViewModel(
                 // Update the current note reference
                 _currentNote.value = freshNote
 
-                // Update state with the fresh note (which includes sticky values)
+                // Update state with the fresh note, then restore sticky flags from UI
                 updateStateFromNote(col, isAddingNote = true)
+
+                // Restore the sticky state flags that were set in the UI
+                _noteEditorState.update { state ->
+                    val updatedFields = state.fields.map { field ->
+                        val uiStickyState = stickyInfo[field.index]?.first
+                        if (uiStickyState != null) {
+                            field.copy(isSticky = uiStickyState)
+                        } else {
+                            field
+                        }
+                    }
+                    state.copy(fields = updatedFields)
+                }
             } else {
                 // When editing an existing card, check if deck changed
                 if (currentCard != null && currentCard.currentDeckId() != _deckId.value) {
