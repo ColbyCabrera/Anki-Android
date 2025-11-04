@@ -36,6 +36,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -118,28 +120,8 @@ fun CardBrowserLayout(
 
     Scaffold(
         topBar = {
-            if (isSearchOpen) {
-                TopAppBar(title = {
-                    TextField(
-                        value = searchQuery,
-                        onValueChange = { query -> viewModel.setSearchQuery(query) },
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text(text = stringResource(R.string.card_browser_search_hint)) },
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                        keyboardActions = KeyboardActions(onSearch = {
-                            viewModel.search(searchQuery)
-                        })
-                    )
-                }, navigationIcon = {
-                    IconButton(onClick = { isSearchOpen = false }) {
-                        Icon(
-                            Icons.Default.Close,
-                            contentDescription = stringResource(R.string.close)
-                        )
-                    }
-                })
-            } else {
-                TopAppBar(title = {
+            TopAppBar(
+                title = {
                     Row {
                         TextButton(onClick = { showDeckMenu = true }) {
                             val selectedDeck by viewModel.flowOfDeckSelection.collectAsStateWithLifecycle(
@@ -167,7 +149,8 @@ fun CardBrowserLayout(
                                         viewModel.setSelectedDeck(SelectableDeck.AllDecks)
                                     }
                                     showDeckMenu = false
-                                })
+                                }
+                            )
                             DeckHierarchyMenu(
                                 deckHierarchy = deckHierarchy,
                                 expandedDecks = expandedDecks,
@@ -176,7 +159,8 @@ fun CardBrowserLayout(
                                         viewModel.setSelectedDeck(deck)
                                     }
                                     showDeckMenu = false
-                                })
+                                }
+                            )
                         }
                     }
                 }, navigationIcon = {
@@ -188,15 +172,54 @@ fun CardBrowserLayout(
                             )
                         )
                     }
-                }, actions = {
-                    IconButton(onClick = { isSearchOpen = true }) {
-                        Icon(
-                            Icons.Default.Search,
-                            contentDescription = stringResource(R.string.card_browser_search_hint)
+                },
+                actions = {
+                    if (isSearchOpen) {
+                        SearchBar(
+                            inputField = {
+                                SearchBarDefaults.InputField(
+                                    query = searchQuery,
+                                    onQueryChange = { query -> viewModel.setSearchQuery(query) },
+                                    onSearch = { viewModel.search(searchQuery) },
+                                    expanded = true,
+                                    onExpandedChange = { },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    placeholder = { Text(text = stringResource(R.string.card_browser_search_hint)) },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Default.Search,
+                                            contentDescription = stringResource(R.string.card_browser_search_hint)
+                                        )
+                                    },
+                                    trailingIcon = {
+                                        IconButton(onClick = { isSearchOpen = false }) {
+                                            Icon(
+                                                Icons.Default.Close,
+                                                contentDescription = stringResource(R.string.close)
+                                            )
+                                        }
+                                    },
+                                )
+                            },
+                            expanded = false,
+                            onExpandedChange = { },
+                            modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                            shape = SearchBarDefaults.inputFieldShape,
+                            colors = SearchBarDefaults.colors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            ),
+                            content = { }
                         )
+                    } else {
+                        IconButton(onClick = { isSearchOpen = true }) {
+                            Icon(
+                                Icons.Default.Search,
+                                contentDescription = stringResource(R.string.card_browser_search_hint)
+                            )
+                        }
                     }
-                })
-            }
+                }
+            )
         }) { paddingValues ->
         if (isTablet) {
             Row(
