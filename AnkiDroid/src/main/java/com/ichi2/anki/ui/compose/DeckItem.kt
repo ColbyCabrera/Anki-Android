@@ -258,7 +258,7 @@ fun DeckItem(
                 modifier = modifier
                     .fillMaxWidth()
                     .padding(top = 2.dp, bottom = 2.dp)
-                   .clip(RoundedCornerShape(cornerRadius))
+                    .clip(RoundedCornerShape(cornerRadius))
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh),
             ) {
                 content()
