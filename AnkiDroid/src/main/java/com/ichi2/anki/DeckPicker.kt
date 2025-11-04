@@ -40,6 +40,7 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.TextView
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.ActivityResultLauncher
@@ -74,6 +75,7 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -99,6 +101,9 @@ import androidx.core.view.MenuItemCompat
 import androidx.core.view.OnReceiveContentListener
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.luminance
 import androidx.core.view.isVisible
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -390,13 +395,13 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
     @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     @Throws(SQLException::class)
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         if (showedActivityFailedScreen(savedInstanceState)) {
             return
         }
 
         // Then set theme and content view
         super.onCreate(savedInstanceState)
-        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         // handle the first load: display the app introduction
         if (!hasShownAppIntro()) {
