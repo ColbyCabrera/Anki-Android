@@ -119,7 +119,6 @@ import com.ichi2.anki.InitialActivity.StartupFailure.DiskFull
 import com.ichi2.anki.InitialActivity.StartupFailure.FutureAnkidroidVersion
 import com.ichi2.anki.InitialActivity.StartupFailure.SDCardNotMounted
 import com.ichi2.anki.InitialActivity.StartupFailure.WebviewFailed
-import com.ichi2.anki.SyncIconState.PendingChanges
 import com.ichi2.anki.analytics.UsageAnalytics
 import com.ichi2.anki.android.input.ShortcutGroup
 import com.ichi2.anki.android.input.shortcut
@@ -1112,7 +1111,8 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
     ) {
         val provider = MenuItemCompat.getActionProvider(menuItem) as? SyncActionProvider ?: return
         val tooltipText = when (state.syncIcon) {
-            SyncIconState.Normal, SyncIconState.PendingChanges -> R.string.button_sync
+            SyncIconState.Normal,
+            SyncIconState.PendingChanges -> R.string.button_sync
             SyncIconState.OneWay -> R.string.sync_menu_title_one_way_sync
             SyncIconState.NotLoggedIn -> R.string.sync_menu_title_no_account
         }
