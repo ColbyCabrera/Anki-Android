@@ -54,11 +54,12 @@ import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.motionScheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -355,24 +356,40 @@ fun DeckPickerScreen(
                     },
                     actions = {
                         if (isSearchOpen) {
-                            TextField(
-                                value = searchQuery,
-                                onValueChange = onSearchQueryChanged,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .focusRequester(searchFocusRequester),
-                                placeholder = { Text(stringResource(R.string.search_decks)) },
-                                trailingIcon = {
-                                    IconButton(onClick = {
-                                        onSearchQueryChanged("")
-                                        isSearchOpen = false
-                                    }) {
-                                        Icon(
-                                            Icons.Default.Close,
-                                            contentDescription = stringResource(R.string.close)
-                                        )
-                                    }
+                            SearchBar(
+                                inputField = {
+                                    SearchBarDefaults.InputField(
+                                        query = searchQuery,
+                                        onQueryChange = onSearchQueryChanged,
+                                        onSearch = { /* Search is performed as user types */ },
+                                        expanded = true,
+                                        onExpandedChange = { },
+                                        modifier = Modifier.focusRequester(searchFocusRequester),
+                                        placeholder = { Text(stringResource(R.string.search_decks)) },
+                                        leadingIcon = {
+                                            Icon(
+                                                painter = painterResource(R.drawable.search_24px),
+                                                contentDescription = stringResource(R.string.search_decks)
+                                            )
+                                        },
+                                        trailingIcon = {
+                                            IconButton(onClick = {
+                                                onSearchQueryChanged("")
+                                                isSearchOpen = false
+                                            }) {
+                                                Icon(
+                                                    Icons.Default.Close,
+                                                    contentDescription = stringResource(R.string.close)
+                                                )
+                                            }
+                                        },
+                                    )
                                 },
+                                expanded = false,
+                                onExpandedChange = { },
+                                modifier = Modifier.weight(1f).padding(top = 0.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
+                                shape = SearchBarDefaults.inputFieldShape,
+                                content = { }
                             )
                         } else {
                             IconButton(onClick = { isSearchOpen = true }) {
