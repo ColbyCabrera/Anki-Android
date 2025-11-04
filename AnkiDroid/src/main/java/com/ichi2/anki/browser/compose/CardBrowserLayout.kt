@@ -203,7 +203,7 @@ fun CardBrowserLayout(
                             },
                             expanded = false,
                             onExpandedChange = { },
-                            modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                            modifier = Modifier.fillMaxWidth().padding(start = 8.dp, end = 8.dp, bottom = 16.dp),
                             shape = SearchBarDefaults.inputFieldShape,
                             colors = SearchBarDefaults.colors(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
