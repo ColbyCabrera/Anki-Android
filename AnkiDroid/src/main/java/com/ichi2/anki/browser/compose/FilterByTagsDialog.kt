@@ -262,13 +262,11 @@ fun SearchBarRow(
                 Icon(
                     painter = painterResource(
                         if (isToggleChecked) R.drawable.filter_alt_24px else R.drawable.filter_alt_off_24px
-                    ),
-                    contentDescription = if (isToggleChecked) {
-                        "Show only tags in deck"
+                    ), contentDescription = if (isToggleChecked) {
+                        stringResource(R.string.card_browser_filter_tags_by_deck_on_description)
                     } else {
-                        "Show all tags"
-                    },
-                    tint = if (isToggleChecked) {
+                        stringResource(R.string.card_browser_filter_tags_by_deck_off_description)
+                    }, tint = if (isToggleChecked) {
                         MaterialTheme.colorScheme.primary
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant
