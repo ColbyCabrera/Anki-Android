@@ -31,6 +31,7 @@ import com.ichi2.anki.libanki.NotetypeJson
 import com.ichi2.anki.libanki.Note.ClozeUtils
 import com.ichi2.anki.noteeditor.compose.NoteEditorState
 import com.ichi2.anki.noteeditor.compose.NoteFieldState
+import com.ichi2.anki.servicelayer.NoteService
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -501,10 +502,12 @@ class NoteEditorViewModel(
             fields.forEach { fieldState ->
                 val fieldIndex = fieldState.index
                 if (fieldIndex in note.fields.indices) {
-                    // Convert newlines to HTML <br> tags
-                    // This ensures that newlines are properly displayed when viewing cards
-                    // The old editor uses NoteService.convertToHtmlNewline() for this conversion
-                    note.fields[fieldIndex] = fieldState.value.text.replace("\n", "<br>")
+                    // Convert newlines to HTML <br> tags when saving
+                    // This ensures newlines are properly displayed when viewing cards
+                    note.fields[fieldIndex] = NoteService.convertToHtmlNewline(
+                        fieldState.value.text,
+                        replaceNewlines = true
+                    )
                 }
             }
 
