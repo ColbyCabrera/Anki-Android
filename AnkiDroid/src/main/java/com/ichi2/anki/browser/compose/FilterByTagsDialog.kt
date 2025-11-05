@@ -120,11 +120,17 @@ fun FilterByTagsDialog(
                                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                                         verticalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        allTags.tags.filter {
-                                            it.contains(
-                                                other = searchQuery, ignoreCase = true
-                                            )
-                                        }.forEach { tag ->
+                                        allTags.tags
+                                            .filter {
+                                                it.contains(
+                                                    other = searchQuery, ignoreCase = true
+                                                )
+                                            }
+                                            .filter {
+                                                // When toggle is checked, hide already selected tags
+                                                !isToggleChecked || it !in selection
+                                            }
+                                            .forEach { tag ->
                                             FilterChip(
                                                 modifier = Modifier.height(
                                                     FilterChipDefaults.Height
@@ -231,7 +237,11 @@ fun SearchBarRow(
                     painter = painterResource(
                         if (isToggleChecked) R.drawable.filter_alt_24px else R.drawable.filter_alt_off_24px
                     ),
-                    contentDescription = "Toggle filter",
+                    contentDescription = if (isToggleChecked) {
+                        "Hide selected tags"
+                    } else {
+                        "Show all tags"
+                    },
                     tint = if (isToggleChecked) {
                         MaterialTheme.colorScheme.primary
                     } else {
