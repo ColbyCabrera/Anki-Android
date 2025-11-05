@@ -282,7 +282,6 @@ fun SearchBarRow(
                     checked = isToggleChecked,
                     onCheckedChange = onToggleCheckedChange,
                     shapes = IconButtonDefaults.toggleableShapes(),
-                    //colors = IconButtonDefaults.filledTonalIconToggleButtonColors()
                 ) {
                     Icon(
                         painter = painterResource(
