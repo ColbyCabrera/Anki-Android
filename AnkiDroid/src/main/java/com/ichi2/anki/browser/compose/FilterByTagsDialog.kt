@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -72,35 +73,38 @@ fun FilterByTagsDialog(
         onDismissRequest = onDismissRequest,
         title = { Text(text = stringResource(id = R.string.card_browser_search_by_tag)) },
         text = {
-            LazyColumn {
-                item {
-                    when (allTags) {
-                        is CardBrowserViewModel.TagsState.Loading -> {
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator()
-                            }
-                        }
+            when (allTags) {
+                is CardBrowserViewModel.TagsState.Loading -> {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
 
-                        is CardBrowserViewModel.TagsState.Loaded -> {
-                            Column {
-                                OutlinedTextField(
-                                    value = searchQuery,
-                                    onValueChange = { searchQuery = it },
-                                    label = { Text(text = stringResource(id = R.string.card_browser_search_tags_hint)) },
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                                HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
-                                Surface(
-                                    color = MaterialTheme.colorScheme.surfaceContainer,
-                                    shape = MaterialTheme.shapes.large
-                                ) {
+                is CardBrowserViewModel.TagsState.Loaded -> {
+                    Column {
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            label = { Text(text = stringResource(id = R.string.card_browser_search_tags_hint)) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+                        Surface(
+                            color = MaterialTheme.colorScheme.surfaceContainer,
+                            shape = MaterialTheme.shapes.large
+                        ) {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                                contentPadding = PaddingValues(vertical = 16.dp)
+                            ) {
+                                item {
                                     FlowRow(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
+                                        modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                                         verticalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
@@ -138,9 +142,9 @@ fun FilterByTagsDialog(
                                         }
                                     }
                                 }
-
                             }
                         }
+
                     }
                 }
             }
