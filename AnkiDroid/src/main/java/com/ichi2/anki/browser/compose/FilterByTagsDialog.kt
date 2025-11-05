@@ -73,11 +73,13 @@ fun FilterByTagsDialog(
     onConfirm: (Set<String>) -> Unit,
     allTags: CardBrowserViewModel.TagsState,
     initialSelection: Set<String>,
-    deckTags: Set<String> = emptySet()
+    deckTags: Set<String> = emptySet(),
+    initialFilterByDeck: Boolean = false,
+    onFilterByDeckChanged: (Boolean) -> Unit = {}
 ) {
     var selection by remember(initialSelection) { mutableStateOf(initialSelection.toSet()) }
     var searchQuery by remember { mutableStateOf("") }
-    var isToggleChecked by remember { mutableStateOf(false) }
+    var isToggleChecked by remember(initialFilterByDeck) { mutableStateOf(initialFilterByDeck) }
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
@@ -99,7 +101,10 @@ fun FilterByTagsDialog(
                             searchQuery = searchQuery,
                             onSearchQueryChange = { searchQuery = it },
                             isToggleChecked = isToggleChecked,
-                            onToggleCheckedChange = { isToggleChecked = it }
+                            onToggleCheckedChange = { 
+                                isToggleChecked = it
+                                onFilterByDeckChanged(it)
+                            }
                         )
                         HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
                         Surface(

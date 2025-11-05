@@ -435,6 +435,11 @@ class CardBrowserViewModel(
     private val _deckTags = MutableStateFlow<Set<String>>(emptySet())
     val deckTags: StateFlow<Set<String>> = _deckTags
     
+    private val _filterTagsByDeck = MutableStateFlow(
+        sharedPrefs().getBoolean("card_browser_filter_tags_by_deck", false)
+    )
+    val filterTagsByDeck: StateFlow<Boolean> = _filterTagsByDeck
+    
     private var tagsLoading = false
 
     init {
@@ -549,6 +554,13 @@ class CardBrowserViewModel(
                 Timber.e(e, "Error loading deck tags")
                 _deckTags.value = emptySet()
             }
+        }
+    }
+
+    fun setFilterTagsByDeck(enabled: Boolean) {
+        _filterTagsByDeck.value = enabled
+        sharedPrefs().edit {
+            putBoolean("card_browser_filter_tags_by_deck", enabled)
         }
     }
 

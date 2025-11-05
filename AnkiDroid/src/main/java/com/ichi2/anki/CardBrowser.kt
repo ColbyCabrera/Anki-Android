@@ -171,6 +171,7 @@ open class CardBrowser :
                     val selectedTags by viewModel.selectedTags.collectAsState()
                     val allTagsState by viewModel.allTags.collectAsState()
                     val deckTags by viewModel.deckTags.collectAsState()
+                    val filterTagsByDeck by viewModel.filterTagsByDeck.collectAsState()
 
                     if (showBrowserOptionsDialog) {
                         BrowserOptionsDialog(
@@ -205,7 +206,9 @@ open class CardBrowser :
                             },
                             allTags = allTagsState,
                             initialSelection = selectedTags,
-                            deckTags = deckTags
+                            deckTags = deckTags,
+                            initialFilterByDeck = filterTagsByDeck,
+                            onFilterByDeckChanged = viewModel::setFilterTagsByDeck
                         )
                     }
                     CardBrowserLayout(
