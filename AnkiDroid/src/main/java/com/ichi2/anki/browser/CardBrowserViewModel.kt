@@ -431,6 +431,10 @@ class CardBrowserViewModel(
 
     private val _selectedTags = MutableStateFlow<Set<String>>(emptySet())
     val selectedTags: StateFlow<Set<String>> = _selectedTags
+    
+    private val _deckTags = MutableStateFlow<Set<String>>(emptySet())
+    val deckTags: StateFlow<Set<String>> = _deckTags
+    
     private var tagsLoading = false
 
     init {
@@ -525,6 +529,25 @@ class CardBrowserViewModel(
                 _allTags.value = TagsState.Loaded(tags)
             } finally {
                 tagsLoading = false
+            }
+        }
+    }
+
+    fun loadDeckTags() {
+        viewModelScope.launch {
+            try {
+                val noteIds = cards.queryNoteIds()
+                val tagsSet = mutableSetOf<String>()
+                withCol {
+                    noteIds.forEach { noteId ->
+                        val note = getNote(noteId)
+                        tagsSet.addAll(note.tags)
+                    }
+                }
+                _deckTags.value = tagsSet
+            } catch (e: Exception) {
+                Timber.e(e, "Error loading deck tags")
+                _deckTags.value = emptySet()
             }
         }
     }

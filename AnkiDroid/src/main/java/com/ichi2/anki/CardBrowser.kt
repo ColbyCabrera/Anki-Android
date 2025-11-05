@@ -170,6 +170,7 @@ open class CardBrowser :
                     var showFilterByTagsDialog by rememberSaveable { mutableStateOf(false) }
                     val selectedTags by viewModel.selectedTags.collectAsState()
                     val allTagsState by viewModel.allTags.collectAsState()
+                    val deckTags by viewModel.deckTags.collectAsState()
 
                     if (showBrowserOptionsDialog) {
                         BrowserOptionsDialog(
@@ -203,7 +204,8 @@ open class CardBrowser :
                                 showFilterByTagsDialog = false
                             },
                             allTags = allTagsState,
-                            initialSelection = selectedTags
+                            initialSelection = selectedTags,
+                            deckTags = deckTags
                         )
                     }
                     CardBrowserLayout(
@@ -280,6 +282,7 @@ open class CardBrowser :
                         },
                         onFilterByTag = {
                             viewModel.loadAllTags()
+                            viewModel.loadDeckTags()
                             showFilterByTagsDialog = true
                         }
                     )

@@ -72,7 +72,8 @@ fun FilterByTagsDialog(
     onDismissRequest: () -> Unit,
     onConfirm: (Set<String>) -> Unit,
     allTags: CardBrowserViewModel.TagsState,
-    initialSelection: Set<String>
+    initialSelection: Set<String>,
+    deckTags: Set<String> = emptySet()
 ) {
     var selection by remember(initialSelection) { mutableStateOf(initialSelection.toSet()) }
     var searchQuery by remember { mutableStateOf("") }
@@ -124,8 +125,8 @@ fun FilterByTagsDialog(
                                                 )
                                             }
                                             .filter {
-                                                // When toggle is checked, hide already selected tags
-                                                !isToggleChecked || it !in selection
+                                                // When toggle is checked, only show tags that exist in the deck
+                                                !isToggleChecked || it in deckTags
                                             }
                                             .forEach { tag ->
                                                 FilterChip(
@@ -251,7 +252,7 @@ fun SearchBarRow(
                         if (isToggleChecked) R.drawable.filter_alt_24px else R.drawable.filter_alt_off_24px
                     ),
                     contentDescription = if (isToggleChecked) {
-                        "Hide selected tags"
+                        "Show only tags in deck"
                     } else {
                         "Show all tags"
                     },
