@@ -541,14 +541,35 @@ class CardBrowserViewModel(
     fun loadDeckTags() {
         viewModelScope.launch {
             try {
-                val noteIds = cards.queryNoteIds()
-                val tagsSet = mutableSetOf<String>()
-                withCol {
-                    noteIds.forEach { noteId ->
-                        val note = getNote(noteId)
-                        tagsSet.addAll(note.tags)
+                // Query notes from the selected deck, not from current search results
+                // This ensures the tag list reflects all tags in the deck regardless of active filters
+                val noteIds = when (val currentDeckId = deckId) {
+                    null -> {
+                        // No deck selected, return empty
+                        emptyList()
+                    }
+
+                    ALL_DECKS_ID -> {
+                        // If "All Decks" is selected, get all notes
+                        withCol { findNotes("") }
+                    }
+
+                    else -> {
+                        // Query all notes in the selected deck using the deck search operator
+                        val deckName = withCol { decks.name(currentDeckId) }
+                        val escapedDeckName = deckName.replace("\"", "\\\"")
+                        withCol { findNotes("deck:\"$escapedDeckName\"") }
                     }
                 }
+
+                // Collect all tags from the notes
+                val tagsSet = withCol {
+                    noteIds.asSequence()
+                        .map { getNote(it).tags }
+                        .flatten()
+                        .toSet()
+                }
+
                 _deckTags.value = tagsSet
             } catch (e: Exception) {
                 Timber.e(e, "Error loading deck tags")
