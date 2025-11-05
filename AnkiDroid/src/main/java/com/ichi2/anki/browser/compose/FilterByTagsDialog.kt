@@ -26,25 +26,34 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,8 +61,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ichi2.anki.R
 import com.ichi2.anki.browser.CardBrowserViewModel
@@ -68,6 +79,7 @@ fun FilterByTagsDialog(
 ) {
     var selection by remember(initialSelection) { mutableStateOf(initialSelection.toSet()) }
     var searchQuery by remember { mutableStateOf("") }
+    var isToggleChecked by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
@@ -85,11 +97,11 @@ fun FilterByTagsDialog(
 
                 is CardBrowserViewModel.TagsState.Loaded -> {
                     Column {
-                        OutlinedTextField(
-                            value = searchQuery,
-                            onValueChange = { searchQuery = it },
-                            label = { Text(text = stringResource(id = R.string.card_browser_search_tags_hint)) },
-                            modifier = Modifier.fillMaxWidth()
+                        SearchBarRow(
+                            searchQuery = searchQuery,
+                            onSearchQueryChange = { searchQuery = it },
+                            isToggleChecked = isToggleChecked,
+                            onToggleCheckedChange = { isToggleChecked = it }
                         )
                         HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
                         Surface(
@@ -127,7 +139,9 @@ fun FilterByTagsDialog(
                                                         Icon(
                                                             painter = painterResource(R.drawable.check_24px),
                                                             contentDescription = stringResource(R.string.done_icon),
-                                                            modifier = Modifier.size(FilterChipDefaults.IconSize)
+                                                            modifier = Modifier.size(
+                                                                FilterChipDefaults.IconSize
+                                                            )
                                                         )
                                                     } else {
                                                         Spacer(Modifier.size(FilterChipDefaults.IconSize / 2))
@@ -144,7 +158,6 @@ fun FilterByTagsDialog(
                                 }
                             }
                         }
-
                     }
                 }
             }
@@ -159,4 +172,109 @@ fun FilterByTagsDialog(
                 Text(text = stringResource(id = R.string.dialog_cancel))
             }
         })
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun SearchBarRow(
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
+    isToggleChecked: Boolean,
+    onToggleCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        shape = MaterialTheme.shapes.extraLargeIncreased,
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextField(
+                value = searchQuery,
+                onValueChange = onSearchQueryChange,
+                placeholder = { Text(text = stringResource(id = R.string.card_browser_search_tags_hint)) },
+                leadingIcon = {
+                    Icon(
+                        Icons.Default.Search,
+                        contentDescription = stringResource(R.string.card_browser_search_hint)
+                    )
+                },
+                trailingIcon = {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { onSearchQueryChange("") }) {
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = stringResource(R.string.close)
+                            )
+                        }
+                    }
+                },
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent
+                ),
+                modifier = Modifier.weight(1f)
+            )
+
+            IconToggleButton(
+                checked = isToggleChecked,
+                onCheckedChange = onToggleCheckedChange
+            ) {
+                Icon(
+                    painter = painterResource(
+                        if (isToggleChecked) R.drawable.filter_alt_24px else R.drawable.filter_alt_off_24px
+                    ),
+                    contentDescription = "Toggle filter",
+                    tint = if (isToggleChecked) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true)
+@Composable
+fun SearchBarRowPreview() {
+    var searchQuery by remember { mutableStateOf("") }
+    var isToggleChecked by remember { mutableStateOf(false) }
+
+    MaterialTheme {
+        SearchBarRow(
+            searchQuery = searchQuery,
+            onSearchQueryChange = { searchQuery = it },
+            isToggleChecked = isToggleChecked,
+            onToggleCheckedChange = { isToggleChecked = it },
+            modifier = Modifier.padding(16.dp)
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true)
+@Composable
+fun SearchBarRowPreviewWithText() {
+    var searchQuery by remember { mutableStateOf("kotlin") }
+    var isToggleChecked by remember { mutableStateOf(true) }
+
+    MaterialTheme {
+        SearchBarRow(
+            searchQuery = searchQuery,
+            onSearchQueryChange = { searchQuery = it },
+            isToggleChecked = isToggleChecked,
+            onToggleCheckedChange = { isToggleChecked = it },
+            modifier = Modifier.padding(16.dp)
+        )
+    }
 }
