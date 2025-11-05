@@ -39,18 +39,25 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalIconToggleButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -101,7 +108,7 @@ fun FilterByTagsDialog(
                             searchQuery = searchQuery,
                             onSearchQueryChange = { searchQuery = it },
                             isToggleChecked = isToggleChecked,
-                            onToggleCheckedChange = { 
+                            onToggleCheckedChange = {
                                 isToggleChecked = it
                                 onFilterByDeckChanged(it)
                             }
@@ -255,23 +262,35 @@ fun SearchBarRow(
                 modifier = Modifier.weight(1f)
             )
 
-            IconToggleButton(
-                checked = isToggleChecked,
-                onCheckedChange = onToggleCheckedChange
-            ) {
-                Icon(
-                    painter = painterResource(
-                        if (isToggleChecked) R.drawable.filter_alt_24px else R.drawable.filter_alt_off_24px
-                    ), contentDescription = if (isToggleChecked) {
-                        stringResource(R.string.card_browser_filter_tags_by_deck_on_description)
-                    } else {
-                        stringResource(R.string.card_browser_filter_tags_by_deck_off_description)
-                    }, tint = if (isToggleChecked) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
+            val tooltipContent = if (isToggleChecked) {
+                stringResource(R.string.card_browser_filter_tags_by_deck_on_description)
+            } else {
+                stringResource(R.string.card_browser_filter_tags_by_deck_off_description)
+            }
+            TooltipBox(
+                positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+                    TooltipAnchorPosition.Above
+                ),
+                tooltip = {
+                    PlainTooltip {
+                        Text(tooltipContent)
                     }
-                )
+                },
+                state = rememberTooltipState()
+            ) {
+                FilledTonalIconToggleButton(
+                    checked = isToggleChecked,
+                    onCheckedChange = onToggleCheckedChange,
+                    shapes = IconButtonDefaults.toggleableShapes(),
+                    //colors = IconButtonDefaults.filledTonalIconToggleButtonColors()
+                ) {
+                    Icon(
+                        painter = painterResource(
+                            if (isToggleChecked) R.drawable.filter_alt_24px else R.drawable.filter_alt_off_24px
+                        ),
+                        contentDescription = tooltipContent,
+                    )
+                }
             }
         }
     }
