@@ -20,7 +20,6 @@
  ****************************************************************************************/
 package com.ichi2.anki.browser.compose
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,7 +27,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -39,7 +37,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
@@ -131,34 +128,47 @@ fun FilterByTagsDialog(
                                                 !isToggleChecked || it !in selection
                                             }
                                             .forEach { tag ->
-                                            FilterChip(
-                                                modifier = Modifier.height(
-                                                    FilterChipDefaults.Height
-                                                ), selected = tag in selection, onClick = {
-                                                    selection = if (tag in selection) {
-                                                        selection - tag
-                                                    } else {
-                                                        selection + tag
-                                                    }
-                                                }, label = { Text(text = tag) }, leadingIcon = {
-                                                    if (tag in selection) {
-                                                        Icon(
-                                                            painter = painterResource(R.drawable.check_24px),
-                                                            contentDescription = stringResource(R.string.done_icon),
-                                                            modifier = Modifier.size(
-                                                                FilterChipDefaults.IconSize
+                                                FilterChip(
+                                                    modifier = Modifier.height(
+                                                        FilterChipDefaults.Height
+                                                    ),
+                                                    selected = tag in selection,
+                                                    onClick = {
+                                                        selection = if (tag in selection) {
+                                                            selection - tag
+                                                        } else {
+                                                            selection + tag
+                                                        }
+                                                    },
+                                                    label = { Text(text = tag) },
+                                                    leadingIcon = {
+                                                        if (tag in selection) {
+                                                            Icon(
+                                                                painter = painterResource(R.drawable.check_24px),
+                                                                contentDescription = stringResource(
+                                                                    R.string.done_icon
+                                                                ),
+                                                                modifier = Modifier.size(
+                                                                    FilterChipDefaults.IconSize
+                                                                )
                                                             )
-                                                        )
-                                                    } else {
-                                                        Spacer(Modifier.size(FilterChipDefaults.IconSize / 2))
-                                                    }
-                                                }, trailingIcon = {
-                                                    if (tag in selection) {
-                                                        Spacer(Modifier.size(0.dp))
-                                                    } else {
-                                                        Spacer(Modifier.size(FilterChipDefaults.IconSize / 2))
-                                                    }
-                                                })
+                                                        } else {
+                                                            Spacer(Modifier.size(FilterChipDefaults.IconSize / 2))
+                                                        }
+                                                    },
+                                                    trailingIcon = {
+                                                        if (tag in selection) {
+                                                            Spacer(Modifier.size(0.dp))
+                                                        } else {
+                                                            Spacer(Modifier.size(FilterChipDefaults.IconSize / 2))
+                                                        }
+                                                    },
+                                                    colors = FilterChipDefaults.filterChipColors(
+                                                        selectedContainerColor = MaterialTheme.colorScheme.tertiary,
+                                                        selectedLabelColor = MaterialTheme.colorScheme.onTertiary,
+                                                        selectedLeadingIconColor = MaterialTheme.colorScheme.onTertiary,
+                                                    ),
+                                            )
                                         }
                                     }
                                 }
@@ -192,9 +202,12 @@ fun SearchBarRow(
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainer,
         shape = MaterialTheme.shapes.extraLargeIncreased,
+        modifier = modifier
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
