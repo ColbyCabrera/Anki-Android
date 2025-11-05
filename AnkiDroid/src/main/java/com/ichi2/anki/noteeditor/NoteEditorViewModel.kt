@@ -501,7 +501,10 @@ class NoteEditorViewModel(
             fields.forEach { fieldState ->
                 val fieldIndex = fieldState.index
                 if (fieldIndex in note.fields.indices) {
-                    note.fields[fieldIndex] = fieldState.value.text
+                    // Convert newlines to HTML <br> tags
+                    // This ensures that newlines are properly displayed when viewing cards
+                    // The old editor uses NoteService.convertToHtmlNewline() for this conversion
+                    note.fields[fieldIndex] = fieldState.value.text.replace("\n", "<br>")
                 }
             }
 
@@ -661,9 +664,20 @@ class NoteEditorViewModel(
 
         val fields = note.fields.mapIndexed { index, value ->
             val field = notetype.fields[index]
+            // Convert HTML <br> tags to newlines for editing in the Compose text fields
+            // This allows users to see and edit newlines naturally
+            // When saving, these newlines are converted back to <br> tags
+            // TODO: Respect PREF_NOTE_EDITOR_NEWLINE_REPLACE preference (currently always converts, defaults to true)
+            val editableValue = value
+                .replace("<br>", "\n")
+                .replace("<br/>", "\n")
+                .replace("<br />", "\n")
+                .replace("<BR>", "\n")
+                .replace("<BR/>", "\n")
+                .replace("<BR />", "\n")
             NoteFieldState(
                 name = field.name,
-                value = TextFieldValue(value),
+                value = TextFieldValue(editableValue),
                 isSticky = field.sticky,
                 hint = "",
                 index = index
@@ -721,9 +735,20 @@ class NoteEditorViewModel(
         val fields = (0 until notetype.fields.length()).map { index ->
             val field = notetype.fields[index]
             val value = if (index < note.fields.size) note.fields[index] else ""
+            // Convert HTML <br> tags to newlines for editing in the Compose text fields
+            // This allows users to see and edit newlines naturally
+            // When saving, these newlines are converted back to <br> tags
+            // TODO: Respect PREF_NOTE_EDITOR_NEWLINE_REPLACE preference (currently always converts, defaults to true)
+            val editableValue = value
+                .replace("<br>", "\n")
+                .replace("<br/>", "\n")
+                .replace("<br />", "\n")
+                .replace("<BR>", "\n")
+                .replace("<BR/>", "\n")
+                .replace("<BR />", "\n")
             NoteFieldState(
                 name = field.name,
-                value = TextFieldValue(value),
+                value = TextFieldValue(editableValue),
                 isSticky = field.sticky,
                 hint = "",
                 index = index
