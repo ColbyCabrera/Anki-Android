@@ -41,6 +41,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -58,6 +60,7 @@ fun FilterByTagsDialog(
     initialSelection: Set<String>
 ) {
     var selection by remember(initialSelection) { mutableStateOf(initialSelection.toSet()) }
+    var searchQuery by remember { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
@@ -75,46 +78,58 @@ fun FilterByTagsDialog(
                             }
                         }
                         is CardBrowserViewModel.TagsState.Loaded -> {
-                            FlowRow(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                allTags.tags.forEach { tag ->
-                                    FilterChip(
-                                        modifier = Modifier.height(
-                                            FilterChipDefaults.Height
-                                        ),
-                                        selected = tag in selection,
-                                        onClick = {
-                                            selection = if (tag in selection) {
-                                                selection - tag
-                                            } else {
-                                                selection + tag
+                            Column {
+                                OutlinedTextField(
+                                    value = searchQuery,
+                                    onValueChange = { searchQuery = it },
+                                    label = { Text(text = stringResource(id = R.string.card_browser_search_tags_hint)) },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                FlowRow(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    allTags.tags.filter {
+                                        it.contains(
+                                            searchQuery,
+                                            ignoreCase = true
+                                        )
+                                    }.forEach { tag ->
+                                        FilterChip(
+                                            modifier = Modifier.height(
+                                                FilterChipDefaults.Height
+                                            ),
+                                            selected = tag in selection,
+                                            onClick = {
+                                                selection = if (tag in selection) {
+                                                    selection - tag
+                                                } else {
+                                                    selection + tag
+                                                }
+                                            },
+                                            label = { Text(text = tag) },
+                                            leadingIcon = {
+                                                if (tag in selection) {
+                                                    Icon(
+                                                        painter = painterResource(R.drawable.check_24px),
+                                                        contentDescription = stringResource(R.string.done_icon),
+                                                        modifier = Modifier.size(FilterChipDefaults.IconSize)
+                                                    )
+                                                } else {
+                                                    Spacer(Modifier.size(FilterChipDefaults.IconSize / 2))
+                                                }
+                                            },
+                                            trailingIcon = {
+                                                if (tag in selection) {
+                                                    Spacer(Modifier.size(0.dp))
+                                                } else {
+                                                    Spacer(Modifier.size(FilterChipDefaults.IconSize / 2))
+                                                }
                                             }
-                                        },
-                                        label = { Text(text = tag) },
-                                        leadingIcon = {
-                                            if (tag in selection) {
-
-                                                Icon(
-                                                    painter = painterResource(R.drawable.check_24px),
-                                                    contentDescription = stringResource(R.string.done_icon),
-                                                    modifier = Modifier.size(FilterChipDefaults.IconSize)
-                                                )
-
-                                            } else {
-                                                Spacer(Modifier.size(FilterChipDefaults.IconSize / 2))
-                                            }
-                                        },
-                                        trailingIcon = {
-                                            if (tag in selection) {
-                                                Spacer(Modifier.size(0.dp))
-                                            } else {
-                                                Spacer(Modifier.size(FilterChipDefaults.IconSize / 2))
-                                            }
-                                        }
-                                    )
+                                        )
+                                    }
                                 }
                             }
                         }
