@@ -118,22 +118,28 @@ fun FilterByTagsDialog(
                                 contentPadding = PaddingValues(vertical = 16.dp)
                             ) {
                                 item {
-                                    FlowRow(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        allTags.tags
-                                            .filter {
-                                                it.contains(
-                                                    other = searchQuery, ignoreCase = true
-                                                )
-                                            }
-                                            .filter {
-                                                // When toggle is checked, only show tags that exist in the deck
-                                                !isToggleChecked || it in deckTags
-                                            }
-                                            .forEach { tag ->
+                                    val filteredTags = allTags.tags
+                                        .filter { it.contains(other = searchQuery, ignoreCase = true) }
+                                        .filter { !isToggleChecked || it in deckTags }
+
+                                    if (filteredTags.isEmpty()) {
+                                        Box(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = stringResource(R.string.card_browser_no_tags_found),
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    } else {
+                                        FlowRow(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            filteredTags.forEach { tag ->
                                                 FilterChip(
                                                     modifier = Modifier.height(
                                                         FilterChipDefaults.Height
@@ -174,7 +180,8 @@ fun FilterByTagsDialog(
                                                         selectedLabelColor = MaterialTheme.colorScheme.onTertiary,
                                                         selectedLeadingIconColor = MaterialTheme.colorScheme.onTertiary,
                                                     ),
-                                            )
+                                                )
+                                            }
                                         }
                                     }
                                 }
