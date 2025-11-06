@@ -118,6 +118,15 @@ fun FilterByTagsDialog(
                             color = MaterialTheme.colorScheme.surfaceContainer,
                             shape = MaterialTheme.shapes.large
                         ) {
+                            val filteredTags =
+                                remember(allTags.tags, searchQuery, isToggleChecked, deckTags) {
+                                    allTags.tags.filter {
+                                            it.contains(
+                                                other = searchQuery, ignoreCase = true
+                                            ) && (!isToggleChecked || it in deckTags)
+                                        }
+                                }
+
                             LazyColumn(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -125,10 +134,6 @@ fun FilterByTagsDialog(
                                 contentPadding = PaddingValues(vertical = 16.dp)
                             ) {
                                 item {
-                                    val filteredTags = allTags.tags
-                                        .filter { it.contains(other = searchQuery, ignoreCase = true) }
-                                        .filter { !isToggleChecked || it in deckTags }
-
                                     if (filteredTags.isEmpty()) {
                                         Box(
                                             modifier = Modifier.fillMaxWidth(),
