@@ -40,6 +40,7 @@ import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -118,11 +119,12 @@ fun CardBrowserLayout(
         availableDecks = viewModel.getAvailableDecks()
     }
 
-    val deckHierarchy = remember(availableDecks) {
-        buildDeckHierarchy(availableDecks)
+    val deckHierarchy = remember(availableDecks, deckSearchQuery) {
+        buildDeckHierarchy(availableDecks, deckSearchQuery)
     }
 
     val expandedDecks = remember { mutableStateMapOf<String, Boolean>() }
+    var deckSearchQuery by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
@@ -150,6 +152,12 @@ fun CardBrowserLayout(
                             onDismissRequest = { showDeckMenu = false },
                             shape = MaterialTheme.shapes.large
                         ) {
+                            TextField(
+                                value = deckSearchQuery,
+                                onValueChange = { deckSearchQuery = it },
+                                placeholder = { Text(stringResource(R.string.card_browser_search_hint)) },
+                                modifier = Modifier.fillMaxWidth().padding(8.dp)
+                            )
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.card_browser_all_decks)) },
                                 onClick = {
@@ -167,7 +175,8 @@ fun CardBrowserLayout(
                                         viewModel.setSelectedDeck(deck)
                                     }
                                     showDeckMenu = false
-                                }
+                                },
+                                searchQuery = deckSearchQuery
                             )
                         }
                     }
@@ -296,11 +305,32 @@ fun CardBrowserLayout(
     }
 }
 
-private fun buildDeckHierarchy(decks: List<SelectableDeck.Deck>): Map<String, List<SelectableDeck.Deck>> {
+private fun buildDeckHierarchy(
+    decks: List<SelectableDeck.Deck>,
+    searchQuery: String
+): Map<String, List<SelectableDeck.Deck>> {
     val hierarchy = mutableMapOf<String, MutableList<SelectableDeck.Deck>>()
     val topLevelDecks = mutableListOf<SelectableDeck.Deck>()
 
-    for (deck in decks) {
+    val decksToShow = if (searchQuery.isEmpty()) {
+        decks
+    } else {
+        val matchingDecks = decks.filter { it.name.contains(searchQuery, ignoreCase = true) }
+        val requiredDecks = mutableSetOf<SelectableDeck.Deck>()
+        val allDecksByName = decks.associateBy { it.name }
+
+        for (deck in matchingDecks) {
+            requiredDecks.add(deck)
+            var currentName = deck.name
+            while (currentName.contains("::")) {
+                currentName = currentName.substringBeforeLast("::")
+                allDecksByName[currentName]?.let { requiredDecks.add(it) }
+            }
+        }
+        requiredDecks.toList()
+    }
+
+    for (deck in decksToShow) {
         val parts = deck.name.split("::")
         if (parts.size > 1) {
             val parentName = parts.dropLast(1).joinToString("::")
@@ -319,6 +349,7 @@ private fun DeckHierarchyMenu(
     deckHierarchy: Map<String, List<SelectableDeck.Deck>>,
     expandedDecks: MutableMap<String, Boolean>,
     onDeckSelected: (SelectableDeck.Deck) -> Unit,
+    searchQuery: String,
     parentName: String = ""
 ) {
     val children = deckHierarchy[parentName] ?: return
@@ -345,7 +376,7 @@ private fun DeckHierarchyMenu(
         )
         if (isExpanded && hasChildren) {
             Column(modifier = Modifier.padding(start = 16.dp)) {
-                DeckHierarchyMenu(deckHierarchy, expandedDecks, onDeckSelected, deck.name)
+                DeckHierarchyMenu(deckHierarchy, expandedDecks, onDeckSelected, searchQuery, deck.name)
             }
         }
     }
