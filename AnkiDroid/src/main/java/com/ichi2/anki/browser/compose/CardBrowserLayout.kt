@@ -103,7 +103,7 @@ fun CardBrowserLayout(
         false
     }
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
-    var isSearchOpen by remember { mutableStateOf(false) }
+    val isSearchOpen by viewModel.flowOfSearchQueryExpanded.collectAsStateWithLifecycle()
     var showDeckMenu by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     var availableDecks by remember { mutableStateOf<List<SelectableDeck.Deck>>(emptyList()) }
@@ -205,7 +205,7 @@ fun CardBrowserLayout(
                                         )
                                     },
                                     trailingIcon = {
-                                        IconButton(onClick = { isSearchOpen = false }) {
+                                        IconButton(onClick = { viewModel.collapseSearchQuery() }) {
                                             Icon(
                                                 Icons.Default.Close,
                                                 contentDescription = stringResource(R.string.close)
@@ -224,7 +224,7 @@ fun CardBrowserLayout(
                             content = { }
                         )
                     } else {
-                        IconButton(onClick = { isSearchOpen = true }) {
+                        IconButton(onClick = { viewModel.expandSearchQuery() }) {
                             Icon(
                                 Icons.Default.Search,
                                 contentDescription = stringResource(R.string.card_browser_search_hint)
