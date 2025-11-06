@@ -119,12 +119,13 @@ fun CardBrowserLayout(
         availableDecks = viewModel.getAvailableDecks()
     }
 
+    var deckSearchQuery by remember { mutableStateOf("") }
+
     val deckHierarchy = remember(availableDecks, deckSearchQuery) {
         buildDeckHierarchy(availableDecks, deckSearchQuery)
     }
 
     val expandedDecks = remember { mutableStateMapOf<String, Boolean>() }
-    var deckSearchQuery by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
