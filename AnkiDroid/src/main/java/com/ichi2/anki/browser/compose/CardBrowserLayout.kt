@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -38,13 +39,17 @@ import androidx.compose.material3.MaterialTheme.motionScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -52,7 +57,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -118,11 +125,23 @@ fun CardBrowserLayout(
         availableDecks = viewModel.getAvailableDecks()
     }
 
-    val deckHierarchy = remember(availableDecks) {
-        buildDeckHierarchy(availableDecks)
+    var deckSearchQuery by remember { mutableStateOf("") }
+
+    val deckHierarchy = remember(availableDecks, deckSearchQuery) {
+        buildDeckHierarchy(availableDecks, deckSearchQuery)
     }
 
     val expandedDecks = remember { mutableStateMapOf<String, Boolean>() }
+
+    // Clean up state when deck menu is dismissed to prevent memory leaks
+    DisposableEffect(showDeckMenu) {
+        onDispose {
+            if (!showDeckMenu) {
+                deckSearchQuery = ""
+                expandedDecks.clear()
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -147,9 +166,53 @@ fun CardBrowserLayout(
                         }
                         DropdownMenu(
                             expanded = showDeckMenu,
-                            onDismissRequest = { showDeckMenu = false },
+                            onDismissRequest = {
+                                showDeckMenu = false
+                                deckSearchQuery = ""
+                                expandedDecks.clear()
+                            },
                             shape = MaterialTheme.shapes.large
                         ) {
+                            Surface(
+                                modifier = Modifier.padding(vertical = 8.dp, horizontal = 12.dp),
+                                color = MaterialTheme.colorScheme.surface,
+                                shape = CircleShape
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    TextField(
+                                        value = deckSearchQuery,
+                                        onValueChange = { deckSearchQuery = it },
+                                        placeholder = { Text(stringResource(R.string.card_browser_search_hint)) },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        textStyle = MaterialTheme.typography.bodyLarge,
+                                        leadingIcon = {
+                                            Icon(
+                                                Icons.Default.Search,
+                                                contentDescription = stringResource(R.string.card_browser_search_hint)
+                                            )
+                                        },
+                                        trailingIcon = {
+                                            if (deckSearchQuery.isNotEmpty()) {
+                                                IconButton(onClick = { deckSearchQuery = "" }) {
+                                                    Icon(
+                                                        Icons.Default.Close,
+                                                        contentDescription = stringResource(R.string.close)
+                                                    )
+                                                }
+                                            }
+                                        },
+                                        colors = TextFieldDefaults.colors(
+                                            focusedIndicatorColor = Color.Transparent,
+                                            unfocusedIndicatorColor = Color.Transparent,
+                                            disabledIndicatorColor = Color.Transparent,
+                                            focusedContainerColor = Color.Transparent,
+                                            unfocusedContainerColor = Color.Transparent,
+                                            disabledContainerColor = Color.Transparent
+                                        ),
+                                    )
+                                }
+                            }
+
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.card_browser_all_decks)) },
                                 onClick = {
@@ -157,6 +220,8 @@ fun CardBrowserLayout(
                                         viewModel.setSelectedDeck(SelectableDeck.AllDecks)
                                     }
                                     showDeckMenu = false
+                                    deckSearchQuery = ""
+                                    expandedDecks.clear()
                                 }
                             )
                             DeckHierarchyMenu(
@@ -167,7 +232,10 @@ fun CardBrowserLayout(
                                         viewModel.setSelectedDeck(deck)
                                     }
                                     showDeckMenu = false
-                                }
+                                    deckSearchQuery = ""
+                                    expandedDecks.clear()
+                                },
+                                searchQuery = deckSearchQuery
                             )
                         }
                     }
@@ -191,12 +259,14 @@ fun CardBrowserLayout(
                                     onSearch = { viewModel.search(searchQuery) },
                                     expanded = true,
                                     onExpandedChange = { },
-                                    modifier = Modifier.fillMaxWidth().graphicsLayer {
-                                        alpha = searchAnim
-                                        translationY = searchOffsetPx * (1f - searchAnim)
-                                        scaleX = 0.98f + 0.02f * searchAnim
-                                        scaleY = 0.98f + 0.02f * searchAnim
-                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .graphicsLayer {
+                                            alpha = searchAnim
+                                            translationY = searchOffsetPx * (1f - searchAnim)
+                                            scaleX = 0.98f + 0.02f * searchAnim
+                                            scaleY = 0.98f + 0.02f * searchAnim
+                                        },
                                     placeholder = { Text(text = stringResource(R.string.card_browser_search_hint)) },
                                     leadingIcon = {
                                         Icon(
@@ -216,7 +286,9 @@ fun CardBrowserLayout(
                             },
                             expanded = false,
                             onExpandedChange = { },
-                            modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 6.dp, bottom = 16.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 10.dp, end = 6.dp, bottom = 16.dp),
                             shape = SearchBarDefaults.inputFieldShape,
                             colors = SearchBarDefaults.colors(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -296,11 +368,32 @@ fun CardBrowserLayout(
     }
 }
 
-private fun buildDeckHierarchy(decks: List<SelectableDeck.Deck>): Map<String, List<SelectableDeck.Deck>> {
+private fun buildDeckHierarchy(
+    decks: List<SelectableDeck.Deck>,
+    searchQuery: String
+): Map<String, List<SelectableDeck.Deck>> {
     val hierarchy = mutableMapOf<String, MutableList<SelectableDeck.Deck>>()
     val topLevelDecks = mutableListOf<SelectableDeck.Deck>()
 
-    for (deck in decks) {
+    val decksToShow = if (searchQuery.isEmpty()) {
+        decks
+    } else {
+        val matchingDecks = decks.filter { it.name.contains(searchQuery, ignoreCase = true) }
+        val requiredDecks = mutableSetOf<SelectableDeck.Deck>()
+        val allDecksByName = decks.associateBy { it.name }
+
+        for (deck in matchingDecks) {
+            requiredDecks.add(deck)
+            var currentName = deck.name
+            while (currentName.contains("::")) {
+                currentName = currentName.substringBeforeLast("::")
+                allDecksByName[currentName]?.let { requiredDecks.add(it) }
+            }
+        }
+        requiredDecks.toList()
+    }
+
+    for (deck in decksToShow) {
         val parts = deck.name.split("::")
         if (parts.size > 1) {
             val parentName = parts.dropLast(1).joinToString("::")
@@ -319,6 +412,7 @@ private fun DeckHierarchyMenu(
     deckHierarchy: Map<String, List<SelectableDeck.Deck>>,
     expandedDecks: MutableMap<String, Boolean>,
     onDeckSelected: (SelectableDeck.Deck) -> Unit,
+    searchQuery: String,
     parentName: String = ""
 ) {
     val children = deckHierarchy[parentName] ?: return
@@ -345,7 +439,7 @@ private fun DeckHierarchyMenu(
         )
         if (isExpanded && hasChildren) {
             Column(modifier = Modifier.padding(start = 16.dp)) {
-                DeckHierarchyMenu(deckHierarchy, expandedDecks, onDeckSelected, deck.name)
+                DeckHierarchyMenu(deckHierarchy, expandedDecks, onDeckSelected, searchQuery, deck.name)
             }
         }
     }
