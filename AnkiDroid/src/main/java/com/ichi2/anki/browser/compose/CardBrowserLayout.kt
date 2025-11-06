@@ -213,8 +213,6 @@ fun CardBrowserLayout(
                                 }
                             }
 
-                        //    HorizontalDivider(Modifier.padding(vertical = 8.dp))
-
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.card_browser_all_decks)) },
                                 onClick = {
