@@ -728,7 +728,25 @@ class NoteEditorFragment :
             deckId = requireArguments().getLong(EXTRA_DID, 0L),
             isAddingNote = addNote,
             initialFieldText = initialFieldText
-        )
+        ) { success, _ ->
+            if (success) {
+                // Sync Fragment's deckId with ViewModel's deckId after initialization
+                // This ensures the hasUnsavedChanges() deck comparison works correctly
+                launchCatchingTask {
+                    deckId = noteEditorViewModel.currentNote.value?.let { note ->
+                        if (addNote) {
+                            // For new notes, use the calculated deck from ViewModel
+                            noteEditorViewModel.noteEditorState.value.selectedDeckName.let { deckName ->
+                                withCol { decks.allNamesAndIds().find { it.name == deckName }?.id ?: 0L }
+                            }
+                        } else {
+                            // For existing cards, use the card's current deck
+                            currentEditedCard?.currentDeckId() ?: 0L
+                        }
+                    } ?: 0L
+                }
+            }
+        }
         
         // Update cards info for the selected note type
         if (editorNote != null) {
@@ -1711,9 +1729,15 @@ class NoteEditorFragment :
 
         // changed note type?
         if (!addNote && currentEditedCard != null) {
-            val newNoteType = currentlySelectedNotetype
+            val newNoteType = if (isComposeMode) {
+                // In Compose mode, get note type from ViewModel's current note
+                noteEditorViewModel.currentNote.value?.notetype
+            } else {
+                // In legacy mode, use the spinner-based selection
+                currentlySelectedNotetype
+            }
             val oldNoteType = currentEditedCard!!.noteType(getColUnsafe)
-            if (newNoteType != oldNoteType) {
+            if (newNoteType != null && newNoteType != oldNoteType) {
                 return true
             }
         }
@@ -1724,8 +1748,7 @@ class NoteEditorFragment :
         // changed fields?
         val isFieldEdited = noteEditorViewModel.isFieldEdited.value
         if (isComposeMode) {
-            val result = isFieldEdited || isTagsEdited
-            return result
+            return isFieldEdited || isTagsEdited
         }
         if (isFieldEdited) {
             for (value in editFields!!) {
@@ -1736,7 +1759,6 @@ class NoteEditorFragment :
             return false
         }
         return isTagsEdited
-        // changed tags?
     }
 
     private fun collectionHasLoaded(): Boolean {

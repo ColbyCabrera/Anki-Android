@@ -136,6 +136,9 @@ class NoteEditorViewModel(
     
     private val _currentCard = MutableStateFlow<Card?>(null)
     private val _deckId = MutableStateFlow<DeckId>(0L)
+    
+    // Store initial field values to detect actual changes
+    private var initialFieldValues: List<String> = emptyList()
 
     /**
      * Initialize the editor with a new or existing note
@@ -229,6 +232,12 @@ class NoteEditorViewModel(
                     }
                 }
                 
+                // Capture initial field values for change detection
+                initialFieldValues = _noteEditorState.value.fields.map { it.value.text }
+                
+                // Reset the field edited flag after initialization to prevent false positives
+                _isFieldEdited.value = false
+                
                 onComplete?.invoke(true, null)
             } catch (e: Exception) {
                 val errorMessage = "Failed to initialize editor: ${e.message ?: "Unknown error"}"
@@ -295,8 +304,9 @@ class NoteEditorViewModel(
             val focusedIndex = currentState.focusedFieldIndex ?: index
             currentState.copy(fields = updatedFields, focusedFieldIndex = focusedIndex)
         }
-        // Mark as edited whenever a field value changes
-        _isFieldEdited.value = true
+        
+        // Check if field values have actually changed from initial values
+        updateFieldEditedFlag()
         
         // Persist field values to SavedStateHandle
         persistDraftState()
@@ -468,6 +478,11 @@ class NoteEditorViewModel(
                 
                 // Pass the fresh notetype directly to avoid cache issues
                 updateStateFromNoteWithNotetype(col, _noteEditorState.value.isAddingNote, freshNotetype)
+                
+                // Update initial field values after note type change
+                initialFieldValues = _noteEditorState.value.fields.map { it.value.text }
+                _isFieldEdited.value = false
+                
                 persistDraftState()
                 
                 Timber.d("Successfully changed note type to '%s'", noteTypeName)
@@ -558,6 +573,10 @@ class NoteEditorViewModel(
                     }
                     state.copy(fields = updatedFields)
                 }
+                
+                // Update initial field values after resetting for next note
+                initialFieldValues = _noteEditorState.value.fields.map { it.value.text }
+                _isFieldEdited.value = false
             } else {
                 // When editing an existing card, check if deck changed
                 if (currentCard != null && currentCard.currentDeckId() != _deckId.value) {
@@ -813,10 +832,20 @@ class NoteEditorViewModel(
     }
 
     /**
+     * Check if current field values differ from initial values
+     */
+    private fun updateFieldEditedFlag() {
+        val currentValues = _noteEditorState.value.fields.map { it.value.text }
+        _isFieldEdited.value = currentValues != initialFieldValues
+    }
+    
+    /**
      * Reset the field edited flag (e.g., after successful save)
      */
     fun resetFieldEditedFlag() {
         _isFieldEdited.value = false
+        // Update initial values to current values after save
+        initialFieldValues = _noteEditorState.value.fields.map { it.value.text }
     }
 
     private fun determineFocusIndex(): Int? {
