@@ -49,6 +49,7 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -132,6 +133,16 @@ fun CardBrowserLayout(
 
     val expandedDecks = remember { mutableStateMapOf<String, Boolean>() }
 
+    // Clean up state when deck menu is dismissed to prevent memory leaks
+    DisposableEffect(showDeckMenu) {
+        onDispose {
+            if (!showDeckMenu) {
+                deckSearchQuery = ""
+                expandedDecks.clear()
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -155,7 +166,11 @@ fun CardBrowserLayout(
                         }
                         DropdownMenu(
                             expanded = showDeckMenu,
-                            onDismissRequest = { showDeckMenu = false },
+                            onDismissRequest = {
+                                showDeckMenu = false
+                                deckSearchQuery = ""
+                                expandedDecks.clear()
+                            },
                             shape = MaterialTheme.shapes.large
                         ) {
                             Surface(
@@ -207,6 +222,8 @@ fun CardBrowserLayout(
                                         viewModel.setSelectedDeck(SelectableDeck.AllDecks)
                                     }
                                     showDeckMenu = false
+                                    deckSearchQuery = ""
+                                    expandedDecks.clear()
                                 }
                             )
                             DeckHierarchyMenu(
@@ -217,6 +234,8 @@ fun CardBrowserLayout(
                                         viewModel.setSelectedDeck(deck)
                                     }
                                     showDeckMenu = false
+                                    deckSearchQuery = ""
+                                    expandedDecks.clear()
                                 },
                                 searchQuery = deckSearchQuery
                             )
