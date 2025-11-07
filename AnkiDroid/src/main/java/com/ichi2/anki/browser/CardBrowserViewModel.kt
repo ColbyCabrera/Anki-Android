@@ -1141,6 +1141,7 @@ class CardBrowserViewModel(
             // only intended to be used if the user has no selection
             if (hasSelectedAnyRows()) return@launch
             setFilterQuery("tag:marked")
+            expandSearchQuery()
         }
 
     /**
@@ -1151,6 +1152,7 @@ class CardBrowserViewModel(
             // only intended to be used if the user has no selection
             if (hasSelectedAnyRows()) return@launch
             setFilterQuery("is:suspended")
+            expandSearchQuery()
         }
 
     suspend fun setFlagFilter(flag: Flag) {
@@ -1163,6 +1165,7 @@ class CardBrowserViewModel(
                 else -> flagSearchTerm
             }
         setFilterQuery(searchTerms)
+        expandSearchQuery()
     }
 
     private suspend fun queryOneCardIdPerNote(): List<CardId> = cards.queryOneCardIdPerRow()
@@ -1173,12 +1176,12 @@ class CardBrowserViewModel(
         return cards.indexOf(idToFind)
     }
 
-    private fun collapseSearchQuery() {
+    fun collapseSearchQuery() {
         searchQueryInputFlow.update { null }
         flowOfSearchQueryExpanded.update { false }
     }
 
-    private fun expandSearchQuery() {
+    fun expandSearchQuery() {
         flowOfSearchQueryExpanded.update { true }
     }
 
@@ -1352,6 +1355,7 @@ class CardBrowserViewModel(
 
     fun search(query: String) {
         setSearchQuery(query)
+        expandSearchQuery()
         launchSearchForCards(query)
     }
 
