@@ -1386,7 +1386,6 @@ class CardBrowserViewModel(
             """tag:"$escaped""""
         }
         search(tagsQuery)
-        expandSearchQuery()
     }
 
     fun updateTags(tags: List<String>) = viewModelScope.launch {
