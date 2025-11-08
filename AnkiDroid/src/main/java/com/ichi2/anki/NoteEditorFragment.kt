@@ -2201,7 +2201,7 @@ class NoteEditorFragment :
         val convertNewlines = shouldReplaceNewlines()
 
         fun String?.toFieldText(): String =
-            NoteService.convertToHtmlNewline(this.toString(), convertNewlines)
+            NoteService.convertToHtmlNewline(this.orEmpty(), convertNewlines)
 
         // Get fields from Compose ViewModel or legacy XML editFields
         val fields = if (isComposeMode) {
