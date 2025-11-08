@@ -884,6 +884,7 @@ class NoteEditorFragment :
                     deckTags = deckTags,
                     onUpdateTags = { tags ->
                         noteEditorViewModel.updateTags(tags)
+                        isTagsEdited = true
                     },
                     onAddTag = { tag ->
                         noteEditorViewModel.addTag(tag)
