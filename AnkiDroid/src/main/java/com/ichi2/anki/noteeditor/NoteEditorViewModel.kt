@@ -52,6 +52,34 @@ enum class ClozeInsertionMode {
 }
 
 /**
+ * Represents the result of a note save operation with type-safe data.
+ * Eliminates the need for unchecked casts by providing a sealed class hierarchy.
+ */
+sealed class SaveResult {
+    /**
+     * Success result when adding a new note.
+     * @param note The freshly created note with sticky field values applied
+     * @param stickyInfo Map of field index to (isSticky flag, field value) pairs
+     */
+    data class NewNote(
+        val note: Note,
+        val stickyInfo: Map<Int, Pair<Boolean, String>>
+    ) : SaveResult()
+
+    /**
+     * Success result when updating an existing note.
+     * @param card The updated card if deck was changed, null otherwise
+     */
+    data class UpdatedNote(val card: Card?) : SaveResult()
+
+    /**
+     * Failure result from validation or save operation.
+     * @param validationResult The validation failure details
+     */
+    data class ValidationFailure(val validationResult: NoteFieldsCheckResult.Failure) : SaveResult()
+}
+
+/**
  * ViewModel for the Note Editor screen
  * Manages note editing state and business logic
  *
@@ -645,7 +673,7 @@ class NoteEditorViewModel(
             val currentCard = _currentCard.value
 
             // Perform all DB operations on IO dispatcher
-            val saveResult = withContext(Dispatchers.IO) {
+            val saveResult: SaveResult = withContext(Dispatchers.IO) {
                 // Update note fields from state
                 val fields = _noteEditorState.value.fields
                 fields.forEach { fieldState ->
@@ -667,7 +695,7 @@ class NoteEditorViewModel(
                 if (_noteEditorState.value.isAddingNote) {
                     val validationResult = checkNoteFieldsResponse(note)
                     if (validationResult is NoteFieldsCheckResult.Failure) {
-                        return@withContext validationResult to null
+                        return@withContext SaveResult.ValidationFailure(validationResult)
                     }
                     col.addNote(note, _deckId.value)
 
@@ -689,76 +717,65 @@ class NoteEditorViewModel(
                     }
 
                     // Return success with fresh note and sticky info
-                    NoteFieldsCheckResult.Success to (freshNote to stickyInfo)
+                    SaveResult.NewNote(freshNote, stickyInfo)
                 } else {
                     // When editing an existing card, check if deck changed
-                    if (currentCard != null && currentCard.currentDeckId() != _deckId.value) {
+                    val updatedCard = if (currentCard != null && currentCard.currentDeckId() != _deckId.value) {
                         // Move card to new deck
                         col.setDeck(listOf(currentCard.id), _deckId.value)
                         // Refresh the card object to reflect database changes
                         currentCard.load(col)
                         Timber.d("Card deck updated to %d", _deckId.value)
+                        currentCard
+                    } else {
+                        null
                     }
 
                     // Explicitly ignore OpChanges - UI updates happen through reactive state
                     col.updateNote(note).let { }
 
                     // Return success with updated card if applicable
-                    NoteFieldsCheckResult.Success to (currentCard to null)
+                    SaveResult.UpdatedNote(updatedCard)
                 }
             }
 
-            // Back on Main dispatcher - update UI state
-            val (result, data) = saveResult
-            
-            if (result is NoteFieldsCheckResult.Failure) {
-                _errorState.value = "Note validation failed: Please check required fields"
-                return result
-            }
-
-            // Handle post-save updates
-            if (_noteEditorState.value.isAddingNote && data != null) {
-                val freshNote: Note
-                val stickyInfo: Map<Int, Pair<Boolean, String>>
-                @Suppress("UNCHECKED_CAST")
-                run {
-                    val pair = data as Pair<Note, Map<Int, Pair<Boolean, String>>>
-                    freshNote = pair.first
-                    stickyInfo = pair.second
+            // Back on Main dispatcher - update UI state based on save result type
+            when (saveResult) {
+                is SaveResult.ValidationFailure -> {
+                    _errorState.value = "Note validation failed: Please check required fields"
+                    return saveResult.validationResult
                 }
                 
-                // Update the current note reference
-                _currentNote.value = freshNote
+                is SaveResult.NewNote -> {
+                    // Update the current note reference
+                    _currentNote.value = saveResult.note
 
-                // Update state with the fresh note, then restore sticky flags from UI
-                updateStateFromNote(col, isAddingNote = true)
+                    // Update state with the fresh note, then restore sticky flags from UI
+                    updateStateFromNote(col, isAddingNote = true)
 
-                // Restore the sticky state flags that were set in the UI
-                _noteEditorState.update { state ->
-                    val updatedFields = state.fields.map { field ->
-                        val uiStickyState = stickyInfo[field.index]?.first
-                        if (uiStickyState != null) {
-                            field.copy(isSticky = uiStickyState)
-                        } else {
-                            field
+                    // Restore the sticky state flags that were set in the UI
+                    _noteEditorState.update { state ->
+                        val updatedFields = state.fields.map { field ->
+                            val uiStickyState = saveResult.stickyInfo[field.index]?.first
+                            if (uiStickyState != null) {
+                                field.copy(isSticky = uiStickyState)
+                            } else {
+                                field
+                            }
                         }
+                        state.copy(fields = updatedFields)
                     }
-                    state.copy(fields = updatedFields)
-                }
 
-                // Update initial field values after resetting for next note
-                initialFieldValues = _noteEditorState.value.fields.map { it.value.text }
-                _isFieldEdited.value = false
-            } else if (!_noteEditorState.value.isAddingNote && data != null) {
-                val updatedCard: Card?
-                @Suppress("UNCHECKED_CAST")
-                run {
-                    val pair = data as Pair<Card?, Any?>
-                    updatedCard = pair.first
+                    // Update initial field values after resetting for next note
+                    initialFieldValues = _noteEditorState.value.fields.map { it.value.text }
+                    _isFieldEdited.value = false
                 }
-                if (updatedCard != null) {
-                    // Update the cached card
-                    _currentCard.value = updatedCard
+                
+                is SaveResult.UpdatedNote -> {
+                    if (saveResult.card != null) {
+                        // Update the cached card
+                        _currentCard.value = saveResult.card
+                    }
                 }
             }
 
@@ -844,25 +861,16 @@ class NoteEditorViewModel(
     }
 
     /**
-     * Update state from the current note
+     * Helper to map note fields into NoteFieldState instances, converting HTML <br> tags
+     * to newlines for editing. Centralizes the replacement logic used in multiple places.
+     * This allows users to see and edit newlines naturally.
+     * When saving, these newlines are converted back to <br> tags.
+     * TODO: Respect PREF_NOTE_EDITOR_NEWLINE_REPLACE preference (currently always converts, defaults to true)
      */
-    private fun updateStateFromNote(col: Collection, isAddingNote: Boolean) {
-        val note = _currentNote.value ?: return
-        val notetype = note.notetype
-
-        Timber.d(
-            "updateStateFromNote: note object id=%s, notetype.name='%s', notetype.id=%d",
-            System.identityHashCode(note),
-            notetype.name,
-            notetype.id
-        )
-
-        val fields = note.fields.mapIndexed { index, value ->
+    private fun mapFieldsFromNote(note: Note, notetype: NotetypeJson): List<NoteFieldState> {
+        return (0 until notetype.fields.length()).map { index ->
             val field = notetype.fields[index]
-            // Convert HTML <br> tags to newlines for editing in the Compose text fields
-            // This allows users to see and edit newlines naturally
-            // When saving, these newlines are converted back to <br> tags
-            // TODO: Respect PREF_NOTE_EDITOR_NEWLINE_REPLACE preference (currently always converts, defaults to true)
+            val value = if (index < note.fields.size) note.fields[index] else ""
             val editableValue = value
                 .replace("<br>", "\n")
                 .replace("<br/>", "\n")
@@ -878,6 +886,23 @@ class NoteEditorViewModel(
                 index = index
             )
         }
+    }
+
+    /**
+     * Update state from the current note
+     */
+    private fun updateStateFromNote(col: Collection, isAddingNote: Boolean) {
+        val note = _currentNote.value ?: return
+        val notetype = note.notetype
+
+        Timber.d(
+            "updateStateFromNote: note object id=%s, notetype.name='%s', notetype.id=%d",
+            System.identityHashCode(note),
+            notetype.name,
+            notetype.id
+        )
+
+        val fields = mapFieldsFromNote(note, notetype)
 
         val deckName = getDeckNameSafely(col, _deckId.value)
 
@@ -939,28 +964,7 @@ class NoteEditorViewModel(
 
         // Map based on the notetype's field definitions (not the note's current fields)
         // This ensures we get the correct number of fields
-        val fields = (0 until notetype.fields.length()).map { index ->
-            val field = notetype.fields[index]
-            val value = if (index < note.fields.size) note.fields[index] else ""
-            // Convert HTML <br> tags to newlines for editing in the Compose text fields
-            // This allows users to see and edit newlines naturally
-            // When saving, these newlines are converted back to <br> tags
-            // TODO: Respect PREF_NOTE_EDITOR_NEWLINE_REPLACE preference (currently always converts, defaults to true)
-            val editableValue = value
-                .replace("<br>", "\n")
-                .replace("<br/>", "\n")
-                .replace("<br />", "\n")
-                .replace("<BR>", "\n")
-                .replace("<BR/>", "\n")
-                .replace("<BR />", "\n")
-            NoteFieldState(
-                name = field.name,
-                value = TextFieldValue(editableValue),
-                isSticky = field.sticky,
-                hint = "",
-                index = index
-            )
-        }
+        val fields = mapFieldsFromNote(note, notetype)
 
         val deckName = try {
             if (_deckId.value == 0L) {
