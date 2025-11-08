@@ -80,7 +80,10 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ichi2.anki.R
+import com.ichi2.anki.compose.TagsDialog
+import com.ichi2.anki.compose.TagsState
 import com.ichi2.anki.noteeditor.ToolbarButtonModel
+
 
 /**
  * Data class representing the state of a note editor field
@@ -122,7 +125,6 @@ fun NoteEditorScreen(
     availableNoteTypes: List<String>,
     onFieldValueChange: (Int, TextFieldValue) -> Unit,
     onFieldFocus: (Int) -> Unit,
-    onTagsClick: () -> Unit,
     onCardsClick: () -> Unit,
     onDeckSelected: (String) -> Unit,
     onNoteTypeSelected: (String) -> Unit,
@@ -150,11 +152,33 @@ fun NoteEditorScreen(
     onImageOcclusionEdit: () -> Unit = {},
     snackbarHostState: SnackbarHostState = SnackbarHostState(),
     topBar: (@Composable () -> Unit)? = null,
+    allTags: TagsState,
+    deckTags: Set<String>,
+    onUpdateTags: (Set<String>) -> Unit,
+    onAddTag: (String) -> Unit
 ) {
 
     // Observe keyboard state for auto-scrolling
     val imeState = rememberImeState()
     val scrollState = rememberScrollState()
+    var showTagsDialog by remember { mutableStateOf(false) }
+
+    if (showTagsDialog) {
+        TagsDialog(
+            onDismissRequest = { showTagsDialog = false },
+            onConfirm = {
+                onUpdateTags(it)
+                showTagsDialog = false
+            },
+            allTags = allTags,
+            initialSelection = state.tags.toSet(),
+            deckTags = deckTags,
+            showFilterByDeckToggle = true,
+            title = stringResource(id = R.string.note_editor_tags_title),
+            confirmButtonText = stringResource(id = R.string.dialog_ok),
+            onAddTag = onAddTag
+        )
+    }
 
     // Auto-scroll when keyboard appears
     LaunchedEffect(key1 = imeState.value) {
@@ -278,7 +302,7 @@ fun NoteEditorScreen(
             Row(modifier = Modifier.fillMaxWidth()) {
                 // Tags Button
                 Button(
-                    onClick = onTagsClick,
+                    onClick = { showTagsDialog = true },
                     modifier = Modifier
                         .height(52.dp)
                         .weight(1f),
@@ -633,7 +657,7 @@ fun ImageOcclusionButtons(
 @Composable
 fun NoteEditorScreenPreview() {
     val snackbarHostState = remember { SnackbarHostState() }
-    MaterialTheme {
+    com.ichi2.anki.theme.AnkiDroidTheme {
         NoteEditorScreen(
             state = NoteEditorState(
                 fields = listOf(
@@ -652,7 +676,6 @@ fun NoteEditorScreenPreview() {
             availableNoteTypes = listOf("Basic", "Basic (and reversed card)", "Cloze"),
             onFieldValueChange = { _, _ -> },
             onFieldFocus = {},
-            onTagsClick = { },
             onCardsClick = { },
             onDeckSelected = { },
             onNoteTypeSelected = { },
@@ -675,7 +698,11 @@ fun NoteEditorScreenPreview() {
             onAddCustomButtonClick = {},
             customToolbarButtons = emptyList(),
             isToolbarVisible = true,
-            snackbarHostState = snackbarHostState
+            snackbarHostState = snackbarHostState,
+            allTags = TagsState.Loaded(listOf("Tag1", "Tag2", "Tag3")),
+            deckTags = setOf("Tag1", "Tag2"),
+            onUpdateTags = {},
+            onAddTag = {}
         )
     }
 }

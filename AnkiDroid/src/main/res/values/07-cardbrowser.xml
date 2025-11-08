@@ -106,4 +106,5 @@
     <string name="save_changes_message">Please save your changes first</string>
 
     <string name="browser_find_replace_loading_fields">Retrieving fields names&#8230;</string>
+    <string name="note_editor_tags_title">Tags</string>
 </resources>

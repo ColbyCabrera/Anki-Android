@@ -770,12 +770,14 @@ class NoteEditorFragment :
         val composeView = view?.findViewById<androidx.compose.ui.platform.ComposeView>(R.id.note_editor_compose)
 
         composeView?.setContent {
-            com.ichi2.anki.ui.compose.theme.AnkiDroidTheme {
+            com.ichi2.anki.theme.AnkiDroidTheme {
                 val noteEditorState by noteEditorViewModel.noteEditorState.collectAsState()
                 val availableDecks by noteEditorViewModel.availableDecks.collectAsState()
                 val availableNoteTypes by noteEditorViewModel.availableNoteTypes.collectAsState()
                 val toolbarButtons by noteEditorViewModel.toolbarButtons.collectAsState()
                 val showToolbar by noteEditorViewModel.showToolbar.collectAsState()
+                val allTags by noteEditorViewModel.tagsState.collectAsState()
+                val deckTags by noteEditorViewModel.deckTags.collectAsState()
                 val snackbarHostState = remember { androidx.compose.material3.SnackbarHostState() }
                 var capitalizeChecked by remember { mutableStateOf(sharedPrefs().getBoolean(PREF_NOTE_EDITOR_CAPITALIZE, true)) }
                 var scrollToolbarChecked by remember { mutableStateOf(sharedPrefs().getBoolean(PREF_NOTE_EDITOR_SCROLL_TOOLBAR, true)) }
@@ -790,9 +792,6 @@ class NoteEditorFragment :
                     },
                     onFieldFocus = { index ->
                         noteEditorViewModel.onFieldFocus(index)
-                    },
-                    onTagsClick = {
-                        showTagsDialog()
                     },
                     onCardsClick = {
                         showCardTemplateEditor()
@@ -878,6 +877,14 @@ class NoteEditorFragment :
                     },
                     customToolbarButtons = toolbarButtons,
                     isToolbarVisible = showToolbar,
+                    allTags = allTags,
+                    deckTags = deckTags,
+                    onUpdateTags = { tags ->
+                        noteEditorViewModel.updateTags(tags)
+                    },
+                    onAddTag = { tag ->
+                        noteEditorViewModel.addTag(tag)
+                    },
                     topBar = {
                         val title = stringResource(
                             if (noteEditorState.isAddingNote) {
@@ -1898,7 +1905,7 @@ class NoteEditorFragment :
             Timber.d("setting 'last deck' of note type %s to %d", editorNote!!.notetype.name, deckId)
             editorNote!!.notetype.did = deckId
             // Save tags to model
-            editorNote!!.setTagsFromStr(getColUnsafe, tagsAsString(selectedTags!!))
+            editorNote!!.setTagsFromStr(getColUnsafe, tagsAsString(selectedTags!!.toSet()))
             val tags = JSONArray()
             for (t in selectedTags!!) {
                 tags.put(t)
@@ -1974,7 +1981,7 @@ class NoteEditorFragment :
                 return
             }
 
-            editorNote!!.setTagsFromStr(getColUnsafe, tagsAsString(selectedTags!!))
+            editorNote!!.setTagsFromStr(getColUnsafe, tagsAsString(selectedTags!!.toSet()))
             changed = true
 
             // these activities are updated to handle `opChanges`
@@ -2165,7 +2172,7 @@ class NoteEditorFragment :
     }
 
     fun copyNote() {
-        launchNoteEditor(NoteEditorLauncher.CopyNote(deckId, fieldsText, selectedTags)) { }
+        launchNoteEditor(NoteEditorLauncher.CopyNote(deckId, fieldsText, selectedTags?.toSet() ?: emptySet())) { }
     }
 
     private fun launchNoteEditor(
@@ -2367,7 +2374,7 @@ class NoteEditorFragment :
         }
         this.selectedTags = selectedTags as ArrayList<String>?
         // Update ViewModel state for Compose UI
-        noteEditorViewModel.updateTags(selectedTags)
+        noteEditorViewModel.updateTags(selectedTags.toSet())
         updateTags()
     }
 
@@ -3414,7 +3421,7 @@ class NoteEditorFragment :
         return false
     }
 
-    private fun tagsAsString(tags: List<String>): String = tags.joinToString(" ")
+    private fun tagsAsString(tags: Set<String>): String = tags.joinToString(" ")
 
     private val currentlySelectedNotetype: NotetypeJson?
         get() =
