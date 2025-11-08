@@ -236,13 +236,13 @@ fun TagsDialog(
                                                 )
                                             }
                                             filteredTags.forEach { tag ->
-                                                val animatedShape by animateDpAsState(
+                                                val animatedCornerRadius by animateDpAsState(
                                                     targetValue = if (tag in selection) {
                                                         24.dp
                                                     } else {
                                                         8.dp
                                                     },
-                                                    label = "padding",
+                                                    label = "corner radius",
                                                     animationSpec = spring(
                                                         dampingRatio = Spring.DampingRatioMediumBouncy,
                                                         stiffness = Spring.StiffnessLow
@@ -272,7 +272,7 @@ fun TagsDialog(
                                                             Spacer(Modifier.size(FilterChipDefaults.IconSize / 2))
                                                         }
                                                     },
-                                                    shape = RoundedCornerShape(animatedShape),
+                                                    shape = RoundedCornerShape(animatedCornerRadius),
                                                     trailingIcon = {
                                                         if (tag in selection) {
                                                             Spacer(Modifier.size(0.dp))
