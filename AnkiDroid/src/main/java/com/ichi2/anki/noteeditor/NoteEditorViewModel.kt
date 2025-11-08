@@ -29,9 +29,11 @@ import com.ichi2.anki.libanki.DeckId
 import com.ichi2.anki.libanki.Note
 import com.ichi2.anki.libanki.NotetypeJson
 import com.ichi2.anki.libanki.Note.ClozeUtils
+import com.ichi2.anki.compose.TagsState
 import com.ichi2.anki.noteeditor.compose.NoteEditorState
 import com.ichi2.anki.noteeditor.compose.NoteFieldState
 import com.ichi2.anki.servicelayer.NoteService
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -39,6 +41,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import kotlin.math.max
 import kotlin.math.min
@@ -49,9 +52,37 @@ enum class ClozeInsertionMode {
 }
 
 /**
+ * Represents the result of a note save operation with type-safe data.
+ * Eliminates the need for unchecked casts by providing a sealed class hierarchy.
+ */
+sealed class SaveResult {
+    /**
+     * Success result when adding a new note.
+     * @param note The freshly created note with sticky field values applied
+     * @param stickyInfo Map of field index to (isSticky flag, field value) pairs
+     */
+    data class NewNote(
+        val note: Note,
+        val stickyInfo: Map<Int, Pair<Boolean, String>>
+    ) : SaveResult()
+
+    /**
+     * Success result when updating an existing note.
+     * @param card The updated card if deck was changed, null otherwise
+     */
+    data class UpdatedNote(val card: Card?) : SaveResult()
+
+    /**
+     * Failure result from validation or save operation.
+     * @param validationResult The validation failure details
+     */
+    data class ValidationFailure(val validationResult: NoteFieldsCheckResult.Failure) : SaveResult()
+}
+
+/**
  * ViewModel for the Note Editor screen
  * Manages note editing state and business logic
- * 
+ *
  * @param savedStateHandle Handles state persistence across process death (optional for backward compatibility).
  *                         When null, draft state persistence is disabled but the ViewModel remains functional.
  *                         To enable persistence, provide SavedStateHandle via a ViewModelFactory.
@@ -62,25 +93,25 @@ class NoteEditorViewModel(
     private val savedStateHandle: SavedStateHandle? = null,
     private val collectionProvider: suspend () -> Collection = { CollectionManager.getColUnsafe() }
 ) : ViewModel() {
-    
+
     companion object {
         // Keys for SavedStateHandle persistence
         private const val KEY_FIELD_VALUES = "note_editor_field_values"
         private const val KEY_TAGS = "note_editor_tags"
         private const val KEY_SELECTED_DECK_NAME = "note_editor_selected_deck_name"
         private const val KEY_FOCUSED_FIELD_INDEX = "note_editor_focused_field_index"
-        
+
         /**
          * Note: SavedStateHandle is nullable to maintain backward compatibility with existing code
          * that creates the ViewModel without providing dependencies. When SavedStateHandle is null,
          * draft state persistence is disabled, but all other functionality works normally.
-         * 
+         *
          * To enable full production features including process death recovery:
          * - Provide SavedStateHandle through a ViewModelFactory
          * - Inject a Collection provider for testability
          */
     }
-    
+
     private val _noteEditorState = MutableStateFlow(
         NoteEditorState(
             fields = emptyList(),
@@ -133,10 +164,16 @@ class NoteEditorViewModel(
     private val _currentNote = MutableStateFlow<Note?>(null)
     /** The underlying Note being edited (null when creating a new, not yet initialized). */
     val currentNote: StateFlow<Note?> = _currentNote.asStateFlow()
-    
+
     private val _currentCard = MutableStateFlow<Card?>(null)
     private val _deckId = MutableStateFlow<DeckId>(0L)
-    
+
+    private val _tagsState = MutableStateFlow<TagsState>(TagsState.Loading)
+    val tagsState: StateFlow<TagsState> = _tagsState.asStateFlow()
+
+    private val _deckTags = MutableStateFlow<Set<String>>(emptySet())
+    val deckTags: StateFlow<Set<String>> = _deckTags.asStateFlow()
+
     // Store initial field values to detect actual changes
     private var initialFieldValues: List<String> = emptyList()
 
@@ -158,69 +195,73 @@ class NoteEditorViewModel(
                 val restoredTags = savedStateHandle?.get<Array<String>>(KEY_TAGS)
                 val restoredDeckName = savedStateHandle?.get<String>(KEY_SELECTED_DECK_NAME)
                 val restoredFocusedIndex = savedStateHandle?.get<Int>(KEY_FOCUSED_FIELD_INDEX)
-                
+
                 // Check cancellation after reading saved state
                 ensureActive()
-                
-                // Load note and determine deck
-                if (cardId != null && !isAddingNote) {
-                    // Editing an existing card - use the card's deck
-                    val card = col.getCard(cardId)
-                    ensureActive() // Check cancellation after DB access
-                    _currentCard.value = card
-                    _currentNote.value = card.note(col)
-                    _deckId.value = card.currentDeckId()
-                } else {
-                    // Adding a new note - use the provided deckId or calculate it
-                    val notetype = col.notetypes.current()
-                    ensureActive() // Check cancellation after DB access
-                    val newNote = Note.fromNotetypeId(col, notetype.id)
-                    
-                    // Restore field values if available
-                    if (restoredFieldValues != null && restoredFieldValues.size == newNote.fields.size) {
-                        restoredFieldValues.forEachIndexed { index, value ->
-                            newNote.fields[index] = value
+
+                // Perform all DB operations on IO dispatcher
+                withContext(Dispatchers.IO) {
+                    // Load note and determine deck
+                    if (cardId != null && !isAddingNote) {
+                        // Editing an existing card - use the card's deck
+                        val card = col.getCard(cardId)
+                        ensureActive() // Check cancellation after DB access
+                        _currentCard.value = card
+                        _currentNote.value = card.note(col)
+                        _deckId.value = card.currentDeckId()
+                    } else {
+                        // Adding a new note - use the provided deckId or calculate it
+                        val notetype = col.notetypes.current()
+                        ensureActive() // Check cancellation after DB access
+                        val newNote = Note.fromNotetypeId(col, notetype.id)
+
+                        // Restore field values if available
+                        if (restoredFieldValues != null && restoredFieldValues.size == newNote.fields.size) {
+                            restoredFieldValues.forEachIndexed { index, value ->
+                                newNote.fields[index] = value
+                            }
+                            ensureActive() // Check cancellation after field restoration
+                        } else if (initialFieldText != null && newNote.fields.isNotEmpty()) {
+                            // If no restored values but initial text is provided (e.g., from ACTION_PROCESS_TEXT),
+                            // set it as the first field's content
+                            newNote.fields[0] = initialFieldText
+                            Timber.d("Set initial field text from intent: %s", initialFieldText)
                         }
-                        ensureActive() // Check cancellation after field restoration
-                    } else if (initialFieldText != null && newNote.fields.isNotEmpty()) {
-                        // If no restored values but initial text is provided (e.g., from ACTION_PROCESS_TEXT),
-                        // set it as the first field's content
-                        newNote.fields[0] = initialFieldText
-                        Timber.d("Set initial field text from intent: %s", initialFieldText)
-                    }
-                    
-                    _currentNote.value = newNote
-                    _deckId.value = calculateDeckIdForNewNote(col, deckId, notetype)
-                    
-                    // Restore deck if available
-                    if (restoredDeckName != null) {
-                        ensureActive() // Check cancellation before deck lookup
-                        val restoredDeck = col.decks.allNamesAndIds().find { it.name == restoredDeckName }
-                        if (restoredDeck != null) {
-                            _deckId.value = restoredDeck.id
+
+                        _currentNote.value = newNote
+                        _deckId.value = calculateDeckIdForNewNote(col, deckId, notetype)
+
+                        // Restore deck if available
+                        if (restoredDeckName != null) {
+                            ensureActive() // Check cancellation before deck lookup
+                            val restoredDeck = col.decks.allNamesAndIds().find { it.name == restoredDeckName }
+                            if (restoredDeck != null) {
+                                _deckId.value = restoredDeck.id
+                            }
                         }
                     }
+
+                    // Load available decks and note types
+                    ensureActive()
+                    _availableDecks.value = col.decks.allNamesAndIds(skipEmptyDefault = true).map { it.name }
+                    _availableNoteTypes.value = col.notetypes.all().map { it.name }
+
+                    // Check cancellation after loading deck/notetype lists
+                    ensureActive()
+
+                    // Update UI state
+                    updateStateFromNote(col, isAddingNote)
+
+                    // Check cancellation after state update
+                    ensureActive()
                 }
 
-                // Load available decks and note types
-                ensureActive()
-                _availableDecks.value = col.decks.allNamesAndIds(skipEmptyDefault = true).map { it.name }
-                _availableNoteTypes.value = col.notetypes.all().map { it.name }
-
-                // Check cancellation after loading deck/notetype lists
-                ensureActive()
-                
-                // Update UI state
-                updateStateFromNote(col, isAddingNote)
-                
-                // Check cancellation after state update
-                ensureActive()
-                
+                // Back on Main dispatcher - update UI state
                 // Restore tags if available
                 if (restoredTags != null) {
                     _noteEditorState.update { it.copy(tags = restoredTags.toList()) }
                 }
-                
+
                 // Restore focused field if available and valid
                 if (restoredFocusedIndex != null) {
                     _noteEditorState.update { currentState ->
@@ -231,13 +272,16 @@ class NoteEditorViewModel(
                         }
                     }
                 }
-                
+
                 // Capture initial field values for change detection
                 initialFieldValues = _noteEditorState.value.fields.map { it.value.text }
-                
+
                 // Reset the field edited flag after initialization to prevent false positives
                 _isFieldEdited.value = false
-                
+
+                // Load tags
+                loadTags(col)
+
                 onComplete?.invoke(true, null)
             } catch (e: Exception) {
                 val errorMessage = "Failed to initialize editor: ${e.message ?: "Unknown error"}"
@@ -247,7 +291,61 @@ class NoteEditorViewModel(
             }
         }
     }
-    
+
+    /**
+     * Escapes a deck name for use in a deck search query.
+     * Must escape backslashes first, then quotes, to prevent breaking the search query.
+     */
+    private fun escapeForDeckQuery(deckName: String): String {
+        return deckName
+            .replace("\\", "\\\\")  // Escape backslashes first
+            .replace("\"", "\\\"")  // Then escape quotes
+    }
+
+    private fun loadTags(col: Collection) {
+        viewModelScope.launch {
+            _tagsState.value = TagsState.Loading
+            
+            // Perform all DB operations on IO dispatcher
+            val (allTags, deckSpecificTags) = withContext(Dispatchers.IO) {
+                val all = col.tags.all().sorted()
+                
+                val deckSpecific = if (_deckId.value != 0L) {
+                    // Query all notes in the selected deck using the deck search operator
+                    val noteIds = try {
+                        val deckName = col.decks.name(_deckId.value)
+                        val escapedDeckName = escapeForDeckQuery(deckName)
+                        col.findNotes("deck:\"$escapedDeckName\"")
+                    } catch (e: Exception) {
+                        Timber.e(e, "Error loading deck tags")
+                        emptyList()
+                    }
+
+                    // Collect all tags from the notes
+                    noteIds.asSequence()
+                        .mapNotNull { noteId ->
+                            try {
+                                col.getNote(noteId).tags
+                            } catch (e: Exception) {
+                                Timber.w(e, "Error getting note tags for note $noteId")
+                                null
+                            }
+                        }
+                        .flatten()
+                        .toSet()
+                } else {
+                    emptySet()
+                }
+                
+                all to deckSpecific
+            }
+            
+            // Back on Main dispatcher - update UI state
+            _tagsState.value = TagsState.Loaded(allTags)
+            _deckTags.value = deckSpecificTags
+        }
+    }
+
     /**
      * Calculate the deck ID for a new note based on preferences and context
      */
@@ -260,7 +358,7 @@ class NoteEditorViewModel(
         if (providedDeckId != null && providedDeckId != 0L) {
             return providedDeckId
         }
-        
+
         // Check if we should use the current deck or the note type's deck
         val useCurrentDeck = try {
             col.config.getBool(anki.config.ConfigKey.Bool.ADDING_DEFAULTS_TO_CURRENT_DECK)
@@ -268,12 +366,12 @@ class NoteEditorViewModel(
             Timber.w(e, "Error reading config, defaulting to current deck")
             true
         }
-        
+
         if (!useCurrentDeck) {
             // Use the note type's default deck
             return notetype.did
         }
-        
+
         // Use the current deck
         val currentDeckId = try {
             col.config.get(com.ichi2.anki.libanki.Decks.Companion.CURRENT_DECK) ?: 1L
@@ -281,7 +379,7 @@ class NoteEditorViewModel(
             Timber.w(e, "Error getting current deck, using default")
             1L
         }
-        
+
         // If current deck is filtered, use default deck instead
         return if (col.decks.isFiltered(currentDeckId)) {
             1L
@@ -304,10 +402,10 @@ class NoteEditorViewModel(
             val focusedIndex = currentState.focusedFieldIndex ?: index
             currentState.copy(fields = updatedFields, focusedFieldIndex = focusedIndex)
         }
-        
+
         // Check if field values have actually changed from initial values
         updateFieldEditedFlag()
-        
+
         // Persist field values to SavedStateHandle
         persistDraftState()
     }
@@ -331,9 +429,21 @@ class NoteEditorViewModel(
     /**
      * Update tags
      */
-    fun updateTags(tags: List<String>) {
-        _noteEditorState.update { it.copy(tags = tags) }
+    fun updateTags(tags: Set<String>) {
+        _noteEditorState.update { it.copy(tags = tags.toList()) }
         persistDraftState()
+    }
+
+    fun addTag(tag: String) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                val col = collectionProvider()
+                // Register the tag by setting its collapse state (registers if missing)
+                col.tags.setCollapsed(tag, collapsed = false)
+            }
+            // loadTags uses IO dispatcher internally, safe to call here
+            loadTags(collectionProvider())
+        }
     }
 
     fun onFieldFocus(index: Int) {
@@ -355,11 +465,19 @@ class NoteEditorViewModel(
             try {
                 val col = collectionProvider()
                 ensureActive() // Check cancellation after getting collection
-                val deck = col.decks.allNamesAndIds().find { it.name == deckName }
-                if (deck != null) {
-                    _deckId.value = deck.id
+                
+                // Perform DB operations on IO dispatcher
+                val deckId = withContext(Dispatchers.IO) {
+                    val deck = col.decks.allNamesAndIds().find { it.name == deckName }
+                    deck?.id
+                }
+                
+                // Back on Main dispatcher - update UI state
+                if (deckId != null) {
+                    _deckId.value = deckId
                     _noteEditorState.update { it.copy(selectedDeckName = deckName) }
                     persistDraftState()
+                    loadTags(col) // Reload deck tags when deck changes
                 }
             } catch (e: Exception) {
                 val errorMessage = "Failed to select deck: ${e.message ?: "Unknown error"}"
@@ -377,115 +495,160 @@ class NoteEditorViewModel(
             try {
                 val col = collectionProvider()
                 ensureActive() // Check cancellation after getting collection
-                
-                val notetype = col.notetypes.all().find { it.name == noteTypeName }
-                if (notetype == null) {
-                    Timber.w("Note type '%s' not found", noteTypeName)
-                    return@launch
-                }
-                
-                // Check if we're already using this note type
-                val currentNote = _currentNote.value
-                if (currentNote != null) {
-                    Timber.d("Current note type: '%s' (id: %d)", currentNote.notetype.name, currentNote.notetype.id)
-                    if (currentNote.notetype.id == notetype.id) {
-                        Timber.d("Note type '%s' is already selected, skipping change", noteTypeName)
-                        return@launch
-                    }
-                }
-                
-                ensureActive() // Check cancellation after notetype lookup
-                
-                Timber.i("Changing note type from '%s' to '%s' (id: %d)", 
-                    currentNote?.notetype?.name ?: "null", noteTypeName, notetype.id)
-                
-                // Set the current note type in the collection
-                col.notetypes.setCurrent(notetype)
-                
-                // Clear notetype cache to ensure we get the fresh notetype
-                col.notetypes.clearCache()
-                
-                // Re-fetch the notetype to ensure we have the latest version
-                val freshNotetype = col.notetypes.get(notetype.id)
-                if (freshNotetype == null) {
-                    Timber.e("Failed to fetch fresh notetype after cache clear")
-                    return@launch
-                }
-                
-                Timber.d("Fresh notetype: name='%s', id=%d, fields=%d", 
-                    freshNotetype.name, freshNotetype.id, freshNotetype.fields.length())
-                
-                // Update the current deck to use this note type
-                val currentDeck = col.decks.current()
-                currentDeck.put("mid", freshNotetype.id)
-                col.decks.save(currentDeck)
-                
-                // Update deck ID if configuration says to use note type's default deck
-                if (!col.config.getBool(anki.config.ConfigKey.Bool.ADDING_DEFAULTS_TO_CURRENT_DECK)) {
-                    _deckId.value = freshNotetype.did
-                    Timber.d("Updated deck ID to note type's default deck: %d", freshNotetype.did)
-                }
-                
-                // Capture existing note to preserve matching field values
-                val oldNote = _currentNote.value
-                val newNote = Note.fromNotetypeId(col, freshNotetype.id)
-                
-                Timber.d("After Note.fromNotetypeId: newNote.notetype.name='%s', newNote.notetype.id=%d", 
-                    newNote.notetype.name, newNote.notetype.id)
-                Timber.d("Expected notetype.name='%s', notetype.id=%d", freshNotetype.name, freshNotetype.id)
-                
-                // Copy field values from old note to new note where field names match
-                if (oldNote != null) {
-                    ensureActive()
-                    
-                    // Preserve original note ID so updateNote targets the correct record
-                    // Note: guId, mod, usn have private setters and will be updated by col.updateNote()
-                    newNote.id = oldNote.id
 
-                    val oldNotetype = oldNote.notetype
-                    oldNotetype.fields.forEachIndexed { oldIndex, oldField ->
-                        if (oldIndex < oldNote.fields.size) {
-                            val oldValue = oldNote.fields[oldIndex]
-                            // Find matching field in new notetype
-                            val newIndex = freshNotetype.fields.indexOfFirst { it.name == oldField.name }
-                            if (newIndex >= 0 && newIndex < newNote.fields.size) {
-                                newNote.fields[newIndex] = oldValue
-                                Timber.v("Copied field '%s' -> '%s': %s", oldField.name, freshNotetype.fields[newIndex].name, oldValue)
-                            }
+                // Perform all DB operations on IO dispatcher
+                val result = withContext(Dispatchers.IO) {
+                    val notetype = col.notetypes.all().find { it.name == noteTypeName }
+                    if (notetype == null) {
+                        Timber.w("Note type '%s' not found", noteTypeName)
+                        return@withContext null
+                    }
+
+                    // Check if we're already using this note type
+                    val currentNote = _currentNote.value
+                    if (currentNote != null) {
+                        Timber.d("Current note type: '%s' (id: %d)", currentNote.notetype.name, currentNote.notetype.id)
+                        if (currentNote.notetype.id == notetype.id) {
+                            Timber.d("Note type '%s' is already selected, skipping change", noteTypeName)
+                            return@withContext null
                         }
                     }
-                    
-                    // Reapply current draft tags from the UI state
-                    val currentTags = _noteEditorState.value.tags
-                    if (currentTags.isNotEmpty()) {
-                        newNote.setTagsFromStr(col, currentTags.joinToString(" "))
-                        Timber.d("Reapplied tags to new note: %s", currentTags.joinToString(", "))
+
+                    ensureActive() // Check cancellation after notetype lookup
+
+                    Timber.i(
+                        "Changing note type from '%s' to '%s' (id: %d)",
+                        currentNote?.notetype?.name ?: "null",
+                        noteTypeName,
+                        notetype.id
+                    )
+
+                    // Set the current note type in the collection
+                    col.notetypes.setCurrent(notetype)
+
+                    // Clear notetype cache to ensure we get the fresh notetype
+                    col.notetypes.clearCache()
+
+                    // Re-fetch the notetype to ensure we have the latest version
+                    val freshNotetype = col.notetypes.get(notetype.id)
+                    if (freshNotetype == null) {
+                        Timber.e("Failed to fetch fresh notetype after cache clear")
+                        return@withContext null
                     }
-                    
-                    ensureActive() // Check cancellation after field copying and tag restoration
+
+                    Timber.d(
+                        "Fresh notetype: name='%s', id=%d, fields=%d",
+                        freshNotetype.name,
+                        freshNotetype.id,
+                        freshNotetype.fields.length()
+                    )
+
+                    // Update the current deck to use this note type
+                    val currentDeck = col.decks.current()
+                    currentDeck.put("mid", freshNotetype.id)
+                    col.decks.save(currentDeck)
+
+                    // Calculate new deck ID if configuration says to use note type's default deck
+                    val newDeckId = if (!col.config.getBool(anki.config.ConfigKey.Bool.ADDING_DEFAULTS_TO_CURRENT_DECK)) {
+                        Timber.d("Updated deck ID to note type's default deck: %d", freshNotetype.did)
+                        freshNotetype.did
+                    } else {
+                        _deckId.value
+                    }
+
+                    // Capture existing note to preserve matching field values
+                    val oldNote = _currentNote.value
+                    val newNote = Note.fromNotetypeId(col, freshNotetype.id)
+
+                    Timber.d(
+                        "After Note.fromNotetypeId: newNote.notetype.name='%s', newNote.notetype.id=%d",
+                        newNote.notetype.name,
+                        newNote.notetype.id
+                    )
+                    Timber.d("Expected notetype.name='%s', notetype.id=%d", freshNotetype.name, freshNotetype.id)
+
+                    // Copy field values from old note to new note where field names match
+                    if (oldNote != null) {
+                        ensureActive()
+
+                        // Preserve original note ID so updateNote targets the correct record
+                        // Note: guId, mod, usn have private setters and will be updated by col.updateNote()
+                        newNote.id = oldNote.id
+
+                        val oldNotetype = oldNote.notetype
+                        oldNotetype.fields.forEachIndexed { oldIndex, oldField ->
+                            if (oldIndex < oldNote.fields.size) {
+                                val oldValue = oldNote.fields[oldIndex]
+                                // Find matching field in new notetype
+                                val newIndex = freshNotetype.fields.indexOfFirst { it.name == oldField.name }
+                                if (newIndex >= 0 && newIndex < newNote.fields.size) {
+                                    newNote.fields[newIndex] = oldValue
+                                    Timber.v("Copied field '%s' -> '%s': %s", oldField.name, freshNotetype.fields[newIndex].name, oldValue)
+                                }
+                            }
+                        }
+
+                        // Reapply current draft tags from the UI state
+                        val currentTags = _noteEditorState.value.tags
+                        if (currentTags.isNotEmpty()) {
+                            newNote.setTagsFromStr(col, currentTags.joinToString(" "))
+                            Timber.d("Reapplied tags to new note: %s", currentTags.joinToString(", "))
+                        }
+
+                        ensureActive() // Check cancellation after field copying and tag restoration
+                    }
+
+                    Timber.d(
+                        "About to return result: newNote object id=%s, notetype.name='%s', notetype.id=%d, fields=%d",
+                        System.identityHashCode(newNote),
+                        newNote.notetype.name,
+                        newNote.notetype.id,
+                        newNote.fields.size
+                    )
+
+                    // Return result data
+                    Triple(newNote, freshNotetype, newDeckId)
                 }
-                
-                Timber.d("About to set _currentNote.value: newNote object id=%s, notetype.name='%s', notetype.id=%d, fields=%d",
-                    System.identityHashCode(newNote), newNote.notetype.name, newNote.notetype.id, newNote.fields.size)
-                
-                // Force StateFlow update by creating a new reference
-                // Note: StateFlow uses equals() which only compares IDs, so we need to force the update
-                _currentNote.value = null
-                _currentNote.value = newNote
-                
-                Timber.d("After setting _currentNote.value: _currentNote.value object id=%s, notetype.name='%s', notetype.id=%d",
-                    System.identityHashCode(_currentNote.value), _currentNote.value?.notetype?.name, _currentNote.value?.notetype?.id)
-                
-                // Pass the fresh notetype directly to avoid cache issues
-                updateStateFromNoteWithNotetype(col, _noteEditorState.value.isAddingNote, freshNotetype)
-                
-                // Update initial field values after note type change
-                initialFieldValues = _noteEditorState.value.fields.map { it.value.text }
-                _isFieldEdited.value = false
-                
-                persistDraftState()
-                
-                Timber.d("Successfully changed note type to '%s'", noteTypeName)
+
+                // Back on Main dispatcher - update UI state
+                if (result != null) {
+                    val (newNote, freshNotetype, newDeckId) = result
+
+                    // Update deck ID if needed
+                    if (newDeckId != _deckId.value) {
+                        _deckId.value = newDeckId
+                    }
+
+                    Timber.d(
+                        "Setting _currentNote.value: newNote object id=%s, notetype.name='%s', notetype.id=%d",
+                        System.identityHashCode(newNote),
+                        newNote.notetype.name,
+                        newNote.notetype.id
+                    )
+
+                    // Force StateFlow update by creating a new reference
+                    // Note: StateFlow uses equals() which only compares IDs, so we need to force the update
+                    _currentNote.value = null
+                    _currentNote.value = newNote
+
+                    Timber.d(
+                        "After setting _currentNote.value: _currentNote.value object id=%s, notetype.name='%s', notetype.id=%d",
+                        System.identityHashCode(_currentNote.value),
+                        _currentNote.value?.notetype?.name,
+                        _currentNote.value?.notetype?.id
+                    )
+
+                    // Pass the fresh notetype directly to avoid cache issues
+                    updateStateFromNoteWithNotetype(col, _noteEditorState.value.isAddingNote, freshNotetype)
+
+                    // Update initial field values after note type change
+                    initialFieldValues = _noteEditorState.value.fields.map { it.value.text }
+                    _isFieldEdited.value = false
+
+                    persistDraftState()
+
+                    Timber.d("Successfully changed note type to '%s'", noteTypeName)
+                }
             } catch (e: Exception) {
                 val errorMessage = "Failed to change note type: ${e.message ?: "Unknown error"}"
                 Timber.e(e, "Error changing note type")
@@ -512,85 +675,111 @@ class NoteEditorViewModel(
             val note = _currentNote.value ?: return NoteFieldsCheckResult.Failure(null)
             val currentCard = _currentCard.value
 
-            // Update note fields from state
-            val fields = _noteEditorState.value.fields
-            fields.forEach { fieldState ->
-                val fieldIndex = fieldState.index
-                if (fieldIndex in note.fields.indices) {
-                    // Convert newlines to HTML <br> tags when saving
-                    // This ensures newlines are properly displayed when viewing cards
-                    note.fields[fieldIndex] = NoteService.convertToHtmlNewline(
-                        fieldState.value.text,
-                        replaceNewlines = true
-                    )
+            // Perform all DB operations on IO dispatcher
+            val saveResult: SaveResult = withContext(Dispatchers.IO) {
+                // Update note fields from state
+                val fields = _noteEditorState.value.fields
+                fields.forEach { fieldState ->
+                    val fieldIndex = fieldState.index
+                    if (fieldIndex in note.fields.indices) {
+                        // Convert newlines to HTML <br> tags when saving
+                        // This ensures newlines are properly displayed when viewing cards
+                        note.fields[fieldIndex] = NoteService.convertToHtmlNewline(
+                            fieldState.value.text,
+                            replaceNewlines = true
+                        )
+                    }
+                }
+
+                // Update tags
+                note.setTagsFromStr(col, _noteEditorState.value.tags.joinToString(" "))
+
+                // For new notes, validate fields before saving
+                if (_noteEditorState.value.isAddingNote) {
+                    val validationResult = checkNoteFieldsResponse(note)
+                    if (validationResult is NoteFieldsCheckResult.Failure) {
+                        return@withContext SaveResult.ValidationFailure(validationResult)
+                    }
+                    col.addNote(note, _deckId.value)
+
+                    // Reset to a fresh blank note for the next add, preserving sticky field values and state
+                    val currentState = _noteEditorState.value
+
+                    // Capture both sticky values and sticky state flags from the current UI
+                    val stickyInfo = currentState.fields.associate { field ->
+                        field.index to (field.isSticky to field.value.text)
+                    }
+
+                    val freshNote = Note.fromNotetypeId(col, note.notetype.id)
+                    // Apply sticky field values to the new note
+                    stickyInfo.forEach { (index, stickyData) ->
+                        val (isSticky, value) = stickyData
+                        if (isSticky && index < freshNote.fields.size) {
+                            freshNote.fields[index] = value
+                        }
+                    }
+
+                    // Return success with fresh note and sticky info
+                    SaveResult.NewNote(freshNote, stickyInfo)
+                } else {
+                    // When editing an existing card, check if deck changed
+                    val updatedCard = if (currentCard != null && currentCard.currentDeckId() != _deckId.value) {
+                        // Move card to new deck
+                        col.setDeck(listOf(currentCard.id), _deckId.value)
+                        // Refresh the card object to reflect database changes
+                        currentCard.load(col)
+                        Timber.d("Card deck updated to %d", _deckId.value)
+                        currentCard
+                    } else {
+                        null
+                    }
+
+                    // Explicitly ignore OpChanges - UI updates happen through reactive state
+                    col.updateNote(note).let { }
+
+                    // Return success with updated card if applicable
+                    SaveResult.UpdatedNote(updatedCard)
                 }
             }
 
-            // Update tags
-            note.setTagsFromStr(col, _noteEditorState.value.tags.joinToString(" "))
-
-            // For new notes, validate fields before saving
-            if (_noteEditorState.value.isAddingNote) {
-                val validationResult = checkNoteFieldsResponse(note)
-                if (validationResult is NoteFieldsCheckResult.Failure) {
+            // Back on Main dispatcher - update UI state based on save result type
+            when (saveResult) {
+                is SaveResult.ValidationFailure -> {
                     _errorState.value = "Note validation failed: Please check required fields"
-                    return validationResult
-                }
-                col.addNote(note, _deckId.value)
-
-                // Reset to a fresh blank note for the next add, preserving sticky field values and state
-                val currentState = _noteEditorState.value
-
-                // Capture both sticky values and sticky state flags from the current UI
-                val stickyInfo = currentState.fields.associate { field ->
-                    field.index to (field.isSticky to field.value.text)
-                }
-
-                val freshNote = Note.fromNotetypeId(col, note.notetype.id)
-                // Apply sticky field values to the new note
-                stickyInfo.forEach { (index, stickyData) ->
-                    val (isSticky, value) = stickyData
-                    if (isSticky && index < freshNote.fields.size) {
-                        freshNote.fields[index] = value
-                    }
-                }
-
-                // Update the current note reference
-                _currentNote.value = freshNote
-
-                // Update state with the fresh note, then restore sticky flags from UI
-                updateStateFromNote(col, isAddingNote = true)
-
-                // Restore the sticky state flags that were set in the UI
-                _noteEditorState.update { state ->
-                    val updatedFields = state.fields.map { field ->
-                        val uiStickyState = stickyInfo[field.index]?.first
-                        if (uiStickyState != null) {
-                            field.copy(isSticky = uiStickyState)
-                        } else {
-                            field
-                        }
-                    }
-                    state.copy(fields = updatedFields)
+                    return saveResult.validationResult
                 }
                 
-                // Update initial field values after resetting for next note
-                initialFieldValues = _noteEditorState.value.fields.map { it.value.text }
-                _isFieldEdited.value = false
-            } else {
-                // When editing an existing card, check if deck changed
-                if (currentCard != null && currentCard.currentDeckId() != _deckId.value) {
-                    // Move card to new deck
-                    col.setDeck(listOf(currentCard.id), _deckId.value)
-                    // Refresh the card object to reflect database changes
-                    currentCard.load(col)
-                    // Update the cached card
-                    _currentCard.value = currentCard
-                    Timber.d("Card deck updated to %d", _deckId.value)
-                }
+                is SaveResult.NewNote -> {
+                    // Update the current note reference
+                    _currentNote.value = saveResult.note
 
-                // Explicitly ignore OpChanges - UI updates happen through reactive state
-                col.updateNote(note).let { }
+                    // Update state with the fresh note, then restore sticky flags from UI
+                    updateStateFromNote(col, isAddingNote = true)
+
+                    // Restore the sticky state flags that were set in the UI
+                    _noteEditorState.update { state ->
+                        val updatedFields = state.fields.map { field ->
+                            val uiStickyState = saveResult.stickyInfo[field.index]?.first
+                            if (uiStickyState != null) {
+                                field.copy(isSticky = uiStickyState)
+                            } else {
+                                field
+                            }
+                        }
+                        state.copy(fields = updatedFields)
+                    }
+
+                    // Update initial field values after resetting for next note
+                    initialFieldValues = _noteEditorState.value.fields.map { it.value.text }
+                    _isFieldEdited.value = false
+                }
+                
+                is SaveResult.UpdatedNote -> {
+                    if (saveResult.card != null) {
+                        // Update the cached card
+                        _currentCard.value = saveResult.card
+                    }
+                }
             }
 
             // Clear draft state after successful save
@@ -675,21 +864,16 @@ class NoteEditorViewModel(
     }
 
     /**
-     * Update state from the current note
+     * Helper to map note fields into NoteFieldState instances, converting HTML <br> tags
+     * to newlines for editing. Centralizes the replacement logic used in multiple places.
+     * This allows users to see and edit newlines naturally.
+     * When saving, these newlines are converted back to <br> tags.
+     * TODO: Respect PREF_NOTE_EDITOR_NEWLINE_REPLACE preference (currently always converts, defaults to true)
      */
-    private fun updateStateFromNote(col: Collection, isAddingNote: Boolean) {
-        val note = _currentNote.value ?: return
-        val notetype = note.notetype
-        
-        Timber.d("updateStateFromNote: note object id=%s, notetype.name='%s', notetype.id=%d", 
-            System.identityHashCode(note), notetype.name, notetype.id)
-
-        val fields = note.fields.mapIndexed { index, value ->
+    private fun mapFieldsFromNote(note: Note, notetype: NotetypeJson): List<NoteFieldState> {
+        return (0 until notetype.fields.length()).map { index ->
             val field = notetype.fields[index]
-            // Convert HTML <br> tags to newlines for editing in the Compose text fields
-            // This allows users to see and edit newlines naturally
-            // When saving, these newlines are converted back to <br> tags
-            // TODO: Respect PREF_NOTE_EDITOR_NEWLINE_REPLACE preference (currently always converts, defaults to true)
+            val value = if (index < note.fields.size) note.fields[index] else ""
             val editableValue = value
                 .replace("<br>", "\n")
                 .replace("<br/>", "\n")
@@ -705,20 +889,40 @@ class NoteEditorViewModel(
                 index = index
             )
         }
+    }
+
+    /**
+     * Update state from the current note
+     */
+    private fun updateStateFromNote(col: Collection, isAddingNote: Boolean) {
+        val note = _currentNote.value ?: return
+        val notetype = note.notetype
+
+        Timber.d(
+            "updateStateFromNote: note object id=%s, notetype.name='%s', notetype.id=%d",
+            System.identityHashCode(note),
+            notetype.name,
+            notetype.id
+        )
+
+        val fields = mapFieldsFromNote(note, notetype)
 
         val deckName = getDeckNameSafely(col, _deckId.value)
 
         Timber.d("updateStateFromNote: Updating state with note type '%s', %d fields", notetype.name, fields.size)
-        
+
         _noteEditorState.update { currentState ->
             val newFocus =
                 currentState.focusedFieldIndex?.takeIf { focus ->
                     fields.any { it.index == focus }
                 } ?: fields.firstOrNull()?.index
-            
-            Timber.d("updateStateFromNote: Old state note type='%s', New state note type='%s'", 
-                currentState.selectedNoteTypeName, notetype.name)
-            
+
+            Timber.d(
+                "updateStateFromNote: Old state note type='%s', New state note type='%s'",
+                currentState.selectedNoteTypeName,
+                notetype.name
+            )
+
             currentState.copy(
                 fields = fields,
                 tags = note.tags,
@@ -735,9 +939,11 @@ class NoteEditorViewModel(
                 focusedFieldIndex = newFocus
             )
         }
-        
-        Timber.d("updateStateFromNote: State updated, current selectedNoteTypeName='%s'", 
-            _noteEditorState.value.selectedNoteTypeName)
+
+        Timber.d(
+            "updateStateFromNote: State updated, current selectedNoteTypeName='%s'",
+            _noteEditorState.value.selectedNoteTypeName
+        )
     }
 
     /**
@@ -746,36 +952,22 @@ class NoteEditorViewModel(
      */
     private fun updateStateFromNoteWithNotetype(col: Collection, isAddingNote: Boolean, notetype: NotetypeJson) {
         val note = _currentNote.value ?: return
-        
-        Timber.d("updateStateFromNoteWithNotetype: note object id=%s, provided notetype.name='%s', notetype.id=%d", 
-            System.identityHashCode(note), notetype.name, notetype.id)
-        Timber.d("updateStateFromNoteWithNotetype: note has %d fields, notetype defines %d fields", 
-            note.fields.size, notetype.fields.length())
+
+        Timber.d(
+            "updateStateFromNoteWithNotetype: note object id=%s, provided notetype.name='%s', notetype.id=%d",
+            System.identityHashCode(note),
+            notetype.name,
+            notetype.id
+        )
+        Timber.d(
+            "updateStateFromNoteWithNotetype: note has %d fields, notetype defines %d fields",
+            note.fields.size,
+            notetype.fields.length()
+        )
 
         // Map based on the notetype's field definitions (not the note's current fields)
         // This ensures we get the correct number of fields
-        val fields = (0 until notetype.fields.length()).map { index ->
-            val field = notetype.fields[index]
-            val value = if (index < note.fields.size) note.fields[index] else ""
-            // Convert HTML <br> tags to newlines for editing in the Compose text fields
-            // This allows users to see and edit newlines naturally
-            // When saving, these newlines are converted back to <br> tags
-            // TODO: Respect PREF_NOTE_EDITOR_NEWLINE_REPLACE preference (currently always converts, defaults to true)
-            val editableValue = value
-                .replace("<br>", "\n")
-                .replace("<br/>", "\n")
-                .replace("<br />", "\n")
-                .replace("<BR>", "\n")
-                .replace("<BR/>", "\n")
-                .replace("<BR />", "\n")
-            NoteFieldState(
-                name = field.name,
-                value = TextFieldValue(editableValue),
-                isSticky = field.sticky,
-                hint = "",
-                index = index
-            )
-        }
+        val fields = mapFieldsFromNote(note, notetype)
 
         val deckName = try {
             if (_deckId.value == 0L) {
@@ -796,16 +988,19 @@ class NoteEditorViewModel(
         }
 
         Timber.d("updateStateFromNoteWithNotetype: Updating state with note type '%s', %d fields", notetype.name, fields.size)
-        
+
         _noteEditorState.update { currentState ->
             val newFocus =
                 currentState.focusedFieldIndex?.takeIf { focus ->
                     fields.any { it.index == focus }
                 } ?: fields.firstOrNull()?.index
-            
-            Timber.d("updateStateFromNoteWithNotetype: Old state note type='%s', New state note type='%s'", 
-                currentState.selectedNoteTypeName, notetype.name)
-            
+
+            Timber.d(
+                "updateStateFromNoteWithNotetype: Old state note type='%s', New state note type='%s'",
+                currentState.selectedNoteTypeName,
+                notetype.name
+            )
+
             currentState.copy(
                 fields = fields,
                 tags = note.tags,
@@ -819,9 +1014,11 @@ class NoteEditorViewModel(
                 focusedFieldIndex = newFocus
             )
         }
-        
-        Timber.d("updateStateFromNoteWithNotetype: State updated, current selectedNoteTypeName='%s'", 
-            _noteEditorState.value.selectedNoteTypeName)
+
+        Timber.d(
+            "updateStateFromNoteWithNotetype: State updated, current selectedNoteTypeName='%s'",
+            _noteEditorState.value.selectedNoteTypeName
+        )
     }
 
     /**
@@ -838,7 +1035,7 @@ class NoteEditorViewModel(
         val currentValues = _noteEditorState.value.fields.map { it.value.text }
         _isFieldEdited.value = currentValues != initialFieldValues
     }
-    
+
     /**
      * Reset the field edited flag (e.g., after successful save)
      */
@@ -859,7 +1056,7 @@ class NoteEditorViewModel(
 
     private fun updateFieldValueInternal(
         fieldIndex: Int,
-        transform: (TextFieldValue) -> TextFieldValue?,
+        transform: (TextFieldValue) -> TextFieldValue?
     ): Boolean {
         var applied = false
         _noteEditorState.update { currentState ->
