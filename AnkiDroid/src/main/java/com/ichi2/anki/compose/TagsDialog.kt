@@ -108,7 +108,7 @@ fun TagsDialog(
     showFilterByDeckToggle: Boolean = false,
     onAddTag: (String) -> Unit
 ) {
-    var selection by remember(initialSelection) { mutableStateOf(initialSelection.toSet()) }
+    var selection by remember(initialSelection) { mutableStateOf(initialSelection) }
     var searchQuery by remember { mutableStateOf("") }
     var isToggleChecked by remember(initialFilterByDeck) { mutableStateOf(initialFilterByDeck) }
 
