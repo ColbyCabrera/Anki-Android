@@ -47,6 +47,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilledTonalIconToggleButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -189,9 +191,11 @@ fun TagsDialog(
                                                     label = { Text(text = newTag) },
                                                     leadingIcon = {
                                                         Icon(
-                                                            imageVector = Icons.Default.Add,
+                                                            painter = painterResource(R.drawable.add_24px),
                                                             contentDescription = stringResource(R.string.add_tag),
-                                                            modifier = Modifier.size(FilterChipDefaults.IconSize)
+                                                            modifier = Modifier.size(
+                                                                FilterChipDefaults.IconSize
+                                                            )
                                                         )
                                                     }
                                                 )
