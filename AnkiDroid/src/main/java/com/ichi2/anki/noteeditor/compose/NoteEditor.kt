@@ -162,6 +162,7 @@ fun NoteEditorScreen(
     val imeState = rememberImeState()
     val scrollState = rememberScrollState()
     var showTagsDialog by remember { mutableStateOf(false) }
+    var filterByDeck by remember { mutableStateOf(true) }
 
     if (showTagsDialog) {
         TagsDialog(
@@ -172,12 +173,13 @@ fun NoteEditorScreen(
             },
             allTags = allTags,
             initialSelection = state.tags.toSet(),
-            initialFilterByDeck = true,
+            initialFilterByDeck = filterByDeck,
             deckTags = deckTags,
             showFilterByDeckToggle = true,
             title = stringResource(id = R.string.note_editor_tags_title),
             confirmButtonText = stringResource(id = R.string.dialog_ok),
-            onAddTag = onAddTag
+            onAddTag = onAddTag,
+            onFilterByDeckChanged = { filterByDeck = it }
         )
     }
 
