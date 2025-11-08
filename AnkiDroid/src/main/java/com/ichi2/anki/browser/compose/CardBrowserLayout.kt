@@ -270,12 +270,15 @@ fun CardBrowserLayout(
                             mutableStateOf(TextFieldValue(searchQuery))
                         }
 
-                        LaunchedEffect(isSearchOpen, searchQuery) {
-                            val newTextFieldValue = textFieldValue.copy(text = searchQuery)
-                            textFieldValue = if (isSearchOpen) {
-                                newTextFieldValue.copy(selection = TextRange(0, newTextFieldValue.text.length))
-                            } else {
-                                newTextFieldValue
+                        LaunchedEffect(searchQuery) {
+                            if (textFieldValue.text != searchQuery) {
+                                textFieldValue = textFieldValue.copy(text = searchQuery)
+                            }
+                        }
+
+                        LaunchedEffect(isSearchOpen) {
+                            if (isSearchOpen) {
+                                textFieldValue = textFieldValue.copy(selection = TextRange(0, textFieldValue.text.length))
                             }
                         }
 
