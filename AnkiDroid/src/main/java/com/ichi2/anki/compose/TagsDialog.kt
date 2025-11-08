@@ -20,6 +20,9 @@
  ****************************************************************************************/
 package com.ichi2.anki.compose
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +35,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -192,6 +197,18 @@ fun TagsDialog(
                                                 )
                                             }
                                             filteredTags.forEach { tag ->
+                                                val animatedShape by animateDpAsState(
+                                                    targetValue = if (tag in selection) {
+                                                        24.dp
+                                                    } else {
+                                                        8.dp
+                                                    },
+                                                    label = "padding",
+                                                    animationSpec = spring(
+                                                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                                                        stiffness = Spring.StiffnessLow
+                                                    )
+                                                )
                                                 FilterChip(
                                                     modifier = Modifier.height(
                                                         FilterChipDefaults.Height
@@ -212,6 +229,14 @@ fun TagsDialog(
                                                                 contentDescription = stringResource(R.string.done_icon),
                                                                 modifier = Modifier.size(FilterChipDefaults.IconSize)
                                                             )
+                                                        } else {
+                                                            Spacer(Modifier.size(FilterChipDefaults.IconSize / 2))
+                                                        }
+                                                    },
+                                                    shape = RoundedCornerShape(animatedShape),
+                                                    trailingIcon = {
+                                                        if (tag in selection) {
+                                                            Spacer(Modifier.size(0.dp))
                                                         } else {
                                                             Spacer(Modifier.size(FilterChipDefaults.IconSize / 2))
                                                         }
