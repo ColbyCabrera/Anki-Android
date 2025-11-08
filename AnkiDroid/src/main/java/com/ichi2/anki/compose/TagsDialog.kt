@@ -90,7 +90,14 @@ sealed interface TagsState {
  * and converting to lowercase for consistent comparison.
  */
 private fun normalizeTag(tag: String): String {
-    return tag.trim().replace("\\s+".toRegex(), " ").lowercase(Locale.ROOT)
+    // Trim leading/trailing whitespace, split on any whitespace runs, filter out
+    // any empty parts (defensive), then rejoin with single spaces and lowercase
+    // to mirror backend tag splitting and duplicate detection.
+    return tag.trim()
+        .split(Regex("\\s+"))
+        .filter { it.isNotEmpty() }
+        .joinToString(" ")
+        .lowercase(Locale.ROOT)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
