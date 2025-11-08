@@ -100,6 +100,17 @@ private fun normalizeTag(tag: String): String {
         .lowercase(Locale.ROOT)
 }
 
+private fun isDuplicateTag(
+    tag: String,
+    existingTags: List<String>,
+    selectedTags: Set<String>
+): Boolean {
+    val normalized = normalizeTag(tag)
+    val normalizedExisting = existingTags.map { normalizeTag(it) }
+    val normalizedSelection = selectedTags.map { normalizeTag(it) }
+    return normalized in normalizedExisting || normalized in normalizedSelection
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TagsDialog(
@@ -122,15 +133,12 @@ fun TagsDialog(
     val addNewTag = {
         val newTag = searchQuery.trim()
         if (newTag.isNotEmpty()) {
-            val normalizedNewTag = normalizeTag(newTag)
-            val normalizedExistingTags = when (allTags) {
-                is TagsState.Loaded -> allTags.tags.map { normalizeTag(it) }
+            val existingTagsList = when (allTags) {
+                is TagsState.Loaded -> allTags.tags
                 else -> emptyList()
             }
-            val normalizedSelection = selection.map { normalizeTag(it) }
-            
             // Check if the normalized tag is not already present in existing tags or current selection
-            if (normalizedNewTag !in normalizedExistingTags && normalizedNewTag !in normalizedSelection) {
+            if (!isDuplicateTag(newTag, existingTagsList, selection)) {
                 onAddTag(newTag)
                 selection = selection + newTag
             }
@@ -187,13 +195,10 @@ fun TagsDialog(
                                     if (trimmedQuery.isEmpty()) {
                                         null
                                     } else {
-                                        val normalizedQuery = normalizeTag(trimmedQuery)
-                                        val normalizedAllTags = allTags.tags.map { normalizeTag(it) }
-                                        val normalizedSelection = selection.map { normalizeTag(it) }
-                                        
+                                        val existingTagsList = allTags.tags
                                         // Show potential new tag only if it doesn't exist in all tags or selection
                                         trimmedQuery.takeIf {
-                                            normalizedQuery !in normalizedAllTags && normalizedQuery !in normalizedSelection
+                                            !isDuplicateTag(trimmedQuery, existingTagsList, selection)
                                         }
                                     }
                                 }
