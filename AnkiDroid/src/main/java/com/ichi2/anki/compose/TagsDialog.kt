@@ -236,55 +236,16 @@ fun TagsDialog(
                                                 )
                                             }
                                             filteredTags.forEach { tag ->
-                                                val animatedCornerRadius by animateDpAsState(
-                                                    targetValue = if (tag in selection) {
-                                                        24.dp
-                                                    } else {
-                                                        8.dp
-                                                    },
-                                                    label = "corner radius",
-                                                    animationSpec = spring(
-                                                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                                                        stiffness = Spring.StiffnessLow
-                                                    )
-                                                )
-                                                FilterChip(
-                                                    modifier = Modifier.height(
-                                                        FilterChipDefaults.Height
-                                                    ),
-                                                    selected = tag in selection,
+                                                TagFilterChip(
+                                                    tag = tag,
+                                                    isSelected = tag in selection,
                                                     onClick = {
                                                         selection = if (tag in selection) {
                                                             selection - tag
                                                         } else {
                                                             selection + tag
                                                         }
-                                                    },
-                                                    label = { Text(text = tag) },
-                                                    leadingIcon = {
-                                                        if (tag in selection) {
-                                                            Icon(
-                                                                painter = painterResource(R.drawable.check_24px),
-                                                                contentDescription = stringResource(R.string.done_icon),
-                                                                modifier = Modifier.size(FilterChipDefaults.IconSize)
-                                                            )
-                                                        } else {
-                                                            Spacer(Modifier.size(FilterChipDefaults.IconSize / 2))
-                                                        }
-                                                    },
-                                                    shape = RoundedCornerShape(animatedCornerRadius),
-                                                    trailingIcon = {
-                                                        if (tag in selection) {
-                                                            Spacer(Modifier.size(0.dp))
-                                                        } else {
-                                                            Spacer(Modifier.size(FilterChipDefaults.IconSize / 2))
-                                                        }
-                                                    },
-                                                    colors = FilterChipDefaults.filterChipColors(
-                                                        selectedContainerColor = MaterialTheme.colorScheme.tertiary,
-                                                        selectedLabelColor = MaterialTheme.colorScheme.onTertiary,
-                                                        selectedLeadingIconColor = MaterialTheme.colorScheme.onTertiary
-                                                    )
+                                                    }
                                                 )
                                             }
                                         }
@@ -306,6 +267,54 @@ fun TagsDialog(
                 Text(text = stringResource(id = R.string.dialog_cancel))
             }
         }
+    )
+}
+
+@Composable
+private fun TagFilterChip(
+    tag: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val animatedCornerRadius by animateDpAsState(
+        targetValue = if (isSelected) 24.dp else 8.dp,
+        label = "corner radius",
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        )
+    )
+
+    FilterChip(
+        modifier = modifier.height(FilterChipDefaults.Height),
+        selected = isSelected,
+        onClick = onClick,
+        label = { Text(text = tag) },
+        leadingIcon = {
+            if (isSelected) {
+                Icon(
+                    painter = painterResource(R.drawable.check_24px),
+                    contentDescription = stringResource(R.string.done_icon),
+                    modifier = Modifier.size(FilterChipDefaults.IconSize)
+                )
+            } else {
+                Spacer(Modifier.size(FilterChipDefaults.IconSize / 2))
+            }
+        },
+        shape = RoundedCornerShape(animatedCornerRadius),
+        trailingIcon = {
+            if (isSelected) {
+                Spacer(Modifier.size(0.dp))
+            } else {
+                Spacer(Modifier.size(FilterChipDefaults.IconSize / 2))
+            }
+        },
+        colors = FilterChipDefaults.filterChipColors(
+            selectedContainerColor = MaterialTheme.colorScheme.tertiary,
+            selectedLabelColor = MaterialTheme.colorScheme.onTertiary,
+            selectedLeadingIconColor = MaterialTheme.colorScheme.onTertiary
+        )
     )
 }
 
