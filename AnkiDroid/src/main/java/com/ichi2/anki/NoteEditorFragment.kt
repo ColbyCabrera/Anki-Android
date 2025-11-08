@@ -888,6 +888,7 @@ class NoteEditorFragment :
                     },
                     onAddTag = { tag ->
                         noteEditorViewModel.addTag(tag)
+                        isTagsEdited = true
                     },
                     topBar = {
                         val title = stringResource(
