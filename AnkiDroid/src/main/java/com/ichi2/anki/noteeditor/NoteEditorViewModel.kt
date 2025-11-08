@@ -416,6 +416,7 @@ class NoteEditorViewModel(
                     _deckId.value = deck.id
                     _noteEditorState.update { it.copy(selectedDeckName = deckName) }
                     persistDraftState()
+                    loadTags(col) // Reload deck tags when deck changes
                 }
             } catch (e: Exception) {
                 val errorMessage = "Failed to select deck: ${e.message ?: "Unknown error"}"
