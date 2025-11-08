@@ -64,6 +64,7 @@ import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -143,17 +144,25 @@ fun TagsDialog(
                             color = MaterialTheme.colorScheme.surfaceContainer,
                             shape = MaterialTheme.shapes.large
                         ) {
-                            val filteredTags =
-                                remember(allTags.tags, searchQuery, isToggleChecked, deckTags) {
+                            val filteredTags by remember(
+                                allTags, searchQuery, isToggleChecked, deckTags
+                            ) {
+                                derivedStateOf {
                                     allTags.tags.filter {
                                         it.contains(
-                                            other = searchQuery,
-                                            ignoreCase = true
+                                            other = searchQuery, ignoreCase = true
                                         ) && (!isToggleChecked || it in deckTags)
                                     }
                                 }
-                            val potentialNewTag = searchQuery.trim().takeIf {
-                                it.isNotEmpty() && it !in allTags.tags && it !in filteredTags
+                            }
+                            val potentialNewTag by remember(searchQuery, allTags, filteredTags) {
+                                derivedStateOf {
+                                    searchQuery.trim().takeIf { newTag ->
+                                        newTag.isNotEmpty() && !allTags.tags.contains(newTag) && !filteredTags.contains(
+                                            newTag
+                                        )
+                                    }
+                                }
                             }
 
                             LazyColumn(
