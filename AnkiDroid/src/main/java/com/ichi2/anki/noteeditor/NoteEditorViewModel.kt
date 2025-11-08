@@ -265,6 +265,16 @@ class NoteEditorViewModel(
         }
     }
 
+    /**
+     * Escapes a deck name for use in a deck search query.
+     * Must escape backslashes first, then quotes, to prevent breaking the search query.
+     */
+    private fun escapeForDeckQuery(deckName: String): String {
+        return deckName
+            .replace("\\", "\\\\")  // Escape backslashes first
+            .replace("\"", "\\\"")  // Then escape quotes
+    }
+
     private fun loadTags(col: Collection) {
         viewModelScope.launch {
             _tagsState.value = TagsState.Loading
@@ -277,7 +287,7 @@ class NoteEditorViewModel(
                     // Query all notes in the selected deck using the deck search operator
                     val noteIds = try {
                         val deckName = col.decks.name(_deckId.value)
-                        val escapedDeckName = deckName.replace("\"", "\\\"")
+                        val escapedDeckName = escapeForDeckQuery(deckName)
                         col.findNotes("deck:\"$escapedDeckName\"")
                     } catch (e: Exception) {
                         Timber.e(e, "Error loading deck tags")
