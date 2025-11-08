@@ -748,16 +748,15 @@ class NoteEditorFragment :
                         }
                     } ?: 0L
                 }
+                // Update cards info for the selected note type
+                if (editorNote != null) {
+                    updateCards(editorNote!!.notetype)
+                } else {
+                    // For new notes, get the note type from the ViewModel state
+                    val currentNotetype = col.notetypes.current()
+                    updateCards(currentNotetype)
+                }
             }
-        }
-        
-        // Update cards info for the selected note type
-        if (editorNote != null) {
-            updateCards(editorNote!!.notetype)
-        } else {
-            // For new notes, get the note type from the ViewModel state
-            val currentNotetype = col.notetypes.current()
-            updateCards(currentNotetype)
         }
 
         // Set toolbar title
