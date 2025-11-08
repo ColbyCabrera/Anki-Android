@@ -108,6 +108,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.TextRange
@@ -191,6 +192,7 @@ import com.ichi2.anki.noteeditor.ToolbarButtonModel
 import com.ichi2.anki.noteeditor.ClozeInsertionMode
 import com.ichi2.anki.noteeditor.Toolbar
 import com.ichi2.anki.noteeditor.Toolbar.TextWrapper
+import com.ichi2.anki.noteeditor.compose.NoteEditorScreen
 import com.ichi2.anki.observability.undoableOp
 import com.ichi2.anki.pages.ImageOcclusion
 import com.ichi2.anki.preferences.sharedPrefs
@@ -201,6 +203,7 @@ import com.ichi2.anki.servicelayer.NoteService
 import com.ichi2.anki.snackbar.BaseSnackbarBuilderProvider
 import com.ichi2.anki.snackbar.SnackbarBuilder
 import com.ichi2.anki.snackbar.showSnackbar
+import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import com.ichi2.anki.utils.ext.sharedPrefs
 import com.ichi2.anki.utils.ext.showDialogFragment
 import com.ichi2.anki.utils.openUrl
@@ -767,10 +770,10 @@ class NoteEditorFragment :
         updateToolbar()
 
         // Replace the view with ComposeView
-        val composeView = view?.findViewById<androidx.compose.ui.platform.ComposeView>(R.id.note_editor_compose)
+        val composeView = view?.findViewById<ComposeView>(R.id.note_editor_compose)
 
         composeView?.setContent {
-            com.ichi2.anki.theme.AnkiDroidTheme {
+            AnkiDroidTheme {
                 val noteEditorState by noteEditorViewModel.noteEditorState.collectAsState()
                 val availableDecks by noteEditorViewModel.availableDecks.collectAsState()
                 val availableNoteTypes by noteEditorViewModel.availableNoteTypes.collectAsState()
@@ -782,7 +785,7 @@ class NoteEditorFragment :
                 var capitalizeChecked by remember { mutableStateOf(sharedPrefs().getBoolean(PREF_NOTE_EDITOR_CAPITALIZE, true)) }
                 var scrollToolbarChecked by remember { mutableStateOf(sharedPrefs().getBoolean(PREF_NOTE_EDITOR_SCROLL_TOOLBAR, true)) }
 
-                com.ichi2.anki.noteeditor.compose.NoteEditorScreen(
+                NoteEditorScreen(
                     state = noteEditorState,
                     availableDecks = availableDecks,
                     availableNoteTypes = availableNoteTypes,
@@ -2172,7 +2175,7 @@ class NoteEditorFragment :
     }
 
     fun copyNote() {
-        launchNoteEditor(NoteEditorLauncher.CopyNote(deckId, fieldsText, selectedTags?.toSet() ?: emptySet())) { }
+        launchNoteEditor(NoteEditorLauncher.CopyNote(deckId, fieldsText, selectedTags)) { }
     }
 
     private fun launchNoteEditor(
@@ -2196,8 +2199,9 @@ class NoteEditorFragment :
     suspend fun performPreview() {
         val convertNewlines = shouldReplaceNewlines()
 
-        fun String?.toFieldText(): String = NoteService.convertToHtmlNewline(this.toString(), convertNewlines)
-        
+        fun String?.toFieldText(): String =
+            NoteService.convertToHtmlNewline(this.toString(), convertNewlines)
+
         // Get fields from Compose ViewModel or legacy XML editFields
         val fields = if (isComposeMode) {
             // Compose UI - get fields from ViewModel state
@@ -2256,7 +2260,7 @@ class NoteEditorFragment :
     private fun setTags(tags: Array<String>) {
         selectedTags = tags.toCollection(ArrayList())
         // Update ViewModel state for Compose UI
-        noteEditorViewModel.updateTags(tags.toList())
+        noteEditorViewModel.updateTags(tags.toSet())
         updateTags()
     }
 
@@ -3174,7 +3178,7 @@ class NoteEditorFragment :
         if (selectedTags == null) {
             selectedTags = editorNote!!.tags
             // Update ViewModel state for Compose UI
-            noteEditorViewModel.updateTags(editorNote!!.tags)
+            noteEditorViewModel.updateTags(editorNote!!.tags.toSet())
         }
         // nb: setOnItemSelectedListener and populateEditFields need to occur after this
         setNoteTypePosition()
@@ -3572,7 +3576,7 @@ class NoteEditorFragment :
                 // Don't let the user change any other values at the same time as changing note type
                 selectedTags = editorNote!!.tags
                 // Update ViewModel state for Compose UI
-                noteEditorViewModel.updateTags(editorNote!!.tags)
+                noteEditorViewModel.updateTags(editorNote!!.tags.toSet())
                 updateTags()
                 // Disable tags button during note type change (Compose UI)
                 noteEditorViewModel.setTagsButtonEnabled(false)

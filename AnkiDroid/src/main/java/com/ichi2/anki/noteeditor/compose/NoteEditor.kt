@@ -27,7 +27,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -83,6 +82,7 @@ import com.ichi2.anki.R
 import com.ichi2.anki.compose.TagsDialog
 import com.ichi2.anki.compose.TagsState
 import com.ichi2.anki.noteeditor.ToolbarButtonModel
+import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 
 
 /**
@@ -172,6 +172,7 @@ fun NoteEditorScreen(
             },
             allTags = allTags,
             initialSelection = state.tags.toSet(),
+            initialFilterByDeck = true,
             deckTags = deckTags,
             showFilterByDeckToggle = true,
             title = stringResource(id = R.string.note_editor_tags_title),
@@ -657,7 +658,7 @@ fun ImageOcclusionButtons(
 @Composable
 fun NoteEditorScreenPreview() {
     val snackbarHostState = remember { SnackbarHostState() }
-    com.ichi2.anki.theme.AnkiDroidTheme {
+    AnkiDroidTheme {
         NoteEditorScreen(
             state = NoteEditorState(
                 fields = listOf(

@@ -267,8 +267,30 @@ class NoteEditorViewModel(
 
             val deckId = _deckId.value
             if (deckId != 0L) {
-                val tagsInDeck = Tags.getTagsInDeck(col, deckId).keys.toSet()
-                _deckTags.value = tagsInDeck
+                // Query all notes in the selected deck using the deck search operator
+                val noteIds = try {
+                    val deckName = col.decks.name(deckId)
+                    val escapedDeckName = deckName.replace("\"", "\\\"")
+                    col.findNotes("deck:\"$escapedDeckName\"")
+                } catch (e: Exception) {
+                    Timber.e(e, "Error loading deck tags")
+                    emptyList()
+                }
+
+                // Collect all tags from the notes
+                val tagsSet = noteIds.asSequence()
+                    .mapNotNull { noteId ->
+                        try {
+                            col.getNote(noteId).tags
+                        } catch (e: Exception) {
+                            Timber.w(e, "Error getting note tags for note $noteId")
+                            null
+                        }
+                    }
+                    .flatten()
+                    .toSet()
+
+                _deckTags.value = tagsSet
             }
         }
     }
@@ -364,7 +386,8 @@ class NoteEditorViewModel(
     fun addTag(tag: String) {
         viewModelScope.launch {
             val col = collectionProvider()
-            Tags.register(col, tag)
+            // Register the tag by setting its collapse state (registers if missing)
+            col.tags.setCollapsed(tag, collapsed = false)
             loadTags(col)
         }
     }
