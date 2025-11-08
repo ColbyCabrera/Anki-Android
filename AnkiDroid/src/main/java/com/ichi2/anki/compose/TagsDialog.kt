@@ -304,9 +304,7 @@ private fun TagFilterChip(
         },
         shape = RoundedCornerShape(animatedCornerRadius),
         trailingIcon = {
-            if (isSelected) {
-                Spacer(Modifier.size(0.dp))
-            } else {
+            if (!isSelected) {
                 Spacer(Modifier.size(FilterChipDefaults.IconSize / 2))
             }
         },
