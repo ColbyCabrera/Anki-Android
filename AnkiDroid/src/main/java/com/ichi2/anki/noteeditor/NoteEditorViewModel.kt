@@ -30,7 +30,6 @@ import com.ichi2.anki.libanki.Note
 import com.ichi2.anki.libanki.NotetypeJson
 import com.ichi2.anki.libanki.Note.ClozeUtils
 import com.ichi2.anki.compose.TagsState
-import com.ichi2.anki.libanki.Tags
 import com.ichi2.anki.noteeditor.compose.NoteEditorState
 import com.ichi2.anki.noteeditor.compose.NoteFieldState
 import com.ichi2.anki.servicelayer.NoteService
