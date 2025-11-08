@@ -78,10 +78,19 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ichi2.anki.R
+import java.util.Locale
 
 sealed interface TagsState {
     object Loading : TagsState
     data class Loaded(val tags: List<String>) : TagsState
+}
+
+/**
+ * Normalizes a tag by trimming whitespace, collapsing internal whitespace,
+ * and converting to lowercase for consistent comparison.
+ */
+private fun normalizeTag(tag: String): String {
+    return tag.trim().replace("\\s+".toRegex(), " ").lowercase(Locale.ROOT)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -106,8 +115,18 @@ fun TagsDialog(
     val addNewTag = {
         val newTag = searchQuery.trim()
         if (newTag.isNotEmpty()) {
-            onAddTag(newTag)
-            selection = selection + newTag
+            val normalizedNewTag = normalizeTag(newTag)
+            val normalizedExistingTags = when (allTags) {
+                is TagsState.Loaded -> allTags.tags.map { normalizeTag(it) }
+                else -> emptyList()
+            }
+            val normalizedSelection = selection.map { normalizeTag(it) }
+            
+            // Check if the normalized tag is not already present in existing tags or current selection
+            if (normalizedNewTag !in normalizedExistingTags && normalizedNewTag !in normalizedSelection) {
+                onAddTag(newTag)
+                selection = selection + newTag
+            }
             searchQuery = ""
         }
     }
@@ -155,12 +174,20 @@ fun TagsDialog(
                                     }
                                 }
                             }
-                            val potentialNewTag by remember(searchQuery, allTags, filteredTags) {
+                            val potentialNewTag by remember(searchQuery, allTags, filteredTags, selection) {
                                 derivedStateOf {
-                                    searchQuery.trim().takeIf { newTag ->
-                                        newTag.isNotEmpty() && !allTags.tags.contains(newTag) && !filteredTags.contains(
-                                            newTag
-                                        )
+                                    val trimmedQuery = searchQuery.trim()
+                                    if (trimmedQuery.isEmpty()) {
+                                        null
+                                    } else {
+                                        val normalizedQuery = normalizeTag(trimmedQuery)
+                                        val normalizedAllTags = allTags.tags.map { normalizeTag(it) }
+                                        val normalizedSelection = selection.map { normalizeTag(it) }
+                                        
+                                        // Show potential new tag only if it doesn't exist in all tags or selection
+                                        trimmedQuery.takeIf {
+                                            normalizedQuery !in normalizedAllTags && normalizedQuery !in normalizedSelection
+                                        }
                                     }
                                 }
                             }
