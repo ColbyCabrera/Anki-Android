@@ -436,10 +436,13 @@ class NoteEditorViewModel(
 
     fun addTag(tag: String) {
         viewModelScope.launch {
-            val col = collectionProvider()
-            // Register the tag by setting its collapse state (registers if missing)
-            col.tags.setCollapsed(tag, collapsed = false)
-            loadTags(col)
+            withContext(Dispatchers.IO) {
+                val col = collectionProvider()
+                // Register the tag by setting its collapse state (registers if missing)
+                col.tags.setCollapsed(tag, collapsed = false)
+            }
+            // loadTags uses IO dispatcher internally, safe to call here
+            loadTags(collectionProvider())
         }
     }
 
