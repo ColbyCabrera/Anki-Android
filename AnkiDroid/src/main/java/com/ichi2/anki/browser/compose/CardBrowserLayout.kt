@@ -59,11 +59,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -120,6 +126,15 @@ fun CardBrowserLayout(
     )
     val density = LocalDensity.current
     val searchOffsetPx = with(density) { (-8).dp.toPx() }
+    val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    LaunchedEffect(isSearchOpen) {
+        if (isSearchOpen) {
+            focusRequester.requestFocus()
+            keyboardController?.show()
+        }
+    }
 
     LaunchedEffect(Unit) {
         availableDecks = viewModel.getAvailableDecks()
@@ -251,22 +266,27 @@ fun CardBrowserLayout(
                 },
                 actions = {
                     if (isSearchOpen) {
+                        var textFieldValue by remember {
+                            mutableStateOf(TextFieldValue(searchQuery))
+                        }
+
+                        LaunchedEffect(isSearchOpen, searchQuery) {
+                            val newTextFieldValue = textFieldValue.copy(text = searchQuery)
+                            textFieldValue = if (isSearchOpen) {
+                                newTextFieldValue.copy(selection = TextRange(0, newTextFieldValue.text.length))
+                            } else {
+                                newTextFieldValue
+                            }
+                        }
+
                         SearchBar(
                             inputField = {
-                                SearchBarDefaults.InputField(
-                                    query = searchQuery,
-                                    onQueryChange = { query -> viewModel.setSearchQuery(query) },
-                                    onSearch = { viewModel.search(searchQuery) },
-                                    expanded = true,
-                                    onExpandedChange = { },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .graphicsLayer {
-                                            alpha = searchAnim
-                                            translationY = searchOffsetPx * (1f - searchAnim)
-                                            scaleX = 0.98f + 0.02f * searchAnim
-                                            scaleY = 0.98f + 0.02f * searchAnim
-                                        },
+                                TextField(
+                                    value = textFieldValue,
+                                    onValueChange = {
+                                        textFieldValue = it
+                                        viewModel.setSearchQuery(it.text)
+                                    },
                                     placeholder = { Text(text = stringResource(R.string.card_browser_search_hint)) },
                                     leadingIcon = {
                                         Icon(
@@ -282,6 +302,26 @@ fun CardBrowserLayout(
                                             )
                                         }
                                     },
+                                    colors = TextFieldDefaults.colors(
+                                        focusedIndicatorColor = Color.Transparent,
+                                        unfocusedIndicatorColor = Color.Transparent,
+                                        disabledIndicatorColor = Color.Transparent,
+                                        focusedContainerColor = Color.Transparent,
+                                        unfocusedContainerColor = Color.Transparent,
+                                        disabledContainerColor = Color.Transparent
+                                    ),
+                                    keyboardActions = KeyboardActions(
+                                        onSearch = { viewModel.search(textFieldValue.text) }
+                                    ),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .focusRequester(focusRequester)
+                                        .graphicsLayer {
+                                            alpha = searchAnim
+                                            translationY = searchOffsetPx * (1f - searchAnim)
+                                            scaleX = 0.98f + 0.02f * searchAnim
+                                            scaleY = 0.98f + 0.02f * searchAnim
+                                        }
                                 )
                             },
                             expanded = false,
