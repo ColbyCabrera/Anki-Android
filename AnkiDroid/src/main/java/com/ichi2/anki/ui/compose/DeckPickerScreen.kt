@@ -363,6 +363,7 @@ fun DeckPickerScreen(
                     navigationIcon = {
                         if (!isSearchOpen) {
                             FilledIconButton(
+                                modifier = Modifier.padding(end = 8.dp),
                                 onClick = onNavigationIconClick,
                                 colors = IconButtonDefaults.filledIconButtonColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
