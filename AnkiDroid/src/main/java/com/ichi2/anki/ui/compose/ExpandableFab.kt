@@ -19,6 +19,7 @@ package com.ichi2.anki.ui.compose
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -53,7 +54,8 @@ fun ExpandableFab(
     onAddNote: () -> Unit,
     onAddDeck: () -> Unit,
     onAddSharedDeck: () -> Unit,
-    onAddFilteredDeck: () -> Unit
+    onAddFilteredDeck: () -> Unit,
+    onCheckDatabase: () -> Unit
 ) {
     val focusRequester = remember { FocusRequester() }
 
@@ -97,6 +99,11 @@ fun ExpandableFab(
             onClick = onMenuItemClick(onAddSharedDeck),
             icon = { Icon(Icons.Filled.Download, contentDescription = null) },
             text = { Text(text = stringResource(R.string.get_shared)) },
+        )
+        FloatingActionButtonMenuItem(
+            onClick = onMenuItemClick(onCheckDatabase),
+            icon = { Icon(Icons.Filled.Checklist, contentDescription = null) },
+            text = { Text(text = stringResource(R.string.check_db)) },
         )
         FloatingActionButtonMenuItem(
             onClick = onMenuItemClick(onAddFilteredDeck),

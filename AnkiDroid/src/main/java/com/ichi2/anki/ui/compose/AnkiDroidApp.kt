@@ -211,6 +211,7 @@ fun AnkiDroidApp(
     onAddDeck: () -> Unit,
     onAddSharedDeck: () -> Unit,
     onAddFilteredDeck: () -> Unit,
+    onCheckDatabase: () -> Unit,
     onDeckOptions: (DisplayDeckNode) -> Unit,
     onRename: (DisplayDeckNode) -> Unit,
     onExport: (DisplayDeckNode) -> Unit,
@@ -437,7 +438,8 @@ fun AnkiDroidApp(
                     onAddNote = onAddNote,
                     onAddDeck = onAddDeck,
                     onAddSharedDeck = onAddSharedDeck,
-                    onAddFilteredDeck = onAddFilteredDeck
+                    onAddFilteredDeck = onAddFilteredDeck,
+                    onCheckDatabase = onCheckDatabase
                 )
             }
             BackHandler(fabMenuExpanded) { fabMenuExpanded = false }
@@ -459,6 +461,7 @@ fun AnkiDroidApp(
             onAddDeck = onAddDeck,
             onAddSharedDeck = onAddSharedDeck,
             onAddFilteredDeck = onAddFilteredDeck,
+            onCheckDatabase = onCheckDatabase,
             onDeckOptions = onDeckOptions,
             onRename = onRename,
             onExport = onExport,

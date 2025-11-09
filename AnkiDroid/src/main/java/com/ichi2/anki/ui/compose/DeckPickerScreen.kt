@@ -306,6 +306,7 @@ fun DeckPickerScreen(
     onAddDeck: () -> Unit,
     onAddSharedDeck: () -> Unit,
     onAddFilteredDeck: () -> Unit,
+    onCheckDatabase: () -> Unit,
     onDeckOptions: (DisplayDeckNode) -> Unit,
     onRename: (DisplayDeckNode) -> Unit,
     onExport: (DisplayDeckNode) -> Unit,
@@ -486,7 +487,8 @@ fun DeckPickerScreen(
                 onAddNote = onAddNote,
                 onAddDeck = onAddDeck,
                 onAddSharedDeck = onAddSharedDeck,
-                onAddFilteredDeck = onAddFilteredDeck
+                onAddFilteredDeck = onAddFilteredDeck,
+                onCheckDatabase = onCheckDatabase
             )
         }
         BackHandler(fabMenuExpanded) { onFabMenuExpandedChange(false) }
@@ -529,6 +531,7 @@ fun DeckPickerScreenPreview() {
         onAddDeck = {},
         onAddSharedDeck = {},
         onAddFilteredDeck = {},
+        onCheckDatabase = {},
         onDeckOptions = {},
         onRename = {},
         onExport = {},
