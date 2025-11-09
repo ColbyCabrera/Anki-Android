@@ -274,22 +274,18 @@ fun CardBrowserLayout(
                 actions = {
                     if (isSearchOpen) {
                         var textFieldValue by remember {
-                            mutableStateOf(TextFieldValue(searchQuery))
+                            mutableStateOf(
+                                TextFieldValue(
+                                    searchQuery,
+                                    selection = TextRange(0, searchQuery.length)
+                                )
+                            )
                         }
 
                         LaunchedEffect(searchQuery) {
                             if (textFieldValue.text != searchQuery) {
                                 textFieldValue = textFieldValue.copy(text = searchQuery)
                             }
-                        }
-
-                        LaunchedEffect(true) {
-                            textFieldValue = textFieldValue.copy(
-                                selection = TextRange(
-                                    0,
-                                    textFieldValue.text.length
-                                )
-                            )
                         }
 
                         SearchBar(
