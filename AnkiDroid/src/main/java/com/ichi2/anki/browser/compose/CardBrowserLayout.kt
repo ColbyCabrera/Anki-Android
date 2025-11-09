@@ -59,11 +59,20 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.TextFieldColors
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -74,6 +83,17 @@ import com.ichi2.anki.model.SelectableDeck
 // TODO: Re-enable NoteEditor in split view after migration is complete
 // import com.ichi2.anki.noteeditor.compose.NoteEditor
 import kotlinx.coroutines.launch
+
+private val transparentTextFieldColors: @Composable () -> TextFieldColors = {
+    TextFieldDefaults.colors(
+        focusedIndicatorColor = Color.Transparent,
+        unfocusedIndicatorColor = Color.Transparent,
+        disabledIndicatorColor = Color.Transparent,
+        focusedContainerColor = Color.Transparent,
+        unfocusedContainerColor = Color.Transparent,
+        disabledContainerColor = Color.Transparent
+    )
+}
 
 @OptIn(
     ExperimentalMaterial3WindowSizeClassApi::class,
@@ -120,6 +140,21 @@ fun CardBrowserLayout(
     )
     val density = LocalDensity.current
     val searchOffsetPx = with(density) { (-8).dp.toPx() }
+    val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+    // Use an integer revision counter as an event-style trigger so that
+    // requesting the keyboard doesn't reset the trigger inside the effect
+    // (which would cause an extra recomposition and restart the effect).
+    var keyboardTrigger by remember { mutableStateOf(0) }
+
+    LaunchedEffect(keyboardTrigger) {
+        // Only run after an explicit trigger increment (> 0). This avoids
+        // running on initial composition when keyboardTrigger == 0.
+        if (keyboardTrigger > 0) {
+            focusRequester.requestFocus()
+            keyboardController?.show()
+        }
+    }
 
     LaunchedEffect(Unit) {
         availableDecks = viewModel.getAvailableDecks()
@@ -201,14 +236,7 @@ fun CardBrowserLayout(
                                                 }
                                             }
                                         },
-                                        colors = TextFieldDefaults.colors(
-                                            focusedIndicatorColor = Color.Transparent,
-                                            unfocusedIndicatorColor = Color.Transparent,
-                                            disabledIndicatorColor = Color.Transparent,
-                                            focusedContainerColor = Color.Transparent,
-                                            unfocusedContainerColor = Color.Transparent,
-                                            disabledContainerColor = Color.Transparent
-                                        ),
+                                        colors = transparentTextFieldColors(),
                                     )
                                 }
                             }
@@ -251,22 +279,29 @@ fun CardBrowserLayout(
                 },
                 actions = {
                     if (isSearchOpen) {
+                        var textFieldValue by remember {
+                            mutableStateOf(
+                                TextFieldValue(
+                                    searchQuery,
+                                    selection = TextRange(0, searchQuery.length)
+                                )
+                            )
+                        }
+
+                        LaunchedEffect(searchQuery) {
+                            if (textFieldValue.text != searchQuery) {
+                                textFieldValue = textFieldValue.copy(text = searchQuery)
+                            }
+                        }
+
                         SearchBar(
                             inputField = {
-                                SearchBarDefaults.InputField(
-                                    query = searchQuery,
-                                    onQueryChange = { query -> viewModel.setSearchQuery(query) },
-                                    onSearch = { viewModel.search(searchQuery) },
-                                    expanded = true,
-                                    onExpandedChange = { },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .graphicsLayer {
-                                            alpha = searchAnim
-                                            translationY = searchOffsetPx * (1f - searchAnim)
-                                            scaleX = 0.98f + 0.02f * searchAnim
-                                            scaleY = 0.98f + 0.02f * searchAnim
-                                        },
+                                TextField(
+                                    value = textFieldValue,
+                                    onValueChange = {
+                                        textFieldValue = it
+                                        viewModel.setSearchQuery(it.text)
+                                    },
                                     placeholder = { Text(text = stringResource(R.string.card_browser_search_hint)) },
                                     leadingIcon = {
                                         Icon(
@@ -282,6 +317,23 @@ fun CardBrowserLayout(
                                             )
                                         }
                                     },
+                                    colors = transparentTextFieldColors(),
+                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                    keyboardActions = KeyboardActions(
+                                        onSearch = {
+                                            viewModel.search(textFieldValue.text)
+                                            keyboardController?.hide()
+                                        }
+                                    ),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .focusRequester(focusRequester)
+                                        .graphicsLayer {
+                                            alpha = searchAnim
+                                            translationY = searchOffsetPx * (1f - searchAnim)
+                                            scaleX = 0.98f + 0.02f * searchAnim
+                                            scaleY = 0.98f + 0.02f * searchAnim
+                                        }
                                 )
                             },
                             expanded = false,
@@ -296,7 +348,12 @@ fun CardBrowserLayout(
                             content = { }
                         )
                     } else {
-                        IconButton(onClick = { viewModel.expandSearchQuery() }) {
+                        IconButton(
+                            onClick = {
+                                viewModel.expandSearchQuery()
+                                keyboardTrigger++
+                            }
+                        ) {
                             Icon(
                                 Icons.Default.Search,
                                 contentDescription = stringResource(R.string.card_browser_search_hint)
