@@ -42,7 +42,8 @@ fun Flashcard(
     onLinkClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     mediaDirectory: File?,
-    isAnswerShown: Boolean
+    isAnswerShown: Boolean,
+    toolbarHeight: Int = 0
 ) {
     val onSurfaceColor = MaterialTheme.colorScheme.onSurface
     val onSurfaceColorHex = String.format("#%06X", (0xFFFFFF and onSurfaceColor.toArgb()))
@@ -99,6 +100,7 @@ fun Flashcard(
                         line-height: ${currentStyle.lineHeight.value}px;
                         letter-spacing: ${currentStyle.letterSpacing.value}px;
                         padding-top: ${currentPadding}px;
+                        padding-bottom: ${toolbarHeight}px;
                     }
                     hr {
                         opacity: 0.1;

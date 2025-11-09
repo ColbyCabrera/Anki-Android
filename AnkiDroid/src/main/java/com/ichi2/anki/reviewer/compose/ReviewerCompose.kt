@@ -69,12 +69,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
@@ -104,6 +106,7 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     var showBottomSheet by remember { mutableStateOf(false) }
+    var toolbarHeight by remember { mutableIntStateOf(0) }
     val context = LocalContext.current
 
     val editCardLauncher = rememberLauncherForActivityResult(
@@ -153,12 +156,14 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                 },
                 mediaDirectory = state.mediaDirectory,
                 isAnswerShown = state.isAnswerShown,
+                toolbarHeight = toolbarHeight
             )
         }
         HorizontalFloatingToolbar(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .offset(y = -ScreenOffset - 16.dp),
+                .offset(y = -ScreenOffset - 16.dp)
+                .onSizeChanged { toolbarHeight = it.height },
             expanded = true,
             colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(),
         ) {
