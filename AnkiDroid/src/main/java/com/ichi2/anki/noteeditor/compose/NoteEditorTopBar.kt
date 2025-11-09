@@ -123,7 +123,6 @@ fun NoteEditorTopAppBar(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 ),
-
             ) {
                 Icon(
                     painter = painterResource(R.drawable.arrow_back_24px),
