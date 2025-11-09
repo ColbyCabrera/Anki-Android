@@ -93,14 +93,14 @@ fun ExpandableFab(
         },
     ) {
         FloatingActionButtonMenuItem(
-            onClick = onMenuItemClick(onAddSharedDeck),
-            icon = { Icon(Icons.Filled.Download, contentDescription = null) },
-            text = { Text(text = stringResource(R.string.get_shared)) },
-        )
-        FloatingActionButtonMenuItem(
             onClick = onMenuItemClick(onCheckDatabase),
             icon = { Icon(Icons.Filled.Checklist, contentDescription = null) },
             text = { Text(text = stringResource(R.string.check_db)) },
+        )
+        FloatingActionButtonMenuItem(
+            onClick = onMenuItemClick(onAddSharedDeck),
+            icon = { Icon(Icons.Filled.Download, contentDescription = null) },
+            text = { Text(text = stringResource(R.string.get_shared)) },
         )
         FloatingActionButtonMenuItem(
             onClick = onMenuItemClick(onAddFilteredDeck),
