@@ -142,11 +142,13 @@ fun CardBrowserLayout(
     val searchOffsetPx = with(density) { (-8).dp.toPx() }
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
+    var showKeyboard by remember { mutableStateOf(false) }
 
-    LaunchedEffect(isSearchOpen) {
-        if (isSearchOpen) {
+    LaunchedEffect(showKeyboard) {
+        if (showKeyboard) {
             focusRequester.requestFocus()
             keyboardController?.show()
+            showKeyboard = false
         }
     }
 
@@ -342,7 +344,12 @@ fun CardBrowserLayout(
                             content = { }
                         )
                     } else {
-                        IconButton(onClick = { viewModel.expandSearchQuery() }) {
+                        IconButton(
+                            onClick = {
+                                viewModel.expandSearchQuery()
+                                showKeyboard = true
+                            }
+                        ) {
                             Icon(
                                 Icons.Default.Search,
                                 contentDescription = stringResource(R.string.card_browser_search_hint)
