@@ -271,17 +271,19 @@ fun CardBrowserLayout(
                     }
                 },
                 navigationIcon = {
-                    FilledIconButton(
-                        onClick = onNavigateUp,
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        ),
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.arrow_back_24px),
-                            contentDescription = stringResource(R.string.back),
-                        )
+                    if (!isSearchOpen) {
+                        FilledIconButton(
+                            onClick = onNavigateUp,
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            ),
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.arrow_back_24px),
+                                contentDescription = stringResource(R.string.back),
+                            )
+                        }
                     }
                 },
                 actions = {
