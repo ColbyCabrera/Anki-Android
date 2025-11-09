@@ -23,8 +23,10 @@ package com.ichi2.anki.ui.compose
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -40,7 +42,7 @@ fun SyncIcon(isSyncing: Boolean, onRefresh: () -> Unit) {
     val rotation = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
 
-    IconButton(
+    FilledIconButton(
         onClick = {
             onRefresh()
             scope.launch {
@@ -53,7 +55,11 @@ fun SyncIcon(isSyncing: Boolean, onRefresh: () -> Unit) {
                 )
             }
         },
-        enabled = !isSyncing
+        enabled = !isSyncing,
+        colors = IconButtonDefaults.filledIconButtonColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        ),
     ) {
         Icon(
             painter = painterResource(R.drawable.sync_24px),

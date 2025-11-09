@@ -48,8 +48,10 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
@@ -359,11 +361,19 @@ fun DeckPickerScreen(
                         )
                     },
                     navigationIcon = {
-                        IconButton(onClick = onNavigationIconClick) {
-                            Icon(
-                                painter = painterResource(R.drawable.menu_24px),
-                                contentDescription = stringResource(R.string.navigation_drawer_open)
-                            )
+                        if (!isSearchOpen) {
+                            FilledIconButton(
+                                onClick = onNavigationIconClick,
+                                colors = IconButtonDefaults.filledIconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                ),
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.menu_24px),
+                                    contentDescription = stringResource(R.string.navigation_drawer_open)
+                                )
+                            }
                         }
                     },
                     actions = {
@@ -417,11 +427,17 @@ fun DeckPickerScreen(
                                 content = { }
                             )
                         } else {
-                            IconButton(
+                            FilledIconButton(
                                 onClick = { isSearchOpen = true },
-                                modifier = Modifier.graphicsLayer {
-                                    alpha = 1f - searchAnim
-                                }
+                                modifier = Modifier
+                                    .graphicsLayer {
+                                        alpha = 1f - searchAnim
+                                    }
+                                    .padding(end = 4.dp),
+                                colors = IconButtonDefaults.filledIconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                ),
                             ) {
                                 Icon(
                                     painter = painterResource(R.drawable.search_24px),
