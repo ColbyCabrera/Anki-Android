@@ -85,6 +85,7 @@ sealed class ReviewerEvent {
 sealed class ReviewerEffect {
     data class NavigateToEditCard(val cardId: CardId) : ReviewerEffect()
     object NavigateToDeckPicker : ReviewerEffect()
+    data class ShowSnackbar(val message: String) : ReviewerEffect()
 }
 
 class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
@@ -331,9 +332,18 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
         }
         val queue = queueState ?: return
         cardActionJob = viewModelScope.launch {
-            CollectionManager.withCol {
-                this.sched.answerCard(queue, rating)
+            val wasLeeched = CollectionManager.withCol {
+                val answer = this.sched.buildAnswer(queue.topCard, queue.states, rating)
+                val isLeech = this.sched.stateIsLeech(answer.newState)
+                this.sched.answerCard(answer)
+                isLeech
             }
+
+            if (wasLeeched) {
+                val message = getApplication<Application>().getString(com.ichi2.anki.R.string.leech_notification)
+                _effect.emit(ReviewerEffect.ShowSnackbar(message))
+            }
+
             loadCardSuspend()
         }.also {
             it.invokeOnCompletion { cardActionJob = null }

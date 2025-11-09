@@ -63,6 +63,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.motionScheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -108,6 +110,7 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
     var showBottomSheet by remember { mutableStateOf(false) }
     var toolbarHeight by remember { mutableIntStateOf(0) }
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
 
     val editCardLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -124,6 +127,9 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                     ).toIntent(context)
                     editCardLauncher.launch(intent)
                 }
+                is ReviewerEffect.ShowSnackbar -> {
+                    snackbarHostState.showSnackbar(effect.message)
+                }
                 else -> {
                     // All other effects are handled by the Activity
                 }
@@ -132,9 +138,11 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Scaffold(topBar = {
-            ReviewerTopBar(
-                newCount = state.newCount,
+        Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            topBar = {
+                ReviewerTopBar(
+                    newCount = state.newCount,
                 learnCount = state.learnCount,
                 reviewCount = state.reviewCount,
                 chosenAnswer = state.chosenAnswer,
