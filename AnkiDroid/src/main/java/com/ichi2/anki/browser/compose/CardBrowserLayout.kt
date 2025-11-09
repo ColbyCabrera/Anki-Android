@@ -142,13 +142,17 @@ fun CardBrowserLayout(
     val searchOffsetPx = with(density) { (-8).dp.toPx() }
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
-    var showKeyboard by remember { mutableStateOf(false) }
+    // Use an integer revision counter as an event-style trigger so that
+    // requesting the keyboard doesn't reset the trigger inside the effect
+    // (which would cause an extra recomposition and restart the effect).
+    var keyboardTrigger by remember { mutableStateOf(0) }
 
-    LaunchedEffect(showKeyboard) {
-        if (showKeyboard) {
+    LaunchedEffect(keyboardTrigger) {
+        // Only run after an explicit trigger increment (> 0). This avoids
+        // running on initial composition when keyboardTrigger == 0.
+        if (keyboardTrigger > 0) {
             focusRequester.requestFocus()
             keyboardController?.show()
-            showKeyboard = false
         }
     }
 
@@ -347,7 +351,7 @@ fun CardBrowserLayout(
                         IconButton(
                             onClick = {
                                 viewModel.expandSearchQuery()
-                                showKeyboard = true
+                                keyboardTrigger++
                             }
                         ) {
                             Icon(
