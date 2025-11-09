@@ -36,6 +36,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -354,14 +355,14 @@ fun CardBrowserLayout(
                             content = { }
                         )
                     } else {
-                        IconButton(
+                        FilledTonalIconButton(
                             onClick = {
                                 viewModel.expandSearchQuery()
                                 keyboardTrigger++
-                            }
+                            },
                         ) {
                             Icon(
-                                Icons.Default.Search,
+                                painter = painterResource(R.drawable.search_24px),
                                 contentDescription = stringResource(R.string.card_browser_search_hint)
                             )
                         }
