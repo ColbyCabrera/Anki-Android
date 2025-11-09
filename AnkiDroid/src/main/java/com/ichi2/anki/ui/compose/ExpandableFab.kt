@@ -18,8 +18,7 @@
 package com.ichi2.anki.ui.compose
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -36,7 +35,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -53,7 +51,8 @@ fun ExpandableFab(
     onAddNote: () -> Unit,
     onAddDeck: () -> Unit,
     onAddSharedDeck: () -> Unit,
-    onAddFilteredDeck: () -> Unit
+    onAddFilteredDeck: () -> Unit,
+    onCheckDatabase: () -> Unit
 ) {
     val focusRequester = remember { FocusRequester() }
 
@@ -80,19 +79,24 @@ fun ExpandableFab(
                 .focusRequester(focusRequester),
                 checked = expanded,
                 onCheckedChange = { onExpandedChange(it) }) {
-                val imageVector by remember {
+                val fabIcon by remember {
                     derivedStateOf {
-                        if (checkedProgress > 0.5f) Icons.Filled.Close else Icons.Filled.Add
+                        if (checkedProgress > 0.5f) R.drawable.close_24px else R.drawable.add_24px
                     }
                 }
                 Icon(
-                    painter = rememberVectorPainter(imageVector),
+                    painter = painterResource(fabIcon),
                     contentDescription = null,
                     modifier = Modifier.animateIcon({ checkedProgress }),
                 )
             }
         },
     ) {
+        FloatingActionButtonMenuItem(
+            onClick = onMenuItemClick(onCheckDatabase),
+            icon = { Icon(Icons.Filled.Checklist, contentDescription = null) },
+            text = { Text(text = stringResource(R.string.check_db)) },
+        )
         FloatingActionButtonMenuItem(
             onClick = onMenuItemClick(onAddSharedDeck),
             icon = { Icon(Icons.Filled.Download, contentDescription = null) },
