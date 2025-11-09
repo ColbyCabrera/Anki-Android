@@ -68,7 +68,10 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -80,6 +83,17 @@ import com.ichi2.anki.model.SelectableDeck
 // TODO: Re-enable NoteEditor in split view after migration is complete
 // import com.ichi2.anki.noteeditor.compose.NoteEditor
 import kotlinx.coroutines.launch
+
+private val transparentTextFieldColors: @Composable () -> TextFieldColors = {
+    TextFieldDefaults.colors(
+        focusedIndicatorColor = Color.Transparent,
+        unfocusedIndicatorColor = Color.Transparent,
+        disabledIndicatorColor = Color.Transparent,
+        focusedContainerColor = Color.Transparent,
+        unfocusedContainerColor = Color.Transparent,
+        disabledContainerColor = Color.Transparent
+    )
+}
 
 @OptIn(
     ExperimentalMaterial3WindowSizeClassApi::class,
@@ -216,14 +230,7 @@ fun CardBrowserLayout(
                                                 }
                                             }
                                         },
-                                        colors = TextFieldDefaults.colors(
-                                            focusedIndicatorColor = Color.Transparent,
-                                            unfocusedIndicatorColor = Color.Transparent,
-                                            disabledIndicatorColor = Color.Transparent,
-                                            focusedContainerColor = Color.Transparent,
-                                            unfocusedContainerColor = Color.Transparent,
-                                            disabledContainerColor = Color.Transparent
-                                        ),
+                                        colors = transparentTextFieldColors(),
                                     )
                                 }
                             }
@@ -276,10 +283,13 @@ fun CardBrowserLayout(
                             }
                         }
 
-                        LaunchedEffect(isSearchOpen) {
-                            if (isSearchOpen) {
-                                textFieldValue = textFieldValue.copy(selection = TextRange(0, textFieldValue.text.length))
-                            }
+                        LaunchedEffect(true) {
+                            textFieldValue = textFieldValue.copy(
+                                selection = TextRange(
+                                    0,
+                                    textFieldValue.text.length
+                                )
+                            )
                         }
 
                         SearchBar(
@@ -305,16 +315,13 @@ fun CardBrowserLayout(
                                             )
                                         }
                                     },
-                                    colors = TextFieldDefaults.colors(
-                                        focusedIndicatorColor = Color.Transparent,
-                                        unfocusedIndicatorColor = Color.Transparent,
-                                        disabledIndicatorColor = Color.Transparent,
-                                        focusedContainerColor = Color.Transparent,
-                                        unfocusedContainerColor = Color.Transparent,
-                                        disabledContainerColor = Color.Transparent
-                                    ),
+                                    colors = transparentTextFieldColors(),
+                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                                     keyboardActions = KeyboardActions(
-                                        onSearch = { viewModel.search(textFieldValue.text) }
+                                        onSearch = {
+                                            viewModel.search(textFieldValue.text)
+                                            keyboardController?.hide()
+                                        }
                                     ),
                                     modifier = Modifier
                                         .fillMaxWidth()
