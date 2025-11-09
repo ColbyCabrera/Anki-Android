@@ -334,6 +334,7 @@ fun CardBrowserLayout(
                                             keyboardController?.hide()
                                         }
                                     ),
+                                    singleLine = true,
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .focusRequester(focusRequester)
