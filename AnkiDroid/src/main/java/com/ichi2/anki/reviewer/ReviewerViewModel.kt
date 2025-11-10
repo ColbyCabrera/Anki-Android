@@ -79,6 +79,7 @@ sealed class ReviewerEvent {
     object BuryCard : ReviewerEvent()
     object SuspendCard : ReviewerEvent()
     object UnanswerCard : ReviewerEvent()
+    object ReloadCard : ReviewerEvent()
 }
 
 sealed class ReviewerEffect {
@@ -150,6 +151,33 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
             is ReviewerEvent.EditCard -> editCard()
             is ReviewerEvent.BuryCard -> buryCard()
             is ReviewerEvent.SuspendCard -> suspendCard()
+            is ReviewerEvent.ReloadCard -> reloadCard()
+        }
+    }
+
+    private suspend fun reloadCardSuspend() {
+        val card = currentCard ?: return
+
+        cardMediaPlayer.loadCardAvTags(card)
+        CollectionManager.withCol {
+            val note = card.note(this)
+            typeAnswer.updateInfo(this, card, getApplication<Application>().resources)
+            val renderOutput = card.renderOutput(this, reload = true)
+
+            _state.update {
+                it.copy(
+                    html = processHtml(renderOutput.questionText, renderOutput),
+                    isAnswerShown = false,
+                    showTypeInAnswer = typeAnswer.correct != null,
+                    nextTimes = List(4) { "" },
+                    chosenAnswer = "",
+                    typedAnswer = "",
+                    isMarked = note.hasTag(this, "marked"),
+                    flag = card.userFlag(),
+                    mediaDirectory = this.media.dir,
+                    isFinished = false
+                )
+            }
         }
     }
 
@@ -188,6 +216,17 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
             if (avTag is SoundOrVideoTag) {
                 cardMediaPlayer.playOne(avTag)
             }
+        }
+    }
+
+    private fun reloadCard() {
+        if (cardActionJob?.isActive == true) {
+            return
+        }
+        cardActionJob = viewModelScope.launch {
+            reloadCardSuspend()
+        }.also {
+            it.invokeOnCompletion { cardActionJob = null }
         }
     }
 

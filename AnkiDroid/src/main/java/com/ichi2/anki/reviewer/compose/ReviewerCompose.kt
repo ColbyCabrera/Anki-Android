@@ -112,7 +112,7 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
     val editCardLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) {
-        // We probably want to reload the card here
+        viewModel.onEvent(ReviewerEvent.ReloadCard)
     }
 
     LaunchedEffect(Unit) {
