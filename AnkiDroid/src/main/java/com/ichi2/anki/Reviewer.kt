@@ -228,9 +228,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
                     is ReviewerEffect.NavigateToEditCard -> {
                         // Handled in Compose
                     }
-                    is ReviewerEffect.ShowSnackbar -> {
-                        showSnackbar(effect.message, Snackbar.LENGTH_SHORT)
-                    }
+                    else -> {}
                 }
             }
         }

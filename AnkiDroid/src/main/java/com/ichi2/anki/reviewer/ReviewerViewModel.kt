@@ -332,16 +332,20 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
         }
         val queue = queueState ?: return
         cardActionJob = viewModelScope.launch {
-            val wasLeeched = CollectionManager.withCol {
-                val answer = this.sched.buildAnswer(queue.topCard, queue.states, rating)
-                val isLeech = this.sched.stateIsLeech(answer.newState)
-                this.sched.answerCard(answer)
-                isLeech
+            var wasLeech = false
+            CollectionManager.withCol {
+                this.sched.answerCard(queue, rating).also {
+                    wasLeech = this.sched.stateIsLeech(queue.states.again)
+                }
             }
 
-            if (wasLeeched) {
-                val message = getApplication<Application>().getString(com.ichi2.anki.R.string.leech_notification)
-                _effect.emit(ReviewerEffect.ShowSnackbar(message))
+            if (rating == CardAnswer.Rating.AGAIN && wasLeech) {
+                val leechMessage: String = if (queue.topCard.queue.buriedOrSuspended()) {
+                    getApplication<Application>().resources.getString(com.ichi2.anki.R.string.leech_suspend_notification)
+                } else {
+                    getApplication<Application>().resources.getString(com.ichi2.anki.R.string.leech_notification)
+                }
+                _effect.emit(ReviewerEffect.ShowSnackbar(leechMessage))
             }
 
             loadCardSuspend()
