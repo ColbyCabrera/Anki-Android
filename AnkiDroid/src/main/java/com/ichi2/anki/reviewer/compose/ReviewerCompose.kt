@@ -63,6 +63,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.motionScheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -145,8 +146,16 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
         Scaffold(snackbarHost = {
             SnackbarHost(
                 snackbarHostState,
-                modifier = Modifier.padding(bottom = toolbarHeightDp)
-            )
+                modifier = Modifier.padding(bottom = toolbarHeightDp + 32.dp)
+            ) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary,
+                    actionColor = MaterialTheme.colorScheme.primary,
+                    dismissActionContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                )
+            }
         }, topBar = {
             ReviewerTopBar(
                 newCount = state.newCount,
