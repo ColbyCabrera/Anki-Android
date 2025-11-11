@@ -80,6 +80,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -109,6 +110,7 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
     val scope = rememberCoroutineScope()
     var showBottomSheet by remember { mutableStateOf(false) }
     var toolbarHeight by remember { mutableIntStateOf(0) }
+    val toolbarHeightDp = with(LocalDensity.current) { toolbarHeight.toDp() }
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -127,9 +129,11 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                     ).toIntent(context)
                     editCardLauncher.launch(intent)
                 }
+
                 is ReviewerEffect.ShowSnackbar -> {
                     snackbarHostState.showSnackbar(effect.message)
                 }
+
                 else -> {
                     // All other effects are handled by the Activity
                 }
@@ -138,20 +142,23 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Scaffold(
-            snackbarHost = { SnackbarHost(snackbarHostState) },
-            topBar = {
-                ReviewerTopBar(
-                    newCount = state.newCount,
-                    learnCount = state.learnCount,
-                    reviewCount = state.reviewCount,
-                    chosenAnswer = state.chosenAnswer,
-                    isMarked = state.isMarked,
-                    flag = state.flag,
-                    onToggleMark = { viewModel.onEvent(ReviewerEvent.ToggleMark) },
-                    onSetFlag = { viewModel.onEvent(ReviewerEvent.SetFlag(it)) },
-                    isAnswerShown = state.isAnswerShown
-                ) { viewModel.onEvent(ReviewerEvent.UnanswerCard) }
+        Scaffold(snackbarHost = {
+            SnackbarHost(
+                snackbarHostState,
+                modifier = Modifier.padding(bottom = toolbarHeightDp)
+            )
+        }, topBar = {
+            ReviewerTopBar(
+                newCount = state.newCount,
+                learnCount = state.learnCount,
+                reviewCount = state.reviewCount,
+                chosenAnswer = state.chosenAnswer,
+                isMarked = state.isMarked,
+                flag = state.flag,
+                onToggleMark = { viewModel.onEvent(ReviewerEvent.ToggleMark) },
+                onSetFlag = { viewModel.onEvent(ReviewerEvent.SetFlag(it)) },
+                isAnswerShown = state.isAnswerShown
+            ) { viewModel.onEvent(ReviewerEvent.UnanswerCard) }
         }) { paddingValues ->
             Flashcard(
                 modifier = Modifier
@@ -275,32 +282,32 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                 val menuOptions = remember {
                     listOf(
                         Triple(R.string.redo, Icons.AutoMirrored.Filled.Undo) {
-                            // TODO
-                        }, Triple(R.string.enable_whiteboard, Icons.Filled.Edit) {
-                            // TODO
-                        }, Triple(R.string.cardeditor_title_edit_card, Icons.Filled.EditNote) {
-                            viewModel.onEvent(ReviewerEvent.EditCard)
-                        }, Triple(R.string.menu_edit_tags, Icons.AutoMirrored.Filled.Label) {
-                            // TODO
-                        }, Triple(R.string.menu_bury_card, Icons.Filled.VisibilityOff) {
-                            viewModel.onEvent(ReviewerEvent.BuryCard)
-                        }, Triple(R.string.menu_suspend_card, Icons.Filled.Pause) {
-                            viewModel.onEvent(ReviewerEvent.SuspendCard)
-                        }, Triple(R.string.menu_delete_note, Icons.Filled.Delete) {
-                            // TODO
-                        }, Triple(R.string.menu_mark_note, Icons.Filled.Star) {
-                            viewModel.onEvent(ReviewerEvent.ToggleMark)
-                        }, Triple(R.string.card_editor_reschedule_card, Icons.Filled.Schedule) {
-                            // TODO
-                        }, Triple(R.string.replay_media, Icons.Filled.Replay) {
-                            // TODO
-                        }, Triple(
-                            R.string.menu_enable_voice_playback, Icons.Filled.RecordVoiceOver
-                        ) {
-                            // TODO
-                        }, Triple(R.string.deck_options, Icons.Filled.Tune) {
-                            // TODO
-                        })
+                        // TODO
+                    }, Triple(R.string.enable_whiteboard, Icons.Filled.Edit) {
+                        // TODO
+                    }, Triple(R.string.cardeditor_title_edit_card, Icons.Filled.EditNote) {
+                        viewModel.onEvent(ReviewerEvent.EditCard)
+                    }, Triple(R.string.menu_edit_tags, Icons.AutoMirrored.Filled.Label) {
+                        // TODO
+                    }, Triple(R.string.menu_bury_card, Icons.Filled.VisibilityOff) {
+                        viewModel.onEvent(ReviewerEvent.BuryCard)
+                    }, Triple(R.string.menu_suspend_card, Icons.Filled.Pause) {
+                        viewModel.onEvent(ReviewerEvent.SuspendCard)
+                    }, Triple(R.string.menu_delete_note, Icons.Filled.Delete) {
+                        // TODO
+                    }, Triple(R.string.menu_mark_note, Icons.Filled.Star) {
+                        viewModel.onEvent(ReviewerEvent.ToggleMark)
+                    }, Triple(R.string.card_editor_reschedule_card, Icons.Filled.Schedule) {
+                        // TODO
+                    }, Triple(R.string.replay_media, Icons.Filled.Replay) {
+                        // TODO
+                    }, Triple(
+                        R.string.menu_enable_voice_playback, Icons.Filled.RecordVoiceOver
+                    ) {
+                        // TODO
+                    }, Triple(R.string.deck_options, Icons.Filled.Tune) {
+                        // TODO
+                    })
                 }
                 menuOptions.forEach { (textRes, icon, action) ->
                     ListItem(
