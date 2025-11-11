@@ -228,6 +228,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
                     is ReviewerEffect.NavigateToEditCard -> {
                         // Handled in Compose
                     }
+                    else -> {}
                 }
             }
         }
@@ -1126,21 +1127,8 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     override suspend fun answerCardInner(rating: Rating) {
         val state = queueState!!
         Timber.d("answerCardInner: ${currentCard!!.id} $rating")
-        var wasLeech = false
         undoableOp(this) {
-            sched.answerCard(state, rating).also {
-                wasLeech = sched.stateIsLeech(state.states.again)
-            }
-        }.also {
-            if (rating == Rating.AGAIN && wasLeech) {
-                state.topCard.load(getColUnsafe)
-                val leechMessage: String = if (state.topCard.queue.buriedOrSuspended()) {
-                    resources.getString(R.string.leech_suspend_notification)
-                } else {
-                    resources.getString(R.string.leech_notification)
-                }
-                showSnackbar(leechMessage, Snackbar.LENGTH_SHORT)
-            }
+            sched.answerCard(state, rating)
         }
     }
 

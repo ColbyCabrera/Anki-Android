@@ -63,6 +63,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.motionScheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -78,6 +81,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -107,7 +111,9 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
     val scope = rememberCoroutineScope()
     var showBottomSheet by remember { mutableStateOf(false) }
     var toolbarHeight by remember { mutableIntStateOf(0) }
+    val toolbarHeightDp = with(LocalDensity.current) { toolbarHeight.toDp() }
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
 
     val editCardLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -124,6 +130,11 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                     ).toIntent(context)
                     editCardLauncher.launch(intent)
                 }
+
+                is ReviewerEffect.ShowSnackbar -> {
+                    snackbarHostState.showSnackbar(effect.message)
+                }
+
                 else -> {
                     // All other effects are handled by the Activity
                 }
@@ -132,7 +143,20 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Scaffold(topBar = {
+        Scaffold(snackbarHost = {
+            SnackbarHost(
+                snackbarHostState,
+                modifier = Modifier.padding(bottom = toolbarHeightDp + 32.dp)
+            ) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary,
+                    actionColor = MaterialTheme.colorScheme.primary,
+                    dismissActionContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                )
+            }
+        }, topBar = {
             ReviewerTopBar(
                 newCount = state.newCount,
                 learnCount = state.learnCount,
