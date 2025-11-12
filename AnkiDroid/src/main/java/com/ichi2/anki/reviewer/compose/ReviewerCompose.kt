@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -66,6 +67,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -79,13 +81,22 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import anki.scheduler.CardAnswer
 import com.ichi2.anim.ActivityTransitionAnimation
 import com.ichi2.anki.R
@@ -102,6 +113,56 @@ private val ratings = listOf(
     "Good" to CardAnswer.Rating.GOOD,
     "Easy" to CardAnswer.Rating.EASY
 )
+
+// You can rename this class to be more descriptive
+class InvertedTopCornersShape(private val cornerRadius: Dp) : Shape {
+    override fun createOutline(
+        size: Size,
+        layoutDirection: LayoutDirection,
+        density: Density
+    ): Outline {
+        val cornerRadiusPx = with(density) { cornerRadius.toPx() }
+
+        val path = Path().apply {
+            // --- Top-Left Corner Path ---
+            moveTo(0f, 0f) // Start at the top-left point
+            lineTo(cornerRadiusPx, 0f) // Line to the start of the arc
+            // Arc from (r, 0) down to (0, r)
+            arcTo(
+                rect = Rect(
+                    left = 0f,
+                    top = 0f,
+                    right = 2 * cornerRadiusPx,
+                    bottom = 2 * cornerRadiusPx
+                ),
+                startAngleDegrees = 270f,   // Top-center of the rect
+                sweepAngleDegrees = -90f, // Sweep counter-clockwise
+                forceMoveTo = false
+            )
+            // lineTo(0f, 0f) is implicitly added by close()
+            close() // Close the path, drawing a line from (0, r) back to (0, 0)
+
+            // --- Top-Right Corner Path ---
+            moveTo(size.width, 0f) // Start at the top-right point
+            lineTo(size.width - cornerRadiusPx, 0f) // Line to the start of the arc
+            // Arc from (width - r, 0) down to (width, r)
+            arcTo(
+                rect = Rect(
+                    left = size.width - 2 * cornerRadiusPx,
+                    top = 0f,
+                    right = size.width,
+                    bottom = 2 * cornerRadiusPx
+                ),
+                startAngleDegrees = 270f, // Top-center of the rect
+                sweepAngleDegrees = 90f,  // Sweep clockwise
+                forceMoveTo = false
+            )
+            // lineTo(size.width, 0f) is implicitly added by close()
+            close() // Close the path, drawing a line from (width, r) back to (width, 0)
+        }
+        return Outline.Generic(path)
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -169,19 +230,32 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                 isAnswerShown = state.isAnswerShown
             ) { viewModel.onEvent(ReviewerEvent.UnanswerCard) }
         }) { paddingValues ->
-            Flashcard(
+            Box(
                 modifier = Modifier
                     .consumeWindowInsets(paddingValues)
                     .padding(top = paddingValues.calculateTopPadding()),
-                html = state.html,
-                onTap = { },
-                onLinkClick = {
-                    viewModel.onEvent(ReviewerEvent.LinkClicked(it))
-                },
-                mediaDirectory = state.mediaDirectory,
-                isAnswerShown = state.isAnswerShown,
-                toolbarHeight = toolbarHeight
-            )
+            ) {
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .zIndex(1F)
+                        .height(100.dp)
+                        .fillMaxWidth(),
+                    shape = InvertedTopCornersShape(cornerRadius = 32.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainer
+                ) {}
+
+                Flashcard(
+                    html = state.html,
+                    onTap = { },
+                    onLinkClick = {
+                        viewModel.onEvent(ReviewerEvent.LinkClicked(it))
+                    },
+                    mediaDirectory = state.mediaDirectory,
+                    isAnswerShown = state.isAnswerShown,
+                    toolbarHeight = toolbarHeight
+                )
+            }
         }
         HorizontalFloatingToolbar(
             modifier = Modifier
@@ -291,32 +365,32 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                 val menuOptions = remember {
                     listOf(
                         Triple(R.string.redo, Icons.AutoMirrored.Filled.Undo) {
-                        // TODO
-                    }, Triple(R.string.enable_whiteboard, Icons.Filled.Edit) {
-                        // TODO
-                    }, Triple(R.string.cardeditor_title_edit_card, Icons.Filled.EditNote) {
-                        viewModel.onEvent(ReviewerEvent.EditCard)
-                    }, Triple(R.string.menu_edit_tags, Icons.AutoMirrored.Filled.Label) {
-                        // TODO
-                    }, Triple(R.string.menu_bury_card, Icons.Filled.VisibilityOff) {
-                        viewModel.onEvent(ReviewerEvent.BuryCard)
-                    }, Triple(R.string.menu_suspend_card, Icons.Filled.Pause) {
-                        viewModel.onEvent(ReviewerEvent.SuspendCard)
-                    }, Triple(R.string.menu_delete_note, Icons.Filled.Delete) {
-                        // TODO
-                    }, Triple(R.string.menu_mark_note, Icons.Filled.Star) {
-                        viewModel.onEvent(ReviewerEvent.ToggleMark)
-                    }, Triple(R.string.card_editor_reschedule_card, Icons.Filled.Schedule) {
-                        // TODO
-                    }, Triple(R.string.replay_media, Icons.Filled.Replay) {
-                        // TODO
-                    }, Triple(
-                        R.string.menu_enable_voice_playback, Icons.Filled.RecordVoiceOver
-                    ) {
-                        // TODO
-                    }, Triple(R.string.deck_options, Icons.Filled.Tune) {
-                        // TODO
-                    })
+                            // TODO
+                        }, Triple(R.string.enable_whiteboard, Icons.Filled.Edit) {
+                            // TODO
+                        }, Triple(R.string.cardeditor_title_edit_card, Icons.Filled.EditNote) {
+                            viewModel.onEvent(ReviewerEvent.EditCard)
+                        }, Triple(R.string.menu_edit_tags, Icons.AutoMirrored.Filled.Label) {
+                            // TODO
+                        }, Triple(R.string.menu_bury_card, Icons.Filled.VisibilityOff) {
+                            viewModel.onEvent(ReviewerEvent.BuryCard)
+                        }, Triple(R.string.menu_suspend_card, Icons.Filled.Pause) {
+                            viewModel.onEvent(ReviewerEvent.SuspendCard)
+                        }, Triple(R.string.menu_delete_note, Icons.Filled.Delete) {
+                            // TODO
+                        }, Triple(R.string.menu_mark_note, Icons.Filled.Star) {
+                            viewModel.onEvent(ReviewerEvent.ToggleMark)
+                        }, Triple(R.string.card_editor_reschedule_card, Icons.Filled.Schedule) {
+                            // TODO
+                        }, Triple(R.string.replay_media, Icons.Filled.Replay) {
+                            // TODO
+                        }, Triple(
+                            R.string.menu_enable_voice_playback, Icons.Filled.RecordVoiceOver
+                        ) {
+                            // TODO
+                        }, Triple(R.string.deck_options, Icons.Filled.Tune) {
+                            // TODO
+                        })
                 }
                 menuOptions.forEach { (textRes, icon, action) ->
                     ListItem(
