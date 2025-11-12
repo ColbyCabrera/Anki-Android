@@ -22,6 +22,7 @@ package com.ichi2.anki.ui.compose
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import com.ichi2.anki.AnkiActivity
 import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.pages.DeckOptions
@@ -29,6 +30,7 @@ import timber.log.Timber
 
 class CongratsActivity : AnkiActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         try {
             val col = CollectionManager.getColUnsafe()
