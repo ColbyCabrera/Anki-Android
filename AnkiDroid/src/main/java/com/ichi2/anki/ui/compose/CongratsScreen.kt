@@ -30,8 +30,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -72,15 +74,27 @@ fun CongratsScreen(onDeckOptions: () -> Unit, onBack: () -> Unit, timeUntilNextD
                 subtitle = {},
                 titleHorizontalAlignment = Alignment.CenterHorizontally,
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    FilledIconButton(
+                        modifier = Modifier.padding(end = 8.dp),
+                        onClick = onBack,
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        ),
+                    ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.arrow_back_24px),
+                            painter = painterResource(R.drawable.arrow_back_24px),
                             contentDescription = stringResource(R.string.back)
                         )
                     }
-                },
-                actions = {
-                    IconButton(onClick = onDeckOptions) {
+                }, actions = {
+                    FilledIconButton(
+                        onClick = onDeckOptions,
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        ),
+                    ) {
                         Icon(
                             painter = painterResource(id = R.drawable.tune_24px),
                             contentDescription = stringResource(R.string.deck_options)
@@ -96,7 +110,6 @@ fun CongratsScreen(onDeckOptions: () -> Unit, onBack: () -> Unit, timeUntilNextD
                     .verticalScroll(scrollState)
                     .padding(top = 48.dp, start = 16.dp, end = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-
             ) {
                 Text(
                     text = stringResource(id = R.string.studyoptions_congrats_finished),
@@ -153,13 +166,8 @@ fun CongratsScreen(onDeckOptions: () -> Unit, onBack: () -> Unit, timeUntilNextD
                     ) {
                         Text(
                             text = String.format(
-                                Locale.getDefault(),
-                                "%02d:%02d:%02d",
-                                hours,
-                                minutes,
-                                seconds
+                                Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds
                             ),
-                         //   modifier = Modifier.scale(1F, 3F),
                             fontFamily = RobotoMono,
                             fontSize = 70.sp,
                             fontWeight = FontWeight.SemiBold,
