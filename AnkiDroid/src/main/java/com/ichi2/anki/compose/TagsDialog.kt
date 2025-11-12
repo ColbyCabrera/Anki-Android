@@ -42,7 +42,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalIconToggleButton
@@ -78,6 +78,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ichi2.anki.R
+import com.ichi2.anki.libanki.Tags
 import java.util.Locale
 
 sealed interface TagsState {
@@ -97,7 +98,7 @@ private fun normalizeTag(tag: String): String {
         .split(Regex("\\s+"))
         .filter { it.isNotEmpty() }
         .joinToString(" ")
-        .lowercase(Locale.ROOT)
+        .lowercase(Locale.getDefault())
 }
 
 private fun isDuplicateTag(
@@ -111,7 +112,7 @@ private fun isDuplicateTag(
     return normalized in normalizedExisting || normalized in normalizedSelection
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun TagsDialog(
     onDismissRequest: () -> Unit,
@@ -156,7 +157,7 @@ fun TagsDialog(
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator()
+                        CircularWavyProgressIndicator(modifier = Modifier.padding(vertical = 32.dp))
                     }
                 }
 
