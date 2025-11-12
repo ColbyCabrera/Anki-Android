@@ -26,6 +26,7 @@ import androidx.activity.enableEdgeToEdge
 import com.ichi2.anki.AnkiActivity
 import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.pages.DeckOptions
+import com.ichi2.anki.common.time.TimeManager
 import timber.log.Timber
 
 class CongratsActivity : AnkiActivity() {
@@ -35,7 +36,7 @@ class CongratsActivity : AnkiActivity() {
         try {
             val col = CollectionManager.getColUnsafe()
             val timeUntilNextDay =
-                (col.sched.dayCutoff * 1000 - System.currentTimeMillis()).coerceAtLeast(0L)
+                (col.sched.dayCutoff * 1000 - TimeManager.time.intTimeMS()).coerceAtLeast(0L)
 
             setContent {
                 CongratsScreen(
