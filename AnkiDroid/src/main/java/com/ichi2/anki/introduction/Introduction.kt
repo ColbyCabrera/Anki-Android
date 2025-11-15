@@ -1,0 +1,112 @@
+/*
+* Copyright (c) 2022 David Allison <davidallisongithub@gmail.com> 2025 Colby Cabrera <colbycabrera.wd@gmail.com>
+
+* This program is free software; you can redistribute it and/or modify it under
+* the terms of the GNU General Public License as published by the Free Software
+* Foundation; either version 3 of the License, or (at your option) any later
+* version.
+*
+* This program is distributed in the hope that it will be useful, but WITHOUT ANY
+* WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+* PARTICULAR PURPOSE. See the GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License along with
+* this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+package com.ichi2.anki.introduction
+
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.ichi2.anki.R
+import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
+
+@Composable
+fun IntroductionScreen(
+    onGetStarted: () -> Unit, onSync: () -> Unit
+) {
+    var acknowledged by remember { mutableStateOf(false) }
+    val uriHandler = LocalUriHandler.current
+
+    AnkiDroidTheme {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background,
+            contentColor = MaterialTheme.colorScheme.onBackground
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if (!acknowledged) {
+                    Text(
+                        text = "First things first!",
+                        style = MaterialTheme.typography.displayLarge,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "This is a fork of AnkiDroid. Please consider donating to the original AnkiDroid team to support their work. If you have any issues with this version, please contact me and not the AnkiDroid team. The creator of Anki has kindly allowed the use of AnkiWeb sync. To support him, please consider buying the iPhone version of Anki.",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Row {
+                        Button(onClick = { uriHandler.openUri("https://opencollective.com/ankidroid") }) {
+                            Text("Donate to AnkiDroid")
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Button(onClick = { acknowledged = true }) {
+                            Text("OK")
+                        }
+                    }
+                } else {
+                    Button(
+                        onClick = onGetStarted, modifier = Modifier.fillMaxWidth(0.8f)
+                    ) {
+                        Text(stringResource(R.string.intro_get_started))
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = onSync, modifier = Modifier.fillMaxWidth(0.8f)
+                    ) {
+                        Text(stringResource(R.string.intro_sync_from_ankiweb))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+fun IntroductionScreenPreview() {
+    IntroductionScreen(onGetStarted = { }, onSync = { })
+}
+

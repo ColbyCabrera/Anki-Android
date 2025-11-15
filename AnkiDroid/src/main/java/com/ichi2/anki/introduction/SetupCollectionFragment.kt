@@ -35,40 +35,31 @@ package com.ichi2.anki.introduction
 
 import android.os.Bundle
 import android.os.Parcelable
+import android.view.LayoutInflater
 import android.view.View
-import android.widget.Button
+import android.view.ViewGroup
+import androidx.compose.ui.platform.ComposeView
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResult
-import com.ichi2.anki.R
-import com.ichi2.anki.introduction.SetupCollectionFragment.CollectionSetupOption.DeckPickerWithNewCollection
-import com.ichi2.anki.introduction.SetupCollectionFragment.CollectionSetupOption.SyncFromExistingAccount
+import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import kotlinx.parcelize.Parcelize
 
-/**
- * Allows a user multiple choices for setting up the collection:
- *
- * * Starting normally
- * * Syncing from AnkiWeb - this allows the user to log in and performs a sync when the DeckPicker is loaded
- *
- * This exists for two reasons:
- * 1) Ensuring that a user does not create two profiles: one for Anki Desktop and one for AnkiDroid
- * 2) Adds a screen that allows for 'advanced' setup.
- * for example: selecting a 'safe' folder using scoped storage, which would not have been deleted
- * if the app is uninstalled.
- */
-class SetupCollectionFragment : Fragment(R.layout.introduction_layout) {
-    override fun onViewCreated(
-        view: View,
-        savedInstanceState: Bundle?,
-    ) {
-        super.onViewCreated(view, savedInstanceState)
-
-        view.findViewById<Button>(R.id.get_started).apply {
-            setOnClickListener { setResult(DeckPickerWithNewCollection) }
-        }
-        view.findViewById<Button>(R.id.sync_profile).apply {
-            setOnClickListener { setResult(SyncFromExistingAccount) }
+class SetupCollectionFragment : Fragment() {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return ComposeView(requireContext()).apply {
+            setContent {
+                AnkiDroidTheme {
+                    IntroductionScreen(
+                        onGetStarted = { setResult(CollectionSetupOption.DeckPickerWithNewCollection) },
+                        onSync = { setResult(CollectionSetupOption.SyncFromExistingAccount) }
+                    )
+                }
+            }
         }
     }
 
