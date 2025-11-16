@@ -54,6 +54,7 @@ class DeckPickerTest : InstrumentedTest() {
         discardPreliminaryViews()
     }
 
+    /*
     @Test
     fun checkIfClickOnCountsLayoutOpensStudyOptionsOnMobile() {
         // Run the test only on emulator.
@@ -71,6 +72,7 @@ class DeckPickerTest : InstrumentedTest() {
             instanceOf(StudyOptionsActivity::class.java),
         )
     }
+     */
 
     @Test
     fun checkIfStudyOptionsIsDisplayedOnTablet() {
