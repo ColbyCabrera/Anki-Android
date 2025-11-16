@@ -17,6 +17,7 @@
 package com.ichi2.anki.introduction
 
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -47,10 +49,18 @@ import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 
 @Composable
 fun IntroductionScreen(
-    onGetStarted: () -> Unit, onSync: () -> Unit
+    acknowledgedState: MutableState<Boolean>,
+    onGetStarted: () -> Unit,
+    onSync: () -> Unit
 ) {
-    var acknowledged by remember { mutableStateOf(false) }
+    val acknowledged by acknowledgedState
     val uriHandler = LocalUriHandler.current
+
+    if (acknowledged) {
+        BackHandler {
+            acknowledgedState.value = false
+        }
+    }
 
     AnkiDroidTheme {
         Surface(
@@ -82,7 +92,7 @@ fun IntroductionScreen(
                             Text("Donate to AnkiDroid")
                         }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Button(onClick = { acknowledged = true }) {
+                        Button(onClick = { acknowledgedState.value = true }) {
                             Text("OK")
                         }
                     }
@@ -102,6 +112,19 @@ fun IntroductionScreen(
             }
         }
     }
+}
+
+@Composable
+fun IntroductionScreen(
+    onGetStarted: () -> Unit,
+    onSync: () -> Unit
+) {
+    val acknowledgedState = remember { mutableStateOf(false) }
+    IntroductionScreen(
+        acknowledgedState = acknowledgedState,
+        onGetStarted = onGetStarted,
+        onSync = onSync
+    )
 }
 
 @Preview
