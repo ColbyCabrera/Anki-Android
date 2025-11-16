@@ -28,30 +28,29 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ichi2.anki.R
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun IntroductionScreen(
-    acknowledgedState: MutableState<Boolean>,
-    onGetStarted: () -> Unit,
-    onSync: () -> Unit
+    acknowledgedState: MutableState<Boolean>, onGetStarted: () -> Unit, onSync: () -> Unit
 ) {
     val acknowledged by acknowledgedState
     val uriHandler = LocalUriHandler.current
@@ -73,27 +72,34 @@ fun IntroductionScreen(
                     .fillMaxSize()
                     .padding(16.dp),
                 verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 if (!acknowledged) {
                     Text(
-                        text = "First things first!",
-                        style = MaterialTheme.typography.displayLarge,
-                        textAlign = TextAlign.Center
+                        text = "Before continuing!",
+                        style = MaterialTheme.typography.displayMediumEmphasized,
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
                     Text(
                         text = "This is a fork of AnkiDroid. Please consider donating to the original AnkiDroid team to support their work. If you have any issues with this version, please contact me and not the AnkiDroid team. The creator of Anki has kindly allowed the use of AnkiWeb sync. To support him, please consider buying the iPhone version of Anki.",
                         style = MaterialTheme.typography.bodyLarge
                     )
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Row {
-                        Button(onClick = { uriHandler.openUri("https://opencollective.com/ankidroid") }) {
+                    Spacer(modifier = Modifier.height(32.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        Button(
+                            onClick = { uriHandler.openUri("https://opencollective.com/ankidroid") },
+                            modifier = Modifier.weight(1F),
+                            colors = ButtonDefaults.filledTonalButtonColors()
+                        ) {
                             Text("Donate to AnkiDroid")
                         }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Button(onClick = { acknowledgedState.value = true }) {
-                            Text("OK")
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = { acknowledgedState.value = true }
+                        ) {
+                            Text(stringResource(R.string.dialog_ok))
                         }
                     }
                 } else {
@@ -116,14 +122,11 @@ fun IntroductionScreen(
 
 @Composable
 fun IntroductionScreen(
-    onGetStarted: () -> Unit,
-    onSync: () -> Unit
+    onGetStarted: () -> Unit, onSync: () -> Unit
 ) {
     val acknowledgedState = remember { mutableStateOf(false) }
     IntroductionScreen(
-        acknowledgedState = acknowledgedState,
-        onGetStarted = onGetStarted,
-        onSync = onSync
+        acknowledgedState = acknowledgedState, onGetStarted = onGetStarted, onSync = onSync
     )
 }
 
