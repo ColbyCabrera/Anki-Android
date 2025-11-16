@@ -80,7 +80,12 @@ fun IntroductionScreen(
                     )
                     Spacer(modifier = Modifier.height(24.dp))
                     Text(
-                        text = "This is a fork of AnkiDroid. Please consider donating to the original AnkiDroid team to support their work. If you have any issues with this version, please contact me and not the AnkiDroid team. The creator of Anki has kindly allowed the use of AnkiWeb sync. To support him, please consider buying the iPhone version of Anki.",
+                        text = "This is app is fork of AnkiDroid so please consider donating to the AnkiDroid team to support their work. The creator of Anki has also kindly allowed the use of AnkiWeb sync. If you'd like to support him, please consider buying the iPhone version of Anki.",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text(
+                        text = "If you have any issues with this version, please contact me and not the AnkiDroid team. Happy memorizing!",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.height(32.dp))
