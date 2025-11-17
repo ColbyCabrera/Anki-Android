@@ -2,7 +2,7 @@
 <resources>
     <!-- French translations for the introduction screen -->
     <string name="intro_before_continuing">Avant de continuer !</string>
-    <string name="intro_donation_notice">Cette application est un fork d'AnkiDroid ; veuillez envisager un don à l'équipe AnkiDroid pour soutenir leur travail. Le créateur d'Anki a gentiment autorisé l'utilisation de la synchronisation AnkiWeb. Si vous souhaitez le soutenir, pensez à acheter la version iPhone d'Anki.</string>
-    <string name="intro_contact_notice">Si vous rencontrez des problèmes avec cette version, veuillez me contacter et non l'équipe AnkiDroid. Bonne mémorisation !</string>
+    <string name="intro_donation_notice">Cette application est un fork d\'AnkiDroid ; veuillez envisager un don à l\'équipe AnkiDroid pour soutenir leur travail. Le créateur d\'Anki a gentiment autorisé l\'utilisation de la synchronisation AnkiWeb. Si vous souhaitez le soutenir, pensez à acheter la version iPhone d\'Anki.</string>
+    <string name="intro_contact_notice">Si vous rencontrez des problèmes avec cette version, veuillez me contacter et non l\'équipe AnkiDroid. Bonne mémorisation !</string>
     <string name="intro_donate_ankidroid">Faire un don à AnkiDroid</string>
 </resources>
