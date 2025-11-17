@@ -42,6 +42,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ichi2.anki.R
@@ -77,6 +79,7 @@ fun IntroductionScreen(
                     Text(
                         text = "Before continuing!",
                         style = MaterialTheme.typography.displayMediumEmphasized,
+                        modifier = Modifier.semantics { contentDescription = "intro_title" }
                     )
                     Spacer(modifier = Modifier.height(24.dp))
                     Text(
@@ -102,7 +105,8 @@ fun IntroductionScreen(
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Button(
-                            onClick = { acknowledgedState.value = true }
+                            onClick = { acknowledgedState.value = true },
+                            modifier = Modifier.semantics { contentDescription = "ok_button" }
                         ) {
                             Text(stringResource(R.string.dialog_ok))
                         }

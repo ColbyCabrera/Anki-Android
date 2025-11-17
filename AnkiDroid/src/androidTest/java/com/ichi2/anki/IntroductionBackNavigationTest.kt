@@ -30,8 +30,8 @@ class IntroductionBackNavigationTest : InstrumentedTest() {
     fun backFromDeckPickerReshowsFirstThingsFirst() {
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         
-        // Wait for and click the "OK" button
-        val okButton = device.wait(Until.findObject(By.text("OK")), 5000)
+        // Wait for and click the "OK" button using its content description
+        val okButton = device.wait(Until.findObject(By.desc("ok_button")), 5000)
         assertNotNull("OK button should be visible", okButton)
         okButton.click()
 
@@ -41,8 +41,8 @@ class IntroductionBackNavigationTest : InstrumentedTest() {
         // Press back to return to the IntroductionActivity
         device.pressBack()
 
-        // The "Before continuing!" title should be visible again
-        val titleText = device.wait(Until.findObject(By.text("Before continuing!")), 5000)
+        // The "Before continuing!" title should be visible again using its content description
+        val titleText = device.wait(Until.findObject(By.desc("intro_title")), 5000)
         assertNotNull("'Before continuing!' text should be visible after pressing back", titleText)
     }
 }
