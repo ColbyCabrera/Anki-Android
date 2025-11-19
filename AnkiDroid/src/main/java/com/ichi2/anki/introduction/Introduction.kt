@@ -114,19 +114,19 @@ fun IntroductionScreen(
                                 .padding(24.dp), verticalArrangement = Arrangement.Center
                         ) {
                             Text(
-                                text = "Before continuing!",
+                                text = stringResource(R.string.intro_title_before_continuing),
                                 style = MaterialTheme.typography.displayMediumEmphasized,
                                 modifier = Modifier.semantics {
                                     contentDescription = "intro_title"
                                 })
                             Spacer(modifier = Modifier.height(24.dp))
                             Text(
-                                text = "This app is a fork of AnkiDroid. Please consider donating to the AnkiDroid team to support their work. The creator of Anki has also kindly allowed the use of AnkiWeb sync. If you'd like to support him, please consider buying the iPhone version of Anki.",
+                                text = stringResource(R.string.intro_fork_disclaimer_1),
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Spacer(modifier = Modifier.height(24.dp))
                             Text(
-                                text = "If you have any issues with this version, please contact me and not the AnkiDroid team. Happy memorizing!",
+                                text = stringResource(R.string.intro_fork_disclaimer_2),
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Spacer(modifier = Modifier.height(32.dp))
@@ -140,7 +140,7 @@ fun IntroductionScreen(
                                     colors = ButtonDefaults.filledTonalButtonColors(),
                                     shapes = ButtonDefaults.shapes()
                                 ) {
-                                    Text("Donate")
+                                    Text(stringResource(R.string.donate))
                                 }
                                 Button(
                                     onClick = { acknowledgedState.value = true },
