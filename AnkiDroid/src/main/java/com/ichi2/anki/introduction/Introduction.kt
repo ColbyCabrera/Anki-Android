@@ -138,6 +138,7 @@ fun IntroductionScreen(
                                     onClick = { uriHandler.openUri("https://opencollective.com/ankidroid") },
                                     modifier = Modifier.weight(1F),
                                     colors = ButtonDefaults.filledTonalButtonColors(),
+                                    shapes = ButtonDefaults.shapes()
                                 ) {
                                     Text("Donate")
                                 }
@@ -146,6 +147,7 @@ fun IntroductionScreen(
                                     modifier = Modifier
                                         .weight(1F)
                                         .semantics { contentDescription = "ok_button" },
+                                    shapes = ButtonDefaults.shapes()
                                 ) {
                                     Text(stringResource(R.string.dialog_ok))
                                 }
@@ -163,7 +165,7 @@ fun IntroductionScreen(
                                 modifier = Modifier
                                     .fillMaxWidth(0.8f)
                                     .height(56.dp),
-
+                                shapes = ButtonDefaults.shapes()
                                 ) {
                                 Text(
                                     stringResource(R.string.intro_get_started),
@@ -177,6 +179,7 @@ fun IntroductionScreen(
                                     .fillMaxWidth(0.8f)
                                     .height(56.dp),
                                 colors = ButtonDefaults.filledTonalButtonColors(),
+                                shapes = ButtonDefaults.shapes()
                             ) {
                                 Text(
                                     stringResource(R.string.intro_sync_from_ankiweb),
