@@ -38,6 +38,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
@@ -111,16 +112,22 @@ fun IntroductionScreen(
                         }
                     }
                 } else {
-                    Button(
-                        onClick = onGetStarted, modifier = Modifier.fillMaxWidth(0.8f)
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(stringResource(R.string.intro_get_started))
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = onSync, modifier = Modifier.fillMaxWidth(0.8f)
-                    ) {
-                        Text(stringResource(R.string.intro_sync_from_ankiweb))
+                        Button(
+                            onClick = onGetStarted, modifier = Modifier.fillMaxWidth(0.8f)
+                        ) {
+                            Text(stringResource(R.string.intro_get_started))
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Button(
+                            onClick = onSync, modifier = Modifier.fillMaxWidth(0.8f)
+                        ) {
+                            Text(stringResource(R.string.intro_sync_from_ankiweb))
+                        }
                     }
                 }
             }
