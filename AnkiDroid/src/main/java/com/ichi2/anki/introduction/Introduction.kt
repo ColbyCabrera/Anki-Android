@@ -36,6 +36,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -113,9 +114,7 @@ fun IntroductionScreen(
                                 .fillMaxWidth()
                                 .background(
                                     color = MaterialTheme.colorScheme.surfaceContainer,
-                                    shape = androidx.compose.foundation.shape.RoundedCornerShape(
-                                        32.dp
-                                    )
+                                    shape = RoundedCornerShape(32.dp)
                                 )
                                 .padding(24.dp), verticalArrangement = Arrangement.Center
                         ) {
