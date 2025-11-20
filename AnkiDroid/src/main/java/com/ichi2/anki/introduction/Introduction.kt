@@ -87,14 +87,20 @@ fun IntroductionScreen(
             ) {
                 AnimatedContent(
                     targetState = acknowledged, transitionSpec = {
-                        if (targetState) {
-                            // Enter transition for "Get Started" buttons
+                        val upwardTransition =
                             (slideInVertically { height -> height } + fadeIn()).togetherWith(
-                                slideOutVertically { height -> -height } + fadeOut())
-                        } else {
-                            // Return transition (if back pressed)
+                                slideOutVertically { height -> -height } + fadeOut()
+                            )
+
+                        val downwardTransition =
                             (slideInVertically { height -> -height } + fadeIn()).togetherWith(
-                                slideOutVertically { height -> height } + fadeOut())
+                                slideOutVertically { height -> height } + fadeOut()
+                            )
+
+                        if (targetState) {
+                            upwardTransition
+                        } else {
+                            downwardTransition
                         }.using(
                             SizeTransform(clip = false)
                         )
@@ -209,4 +215,3 @@ fun IntroductionScreen(
 fun IntroductionScreenPreview() {
     IntroductionScreen(onGetStarted = { }, onSync = { })
 }
-
