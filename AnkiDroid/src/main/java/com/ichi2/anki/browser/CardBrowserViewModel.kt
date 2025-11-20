@@ -176,6 +176,16 @@ class CardBrowserViewModel(
     private val reverseDirectionFlow = MutableStateFlow(ReverseDirection(orderAsc = false))
     val orderAsc get() = reverseDirectionFlow.value.orderAsc
 
+    val sortBackwards: StateFlow<Boolean> = reverseDirectionFlow.map { it.orderAsc }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    fun setSortBackwards(backwards: Boolean) {
+        if (reverseDirectionFlow.value.orderAsc == backwards) return
+        reverseDirectionFlow.update { ReverseDirection(orderAsc = backwards) }
+        cards.reverse()
+        viewModelScope.launch { flowOfSearchState.emit(SearchState.Completed) }
+    }
+
     /**
      * A map from column backend key to backend column definition
      *

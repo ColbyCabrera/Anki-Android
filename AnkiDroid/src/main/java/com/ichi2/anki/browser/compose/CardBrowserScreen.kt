@@ -596,6 +596,7 @@ fun SelectableSortOrderBottomSheet(viewModel: CardBrowserViewModel, onDismiss: (
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     val currentSortType by viewModel.sortTypeFlow.collectAsStateWithLifecycle()
+    val isSortBackwards by viewModel.sortBackwards.collectAsStateWithLifecycle()
     val sortLabels = stringArrayResource(id = R.array.card_browser_order_labels)
 
     ModalBottomSheet(
@@ -619,6 +620,57 @@ fun SelectableSortOrderBottomSheet(viewModel: CardBrowserViewModel, onDismiss: (
                     leadingContent = {
                         RadioButton(
                             selected = currentSortType == sortType,
+                            onClick = onItemClick
+                        )
+                    },
+                    modifier = Modifier.clickable(onClick = onItemClick)
+                )
+            }
+
+            item {
+                HorizontalDivider()
+                Text(
+                    text = stringResource(R.string.sort_order_header),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp)
+                )
+            }
+
+            item {
+                val onItemClick: () -> Unit = {
+                    viewModel.setSortBackwards(false)
+                    scope.launch { sheetState.hide() }.invokeOnCompletion {
+                        if (!sheetState.isVisible) {
+                            onDismiss()
+                        }
+                    }
+                }
+                ListItem(
+                    headlineContent = { Text(text = stringResource(R.string.sort_order_ascending)) },
+                    leadingContent = {
+                        RadioButton(
+                            selected = !isSortBackwards,
+                            onClick = onItemClick
+                        )
+                    },
+                    modifier = Modifier.clickable(onClick = onItemClick)
+                )
+            }
+
+            item {
+                val onItemClick: () -> Unit = {
+                    viewModel.setSortBackwards(true)
+                    scope.launch { sheetState.hide() }.invokeOnCompletion {
+                        if (!sheetState.isVisible) {
+                            onDismiss()
+                        }
+                    }
+                }
+                ListItem(
+                    headlineContent = { Text(text = stringResource(R.string.sort_order_descending)) },
+                    leadingContent = {
+                        RadioButton(
+                            selected = isSortBackwards,
                             onClick = onItemClick
                         )
                     },
