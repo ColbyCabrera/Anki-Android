@@ -103,6 +103,10 @@
     <string name="include_column">Include column</string>
     <string name="exclude_column">Exclude column</string>
 
+    <string name="sort_order_header">Sort order</string>
+    <string name="sort_order_ascending">Ascending</string>
+    <string name="sort_order_descending">Descending</string>
+
     <string name="save_changes_message">Please save your changes first</string>
 
     <string name="browser_find_replace_loading_fields">Retrieving fields names&#8230;</string>

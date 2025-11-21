@@ -173,8 +173,18 @@ class CardBrowserViewModel(
     val sortTypeFlow: StateFlow<SortType> = _sortTypeFlow
     val order get() = _sortTypeFlow.value
 
-    private val reverseDirectionFlow = MutableStateFlow(ReverseDirection(orderAsc = false))
-    val orderAsc get() = reverseDirectionFlow.value.orderAsc
+    private val reverseDirectionFlow = MutableStateFlow(ReverseDirection(isSortDescending = false))
+    val isSortDescendingValue get() = reverseDirectionFlow.value.isSortDescending
+
+    val isSortDescending: StateFlow<Boolean> = reverseDirectionFlow.map { it.isSortDescending }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    fun setSortDescending(descending: Boolean) {
+        if (reverseDirectionFlow.value.isSortDescending == descending) return
+        reverseDirectionFlow.update { ReverseDirection(isSortDescending = descending) }
+
+        launchSearchForCards()
+    }
 
     /**
      * A map from column backend key to backend column definition
@@ -902,11 +912,11 @@ class CardBrowserViewModel(
         when (changeType) {
             is ChangeCardOrder.OrderChange -> {
                 _sortTypeFlow.update { which }
-                reverseDirectionFlow.update { ReverseDirection(orderAsc = false) }
+                reverseDirectionFlow.update { ReverseDirection(isSortDescending = false) }
                 launchSearchForCards()
             }
             ChangeCardOrder.DirectionChange -> {
-                reverseDirectionFlow.update { ReverseDirection(orderAsc = !orderAsc) }
+                reverseDirectionFlow.update { ReverseDirection(isSortDescending = !isSortDescendingValue) }
                 cards.reverse()
                 viewModelScope.launch { flowOfSearchState.emit(SearchState.Completed) }
             }
