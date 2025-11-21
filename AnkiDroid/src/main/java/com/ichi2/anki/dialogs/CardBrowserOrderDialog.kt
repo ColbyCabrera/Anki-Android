@@ -39,7 +39,7 @@ class CardBrowserOrderDialog : AnalyticsDialogFragment() {
         // Set sort order arrow
         for (i in items.indices) {
             if (i != CARD_ORDER_NONE && i == viewModel.order.cardBrowserLabelIndex) {
-                if (viewModel.orderAsc) {
+                if (viewModel.isSortDescendingValue) {
                     items[i] = items[i].toString() + " (\u25b2)"
                 } else {
                     items[i] = items[i].toString() + " (\u25bc)"

@@ -593,7 +593,7 @@ fun SelectableSortOrderBottomSheet(viewModel: CardBrowserViewModel, onDismiss: (
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     val currentSortType by viewModel.sortTypeFlow.collectAsStateWithLifecycle()
-    val isSortBackwards by viewModel.sortBackwards.collectAsStateWithLifecycle()
+    val isSortDescending by viewModel.isSortDescending.collectAsStateWithLifecycle()
     val sortLabels = stringArrayResource(id = R.array.card_browser_order_labels)
 
     ModalBottomSheet(
@@ -617,9 +617,9 @@ fun SelectableSortOrderBottomSheet(viewModel: CardBrowserViewModel, onDismiss: (
                         buttonGroupContent = {
                             val interactionSource = remember { MutableInteractionSource() }
                             ToggleButton(
-                                checked = !isSortBackwards,
+                                checked = !isSortDescending,
                                 onCheckedChange = {
-                                    viewModel.setSortBackwards(false)
+                                    viewModel.setSortDescending(false)
                                     scope.launch { sheetState.hide() }.invokeOnCompletion {
                                         if (!sheetState.isVisible) {
                                             onDismiss()
@@ -632,7 +632,7 @@ fun SelectableSortOrderBottomSheet(viewModel: CardBrowserViewModel, onDismiss: (
                                 shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
                                 interactionSource = interactionSource,
                             ) {
-                                if (!isSortBackwards) {
+                                if (!isSortDescending) {
                                     Icon(
                                         painterResource(R.drawable.check_24px),
                                         contentDescription = null,
@@ -654,9 +654,9 @@ fun SelectableSortOrderBottomSheet(viewModel: CardBrowserViewModel, onDismiss: (
                         buttonGroupContent = {
                             val interactionSource = remember { MutableInteractionSource() }
                             ToggleButton(
-                                checked = isSortBackwards,
+                                checked = isSortDescending,
                                 onCheckedChange = {
-                                    viewModel.setSortBackwards(true)
+                                    viewModel.setSortDescending(true)
                                     scope.launch { sheetState.hide() }.invokeOnCompletion {
                                         if (!sheetState.isVisible) {
                                             onDismiss()
@@ -669,7 +669,7 @@ fun SelectableSortOrderBottomSheet(viewModel: CardBrowserViewModel, onDismiss: (
                                 shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
                                 interactionSource = interactionSource,
                             ) {
-                                if (isSortBackwards) {
+                                if (isSortDescending) {
                                     Icon(
                                         painterResource(R.drawable.check_24px),
                                         contentDescription = null,

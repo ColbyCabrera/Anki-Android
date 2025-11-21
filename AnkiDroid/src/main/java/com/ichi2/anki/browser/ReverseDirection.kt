@@ -23,16 +23,16 @@ import timber.log.Timber
  * Whether searches should be reversed
  */
 data class ReverseDirection(
-    val orderAsc: Boolean,
+    val isSortDescending: Boolean,
 ) {
     // TODO: This likely needs to handle 'CardsOrNotes'
     fun updateConfig(config: Config) {
         Timber.v("update config to %s", this)
-        config.set("sortBackwards", orderAsc)
-        config.set("browserNoteSortBackwards", orderAsc)
+        config.set("sortBackwards", isSortDescending)
+        config.set("browserNoteSortBackwards", isSortDescending)
     }
 
     companion object {
-        fun fromConfig(config: Config): ReverseDirection = ReverseDirection(orderAsc = config.get("sortBackwards") ?: false)
+        fun fromConfig(config: Config): ReverseDirection = ReverseDirection(isSortDescending = config.get("sortBackwards") ?: false)
     }
 }

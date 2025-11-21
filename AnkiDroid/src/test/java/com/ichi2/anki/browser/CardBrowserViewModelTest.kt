@@ -464,13 +464,13 @@ class CardBrowserViewModelTest : JvmTest() {
             flowOfSearchState.test {
                 ignoreEventsDuringViewModelInit()
                 assertThat("initial order", order, equalTo(SORT_FIELD))
-                assertThat("initial direction", !orderAsc)
+                assertThat("initial direction", !isSortDescendingValue)
 
                 // changing the order performs a search & changes order
                 changeCardOrder(NO_SORTING)
                 expectMostRecentItem()
                 assertThat("order changed", order, equalTo(NO_SORTING))
-                assertThat("changed direction", !orderAsc)
+                assertThat("changed direction", !isSortDescendingValue)
 
                 waitForSearchResults()
 
@@ -478,7 +478,7 @@ class CardBrowserViewModelTest : JvmTest() {
                 changeCardOrder(NO_SORTING)
                 expectNoEvents()
                 assertThat("order unchanged", order, equalTo(NO_SORTING))
-                assertThat("unchanged direction", !orderAsc)
+                assertThat("unchanged direction", !isSortDescendingValue)
             }
         }
 
@@ -488,13 +488,13 @@ class CardBrowserViewModelTest : JvmTest() {
             flowOfSearchState.test {
                 ignoreEventsDuringViewModelInit()
                 assertThat("initial order", order, equalTo(SORT_FIELD))
-                assertThat("initial direction", !orderAsc)
+                assertThat("initial direction", !isSortDescendingValue)
 
                 // changing the order performs a search & changes order
                 changeCardOrder(SortType.EASE)
                 expectMostRecentItem()
                 assertThat("order changed", order, equalTo(SortType.EASE))
-                assertThat("changed direction is the default", !orderAsc)
+                assertThat("changed direction is the default", !isSortDescendingValue)
 
                 waitForSearchResults()
 
@@ -502,7 +502,7 @@ class CardBrowserViewModelTest : JvmTest() {
                 changeCardOrder(SortType.EASE)
                 expectMostRecentItem()
                 assertThat("order unchanged", order, equalTo(SortType.EASE))
-                assertThat("direction is changed", orderAsc)
+                assertThat("direction is changed", isSortDescendingValue)
             }
         }
 
