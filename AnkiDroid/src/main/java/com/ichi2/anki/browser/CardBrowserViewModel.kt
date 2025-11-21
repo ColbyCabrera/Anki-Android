@@ -182,8 +182,8 @@ class CardBrowserViewModel(
     fun setSortBackwards(backwards: Boolean) {
         if (reverseDirectionFlow.value.orderAsc == backwards) return
         reverseDirectionFlow.update { ReverseDirection(orderAsc = backwards) }
-        cards.reverse()
-        viewModelScope.launch { flowOfSearchState.emit(SearchState.Completed) }
+
+        launchSearchForCards()
     }
 
     /**
