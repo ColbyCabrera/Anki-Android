@@ -17,6 +17,7 @@ package com.ichi2.anki.browser.compose
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -590,7 +591,7 @@ fun MoreOptionsBottomSheet(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SelectableSortOrderBottomSheet(viewModel: CardBrowserViewModel, onDismiss: () -> Unit) {
     val sheetState = rememberModalBottomSheetState()
@@ -605,7 +606,71 @@ fun SelectableSortOrderBottomSheet(viewModel: CardBrowserViewModel, onDismiss: (
         containerColor = MaterialTheme.colorScheme.surface,
         contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
-        LazyColumn {
+        LazyColumn(modifier = Modifier.fillMaxWidth()) {
+            item {
+                    ButtonGroup(
+                        modifier = Modifier.padding(32.dp).fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(2.dp),
+                        overflowIndicator = { menuState ->
+                            ButtonGroupDefaults.OverflowIndicator(menuState = menuState)
+                        },
+                    ) {
+                        customItem(
+                            buttonGroupContent = {
+                                val interactionSource = remember { MutableInteractionSource() }
+                                ToggleButton(
+                                    checked = !isSortBackwards,
+                                    onCheckedChange = {
+                                        viewModel.setSortBackwards(false)
+                                        scope.launch { sheetState.hide() }.invokeOnCompletion {
+                                            if (!sheetState.isVisible) {
+                                                onDismiss()
+                                            }
+                                        }
+                                    },
+                                    modifier = Modifier.weight(1F).animateWidth(interactionSource),
+                                    shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
+                                    interactionSource = interactionSource,
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.sort_order_ascending),
+                                        softWrap = false,
+                                        overflow = TextOverflow.Visible
+                                    )
+                                }
+                            },
+                        ) {}
+
+                        customItem(
+                            buttonGroupContent = {
+                                val interactionSource = remember { MutableInteractionSource() }
+                                ToggleButton(
+                                    checked = isSortBackwards,
+                                    onCheckedChange = {
+                                        viewModel.setSortBackwards(true)
+                                        scope.launch { sheetState.hide() }.invokeOnCompletion {
+                                            if (!sheetState.isVisible) {
+                                                onDismiss()
+                                            }
+                                        }
+                                    },
+                                    Modifier.weight(1F).animateWidth(interactionSource),
+                                    shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
+                                    interactionSource = interactionSource,
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.sort_order_descending),
+                                        softWrap = false,
+                                        overflow = TextOverflow.Visible
+                                    )
+                                }
+                            },
+                        ) {}
+                    }
+
+            }
+
+
             items(SortType.entries) { sortType ->
                 val onItemClick: () -> Unit = {
                     viewModel.changeCardOrder(sortType)
@@ -633,48 +698,6 @@ fun SelectableSortOrderBottomSheet(viewModel: CardBrowserViewModel, onDismiss: (
                     text = stringResource(R.string.sort_order_header),
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp)
-                )
-            }
-
-            item {
-                val onItemClick: () -> Unit = {
-                    viewModel.setSortBackwards(false)
-                    scope.launch { sheetState.hide() }.invokeOnCompletion {
-                        if (!sheetState.isVisible) {
-                            onDismiss()
-                        }
-                    }
-                }
-                ListItem(
-                    headlineContent = { Text(text = stringResource(R.string.sort_order_ascending)) },
-                    leadingContent = {
-                        RadioButton(
-                            selected = !isSortBackwards,
-                            onClick = onItemClick
-                        )
-                    },
-                    modifier = Modifier.clickable(onClick = onItemClick)
-                )
-            }
-
-            item {
-                val onItemClick: () -> Unit = {
-                    viewModel.setSortBackwards(true)
-                    scope.launch { sheetState.hide() }.invokeOnCompletion {
-                        if (!sheetState.isVisible) {
-                            onDismiss()
-                        }
-                    }
-                }
-                ListItem(
-                    headlineContent = { Text(text = stringResource(R.string.sort_order_descending)) },
-                    leadingContent = {
-                        RadioButton(
-                            selected = isSortBackwards,
-                            onClick = onItemClick
-                        )
-                    },
-                    modifier = Modifier.clickable(onClick = onItemClick)
                 )
             }
         }
