@@ -68,8 +68,6 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
-import androidx.compose.material3.NavigationRail
-import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
@@ -175,6 +173,8 @@ import com.ichi2.anki.receiver.SdCardReceiver
 import com.ichi2.anki.servicelayer.ScopedStorageService
 import com.ichi2.anki.settings.Prefs
 import com.ichi2.anki.ui.compose.AnkiDroidApp
+import com.ichi2.anki.ui.compose.AnkiNavigationRail
+import com.ichi2.anki.ui.compose.AppNavigationItem
 import com.ichi2.anki.ui.compose.CongratsActivity
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import com.ichi2.anki.ui.windows.permissions.PermissionsActivity
@@ -475,37 +475,38 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                         null
                     )
                 }
-                var selectedNavigationItem by remember { mutableIntStateOf(0) } // For NavigationRail
+                var selectedNavigationItem by remember { mutableStateOf(AppNavigationItem.Decks) } // For NavigationRail
                 val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
-                data class DrawerItem(
-                    val icon: Int, @StringRes val labelResId: Int, val action: (() -> Unit)? = null
-                )
+                val handleNavigation: (AppNavigationItem) -> Unit = { item ->
+                    when (item) {
+                        AppNavigationItem.Decks -> {
+                            coroutineScope.launch { drawerState.close() }
+                        }
 
-                val items = listOf(
-                    DrawerItem(R.drawable.ic_list_black, R.string.decks) {
-                        coroutineScope.launch { drawerState.close() }
-                    },
-                    DrawerItem(R.drawable.ic_flashcard_black, R.string.card_browser) {
-                        startActivity(Intent(this@DeckPicker, CardBrowser::class.java))
-                    },
-                    DrawerItem(R.drawable.ic_bar_chart_black, R.string.statistics) {
-                        startActivity(Statistics.getIntent(this@DeckPicker))
-                    },
-                    DrawerItem(R.drawable.ic_settings_black, R.string.settings) {
-                        startActivity(PreferencesActivity.getIntent(this))
-                    },
-                    DrawerItem(R.drawable.ic_help_black, R.string.help) {
-                        startActivity(Intent(this@DeckPicker, HelpActivity::class.java))
-                    },
-                    DrawerItem(
-                        R.drawable.ic_support_ankidroid, R.string.help_title_support_ankidroid
-                    ) {
-                        val uri =
-                            "https://github.com/ankidroid/Anki-Android/wiki/Contributing".toUri()
-                        startActivity(Intent(Intent.ACTION_VIEW, uri))
-                    },
-                )
+                        AppNavigationItem.CardBrowser -> {
+                            startActivity(Intent(this@DeckPicker, CardBrowser::class.java))
+                        }
+
+                        AppNavigationItem.Statistics -> {
+                            startActivity(Statistics.getIntent(this@DeckPicker))
+                        }
+
+                        AppNavigationItem.Settings -> {
+                            startActivity(PreferencesActivity.getIntent(this@DeckPicker))
+                        }
+
+                        AppNavigationItem.Help -> {
+                            startActivity(Intent(this@DeckPicker, HelpActivity::class.java))
+                        }
+
+                        AppNavigationItem.Support -> {
+                            val uri =
+                                "https://github.com/ankidroid/Anki-Android/wiki/Contributing".toUri()
+                            startActivity(Intent(Intent.ACTION_VIEW, uri))
+                        }
+                    }
+                }
 
 
                 LaunchedEffect(focusedDeckId) {
@@ -551,24 +552,13 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
 
                 if (fragmented) {
                     Row {
-                        NavigationRail {
-                            items.forEachIndexed { index, item ->
-                                NavigationRailItem(
-                                    icon = {
-                                        Icon(
-                                            painter = painterResource(item.icon),
-                                            contentDescription = stringResource(item.labelResId),
-                                        )
-                                    },
-                                    label = { Text(stringResource(item.labelResId)) },
-                                    selected = selectedNavigationItem == index,
-                                    onClick = {
-                                        selectedNavigationItem = index
-                                        item.action?.invoke()
-                                    },
-                                )
+                        AnkiNavigationRail(
+                            selectedItem = selectedNavigationItem,
+                            onNavigate = { item ->
+                                selectedNavigationItem = item
+                                handleNavigation(item)
                             }
-                        }
+                        )
                         AnkiDroidApp(
                             fragmented = fragmented,
                             decks = deckList.data,
@@ -632,8 +622,8 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                             bottom = 24.dp,
                                         )
                                     )
-                                    items.forEachIndexed { index, item ->
-                                        if (item.labelResId == R.string.settings) {
+                                    AppNavigationItem.values().forEach { item ->
+                                        if (item == AppNavigationItem.Settings) {
                                             HorizontalDivider(
                                                 modifier = Modifier
                                                     .padding(vertical = 12.dp)
@@ -652,15 +642,14 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                                 )
                                             },
                                             label = { Text(stringResource(item.labelResId)) },
-                                            selected = selectedNavigationItem == index,
+                                            selected = selectedNavigationItem == item,
                                             onClick = {
-                                                selectedNavigationItem = index
+                                                selectedNavigationItem = item
                                                 coroutineScope.launch {
                                                     drawerState.close()
-                                                    item.action?.invoke()
-                                                    selectedNavigationItem = 0
+                                                    handleNavigation(item)
+                                                    selectedNavigationItem = AppNavigationItem.Decks
                                                 }
-
                                             })
                                     }
                                 }

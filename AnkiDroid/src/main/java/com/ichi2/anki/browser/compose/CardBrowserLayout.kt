@@ -18,10 +18,12 @@ package com.ichi2.anki.browser.compose
 
 // TODO: Re-enable NoteEditor in split view after migration is complete
 // import com.ichi2.anki.noteeditor.compose.NoteEditor
+import android.content.Intent
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
@@ -81,9 +83,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ichi2.anki.R
+import androidx.core.net.toUri
+import com.ichi2.anki.HelpActivity
 import com.ichi2.anki.browser.BrowserRowWithId
 import com.ichi2.anki.browser.CardBrowserViewModel
 import com.ichi2.anki.model.SelectableDeck
+import com.ichi2.anki.pages.Statistics
+import com.ichi2.anki.preferences.PreferencesActivity
+import com.ichi2.anki.ui.compose.AnkiNavigationRail
+import com.ichi2.anki.ui.compose.AppNavigationItem
 import kotlinx.coroutines.launch
 
 private val transparentTextFieldColors: @Composable () -> TextFieldColors = {
@@ -105,6 +113,7 @@ private val transparentTextFieldColors: @Composable () -> TextFieldColors = {
 @Composable
 fun CardBrowserLayout(
     viewModel: CardBrowserViewModel,
+    fragmented: Boolean,
     onNavigateUp: () -> Unit,
     onCardClicked: (BrowserRowWithId) -> Unit,
     onAddNote: () -> Unit,
@@ -180,8 +189,29 @@ fun CardBrowserLayout(
         }
     }
 
-    Scaffold(
-        topBar = {
+    Row(modifier = Modifier.fillMaxSize()) {
+        if (fragmented) {
+            AnkiNavigationRail(
+                selectedItem = AppNavigationItem.CardBrowser,
+                onNavigate = { item ->
+                    when (item) {
+                        AppNavigationItem.Decks -> onNavigateUp()
+                        AppNavigationItem.CardBrowser -> { /* Already here */ }
+                        AppNavigationItem.Statistics -> activity?.startActivity(Statistics.getIntent(activity))
+                        AppNavigationItem.Settings -> activity?.startActivity(PreferencesActivity.getIntent(activity))
+                        AppNavigationItem.Help -> activity?.startActivity(Intent(activity, HelpActivity::class.java))
+                        AppNavigationItem.Support -> {
+                            val uri =
+                                "https://github.com/ankidroid/Anki-Android/wiki/Contributing".toUri()
+                            activity?.startActivity(Intent(Intent.ACTION_VIEW, uri))
+                        }
+                    }
+                }
+            )
+        }
+        Scaffold(
+            modifier = Modifier.weight(1f),
+            topBar = {
             TopAppBar(
                 title = {
                     Row(modifier = Modifier.graphicsLayer {
@@ -432,6 +462,7 @@ fun CardBrowserLayout(
                 )
             }
         }
+    }
     }
 }
 

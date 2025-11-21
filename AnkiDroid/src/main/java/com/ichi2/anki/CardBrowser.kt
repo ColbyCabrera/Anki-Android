@@ -18,6 +18,7 @@
 
 package com.ichi2.anki
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.KeyEvent
 import androidx.activity.enableEdgeToEdge
@@ -84,6 +85,10 @@ open class CardBrowser :
     ChangeManager.Subscriber,
     DeckSelectionDialog.DeckSelectionListener,
     TagsDialogListener {
+
+    var fragmented: Boolean
+        get() = resources.configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK == Configuration.SCREENLAYOUT_SIZE_XLARGE
+        private set(_) = throw UnsupportedOperationException()
 
     private lateinit var viewModel: CardBrowserViewModel
 
@@ -158,7 +163,7 @@ open class CardBrowser :
         enableEdgeToEdge()
 
         val launchOptions = intent?.toCardBrowserLaunchOptions()
-        viewModel = createViewModel(launchOptions)
+        viewModel = createViewModel(launchOptions, fragmented)
 
         startLoadingCollection()
 
@@ -213,6 +218,7 @@ open class CardBrowser :
                     }
                     CardBrowserLayout(
                         viewModel = viewModel,
+                        fragmented = fragmented,
                         onNavigateUp = { finish() },
                         onCardClicked = { row ->
                             if (viewModel.isInMultiSelectMode) {
@@ -368,14 +374,15 @@ open class CardBrowser :
     }
 
     private fun createViewModel(
-        launchOptions: CardBrowserLaunchOptions?
+        launchOptions: CardBrowserLaunchOptions?,
+        isFragmented: Boolean
     ) = ViewModelProvider(
         viewModelStore,
         CardBrowserViewModel.factory(
             lastDeckIdRepository = AnkiDroidApp.instance.sharedPrefsLastDeckIdRepository,
             cacheDir = cacheDir,
             options = launchOptions,
-            isFragmented = false
+            isFragmented = isFragmented
         ),
         defaultViewModelCreationExtras
     )[CardBrowserViewModel::class.java]

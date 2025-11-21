@@ -270,11 +270,13 @@ fun AnkiDroidApp(
                             )
                         },
                         navigationIcon = {
-                            IconButton(onClick = onNavigationIconClick) {
-                                Icon(
-                                    Icons.Default.Menu,
-                                    contentDescription = stringResource(R.string.navigation_drawer_open),
-                                )
+                            if (!fragmented) {
+                                IconButton(onClick = onNavigationIconClick) {
+                                    Icon(
+                                        Icons.Default.Menu,
+                                        contentDescription = stringResource(R.string.navigation_drawer_open),
+                                    )
+                                }
                             }
                         },
                         actions = {
