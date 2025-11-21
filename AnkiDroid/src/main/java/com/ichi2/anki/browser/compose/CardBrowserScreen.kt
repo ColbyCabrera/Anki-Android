@@ -133,7 +133,8 @@ fun CardBrowserScreen(
             when (val state = searchState) {
                 is SearchState.Initializing, is SearchState.Searching -> CardBrowserLoading(
                     Modifier.padding(
-                    bottom = with(LocalDensity.current) { toolbarHeight.toDp() }))
+                        bottom = with(LocalDensity.current) { toolbarHeight.toDp() })
+                )
 
                 is SearchState.Completed -> {
                     if (browserRows.isEmpty()) {
@@ -148,10 +149,8 @@ fun CardBrowserScreen(
                     } else {
                         val toolbarHeightInDp = with(LocalDensity.current) { toolbarHeight.toDp() }
                         LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(
-                                top = 0.dp,
-                                bottom = toolbarHeightInDp + 32.dp
+                            modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(
+                                top = 0.dp, bottom = toolbarHeightInDp + 32.dp
                             )
                         ) {
                             items(
@@ -167,7 +166,8 @@ fun CardBrowserScreen(
                                                 rowId = CardOrNoteId(row.id), topOffset = 0
                                             )
                                         )
-                                    }))
+                                    })
+                                )
                                 HorizontalDivider()
                             }
                         }
@@ -199,10 +199,10 @@ fun CardBrowserScreen(
         if (showFilterSheet) {
             FilterBottomSheet(
                 onDismissRequest = { showFilterSheet = false }, onFilter = {
-                    onFilter(it)
-                }, onFlagFilter = {
-                    showFlagMenu = true
-                }, onFilterByTag = onFilterByTag
+                onFilter(it)
+            }, onFlagFilter = {
+                showFlagMenu = true
+            }, onFilterByTag = onFilterByTag
             )
         }
 
