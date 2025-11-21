@@ -10,7 +10,7 @@
     android:paddingEnd="@dimen/deck_picker_right_padding"
     tools:background="@android:color/holo_orange_light">
 
-    <ImageButton
+    <com.ichi2.anki.widgets.SafeImageButton
         android:id="@+id/deckpicker_indent"
         android:minWidth="0dp"
         android:layout_height="wrap_content"
@@ -29,7 +29,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         android:orientation="horizontal"
         android:gravity="center_vertical">
-        <ImageButton
+        <com.ichi2.anki.widgets.SafeImageButton
             android:id="@+id/deckpicker_expander"
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
