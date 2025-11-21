@@ -68,6 +68,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -138,21 +139,23 @@ private fun RenderDeck(
             exit = shrinkVertically(motionScheme.fastSpatialSpec()) + fadeOut(motionScheme.defaultEffectsSpec()),
         ) {
             Column {
-                (rememberedChildren ?: emptyList()).forEach { child ->
-                    val grandChildren = deckToChildrenMap[child] ?: emptyList()
-                    RenderDeck(
-                        deck = child,
-                        children = grandChildren,
-                        deckToChildrenMap = deckToChildrenMap,
-                        onDeckClick = onDeckClick,
-                        onExpandClick = onExpandClick,
-                        onDeckOptions = onDeckOptions,
-                        onRename = onRename,
-                        onExport = onExport,
-                        onDelete = onDelete,
-                        onRebuild = onRebuild,
-                        onEmpty = onEmpty,
-                    )
+                for (child in (rememberedChildren ?: emptyList())) {
+                    key(child.did) {
+                        val grandChildren = deckToChildrenMap[child] ?: emptyList()
+                        RenderDeck(
+                            deck = child,
+                            children = grandChildren,
+                            deckToChildrenMap = deckToChildrenMap,
+                            onDeckClick = onDeckClick,
+                            onExpandClick = onExpandClick,
+                            onDeckOptions = onDeckOptions,
+                            onRename = onRename,
+                            onExport = onExport,
+                            onDelete = onDelete,
+                            onRebuild = onRebuild,
+                            onEmpty = onEmpty,
+                        )
+                    }
                 }
             }
         }
@@ -271,7 +274,7 @@ fun DeckPickerContent(
                 contentPadding = contentPadding,
                 state = listState
             ) {
-                items(rootDecks) { rootDeck ->
+                items(rootDecks, key = { it.did }) { rootDeck ->
                     val children = deckToChildrenMap[rootDeck] ?: emptyList()
                     RenderDeck(
                         deck = rootDeck,
