@@ -36,6 +36,7 @@ class SafeImageButton @JvmOverloads constructor(
 ) : AppCompatImageButton(context, attrs, defStyleAttr) {
 
     private var savedContentDescription: CharSequence? = null
+    private var savedTooltipText: CharSequence? = null
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
