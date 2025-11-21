@@ -115,22 +115,24 @@ class CardBrowserViewModelTest : JvmTest() {
     }
 
     @Test
-    fun `undo with empty stack does not crash`() =
-        runViewModelTest {
-            undo().join()
-        }
+    fun `undo with empty stack does not crash`() = runViewModelTest {
+        undo().join()
+    }
 
     @Test
-    fun `saving search with same name fails`() =
-        runViewModelTest {
-            saveSearch("hello", "aa").also { result ->
-                assertThat("saving a new search succeeds", result, equalTo(SaveSearchResult.SUCCESS))
-            }
-            saveSearch("hello", "bb").also { result ->
-                assertThat("saving with same name fails", result, equalTo(SaveSearchResult.ALREADY_EXISTS))
-            }
+    fun `saving search with same name fails`() = runViewModelTest {
+        saveSearch("hello", "aa").also { result ->
+            assertThat(
+                "saving a new search succeeds", result, equalTo(SaveSearchResult.SUCCESS)
+            )
+        }
+        saveSearch("hello", "bb").also { result ->
+            assertThat(
+                "saving with same name fails", result, equalTo(SaveSearchResult.ALREADY_EXISTS)
+            )
         }
     }
+
 
     @Test
     fun `change deck in notes mode 15444`() = runViewModelTest {
@@ -291,6 +293,7 @@ class CardBrowserViewModelTest : JvmTest() {
         }
     }
 
+    @Test
     fun `selected rows are refreshed`() = runViewModelTest(notes = 2) {
         flowOfSelectedRows.test {
             // initially, flowOfSelectedRows should not have emitted anything
@@ -794,8 +797,7 @@ class CardBrowserViewModelTest : JvmTest() {
         showMediaFilenamesPreference = false
 
         BrowserColumnCollection.update(
-            AnkiDroidApp.sharedPreferencesProvider.sharedPrefs(),
-            CardsOrNotes.CARDS
+            AnkiDroidApp.sharedPreferencesProvider.sharedPrefs(), CardsOrNotes.CARDS
         ) {
             it[0] = QUESTION
             true
@@ -910,9 +912,7 @@ class CardBrowserViewModelTest : JvmTest() {
                     FSRS_STABILITY -> Pair("Stability", "")
                 }
                 assertThat(
-                    "${preview.columnType} value",
-                    preview.sampleValue,
-                    equalTo(expectedValue)
+                    "${preview.columnType} value", preview.sampleValue, equalTo(expectedValue)
                 )
                 assertThat("${preview.columnType} label", preview.label, equalTo(expectedLabel))
             }
@@ -947,9 +947,7 @@ class CardBrowserViewModelTest : JvmTest() {
                     FSRS_STABILITY -> Pair("Stability", "")
                 }
                 assertThat(
-                    "${preview.columnType} value",
-                    preview.sampleValue,
-                    equalTo(expectedValue)
+                    "${preview.columnType} value", preview.sampleValue, equalTo(expectedValue)
                 )
                 assertThat("${preview.columnType} label", preview.label, equalTo(expectedLabel))
             }
@@ -1041,9 +1039,7 @@ class CardBrowserViewModelTest : JvmTest() {
             // select the last row - emits 'select none'
             toggleRowSelectionAtPosition(1).join()
             assertThat(
-                "toggle selection after select all manually",
-                awaitItem(),
-                equalTo(SELECT_NONE)
+                "toggle selection after select all manually", awaitItem(), equalTo(SELECT_NONE)
             )
 
             // end select mode
@@ -1103,15 +1099,11 @@ class CardBrowserViewModelTest : JvmTest() {
         runViewModelTest(savedStateHandle = handle, notes = 1) {
             assertThat(isInMultiSelectMode, equalTo(false))
             assertThat(
-                "initial multiselect state",
-                handle.get<Boolean>("multiselect"),
-                equalTo(false)
+                "initial multiselect state", handle.get<Boolean>("multiselect"), equalTo(false)
             )
             selectAll()
             assertThat(
-                "multiselect after select all",
-                handle.get<Boolean>("multiselect"),
-                equalTo(true)
+                "multiselect after select all", handle.get<Boolean>("multiselect"), equalTo(true)
             )
         }
 
