@@ -40,13 +40,7 @@
                 <!--android:layout_margin="@dimen/content_vertical_padding"/>-->
                 <!--&lt;!&ndash; TODO JS - move into strings.xml &ndash;&gt;-->
 
-                <ImageView
-                    android:id="@+id/login_logo"
-                    android:layout_width="326dp"
-                    android:layout_height="238dp"
-                    android:layout_gravity="center"
-                    android:layout_marginBottom="@dimen/input_layout_padding"
-                    app:srcCompat="@drawable/login_logo" />
+
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/username_layout"
@@ -123,7 +117,7 @@
                     android:id="@+id/no_account_not_affiliated"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/sign_up_not_affiliated"
+                    android:text="@string/ankiweb_is_not_affiliated_with_this_app"
                     android:layout_gravity="center"
                     android:textSize="@dimen/abc_text_size_button_material"
                     android:textStyle="italic"/>

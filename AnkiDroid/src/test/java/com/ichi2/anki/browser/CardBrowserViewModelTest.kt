@@ -115,16 +115,20 @@ class CardBrowserViewModelTest : JvmTest() {
     }
 
     @Test
-    fun `saving search with same name fails`() = runViewModelTest {
-        saveSearch("hello", "aa").also { result ->
-            assertThat("saving a new search succeeds", result, equalTo(SaveSearchResult.SUCCESS))
+    fun `undo with empty stack does not crash`() =
+        runViewModelTest {
+            undo().join()
         }
-        saveSearch("hello", "bb").also { result ->
-            assertThat(
-                "saving with same name fails",
-                result,
-                equalTo(SaveSearchResult.ALREADY_EXISTS)
-            )
+
+    @Test
+    fun `saving search with same name fails`() =
+        runViewModelTest {
+            saveSearch("hello", "aa").also { result ->
+                assertThat("saving a new search succeeds", result, equalTo(SaveSearchResult.SUCCESS))
+            }
+            saveSearch("hello", "bb").also { result ->
+                assertThat("saving with same name fails", result, equalTo(SaveSearchResult.ALREADY_EXISTS))
+            }
         }
     }
 
