@@ -38,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -93,6 +94,14 @@ fun CardBrowserScreen(
     var showSetFlagMenu by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     var toolbarHeight by remember { mutableIntStateOf(0) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+
+    LaunchedEffect(viewModel.flowOfSnackbarMessage) {
+        viewModel.flowOfSnackbarMessage.collect { messageRes ->
+            snackbarHostState.showSnackbar(context.getString(messageRes))
+        }
+    }
 
     Box(modifier = modifier) {
         Column {
@@ -164,6 +173,13 @@ fun CardBrowserScreen(
                 .align(Alignment.BottomCenter)
                 .offset(y = -ScreenOffset - 16.dp)
                 .onSizeChanged { toolbarHeight = it.height }
+        )
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = with(LocalDensity.current) { toolbarHeight.toDp() + 32.dp })
         )
 
         if (showFilterSheet) {
