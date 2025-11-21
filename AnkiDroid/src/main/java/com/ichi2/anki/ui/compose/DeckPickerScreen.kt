@@ -139,7 +139,7 @@ private fun RenderDeck(
             exit = shrinkVertically(motionScheme.fastSpatialSpec()) + fadeOut(motionScheme.defaultEffectsSpec()),
         ) {
             Column {
-                (rememberedChildren ?: emptyList()).forEach { child ->
+                for (child in (rememberedChildren ?: emptyList())) {
                     key(child.did) {
                         val grandChildren = deckToChildrenMap[child] ?: emptyList()
                         RenderDeck(
