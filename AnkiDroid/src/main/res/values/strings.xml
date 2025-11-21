@@ -47,4 +47,5 @@
     <string name="intro_fork_disclaimer_2">If you have any issues with this version, please contact me and not the AnkiDroid team. Happy memorizing!</string>
     <string name="donate">Donate</string>
     <string name="ankiweb_is_not_affiliated_with_this_app">AnkiWeb is not affiliated with this app</string>
+    <string name="undo_empty">Nothing to undo</string>
 </resources>

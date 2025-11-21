@@ -292,6 +292,11 @@ open class CardBrowser :
                 }
             }
         }
+        launchCatchingTask {
+            viewModel.flowOfSnackbarMessage.collect { messageRes ->
+                showSnackbar(getString(messageRes))
+            }
+        }
     }
 
     override fun onCollectionLoaded(col: Collection) {

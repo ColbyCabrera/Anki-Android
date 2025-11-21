@@ -259,6 +259,8 @@ class CardBrowserViewModel(
      */
     val flowOfSaveSearchNamePrompt = MutableSharedFlow<String>()
 
+    val flowOfSnackbarMessage = MutableSharedFlow<Int>()
+
     var focusedRow: CardOrNoteId? = null
         set(value) {
             if (!isFragmented) return
@@ -1367,6 +1369,7 @@ class CardBrowserViewModel(
             refreshSearch()
         } catch (e: BackendException) {
             Timber.w(e, "Undo failed - likely empty stack")
+            flowOfSnackbarMessage.emit(com.ichi2.anki.R.string.undo_empty)
         }
     }
 
