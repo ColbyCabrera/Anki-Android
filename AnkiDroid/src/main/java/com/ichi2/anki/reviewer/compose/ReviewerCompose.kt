@@ -253,7 +253,7 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                     },
                     mediaDirectory = state.mediaDirectory,
                     isAnswerShown = state.isAnswerShown,
-                    toolbarHeight = toolbarHeight
+                    toolbarHeight = (toolbarHeightDp + 32.dp).value.toInt()
                 )
             }
         }
