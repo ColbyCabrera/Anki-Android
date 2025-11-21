@@ -596,6 +596,14 @@ fun SelectableSortOrderBottomSheet(viewModel: CardBrowserViewModel, onDismiss: (
     val isSortDescending by viewModel.isSortDescending.collectAsStateWithLifecycle()
     val sortLabels = stringArrayResource(id = R.array.card_browser_order_labels)
 
+    val dismissSheet: () -> Unit = {
+        scope.launch { sheetState.hide() }.invokeOnCompletion {
+            if (!sheetState.isVisible) {
+                onDismiss()
+            }
+        }
+    }
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
@@ -613,90 +621,58 @@ fun SelectableSortOrderBottomSheet(viewModel: CardBrowserViewModel, onDismiss: (
                         ButtonGroupDefaults.OverflowIndicator(menuState = menuState)
                     },
                 ) {
-                    customItem(
-                        buttonGroupContent = {
-                            val interactionSource = remember { MutableInteractionSource() }
-                            ToggleButton(
-                                checked = !isSortDescending,
-                                onCheckedChange = {
-                                    viewModel.setSortDescending(false)
-                                    scope.launch { sheetState.hide() }.invokeOnCompletion {
-                                        if (!sheetState.isVisible) {
-                                            onDismiss()
-                                        }
-                                    }
-                                },
-                                modifier = Modifier
-                                    .weight(1F)
-                                    .animateWidth(interactionSource),
-                                shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
-                                interactionSource = interactionSource,
-                            ) {
-                                if (!isSortDescending) {
-                                    Icon(
-                                        painterResource(R.drawable.check_24px),
-                                        contentDescription = null,
-                                        modifier = Modifier
-                                            .padding(end = 8.dp)
-                                            .size(18.dp)
-                                    )
-                                }
-                                Text(
-                                    text = stringResource(R.string.sort_order_ascending),
-                                    softWrap = false,
-                                    overflow = TextOverflow.Visible
-                                )
-                            }
-                        },
-                    ) {}
+                    val sortOptions = listOf(
+                        false to R.string.sort_order_ascending,
+                        true to R.string.sort_order_descending
+                    )
 
-                    customItem(
-                        buttonGroupContent = {
-                            val interactionSource = remember { MutableInteractionSource() }
-                            ToggleButton(
-                                checked = isSortDescending,
-                                onCheckedChange = {
-                                    viewModel.setSortDescending(true)
-                                    scope.launch { sheetState.hide() }.invokeOnCompletion {
-                                        if (!sheetState.isVisible) {
-                                            onDismiss()
-                                        }
+                    sortOptions.forEach { (isDescending, textRes) ->
+                        customItem(
+                            buttonGroupContent = {
+                                val interactionSource = remember { MutableInteractionSource() }
+                                val isChecked = isSortDescending == isDescending
+                                val shape = if (isDescending) {
+                                    ButtonGroupDefaults.connectedTrailingButtonShapes()
+                                } else {
+                                    ButtonGroupDefaults.connectedLeadingButtonShapes()
+                                }
+                                ToggleButton(
+                                    checked = isChecked,
+                                    onCheckedChange = {
+                                        viewModel.setSortDescending(isDescending)
+                                        dismissSheet()
+                                    },
+                                    modifier = Modifier
+                                        .weight(1F)
+                                        .animateWidth(interactionSource),
+                                    shapes = shape,
+                                    interactionSource = interactionSource,
+                                ) {
+                                    if (isChecked) {
+                                        Icon(
+                                            painterResource(R.drawable.check_24px),
+                                            contentDescription = null,
+                                            modifier = Modifier
+                                                .padding(end = 8.dp)
+                                                .size(18.dp)
+                                        )
                                     }
-                                },
-                                Modifier
-                                    .weight(1F)
-                                    .animateWidth(interactionSource),
-                                shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
-                                interactionSource = interactionSource,
-                            ) {
-                                if (isSortDescending) {
-                                    Icon(
-                                        painterResource(R.drawable.check_24px),
-                                        contentDescription = null,
-                                        modifier = Modifier
-                                            .padding(end = 8.dp)
-                                            .size(18.dp)
+                                    Text(
+                                        text = stringResource(textRes),
+                                        softWrap = false,
+                                        overflow = TextOverflow.Visible
                                     )
                                 }
-                                Text(
-                                    text = stringResource(R.string.sort_order_descending),
-                                    softWrap = false,
-                                    overflow = TextOverflow.Visible
-                                )
-                            }
-                        },
-                    ) {}
+                            },
+                        ) {}
+                    }
                 }
             }
 
             items(SortType.entries) { sortType ->
                 val onItemClick: () -> Unit = {
                     viewModel.changeCardOrder(sortType)
-                    scope.launch { sheetState.hide() }.invokeOnCompletion {
-                        if (!sheetState.isVisible) {
-                            onDismiss()
-                        }
-                    }
+                    dismissSheet()
                 }
                 ListItem(
                     headlineContent = { Text(text = sortLabels[sortType.cardBrowserLabelIndex]) },
