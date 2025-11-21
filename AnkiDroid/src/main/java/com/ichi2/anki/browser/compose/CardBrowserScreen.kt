@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -605,7 +606,7 @@ fun SelectableSortOrderBottomSheet(viewModel: CardBrowserViewModel, onDismiss: (
             item {
                 ButtonGroup(
                     modifier = Modifier
-                        .padding(32.dp)
+                        .padding(start = 24.dp, end = 24.dp, bottom = 8.dp)
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(2.dp),
                     overflowIndicator = { menuState ->
@@ -631,6 +632,15 @@ fun SelectableSortOrderBottomSheet(viewModel: CardBrowserViewModel, onDismiss: (
                                 shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
                                 interactionSource = interactionSource,
                             ) {
+                                if (!isSortBackwards) {
+                                    Icon(
+                                        painterResource(R.drawable.check_24px),
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .padding(end = 8.dp)
+                                            .size(18.dp)
+                                    )
+                                }
                                 Text(
                                     text = stringResource(R.string.sort_order_ascending),
                                     softWrap = false,
@@ -659,6 +669,15 @@ fun SelectableSortOrderBottomSheet(viewModel: CardBrowserViewModel, onDismiss: (
                                 shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
                                 interactionSource = interactionSource,
                             ) {
+                                if (isSortBackwards) {
+                                    Icon(
+                                        painterResource(R.drawable.check_24px),
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .padding(end = 8.dp)
+                                            .size(18.dp)
+                                    )
+                                }
                                 Text(
                                     text = stringResource(R.string.sort_order_descending),
                                     softWrap = false,
@@ -689,15 +708,6 @@ fun SelectableSortOrderBottomSheet(viewModel: CardBrowserViewModel, onDismiss: (
                         )
                     },
                     modifier = Modifier.clickable(onClick = onItemClick)
-                )
-            }
-
-            item {
-                HorizontalDivider()
-                Text(
-                    text = stringResource(R.string.sort_order_header),
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp)
                 )
             }
         }
