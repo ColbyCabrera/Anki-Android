@@ -1360,10 +1360,14 @@ class CardBrowserViewModel(
     }
 
     fun undo() = viewModelScope.launch {
-        withCol {
-            undo()
+        try {
+            withCol {
+                undo()
+            }
+            refreshSearch()
+        } catch (e: BackendException) {
+            Timber.w(e, "Undo failed - likely empty stack")
         }
-        refreshSearch()
     }
 
     suspend fun queryPreviewIntentData(): PreviewIntentData {

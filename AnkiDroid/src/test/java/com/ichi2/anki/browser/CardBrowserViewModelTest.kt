@@ -116,6 +116,12 @@ class CardBrowserViewModelTest : JvmTest() {
         }
 
     @Test
+    fun `undo with empty stack does not crash`() =
+        runViewModelTest {
+            undo().join()
+        }
+
+    @Test
     fun `saving search with same name fails`() =
         runViewModelTest {
             saveSearch("hello", "aa").also { result ->
