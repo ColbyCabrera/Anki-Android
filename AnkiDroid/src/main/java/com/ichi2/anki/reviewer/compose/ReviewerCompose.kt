@@ -198,8 +198,7 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(snackbarHost = {
             SnackbarHost(
-                snackbarHostState,
-                modifier = Modifier.padding(bottom = toolbarHeightDp + 32.dp)
+                snackbarHostState, modifier = Modifier.padding(bottom = toolbarHeightDp + 32.dp)
             ) { data ->
                 Snackbar(
                     snackbarData = data,
@@ -356,36 +355,41 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                 containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = MaterialTheme.colorScheme.onSurface,
             ) {
-                val menuOptions = remember {
-                    listOf(
-                        Triple(R.string.redo, Icons.AutoMirrored.Filled.Undo) {
-                        // TODO
-                    }, Triple(R.string.enable_whiteboard, Icons.Filled.Edit) {
-                        // TODO
-                    }, Triple(R.string.cardeditor_title_edit_card, Icons.Filled.EditNote) {
-                        viewModel.onEvent(ReviewerEvent.EditCard)
-                    }, Triple(R.string.menu_edit_tags, Icons.AutoMirrored.Filled.Label) {
-                        // TODO
-                    }, Triple(R.string.menu_bury_card, Icons.Filled.VisibilityOff) {
-                        viewModel.onEvent(ReviewerEvent.BuryCard)
-                    }, Triple(R.string.menu_suspend_card, Icons.Filled.Pause) {
-                        viewModel.onEvent(ReviewerEvent.SuspendCard)
-                    }, Triple(R.string.menu_delete_note, Icons.Filled.Delete) {
-                        // TODO
-                    }, Triple(R.string.menu_mark_note, Icons.Filled.Star) {
-                        viewModel.onEvent(ReviewerEvent.ToggleMark)
-                    }, Triple(R.string.card_editor_reschedule_card, Icons.Filled.Schedule) {
-                        // TODO
-                    }, Triple(R.string.replay_media, Icons.Filled.Replay) {
-                        // TODO
-                    }, Triple(
-                        R.string.menu_enable_voice_playback, Icons.Filled.RecordVoiceOver
-                    ) {
-                        // TODO
-                    }, Triple(R.string.deck_options, Icons.Filled.Tune) {
-                        // TODO
-                    })
-                }
+                val menuOptions =
+                    remember(state.isWhiteboardEnabled, state.isVoicePlaybackEnabled) {
+                        listOf(
+                            Triple(R.string.redo, Icons.AutoMirrored.Filled.Undo) {
+                            viewModel.onEvent(ReviewerEvent.Redo)
+                        }, Triple(
+                            if (state.isWhiteboardEnabled) R.string.disable_whiteboard else R.string.enable_whiteboard,
+                            Icons.Filled.Edit
+                        ) {
+                            viewModel.onEvent(ReviewerEvent.ToggleWhiteboard)
+                        }, Triple(R.string.cardeditor_title_edit_card, Icons.Filled.EditNote) {
+                            viewModel.onEvent(ReviewerEvent.EditCard)
+                        }, Triple(R.string.menu_edit_tags, Icons.AutoMirrored.Filled.Label) {
+                            viewModel.onEvent(ReviewerEvent.EditTags)
+                        }, Triple(R.string.menu_bury_card, Icons.Filled.VisibilityOff) {
+                            viewModel.onEvent(ReviewerEvent.BuryCard)
+                        }, Triple(R.string.menu_suspend_card, Icons.Filled.Pause) {
+                            viewModel.onEvent(ReviewerEvent.SuspendCard)
+                        }, Triple(R.string.menu_delete_note, Icons.Filled.Delete) {
+                            viewModel.onEvent(ReviewerEvent.DeleteNote)
+                        }, Triple(R.string.menu_mark_note, Icons.Filled.Star) {
+                            viewModel.onEvent(ReviewerEvent.ToggleMark)
+                        }, Triple(R.string.card_editor_reschedule_card, Icons.Filled.Schedule) {
+                            viewModel.onEvent(ReviewerEvent.RescheduleCard)
+                        }, Triple(R.string.replay_media, Icons.Filled.Replay) {
+                            viewModel.onEvent(ReviewerEvent.ReplayMedia)
+                        }, Triple(
+                            if (state.isVoicePlaybackEnabled) R.string.menu_disable_voice_playback else R.string.menu_enable_voice_playback,
+                            Icons.Filled.RecordVoiceOver
+                        ) {
+                            viewModel.onEvent(ReviewerEvent.ToggleVoicePlayback)
+                        }, Triple(R.string.deck_options, Icons.Filled.Tune) {
+                            viewModel.onEvent(ReviewerEvent.DeckOptions)
+                        })
+                    }
                 menuOptions.forEach { (textRes, icon, action) ->
                     ListItem(
                         headlineContent = { Text(stringResource(textRes)) },

@@ -63,7 +63,9 @@ data class ReviewerState(
     val isMarked: Boolean = false,
     val flag: Int = 0,
     val mediaDirectory: File? = null,
-    val isFinished: Boolean = false
+    val isFinished: Boolean = false,
+    val isWhiteboardEnabled: Boolean = false,
+    val isVoicePlaybackEnabled: Boolean = false
 )
 
 sealed class ReviewerEvent {
@@ -80,12 +82,30 @@ sealed class ReviewerEvent {
     object SuspendCard : ReviewerEvent()
     object UnanswerCard : ReviewerEvent()
     object ReloadCard : ReviewerEvent()
+    object Redo : ReviewerEvent()
+    object ToggleWhiteboard : ReviewerEvent()
+    data class OnWhiteboardStateChanged(val enabled: Boolean) : ReviewerEvent()
+    object EditTags : ReviewerEvent()
+    object DeleteNote : ReviewerEvent()
+    object RescheduleCard : ReviewerEvent()
+    object ReplayMedia : ReviewerEvent()
+    object ToggleVoicePlayback : ReviewerEvent()
+    data class OnVoicePlaybackStateChanged(val enabled: Boolean) : ReviewerEvent()
+    object DeckOptions : ReviewerEvent()
 }
 
 sealed class ReviewerEffect {
     data class NavigateToEditCard(val cardId: CardId) : ReviewerEffect()
     object NavigateToDeckPicker : ReviewerEffect()
     data class ShowSnackbar(val message: String) : ReviewerEffect()
+    object PerformRedo : ReviewerEffect()
+    object ToggleWhiteboard : ReviewerEffect()
+    data class ShowTagsDialog(val card: Card) : ReviewerEffect()
+    data class ShowDeleteNoteDialog(val card: Card) : ReviewerEffect()
+    data class ShowDueDateDialog(val card: Card) : ReviewerEffect()
+    data class ReplayMedia(val card: Card) : ReviewerEffect()
+    object ToggleVoicePlayback : ReviewerEffect()
+    object NavigateToDeckOptions : ReviewerEffect()
 }
 
 class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
@@ -153,7 +173,61 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
             is ReviewerEvent.BuryCard -> buryCard()
             is ReviewerEvent.SuspendCard -> suspendCard()
             is ReviewerEvent.ReloadCard -> reloadCard()
+            is ReviewerEvent.Redo -> redo()
+            is ReviewerEvent.ToggleWhiteboard -> toggleWhiteboard()
+            is ReviewerEvent.OnWhiteboardStateChanged -> onWhiteboardStateChanged(event.enabled)
+            is ReviewerEvent.EditTags -> editTags()
+            is ReviewerEvent.DeleteNote -> deleteNote()
+            is ReviewerEvent.RescheduleCard -> rescheduleCard()
+            is ReviewerEvent.ReplayMedia -> replayMedia()
+            is ReviewerEvent.ToggleVoicePlayback -> toggleVoicePlayback()
+            is ReviewerEvent.OnVoicePlaybackStateChanged -> onVoicePlaybackStateChanged(event.enabled)
+            is ReviewerEvent.DeckOptions -> deckOptions()
         }
+    }
+
+    private fun deckOptions() {
+        viewModelScope.launch { _effect.emit(ReviewerEffect.NavigateToDeckOptions) }
+    }
+
+    private fun onVoicePlaybackStateChanged(enabled: Boolean) {
+        _state.update { it.copy(isVoicePlaybackEnabled = enabled) }
+    }
+
+    private fun toggleVoicePlayback() {
+        viewModelScope.launch { _effect.emit(ReviewerEffect.ToggleVoicePlayback) }
+    }
+
+    private fun replayMedia() {
+        val card = currentCard ?: return
+        viewModelScope.launch { _effect.emit(ReviewerEffect.ReplayMedia(card)) }
+    }
+
+    private fun rescheduleCard() {
+        val card = currentCard ?: return
+        viewModelScope.launch { _effect.emit(ReviewerEffect.ShowDueDateDialog(card)) }
+    }
+
+    private fun deleteNote() {
+        val card = currentCard ?: return
+        viewModelScope.launch { _effect.emit(ReviewerEffect.ShowDeleteNoteDialog(card)) }
+    }
+
+    private fun editTags() {
+        val card = currentCard ?: return
+        viewModelScope.launch { _effect.emit(ReviewerEffect.ShowTagsDialog(card)) }
+    }
+
+    private fun onWhiteboardStateChanged(enabled: Boolean) {
+        _state.update { it.copy(isWhiteboardEnabled = enabled) }
+    }
+
+    private fun toggleWhiteboard() {
+        viewModelScope.launch { _effect.emit(ReviewerEffect.ToggleWhiteboard) }
+    }
+
+    private fun redo() {
+        viewModelScope.launch { _effect.emit(ReviewerEffect.PerformRedo) }
     }
 
     private suspend fun reloadCardSuspend() {
