@@ -20,9 +20,11 @@
  ****************************************************************************************/
 package com.ichi2.anki.browser
 
+import androidx.compose.runtime.Immutable
 import anki.search.BrowserRow
 
+@Immutable
 data class BrowserRowWithId(
     val browserRow: BrowserRow,
-    val id: Long
+    val id: Long,
 )

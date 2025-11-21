@@ -176,8 +176,10 @@ class CardBrowserViewModel(
     private val reverseDirectionFlow = MutableStateFlow(ReverseDirection(isSortDescending = false))
     val isSortDescendingValue get() = reverseDirectionFlow.value.isSortDescending
 
-    val isSortDescending: StateFlow<Boolean> = reverseDirectionFlow.map { it.isSortDescending }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+    val isSortDescending: StateFlow<Boolean> =
+        reverseDirectionFlow
+            .map { it.isSortDescending }
+            .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     fun setSortDescending(descending: Boolean) {
         if (reverseDirectionFlow.value.isSortDescending == descending) return
@@ -243,17 +245,18 @@ class CardBrowserViewModel(
     private val _flowOfSelectedRows = MutableStateFlow<Set<CardOrNoteId>>(emptySet())
     val flowOfSelectedRows: StateFlow<Set<CardOrNoteId>> = _flowOfSelectedRows
 
-    val flowOfToggleSelectionState: StateFlow<ToggleSelectionState> = combine(flowOfSelectedRows, browserRows) { selected, all ->
-        if (all.isEmpty() || selected.size < all.size) {
-            SELECT_ALL
-        } else {
-            SELECT_NONE
-        }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.Eagerly,
-        initialValue = SELECT_ALL,
-    )
+    val flowOfToggleSelectionState: StateFlow<ToggleSelectionState> =
+        combine(flowOfSelectedRows, browserRows) { selected, all ->
+            if (all.isEmpty() || selected.size < all.size) {
+                SELECT_ALL
+            } else {
+                SELECT_NONE
+            }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = SELECT_ALL,
+        )
 
     val cardSelectionEventFlow = MutableSharedFlow<Unit>()
 
@@ -290,10 +293,11 @@ class CardBrowserViewModel(
         get() = lastDeckIdRepository.lastDeckId
 
     suspend fun setSelectedDeck(deck: SelectableDeck) {
-        val deckId = when (deck) {
-            is SelectableDeck.AllDecks -> ALL_DECKS_ID
-            is SelectableDeck.Deck -> deck.deckId
-        }
+        val deckId =
+            when (deck) {
+                is SelectableDeck.AllDecks -> ALL_DECKS_ID
+                is SelectableDeck.Deck -> deck.deckId
+            }
         setSelectedDeckInternal(deckId)
     }
 
@@ -337,12 +341,13 @@ class CardBrowserViewModel(
     suspend fun queryDataForCardEdit(id: CardOrNoteId): CardId = id.toCardId(cardsOrNotes)
 
     private suspend fun getInitialDeck(): SelectableDeck {
-        val search = when (options) {
-            is CardBrowserLaunchOptions.SearchQueryJs -> options.search
-            is CardBrowserLaunchOptions.DeepLink -> options.search
-            is CardBrowserLaunchOptions.SystemContextMenu -> options.search.toString()
-            else -> null
-        }
+        val search =
+            when (options) {
+                is CardBrowserLaunchOptions.SearchQueryJs -> options.search
+                is CardBrowserLaunchOptions.DeepLink -> options.search
+                is CardBrowserLaunchOptions.SystemContextMenu -> options.search.toString()
+                else -> null
+            }
         val deckName = search?.let { extractDeckNameFromSearch(it) }
         if (deckName != null) {
             val did = withCol { decks.id(deckName) }
@@ -382,7 +387,7 @@ class CardBrowserViewModel(
         1. "((?:\\.|[^"\\])*)" - A double-quoted string. It handles escaped quotes.
         2. '((?:\\.|[^'\\])*)' - A single-quoted string. It also handles escaped quotes.
         3. ([^\s)]+) - An unquoted string, which ends at the first space or closing parenthesis.
-        */
+         */
         val regex = Regex("""(?i)\bdeck:\s*(?:"((?:\\.|[^"\\])*)"|'((?:\\.|[^'\\])*)'|([^\s)]+))""")
         val m = regex.find(search) ?: return null
         // The deck name is in one of the capturing groups.
@@ -435,7 +440,10 @@ class CardBrowserViewModel(
 
     sealed class TagsState {
         data object Loading : TagsState()
-        data class Loaded(val tags: List<String>) : TagsState()
+
+        data class Loaded(
+            val tags: List<String>,
+        ) : TagsState()
     }
 
     private val _allTags = MutableStateFlow<TagsState>(TagsState.Loading)
@@ -443,15 +451,16 @@ class CardBrowserViewModel(
 
     private val _selectedTags = MutableStateFlow<Set<String>>(emptySet())
     val selectedTags: StateFlow<Set<String>> = _selectedTags
-    
+
     private val _deckTags = MutableStateFlow<Set<String>>(emptySet())
     val deckTags: StateFlow<Set<String>> = _deckTags
-    
-    private val _filterTagsByDeck = MutableStateFlow(
-        sharedPrefs().getBoolean("card_browser_filter_tags_by_deck", false)
-    )
+
+    private val _filterTagsByDeck =
+        MutableStateFlow(
+            sharedPrefs().getBoolean("card_browser_filter_tags_by_deck", false),
+        )
     val filterTagsByDeck: StateFlow<Boolean> = _filterTagsByDeck
-    
+
     private var tagsLoading = false
 
     init {
@@ -555,32 +564,35 @@ class CardBrowserViewModel(
             try {
                 // Query notes from the selected deck, not from current search results
                 // This ensures the tag list reflects all tags in the deck regardless of active filters
-                val noteIds = when (val currentDeckId = deckId) {
-                    null -> {
-                        // No deck selected, return empty
-                        emptyList()
-                    }
+                val noteIds =
+                    when (val currentDeckId = deckId) {
+                        null -> {
+                            // No deck selected, return empty
+                            emptyList()
+                        }
 
-                    ALL_DECKS_ID -> {
-                        // If "All Decks" is selected, get all notes
-                        withCol { findNotes("") }
-                    }
+                        ALL_DECKS_ID -> {
+                            // If "All Decks" is selected, get all notes
+                            withCol { findNotes("") }
+                        }
 
-                    else -> {
-                        // Query all notes in the selected deck using the deck search operator
-                        val deckName = withCol { decks.name(currentDeckId) }
-                        val escapedDeckName = deckName.replace("\"", "\\\"")
-                        withCol { findNotes("deck:\"$escapedDeckName\"") }
+                        else -> {
+                            // Query all notes in the selected deck using the deck search operator
+                            val deckName = withCol { decks.name(currentDeckId) }
+                            val escapedDeckName = deckName.replace("\"", "\\\"")
+                            withCol { findNotes("deck:\"$escapedDeckName\"") }
+                        }
                     }
-                }
 
                 // Collect all tags from the notes
-                val tagsSet = withCol {
-                    noteIds.asSequence()
-                        .map { getNote(it).tags }
-                        .flatten()
-                        .toSet()
-                }
+                val tagsSet =
+                    withCol {
+                        noteIds
+                            .asSequence()
+                            .map { getNote(it).tags }
+                            .flatten()
+                            .toSet()
+                    }
 
                 _deckTags.value = tagsSet
             } catch (e: Exception) {
@@ -685,37 +697,40 @@ class CardBrowserViewModel(
         flowOfCardStateChanged.emit(Unit)
     }
 
-    fun toggleMarkForSelectedRows() = viewModelScope.launch {
-        if (!hasSelectedAnyRows()) {
-            return@launch
+    fun toggleMarkForSelectedRows() =
+        viewModelScope.launch {
+            if (!hasSelectedAnyRows()) {
+                return@launch
+            }
+            val selectedBefore = selectedRows.map { RowSelection(it, 0) }
+            toggleMark()
+            refreshRowsByIds(selectedBefore)
         }
-        val selectedBefore = selectedRows.map { RowSelection(it, 0) }
-        toggleMark()
-        refreshRowsByIds(selectedBefore)
-    }
 
-    private suspend fun refreshRowsByIds(ids: List<RowSelection>) = withCol {
-        val updated = _browserRows.value.toMutableList()
-        for (rowId in ids) {
-            val newRow = backend.browserRowForId(rowId.rowId.cardOrNoteId)
-            val index = updated.indexOfFirst { it.id == rowId.rowId.cardOrNoteId }
-            if (index != -1) updated[index] = BrowserRowWithId(newRow, rowId.rowId.cardOrNoteId)
+    private suspend fun refreshRowsByIds(ids: List<RowSelection>) =
+        withCol {
+            val updated = _browserRows.value.toMutableList()
+            for (rowId in ids) {
+                val newRow = backend.browserRowForId(rowId.rowId.cardOrNoteId)
+                val index = updated.indexOfFirst { it.id == rowId.rowId.cardOrNoteId }
+                if (index != -1) updated[index] = BrowserRowWithId(newRow, rowId.rowId.cardOrNoteId)
+            }
+            _browserRows.value = updated
         }
-        _browserRows.value = updated
-    }
 
-    fun setFlagForSelectedRows(flag: Flag) = viewModelScope.launch {
-        if (!hasSelectedAnyRows()) {
-            return@launch
+    fun setFlagForSelectedRows(flag: Flag) =
+        viewModelScope.launch {
+            if (!hasSelectedAnyRows()) {
+                return@launch
+            }
+            val selectedBefore = selectedRows.map { RowSelection(it, 0) }
+            val cardIds = queryAllSelectedCardIds()
+            undoableOp<OpChanges> {
+                setUserFlagForCards(cardIds, flag.code).changes
+            }
+            flowOfCardStateChanged.emit(Unit)
+            refreshRowsByIds(selectedBefore)
         }
-        val selectedBefore = selectedRows.map { RowSelection(it, 0) }
-        val cardIds = queryAllSelectedCardIds()
-        undoableOp<OpChanges> {
-            setUserFlagForCards(cardIds, flag.code).changes
-        }
-        flowOfCardStateChanged.emit(Unit)
-        refreshRowsByIds(selectedBefore)
-    }
 
     /**
      * Deletes the selected notes,
@@ -1268,18 +1283,20 @@ class CardBrowserViewModel(
                 ) {
                     flowOfSearchState.emit(SearchState.Searching)
                     Timber.d("performing search: '%s'", query)
-                    val newBrowserRows = withCol {
-                        val ids = when (cardsOrNotes) {
-                            CARDS -> findCards(query, order.toSortOrder())
-                            NOTES -> findNotes(query, order.toSortOrder())
+                    val newBrowserRows =
+                        withCol {
+                            val ids =
+                                when (cardsOrNotes) {
+                                    CARDS -> findCards(query, order.toSortOrder())
+                                    NOTES -> findNotes(query, order.toSortOrder())
+                                }
+                            ids.map { id ->
+                                BrowserRowWithId(
+                                    browserRow = backend.browserRowForId(id),
+                                    id = id,
+                                )
+                            }
                         }
-                        ids.map { id ->
-                            BrowserRowWithId(
-                                browserRow = backend.browserRowForId(id),
-                                id = id
-                            )
-                        }
-                    }
                     Timber.d("Search returned %d card(s)", newBrowserRows.size)
 
                     ensureActive()
@@ -1371,26 +1388,28 @@ class CardBrowserViewModel(
         launchSearchForCards(query)
     }
 
-    fun undo() = viewModelScope.launch {
-        try {
-            withCol {
-                undo()
+    fun undo() =
+        viewModelScope.launch {
+            try {
+                withCol {
+                    undo()
+                }
+                refreshSearch()
+            } catch (e: BackendException) {
+                Timber.w(e, "Undo failed - likely empty stack")
+                flowOfSnackbarMessage.emit(com.ichi2.anki.R.string.undo_empty)
             }
-            refreshSearch()
-        } catch (e: BackendException) {
-            Timber.w(e, "Undo failed - likely empty stack")
-            flowOfSnackbarMessage.emit(com.ichi2.anki.R.string.undo_empty)
         }
-    }
 
     suspend fun queryPreviewIntentData(): PreviewIntentData {
-        val ids = if (selectedRows.isNotEmpty()) {
-            queryAllSelectedCardIds()
-        } else if (cardsOrNotes == CARDS) {
-            queryAllCardIds()
-        } else {
-            queryOneCardIdPerNote()
-        }
+        val ids =
+            if (selectedRows.isNotEmpty()) {
+                queryAllSelectedCardIds()
+            } else if (cardsOrNotes == CARDS) {
+                queryAllCardIds()
+            } else {
+                queryOneCardIdPerNote()
+            }
         val idsFile = IdsFile(cacheDir, ids)
         val currentIndex = if (selectedRows.isNotEmpty()) 0 else indexOfFirstCheckedCard() ?: 0
         return PreviewIntentData(currentIndex, idsFile)
@@ -1398,23 +1417,25 @@ class CardBrowserViewModel(
 
     fun filterByTags(tags: Set<String>) {
         _selectedTags.value = tags
-        val tagsQuery = tags.joinToString(" OR ") {
-            val escaped = it.replace("\"", "\\\"")
-            """tag:"$escaped""""
-        }
+        val tagsQuery =
+            tags.joinToString(" OR ") {
+                val escaped = it.replace("\"", "\\\"")
+                """tag:"$escaped""""
+            }
         search(tagsQuery)
     }
 
-    fun updateTags(tags: List<String>) = viewModelScope.launch {
-        val noteIds = queryAllSelectedNoteIds()
-        undoableOp {
-            this.tags.bulkUpdate(
-                noteIds = noteIds,
-                tags = tags.joinToString(" "),
-            )
+    fun updateTags(tags: List<String>) =
+        viewModelScope.launch {
+            val noteIds = queryAllSelectedNoteIds()
+            undoableOp {
+                this.tags.bulkUpdate(
+                    noteIds = noteIds,
+                    tags = tags.joinToString(" "),
+                )
+            }
+            refreshSearch()
         }
-        refreshSearch()
-    }
 
     data class PreviewIntentData(
         val currentIndex: Int,
@@ -1487,8 +1508,6 @@ class CardBrowserViewModel(
 
             var previouslySelectedRowIds: Set<CardOrNoteId>? = null
         }
-
-
 
         sealed class MultiSelectCause : ChangeMultiSelectMode() {
             data class RowSelected(

@@ -25,14 +25,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 
 @Composable
-fun ExpandableFabContainer(
-    content: @Composable () -> Unit
-) {
+fun ExpandableFabContainer(content: @Composable () -> Unit) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(end = FabPaddingEnd, bottom = FabPaddingBottom),
-        contentAlignment = Alignment.BottomEnd
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(end = FabPaddingEnd, bottom = FabPaddingBottom),
+        contentAlignment = Alignment.BottomEnd,
     ) {
         content()
     }

@@ -74,126 +74,144 @@ import com.ichi2.anki.SyncIconState
 import com.ichi2.anki.deckpicker.DisplayDeckNode
 
 // Define Expressive Typography
-val GoogleSansRounded = FontFamily(
-    Font(R.font.google_sans_rounded_regular, FontWeight.Normal),
-)
-
-val AppTypography = Typography(
-    displayLarge = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.Bold,
-        fontSize = 57.sp,
-        lineHeight = 64.sp,
-        letterSpacing = (-0.25).sp
-    ),
-    displayMedium = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.Bold,
-        fontSize = 45.sp,
-        lineHeight = 52.sp,
-        letterSpacing = 0.sp
-    ),
-    displaySmall = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.Bold,
-        fontSize = 36.sp,
-        lineHeight = 44.sp,
-        letterSpacing = 0.sp
-    ),
-    headlineLarge = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 32.sp,
-        lineHeight = 40.sp,
-        letterSpacing = 0.sp
-    ),
-    headlineMedium = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 28.sp,
-        lineHeight = 36.sp,
-        letterSpacing = 0.sp
-    ),
-    headlineSmall = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 24.sp,
-        lineHeight = 32.sp,
-        letterSpacing = 0.sp
-    ),
-    titleLarge = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.Medium,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.sp
-    ),
-    titleMedium = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.Medium,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.15.sp
-    ),
-    titleSmall = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.Medium,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.1.sp
-    ),
-    bodyLarge = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.5.sp
-    ),
-    bodyMedium = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.25.sp
-    ),
-    bodySmall = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.Normal,
-        fontSize = 12.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.4.sp
-    ),
-    labelLarge = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.Medium,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.1.sp
-    ),
-    labelMedium = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.Medium,
-        fontSize = 12.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
-    ),
-    labelSmall = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
+val GoogleSansRounded =
+    FontFamily(
+        Font(R.font.google_sans_rounded_regular, FontWeight.Normal),
     )
-)
+
+val AppTypography =
+    Typography(
+        displayLarge =
+            TextStyle(
+                fontFamily = GoogleSansRounded,
+                fontWeight = FontWeight.Bold,
+                fontSize = 57.sp,
+                lineHeight = 64.sp,
+                letterSpacing = (-0.25).sp,
+            ),
+        displayMedium =
+            TextStyle(
+                fontFamily = GoogleSansRounded,
+                fontWeight = FontWeight.Bold,
+                fontSize = 45.sp,
+                lineHeight = 52.sp,
+                letterSpacing = 0.sp,
+            ),
+        displaySmall =
+            TextStyle(
+                fontFamily = GoogleSansRounded,
+                fontWeight = FontWeight.Bold,
+                fontSize = 36.sp,
+                lineHeight = 44.sp,
+                letterSpacing = 0.sp,
+            ),
+        headlineLarge =
+            TextStyle(
+                fontFamily = GoogleSansRounded,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 32.sp,
+                lineHeight = 40.sp,
+                letterSpacing = 0.sp,
+            ),
+        headlineMedium =
+            TextStyle(
+                fontFamily = GoogleSansRounded,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 28.sp,
+                lineHeight = 36.sp,
+                letterSpacing = 0.sp,
+            ),
+        headlineSmall =
+            TextStyle(
+                fontFamily = GoogleSansRounded,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 24.sp,
+                lineHeight = 32.sp,
+                letterSpacing = 0.sp,
+            ),
+        titleLarge =
+            TextStyle(
+                fontFamily = GoogleSansRounded,
+                fontWeight = FontWeight.Medium,
+                fontSize = 22.sp,
+                lineHeight = 28.sp,
+                letterSpacing = 0.sp,
+            ),
+        titleMedium =
+            TextStyle(
+                fontFamily = GoogleSansRounded,
+                fontWeight = FontWeight.Medium,
+                fontSize = 16.sp,
+                lineHeight = 24.sp,
+                letterSpacing = 0.15.sp,
+            ),
+        titleSmall =
+            TextStyle(
+                fontFamily = GoogleSansRounded,
+                fontWeight = FontWeight.Medium,
+                fontSize = 14.sp,
+                lineHeight = 20.sp,
+                letterSpacing = 0.1.sp,
+            ),
+        bodyLarge =
+            TextStyle(
+                fontFamily = GoogleSansRounded,
+                fontWeight = FontWeight.Normal,
+                fontSize = 16.sp,
+                lineHeight = 24.sp,
+                letterSpacing = 0.5.sp,
+            ),
+        bodyMedium =
+            TextStyle(
+                fontFamily = GoogleSansRounded,
+                fontWeight = FontWeight.Normal,
+                fontSize = 14.sp,
+                lineHeight = 20.sp,
+                letterSpacing = 0.25.sp,
+            ),
+        bodySmall =
+            TextStyle(
+                fontFamily = GoogleSansRounded,
+                fontWeight = FontWeight.Normal,
+                fontSize = 12.sp,
+                lineHeight = 16.sp,
+                letterSpacing = 0.4.sp,
+            ),
+        labelLarge =
+            TextStyle(
+                fontFamily = GoogleSansRounded,
+                fontWeight = FontWeight.Medium,
+                fontSize = 14.sp,
+                lineHeight = 20.sp,
+                letterSpacing = 0.1.sp,
+            ),
+        labelMedium =
+            TextStyle(
+                fontFamily = GoogleSansRounded,
+                fontWeight = FontWeight.Medium,
+                fontSize = 12.sp,
+                lineHeight = 16.sp,
+                letterSpacing = 0.5.sp,
+            ),
+        labelSmall =
+            TextStyle(
+                fontFamily = GoogleSansRounded,
+                fontWeight = FontWeight.Medium,
+                fontSize = 11.sp,
+                lineHeight = 16.sp,
+                letterSpacing = 0.5.sp,
+            ),
+    )
 
 // Define Expressive Shapes
-val AppShapes = Shapes(
-    extraSmall = RoundedCornerShape(4.dp), // Default M3
-    small = RoundedCornerShape(8.dp), // Expressive: Slightly more rounded
-    medium = RoundedCornerShape(16.dp), // Expressive: More pronounced rounding for cards/buttons
-    large = RoundedCornerShape(24.dp), // Expressive: Very rounded for larger elements like dialogs
-    extraLarge = RoundedCornerShape(32.dp), // Expressive: For prominent elements like FABs or hero containers
-)
+val AppShapes =
+    Shapes(
+        extraSmall = RoundedCornerShape(4.dp), // Default M3
+        small = RoundedCornerShape(8.dp), // Expressive: Slightly more rounded
+        medium = RoundedCornerShape(16.dp), // Expressive: More pronounced rounding for cards/buttons
+        large = RoundedCornerShape(24.dp), // Expressive: Very rounded for larger elements like dialogs
+        extraLarge = RoundedCornerShape(32.dp), // Expressive: For prominent elements like FABs or hero containers
+    )
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -231,9 +249,11 @@ fun AnkiDroidApp(
     syncState: SyncIconState,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
-    val searchFocusRequester = remember {
-        androidx.compose.ui.focus.FocusRequester()
-    }
+    val searchFocusRequester =
+        remember {
+            androidx.compose.ui.focus
+                .FocusRequester()
+        }
     var fabMenuExpanded by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(requestSearchFocus) {
@@ -264,10 +284,12 @@ fun AnkiDroidApp(
                 topBar = {
                     LargeTopAppBar(
                         title = {
-                            if (!isSearchOpen) Text(
-                                stringResource(R.string.app_name),
-                                style = MaterialTheme.typography.headlineSmall
-                            )
+                            if (!isSearchOpen) {
+                                Text(
+                                    stringResource(R.string.app_name),
+                                    style = MaterialTheme.typography.headlineSmall,
+                                )
+                            }
                         },
                         navigationIcon = {
                             IconButton(onClick = onNavigationIconClick) {
@@ -282,9 +304,10 @@ fun AnkiDroidApp(
                                 TextField(
                                     value = searchQuery,
                                     onValueChange = onSearchQueryChanged,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .focusRequester(searchFocusRequester),
+                                    modifier =
+                                        Modifier
+                                            .weight(1f)
+                                            .focusRequester(searchFocusRequester),
                                     placeholder = { Text(stringResource(R.string.search_decks)) },
                                     trailingIcon = {
                                         IconButton(onClick = {
@@ -390,10 +413,11 @@ fun AnkiDroidApp(
                                 }
                             }
                         },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            scrolledContainerColor = MaterialTheme.colorScheme.surface,
-                        ),
+                        colors =
+                            TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.surface,
+                                scrolledContainerColor = MaterialTheme.colorScheme.surface,
+                            ),
                         scrollBehavior = scrollBehavior,
                     )
                 },
@@ -417,7 +441,7 @@ fun AnkiDroidApp(
                             onDelete = onDelete,
                             onRebuild = onRebuild,
                             onEmpty = onEmpty,
-                            listState = listState
+                            listState = listState,
                         )
                     }
                     Box(modifier = Modifier.weight(1f)) {
@@ -430,7 +454,9 @@ fun AnkiDroidApp(
                 }
             }
             Scrim(
-                visible = fabMenuExpanded, onDismiss = { fabMenuExpanded = false })
+                visible = fabMenuExpanded,
+                onDismiss = { fabMenuExpanded = false },
+            )
             ExpandableFabContainer {
                 ExpandableFab(
                     expanded = fabMenuExpanded,
@@ -439,7 +465,7 @@ fun AnkiDroidApp(
                     onAddDeck = onAddDeck,
                     onAddSharedDeck = onAddSharedDeck,
                     onAddFilteredDeck = onAddFilteredDeck,
-                    onCheckDatabase = onCheckDatabase
+                    onCheckDatabase = onCheckDatabase,
                 )
             }
             BackHandler(fabMenuExpanded) { fabMenuExpanded = false }
@@ -471,6 +497,7 @@ fun AnkiDroidApp(
             onNavigationIconClick = onNavigationIconClick,
             fabMenuExpanded = fabMenuExpanded,
             onFabMenuExpandedChange = { fabMenuExpanded = it },
-            syncState = syncState)
+            syncState = syncState,
+        )
     }
 }

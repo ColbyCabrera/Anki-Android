@@ -91,59 +91,61 @@ fun NoteEditorToolbar(
     if (!isVisible) return
 
     BottomAppBar(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(72.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(72.dp),
         containerColor = MaterialTheme.colorScheme.surface,
-        contentColor = MaterialTheme.colorScheme.onSurface
+        contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
         Row(
-            modifier = Modifier
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 8.dp),
+            modifier =
+                Modifier
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             // Basic formatting buttons
             ToolbarIconButton(
                 icon = Icons.Default.FormatBold,
                 contentDescription = stringResource(R.string.format_insert_bold),
-                onClick = onBoldClick
+                onClick = onBoldClick,
             )
             ToolbarIconButton(
                 icon = Icons.Default.FormatItalic,
                 contentDescription = stringResource(R.string.format_insert_italic),
-                onClick = onItalicClick
+                onClick = onItalicClick,
             )
             ToolbarIconButton(
                 icon = Icons.Default.FormatUnderlined,
                 contentDescription = stringResource(R.string.format_insert_underline),
-                onClick = onUnderlineClick
+                onClick = onUnderlineClick,
             )
 
             ToolbarIconButton(
                 painter = painterResource(R.drawable.ic_horizontal_rule_black_24dp),
                 contentDescription = stringResource(R.string.insert_horizontal_line),
-                onClick = onHorizontalRuleClick
+                onClick = onHorizontalRuleClick,
             )
 
             ToolbarIconButton(
                 painter = painterResource(R.drawable.ic_format_title_black_24dp),
                 contentDescription = stringResource(R.string.insert_heading),
-                onClick = onHeadingClick
+                onClick = onHeadingClick,
             )
 
             ToolbarIconButton(
                 painter = painterResource(R.drawable.ic_format_font_size_24dp),
                 contentDescription = stringResource(R.string.format_font_size),
-                onClick = onFontSizeClick
+                onClick = onFontSizeClick,
             )
 
             ToolbarIconButton(
                 painter = painterResource(R.drawable.ic_add_equation_black_24dp),
                 contentDescription = stringResource(R.string.insert_mathjax),
                 onClick = onMathjaxClick,
-                onLongClick = onMathjaxLongClick
+                onLongClick = onMathjaxLongClick,
             )
 
             // Cloze buttons (if cloze note type)
@@ -151,12 +153,12 @@ fun NoteEditorToolbar(
                 ToolbarIconButton(
                     painter = painterResource(R.drawable.ic_cloze_new_card),
                     contentDescription = stringResource(R.string.multimedia_editor_popup_cloze),
-                    onClick = onClozeIncrementClick
+                    onClick = onClozeIncrementClick,
                 )
                 ToolbarIconButton(
                     painter = painterResource(R.drawable.ic_cloze_same_card),
                     contentDescription = stringResource(R.string.multimedia_editor_popup_cloze),
-                    onClick = onClozeClick
+                    onClick = onClozeClick,
                 )
             }
 
@@ -167,7 +169,7 @@ fun NoteEditorToolbar(
                     text = displayText,
                     contentDescription = displayText,
                     onClick = { onCustomButtonClick(button) },
-                    onLongClick = { onCustomButtonLongClick(button) }
+                    onLongClick = { onCustomButtonLongClick(button) },
                 )
             }
 
@@ -175,10 +177,11 @@ fun NoteEditorToolbar(
             FilledIconButton(
                 onClick = onAddCustomButtonClick,
                 shapes = IconButtonDefaults.shapes(),
-                colors = IconButtonDefaults.iconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                colors =
+                    IconButtonDefaults.iconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    ),
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
@@ -203,20 +206,21 @@ private fun ToolbarIconButton(
     onLongClick: (() -> Unit)? = null,
 ) {
     val tooltipState = rememberTooltipState()
-    
+
     // Ensure tooltip is dismissed when the composable is disposed
     DisposableEffect(Unit) {
         onDispose {
             tooltipState.dismiss()
         }
     }
-    
+
     TooltipBox(
-        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
-            positioning = TooltipAnchorPosition.Above
-        ),
+        positionProvider =
+            TooltipDefaults.rememberTooltipPositionProvider(
+                positioning = TooltipAnchorPosition.Above,
+            ),
         tooltip = { PlainTooltip { Text(contentDescription) } },
-        state = tooltipState
+        state = tooltipState,
     ) {
         if (onLongClick != null) {
             // For buttons with long click, wrap IconButton behavior with combinedClickable
@@ -229,23 +233,25 @@ private fun ToolbarIconButton(
                 color = Color.Transparent,
             ) {
                 Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .combinedClickable(
-                            interactionSource = interactionSource,
-                            indication = ripple(
-                                bounded = false,
-                                radius = 20.dp
+                    modifier =
+                        Modifier
+                            .size(40.dp)
+                            .combinedClickable(
+                                interactionSource = interactionSource,
+                                indication =
+                                    ripple(
+                                        bounded = false,
+                                        radius = 20.dp,
+                                    ),
+                                onClick = onClick,
+                                onLongClick = onLongClick,
                             ),
-                            onClick = onClick,
-                            onLongClick = onLongClick
-                        ),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     ToolbarIcon(
                         icon = icon,
                         painter = painter,
-                        contentDescription = contentDescription
+                        contentDescription = contentDescription,
                     )
                 }
             }
@@ -255,14 +261,15 @@ private fun ToolbarIconButton(
                 onClick = onClick,
                 shapes = IconButtonDefaults.shapes(),
                 modifier = modifier,
-                colors = IconButtonDefaults.iconButtonColors(
-                    contentColor = MaterialTheme.colorScheme.onSurface
-                )
+                colors =
+                    IconButtonDefaults.iconButtonColors(
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                    ),
             ) {
                 ToolbarIcon(
                     icon = icon,
                     painter = painter,
-                    contentDescription = contentDescription
+                    contentDescription = contentDescription,
                 )
             }
         }
@@ -272,8 +279,10 @@ private fun ToolbarIconButton(
 /**
  * Text button for custom toolbar buttons (needs combinedClickable for long press)
  */
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class,
-    ExperimentalMaterial3ExpressiveApi::class
+@OptIn(
+    ExperimentalFoundationApi::class,
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3ExpressiveApi::class,
 )
 @Composable
 private fun ToolbarTextButton(
@@ -285,20 +294,21 @@ private fun ToolbarTextButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val tooltipState = rememberTooltipState()
-    
+
     // Ensure tooltip is dismissed when the composable is disposed
     DisposableEffect(Unit) {
         onDispose {
             tooltipState.dismiss()
         }
     }
-    
+
     TooltipBox(
-        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
-            positioning = TooltipAnchorPosition.Above
-        ),
+        positionProvider =
+            TooltipDefaults.rememberTooltipPositionProvider(
+                positioning = TooltipAnchorPosition.Above,
+            ),
         tooltip = { PlainTooltip { Text(contentDescription) } },
-        state = tooltipState
+        state = tooltipState,
     ) {
         Surface(
             onClick = onClick,
@@ -308,23 +318,25 @@ private fun ToolbarTextButton(
             color = Color.Transparent,
         ) {
             Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .combinedClickable(
-                        interactionSource = interactionSource,
-                        indication = ripple(
-                            bounded = false,
-                            radius = 24.dp
+                modifier =
+                    Modifier
+                        .size(48.dp)
+                        .combinedClickable(
+                            interactionSource = interactionSource,
+                            indication =
+                                ripple(
+                                    bounded = false,
+                                    radius = 24.dp,
+                                ),
+                            onClick = onClick,
+                            onLongClick = onLongClick,
                         ),
-                        onClick = onClick,
-                        onLongClick = onLongClick
-                    ),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = text,
                     style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp),
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
             }
         }
@@ -339,19 +351,21 @@ private fun ToolbarIcon(
     icon: ImageVector? = null,
     painter: Painter? = null,
     contentDescription: String? = null,
-    tint: Color = MaterialTheme.colorScheme.onSurface
+    tint: Color = MaterialTheme.colorScheme.onSurface,
 ) {
     when {
-        icon != null -> Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = tint
-        )
-        painter != null -> Icon(
-            painter = painter,
-            contentDescription = contentDescription,
-            tint = tint
-        )
+        icon != null ->
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                tint = tint,
+            )
+        painter != null ->
+            Icon(
+                painter = painter,
+                contentDescription = contentDescription,
+                tint = tint,
+            )
     }
 }
 
@@ -372,10 +386,11 @@ fun NoteEditorToolbarPreview() {
                 onMathjaxLongClick = {},
                 onClozeClick = {},
                 onClozeIncrementClick = {},
-                customButtons = listOf(
-                    ToolbarButtonModel(index = 0, text = "1", prefix = "<b>", suffix = "</b>"),
-                    ToolbarButtonModel(index = 1, text = "2", prefix = "<i>", suffix = "</i>")
-                )
+                customButtons =
+                    listOf(
+                        ToolbarButtonModel(index = 0, text = "1", prefix = "<b>", suffix = "</b>"),
+                        ToolbarButtonModel(index = 1, text = "2", prefix = "<i>", suffix = "</i>"),
+                    ),
             )
         }
     }

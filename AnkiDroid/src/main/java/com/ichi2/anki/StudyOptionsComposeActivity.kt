@@ -84,6 +84,7 @@ class StudyOptionsComposeActivity : AnkiActivity() {
             )
         }
     }
+
     companion object {
         const val DECK_ID = "deck_id"
     }

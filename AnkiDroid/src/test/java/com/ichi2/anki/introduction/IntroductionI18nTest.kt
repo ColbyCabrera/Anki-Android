@@ -11,7 +11,6 @@ import java.util.Locale
 
 @RunWith(AndroidJUnit4::class)
 class IntroductionI18nTest : RobolectricTest() {
-
     @Test
     fun stringsEnglish() {
         val ctx = targetContext
@@ -19,7 +18,10 @@ class IntroductionI18nTest : RobolectricTest() {
         assertEquals("Before continuing!", title)
 
         val donation = ctx.getStringByLocale(R.string.intro_donation_notice, Locale.ENGLISH)
-        assertEquals("This app is a fork of AnkiDroid; please consider donating to the AnkiDroid team to support their work. The creator of Anki has kindly allowed the use of AnkiWeb sync. If you'd like to support him, please consider buying the iPhone version of Anki.", donation)
+        assertEquals(
+            "This app is a fork of AnkiDroid; please consider donating to the AnkiDroid team to support their work. The creator of Anki has kindly allowed the use of AnkiWeb sync. If you'd like to support him, please consider buying the iPhone version of Anki.",
+            donation,
+        )
 
         val contact = ctx.getStringByLocale(R.string.intro_contact_notice, Locale.ENGLISH)
         assertEquals("If you have any issues with this version, please contact me and not the AnkiDroid team. Happy memorizing!", contact)
@@ -35,7 +37,10 @@ class IntroductionI18nTest : RobolectricTest() {
         assertEquals("続ける前に！", titleJa)
 
         val donationJa = ctx.getStringByLocale(R.string.intro_donation_notice, Locale.JAPANESE)
-        assertEquals("このアプリはAnkiDroidのフォークです。AnkiDroidチームの活動を支援するために寄付をご検討ください。Ankiの作者はAnkiWeb同期の使用を快く許可してくれました。作者を支援したい場合は、AnkiのiPhone版の購入をご検討ください。", donationJa)
+        assertEquals(
+            "このアプリはAnkiDroidのフォークです。AnkiDroidチームの活動を支援するために寄付をご検討ください。Ankiの作者はAnkiWeb同期の使用を快く許可してくれました。作者を支援したい場合は、AnkiのiPhone版の購入をご検討ください。",
+            donationJa,
+        )
 
         val contactJa = ctx.getStringByLocale(R.string.intro_contact_notice, Locale.JAPANESE)
         assertEquals("このバージョンに問題がある場合は、AnkiDroidチームではなく私にご連絡ください。学習をお楽しみください！", contactJa)

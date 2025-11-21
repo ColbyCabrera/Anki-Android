@@ -84,7 +84,6 @@ open class CardBrowser :
     ChangeManager.Subscriber,
     DeckSelectionDialog.DeckSelectionListener,
     TagsDialogListener {
-
     private lateinit var viewModel: CardBrowserViewModel
 
     // Provides an instance of NoteEditorLauncher for editing a note
@@ -94,11 +93,12 @@ open class CardBrowser :
     private val addNoteLauncher: NoteEditorLauncher
         get() = NoteEditorLauncher.AddNoteFromCardBrowser(viewModel, inCardBrowserActivity = false)
 
-    private val onMySearches = registerForActivityResult(MySearchesContract()) { query ->
-        if (query != null) {
-            viewModel.search(query)
+    private val onMySearches =
+        registerForActivityResult(MySearchesContract()) { query ->
+            if (query != null) {
+                viewModel.search(query)
+            }
         }
-    }
 
     private var onEditCardActivityResult =
         registerForActivityResult(StartActivityForResult()) { result: ActivityResult ->
@@ -135,11 +135,13 @@ open class CardBrowser :
                 return@registerForActivityResult
             }
             val data = result.data
-            if (data != null && (
-                data.getBooleanExtra(
-                    NoteEditorFragment.RELOAD_REQUIRED_EXTRA_KEY,
-                    false
-                ) || data.getBooleanExtra(NoteEditorFragment.NOTE_CHANGED_EXTRA_KEY, false)
+            if (data != null &&
+                (
+                    data.getBooleanExtra(
+                        NoteEditorFragment.RELOAD_REQUIRED_EXTRA_KEY,
+                        false,
+                    ) ||
+                        data.getBooleanExtra(NoteEditorFragment.NOTE_CHANGED_EXTRA_KEY, false)
                 )
             ) {
                 viewModel.search(viewModel.searchQuery.value)
@@ -194,7 +196,7 @@ open class CardBrowser :
                             onRenameFlagClicked = {
                                 val flagRenameDialog = FlagRenameDialog()
                                 flagRenameDialog.show(supportFragmentManager, "FlagRenameDialog")
-                            }
+                            },
                         )
                     }
                     if (showFilterByTagsDialog) {
@@ -208,7 +210,7 @@ open class CardBrowser :
                             initialSelection = selectedTags,
                             deckTags = deckTags,
                             initialFilterByDeck = filterTagsByDeck,
-                            onFilterByDeckChanged = viewModel::setFilterTagsByDeck
+                            onFilterByDeckChanged = viewModel::setFilterTagsByDeck,
                         )
                     }
                     CardBrowserLayout(
@@ -219,14 +221,14 @@ open class CardBrowser :
                                 viewModel.toggleRowSelection(
                                     CardBrowserViewModel.RowSelection(
                                         rowId = CardOrNoteId(row.id),
-                                        topOffset = 0
-                                    )
+                                        topOffset = 0,
+                                    ),
                                 )
                             } else {
                                 launchCatchingTask {
                                     val cardId = viewModel.queryDataForCardEdit(CardOrNoteId(row.id))
                                     openNoteEditorForCard(cardId)
-                                 }
+                                }
                             }
                         },
                         onAddNote = {
@@ -235,11 +237,12 @@ open class CardBrowser :
                         onPreview = {
                             launchCatchingTask {
                                 val intentData = viewModel.queryPreviewIntentData()
-                                val intent = PreviewerFragment.getIntent(
-                                    this@CardBrowser,
-                                    intentData.idsFile,
-                                    intentData.currentIndex
-                                )
+                                val intent =
+                                    PreviewerFragment.getIntent(
+                                        this@CardBrowser,
+                                        intentData.idsFile,
+                                        intentData.currentIndex,
+                                    )
                                 onPreviewCardsActivityResult.launch(intent)
                             }
                         },
@@ -287,7 +290,7 @@ open class CardBrowser :
                             viewModel.loadAllTags()
                             viewModel.loadDeckTags()
                             showFilterByTagsDialog = true
-                        }
+                        },
                     )
                 }
             }
@@ -299,7 +302,10 @@ open class CardBrowser :
         Timber.d("onCollectionLoaded(): Collection loaded, ViewModel will start search.")
     }
 
-    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
+    override fun onKeyUp(
+        keyCode: Int,
+        event: KeyEvent?,
+    ): Boolean {
         if (event == null) {
             return super.onKeyUp(keyCode, event)
         }
@@ -322,11 +328,12 @@ open class CardBrowser :
                 if (event.isCtrlPressed && event.isShiftPressed) {
                     launchCatchingTask {
                         val intentData = viewModel.queryPreviewIntentData()
-                        val intent = PreviewerFragment.getIntent(
-                            this@CardBrowser,
-                            intentData.idsFile,
-                            intentData.currentIndex
-                        )
+                        val intent =
+                            PreviewerFragment.getIntent(
+                                this@CardBrowser,
+                                intentData.idsFile,
+                                intentData.currentIndex,
+                            )
                         onPreviewCardsActivityResult.launch(intent)
                     }
                     return true
@@ -350,12 +357,13 @@ open class CardBrowser :
     }
 
     fun showCreateFilteredDeckDialog() {
-        val createFilteredDeckDialog = CreateDeckDialog(
-            this,
-            R.string.new_deck,
-            CreateDeckDialog.DeckDialogType.FILTERED_DECK,
-            null
-        )
+        val createFilteredDeckDialog =
+            CreateDeckDialog(
+                this,
+                R.string.new_deck,
+                CreateDeckDialog.DeckDialogType.FILTERED_DECK,
+                null,
+            )
         createFilteredDeckDialog.onNewDeckCreated = { deckId ->
             val intent = FilteredDeckOptions.getIntent(this@CardBrowser, deckId)
             startActivity(intent)
@@ -367,20 +375,22 @@ open class CardBrowser :
         }
     }
 
-    private fun createViewModel(
-        launchOptions: CardBrowserLaunchOptions?
-    ) = ViewModelProvider(
-        viewModelStore,
-        CardBrowserViewModel.factory(
-            lastDeckIdRepository = AnkiDroidApp.instance.sharedPrefsLastDeckIdRepository,
-            cacheDir = cacheDir,
-            options = launchOptions,
-            isFragmented = false
-        ),
-        defaultViewModelCreationExtras
-    )[CardBrowserViewModel::class.java]
+    private fun createViewModel(launchOptions: CardBrowserLaunchOptions?) =
+        ViewModelProvider(
+            viewModelStore,
+            CardBrowserViewModel.factory(
+                lastDeckIdRepository = AnkiDroidApp.instance.sharedPrefsLastDeckIdRepository,
+                cacheDir = cacheDir,
+                options = launchOptions,
+                isFragmented = false,
+            ),
+            defaultViewModelCreationExtras,
+        )[CardBrowserViewModel::class.java]
 
-    override fun opExecuted(changes: OpChanges, handler: Any?) {
+    override fun opExecuted(
+        changes: OpChanges,
+        handler: Any?,
+    ) {
         if (handler === this || handler === viewModel) {
             return
         }
@@ -398,25 +408,26 @@ open class CardBrowser :
         @VisibleForTesting
         fun createAddNoteLauncher(
             viewModel: CardBrowserViewModel,
-            inCardBrowserActivity: Boolean = false
-        ): NoteEditorLauncher =
-            NoteEditorLauncher.AddNoteFromCardBrowser(viewModel, inCardBrowserActivity)
+            inCardBrowserActivity: Boolean = false,
+        ): NoteEditorLauncher = NoteEditorLauncher.AddNoteFromCardBrowser(viewModel, inCardBrowserActivity)
     }
 
-    private fun showChangeDeckDialog() = launchCatchingTask {
-        if (!viewModel.hasSelectedAnyRows()) {
-            Timber.i("Not showing Change Deck - No Cards")
-            return@launchCatchingTask
+    private fun showChangeDeckDialog() =
+        launchCatchingTask {
+            if (!viewModel.hasSelectedAnyRows()) {
+                Timber.i("Not showing Change Deck - No Cards")
+                return@launchCatchingTask
+            }
+            val selectableDecks = viewModel.getAvailableDecks()
+            val dialog =
+                DeckSelectionDialog.newInstance(
+                    getString(R.string.move_all_to_deck),
+                    null,
+                    false,
+                    selectableDecks,
+                )
+            dialog.show(supportFragmentManager, "deck_selection_dialog")
         }
-        val selectableDecks = viewModel.getAvailableDecks()
-        val dialog = DeckSelectionDialog.newInstance(
-            getString(R.string.move_all_to_deck),
-            null,
-            false,
-            selectableDecks
-        )
-        dialog.show(supportFragmentManager, "deck_selection_dialog")
-    }
 
     private fun rescheduleSelectedCards() {
         if (!viewModel.hasSelectedAnyRows()) {
@@ -427,7 +438,8 @@ open class CardBrowser :
 
         launchCatchingTask {
             val allCardIds = viewModel.queryAllSelectedCardIds()
-            SetDueDateDialog.newInstance(allCardIds)
+            SetDueDateDialog
+                .newInstance(allCardIds)
                 .show(supportFragmentManager, "set_due_date_dialog")
         }
     }
@@ -438,11 +450,12 @@ open class CardBrowser :
         launchCatchingTask {
             when (val repositionCardsResult = viewModel.prepareToRepositionCards()) {
                 is RepositionCardsRequest.ContainsNonNewCardsError -> {
-                    SimpleMessageDialog.newInstance(
-                        title = getString(R.string.vague_error),
-                        message = getString(R.string.reposition_card_not_new_error),
-                        reload = false
-                    ).show(supportFragmentManager, "reposition_error_dialog")
+                    SimpleMessageDialog
+                        .newInstance(
+                            title = getString(R.string.vague_error),
+                            message = getString(R.string.reposition_card_not_new_error),
+                            reload = false,
+                        ).show(supportFragmentManager, "reposition_error_dialog")
                     return@launchCatchingTask
                 }
 
@@ -452,12 +465,13 @@ open class CardBrowser :
                     if (top == null || bottom == null) {
                         return@launchCatchingTask
                     }
-                    val repositionDialog = RepositionCardFragment.newInstance(
-                        queueTop = top,
-                        queueBottom = bottom,
-                        random = repositionCardsResult.random,
-                        shift = repositionCardsResult.shift
-                    )
+                    val repositionDialog =
+                        RepositionCardFragment.newInstance(
+                            queueTop = top,
+                            queueBottom = bottom,
+                            random = repositionCardsResult.random,
+                            shift = repositionCardsResult.shift,
+                        )
                     repositionDialog.show(supportFragmentManager, "reposition_dialog")
                 }
             }
@@ -480,27 +494,29 @@ open class CardBrowser :
 
     private fun exportSelected() {
         val (type, selectedIds) = viewModel.querySelectionExportData() ?: return
-        ExportDialogFragment.newInstance(type, selectedIds)
+        ExportDialogFragment
+            .newInstance(type, selectedIds)
             .show(supportFragmentManager, "exportDialog")
     }
 
-    private fun showEditTagsDialog() = launchCatchingTask {
-        if (!viewModel.hasSelectedAnyRows()) {
-            Timber.d("showEditTagsDialog: called with empty selection")
-            return@launchCatchingTask
+    private fun showEditTagsDialog() =
+        launchCatchingTask {
+            if (!viewModel.hasSelectedAnyRows()) {
+                Timber.d("showEditTagsDialog: called with empty selection")
+                return@launchCatchingTask
+            }
+
+            val noteIds = viewModel.queryAllSelectedNoteIds()
+
+            TagsDialog(this@CardBrowser)
+                .withArguments(this@CardBrowser, TagsDialog.DialogType.EDIT_TAGS, noteIds)
+                .show(supportFragmentManager, "edit_tags_dialog")
         }
-
-        val noteIds = viewModel.queryAllSelectedNoteIds()
-
-        TagsDialog(this@CardBrowser)
-            .withArguments(this@CardBrowser, TagsDialog.DialogType.EDIT_TAGS, noteIds)
-            .show(supportFragmentManager, "edit_tags_dialog")
-    }
 
     override fun onSelectedTags(
         selectedTags: List<String>,
         indeterminateTags: List<String>,
-        stateFilter: CardStateFilter
+        stateFilter: CardStateFilter,
     ) {
         viewModel.updateTags(selectedTags)
     }
@@ -514,7 +530,7 @@ open class CardBrowser :
         if (viewModel.cardsOrNotes == CardsOrNotes.NOTES && viewModel.hasSelectedAnyRows()) {
             showSnackbar(
                 getString(R.string.card_browser_unavailable_when_notes_mode),
-                duration = 5000
+                duration = 5000,
             ) {
                 setAction(getString(R.string.cards)) {
                     viewModel.setCardsOrNotes(CardsOrNotes.CARDS)
@@ -530,16 +546,18 @@ open class CardBrowser :
         moveSelectedCardsToDeck(did)
     }
 
-    private fun moveSelectedCardsToDeck(did: DeckId) = launchCatchingTask {
-        val changed = withProgress { viewModel.moveSelectedCardsToDeck(did).await() }
-        viewModel.search(viewModel.searchQuery.value)
-        val message = resources.getQuantityString(
-            R.plurals.card_browser_cards_moved,
-            changed.count,
-            changed.count
-        )
-        showSnackbar(message) {
-            this.setAction(R.string.undo) { launchCatchingTask { undoAndShowSnackbar() } }
+    private fun moveSelectedCardsToDeck(did: DeckId) =
+        launchCatchingTask {
+            val changed = withProgress { viewModel.moveSelectedCardsToDeck(did).await() }
+            viewModel.search(viewModel.searchQuery.value)
+            val message =
+                resources.getQuantityString(
+                    R.plurals.card_browser_cards_moved,
+                    changed.count,
+                    changed.count,
+                )
+            showSnackbar(message) {
+                this.setAction(R.string.undo) { launchCatchingTask { undoAndShowSnackbar() } }
+            }
         }
-    }
 }

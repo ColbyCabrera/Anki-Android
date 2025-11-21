@@ -40,7 +40,7 @@ import com.ichi2.anki.R
 fun SyncProgressDialog(
     title: String,
     message: String,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = onCancel,
@@ -56,7 +56,7 @@ fun SyncProgressDialog(
             TextButton(onClick = onCancel) {
                 Text(text = stringResource(id = R.string.dialog_cancel))
             }
-        }
+        },
     )
 }
 
@@ -69,7 +69,7 @@ fun SyncProgressDialogPreview() {
         SyncProgressDialog(
             title = "Syncing",
             message = "Syncing in progress...",
-            onCancel = { showDialog = false }
+            onCancel = { showDialog = false },
         )
     }
 }

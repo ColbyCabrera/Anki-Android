@@ -48,7 +48,6 @@ import com.ichi2.anki.R
 import com.ichi2.anki.ui.compose.MorphingCardCount
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 
-
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ReviewerTopBar(
@@ -62,98 +61,124 @@ fun ReviewerTopBar(
     onSetFlag: (Int) -> Unit,
     modifier: Modifier = Modifier,
     isAnswerShown: Boolean,
-    onUnanswerCard: () -> Unit
+    onUnanswerCard: () -> Unit,
 ) {
     CenterAlignedTopAppBar(
-        modifier = modifier, title = { Text(chosenAnswer) }, navigationIcon = {
-        Counts(
-            modifier = Modifier.padding(horizontal = 8.dp),
-            newCount = newCount,
-            learnCount = learnCount,
-            reviewCount = reviewCount
-        )
-    }, actions = {
-        MarkIcon(
-            isMarked = isMarked, onToggleMark = onToggleMark
-        )
-        FlagIcon(currentFlag = flag, onSetFlag = onSetFlag)
-        AnimatedVisibility(visible = isAnswerShown) {
-            FilledIconButton(
-                onClick = onUnanswerCard, shapes = IconButtonDefaults.shapes()
-            ) {
-                Icon(
-                    painterResource(R.drawable.undo_24px),
-                    contentDescription = stringResource(id = R.string.unanswer_card),
-                )
+        modifier = modifier,
+        title = { Text(chosenAnswer) },
+        navigationIcon = {
+            Counts(
+                modifier = Modifier.padding(horizontal = 8.dp),
+                newCount = newCount,
+                learnCount = learnCount,
+                reviewCount = reviewCount,
+            )
+        },
+        actions = {
+            MarkIcon(
+                isMarked = isMarked,
+                onToggleMark = onToggleMark,
+            )
+            FlagIcon(currentFlag = flag, onSetFlag = onSetFlag)
+            AnimatedVisibility(visible = isAnswerShown) {
+                FilledIconButton(
+                    onClick = onUnanswerCard,
+                    shapes = IconButtonDefaults.shapes(),
+                ) {
+                    Icon(
+                        painterResource(R.drawable.undo_24px),
+                        contentDescription = stringResource(id = R.string.unanswer_card),
+                    )
+                }
             }
-        }
-    }, colors = TopAppBarDefaults.topAppBarColors(
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-        titleContentColor = MaterialTheme.colorScheme.onSurface,
-        actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-    )
+        },
+        colors =
+            TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                titleContentColor = MaterialTheme.colorScheme.onSurface,
+                actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            ),
     )
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun MarkIcon(isMarked: Boolean, onToggleMark: (Boolean) -> Unit) {
+fun MarkIcon(
+    isMarked: Boolean,
+    onToggleMark: (Boolean) -> Unit,
+) {
     FilledIconToggleButton(
         checked = isMarked,
         onCheckedChange = onToggleMark,
         shapes = IconButtonDefaults.toggleableShapes(),
-        colors = IconButtonDefaults.filledIconToggleButtonColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            checkedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            checkedContentColor = MaterialTheme.colorScheme.tertiary
-        )
+        colors =
+            IconButtonDefaults.filledIconToggleButtonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                checkedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                checkedContentColor = MaterialTheme.colorScheme.tertiary,
+            ),
     ) {
         Icon(
-            painter = if (isMarked) painterResource(R.drawable.star_shine_24px) else painterResource(
-                R.drawable.star_24px
-            ),
-            contentDescription = stringResource(if (isMarked) R.string.menu_unmark_note else R.string.menu_mark_note)
+            painter =
+                if (isMarked) {
+                    painterResource(R.drawable.star_shine_24px)
+                } else {
+                    painterResource(
+                        R.drawable.star_24px,
+                    )
+                },
+            contentDescription = stringResource(if (isMarked) R.string.menu_unmark_note else R.string.menu_mark_note),
         )
     }
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun FlagIcon(currentFlag: Int, onSetFlag: (Int) -> Unit) {
+fun FlagIcon(
+    currentFlag: Int,
+    onSetFlag: (Int) -> Unit,
+) {
     var expanded by remember { mutableStateOf(false) }
-    val flagColors = listOf(
-        Color.Unspecified, // 0: no flag
-        Color.Red,         // 1: Red
-        Color(0xFFFFA500), // 2: Orange
-        Color.Green,       // 3: Green
-        Color.Blue,        // 4: Blue
-        Color.Magenta,     // 5: Pink
-        Color.Cyan,        // 6: Turquoise
-        Color(0xFF9400D3)  // 7: Purple
-    )
-    val flagColorNames = listOf(
-        stringResource(R.string.no_flag),
-        stringResource(R.string.flag_red),
-        stringResource(R.string.flag_orange),
-        stringResource(R.string.flag_green),
-        stringResource(R.string.flag_blue),
-        stringResource(R.string.flag_pink),
-        stringResource(R.string.flag_turquoise),
-        stringResource(R.string.flag_purple)
-    )
+    val flagColors =
+        listOf(
+            Color.Unspecified, // 0: no flag
+            Color.Red, // 1: Red
+            Color(0xFFFFA500), // 2: Orange
+            Color.Green, // 3: Green
+            Color.Blue, // 4: Blue
+            Color.Magenta, // 5: Pink
+            Color.Cyan, // 6: Turquoise
+            Color(0xFF9400D3), // 7: Purple
+        )
+    val flagColorNames =
+        listOf(
+            stringResource(R.string.no_flag),
+            stringResource(R.string.flag_red),
+            stringResource(R.string.flag_orange),
+            stringResource(R.string.flag_green),
+            stringResource(R.string.flag_blue),
+            stringResource(R.string.flag_pink),
+            stringResource(R.string.flag_turquoise),
+            stringResource(R.string.flag_purple),
+        )
 
     Box {
         FilledIconButton(
             onClick = { expanded = true },
             shapes = IconButtonDefaults.shapes(),
-            colors = if (currentFlag in flagColors.indices && currentFlag != 0) IconButtonDefaults.filledIconButtonColors(
-                contentColor = flagColors[currentFlag],
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            ) else IconButtonDefaults.filledIconButtonColors(
-                contentColor = IconButtonDefaults.filledIconToggleButtonColors().contentColor,
-                containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-            )
+            colors =
+                if (currentFlag in flagColors.indices && currentFlag != 0) {
+                    IconButtonDefaults.filledIconButtonColors(
+                        contentColor = flagColors[currentFlag],
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    )
+                } else {
+                    IconButtonDefaults.filledIconButtonColors(
+                        contentColor = IconButtonDefaults.filledIconToggleButtonColors().contentColor,
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    )
+                },
         ) {
             Icon(
                 painter = painterResource(R.drawable.flag_24px),
@@ -161,19 +186,21 @@ fun FlagIcon(currentFlag: Int, onSetFlag: (Int) -> Unit) {
             )
         }
         DropdownMenu(
-            expanded = expanded, onDismissRequest = { expanded = false },
-        shape = MaterialTheme.shapes.large,) {
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            shape = MaterialTheme.shapes.large,
+        ) {
             (0..7).forEach { flag ->
                 DropdownMenuItem(
                     text = {
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.flag_24px),
                                 contentDescription = null,
-                                tint = flagColors[flag]
+                                tint = flagColors[flag],
                             )
                             Text(flagColorNames[flag])
                         }
@@ -181,7 +208,7 @@ fun FlagIcon(currentFlag: Int, onSetFlag: (Int) -> Unit) {
                     onClick = {
                         onSetFlag(flag)
                         expanded = false
-                    }
+                    },
                 )
             }
         }
@@ -189,24 +216,30 @@ fun FlagIcon(currentFlag: Int, onSetFlag: (Int) -> Unit) {
 }
 
 @Composable
-fun Counts(newCount: Int, learnCount: Int, reviewCount: Int, modifier: Modifier = Modifier) {
+fun Counts(
+    newCount: Int,
+    learnCount: Int,
+    reviewCount: Int,
+    modifier: Modifier = Modifier,
+) {
     Row(
-        modifier = modifier, horizontalArrangement = Arrangement.spacedBy(2.dp)
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         MorphingCardCount(
             newCount,
             MaterialTheme.colorScheme.primaryContainer,
-            MaterialTheme.colorScheme.onPrimaryContainer
+            MaterialTheme.colorScheme.onPrimaryContainer,
         )
         MorphingCardCount(
             learnCount,
             MaterialTheme.colorScheme.errorContainer,
-            MaterialTheme.colorScheme.onErrorContainer
+            MaterialTheme.colorScheme.onErrorContainer,
         )
         MorphingCardCount(
             reviewCount,
             MaterialTheme.colorScheme.secondaryContainer,
-            MaterialTheme.colorScheme.onSecondaryContainer
+            MaterialTheme.colorScheme.onSecondaryContainer,
         )
     }
 }
@@ -225,6 +258,7 @@ fun ReviewerTopBarPreview() {
             onToggleMark = { _ -> },
             onSetFlag = { _ -> },
             isAnswerShown = true,
-            onUnanswerCard = {})
+            onUnanswerCard = {},
+        )
     }
 }

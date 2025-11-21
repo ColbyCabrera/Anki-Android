@@ -1,5 +1,3 @@
-import com.android.build.configs.NdkConfig
-
 plugins {
     id("com.android.application")
     kotlin("android")
