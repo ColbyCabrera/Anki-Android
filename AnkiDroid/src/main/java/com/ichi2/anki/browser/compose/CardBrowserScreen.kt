@@ -687,9 +687,7 @@ fun SelectableSortOrderBottomSheet(viewModel: CardBrowserViewModel, onDismiss: (
                         },
                     ) {}
                 }
-
             }
-
 
             items(SortType.entries) { sortType ->
                 val onItemClick: () -> Unit = {
