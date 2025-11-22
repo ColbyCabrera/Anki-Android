@@ -4,6 +4,10 @@ import android.os.Message
 import com.ichi2.anki.dialogs.DatabaseErrorDialog.DatabaseErrorDialogType
 import com.ichi2.anki.dialogs.DialogHandlerMessage
 
+/**
+ * Dialog shown when the Anki collection fails to load.
+ * Displays a database error dialog with options to handle the failure.
+ */
 class CollectionLoadingErrorDialog : DialogHandlerMessage(
     WhichDialogHandler.MSG_SHOW_COLLECTION_LOADING_ERROR_DIALOG,
     "CollectionLoadingErrorDialog",
