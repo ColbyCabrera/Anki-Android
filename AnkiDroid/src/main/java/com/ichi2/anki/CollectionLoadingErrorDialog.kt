@@ -1,6 +1,5 @@
 package com.ichi2.anki
 
-import android.os.Message
 import com.ichi2.anki.dialogs.DatabaseErrorDialog.DatabaseErrorDialogType
 import com.ichi2.anki.dialogs.DialogHandlerMessage
 
