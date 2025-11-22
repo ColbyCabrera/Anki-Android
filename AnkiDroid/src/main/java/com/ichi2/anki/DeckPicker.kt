@@ -577,7 +577,9 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                         }
 
                         AppNavigationItem.CardBrowser -> {
-                            // Handled by state change
+                            if (!fragmented) {
+                                startActivity(Intent(this@DeckPicker, CardBrowser::class.java))
+                            }
                         }
 
                         AppNavigationItem.Statistics -> {
