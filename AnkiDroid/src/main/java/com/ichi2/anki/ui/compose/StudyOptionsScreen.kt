@@ -62,6 +62,8 @@ import androidx.compose.ui.unit.sp
 import androidx.core.text.HtmlCompat
 import com.ichi2.anki.R
 import com.ichi2.anki.ui.compose.theme.RobotoMono
+import org.jsoup.Jsoup
+import org.jsoup.safety.Safelist
 
 data class StudyOptionsData(
     val deckId: Long,
@@ -137,8 +139,10 @@ fun StudyOptionsView(
         if (studyOptionsData.deckDescription.isNotEmpty()) {
             val linkColor = MaterialTheme.colorScheme.primary
             val annotatedString = remember(studyOptionsData.deckDescription, linkColor) {
+                val cleanDescription =
+                    Jsoup.clean(studyOptionsData.deckDescription, Safelist.basic())
                 val spanned = HtmlCompat.fromHtml(
-                    studyOptionsData.deckDescription, HtmlCompat.FROM_HTML_MODE_LEGACY
+                    cleanDescription, HtmlCompat.FROM_HTML_MODE_LEGACY
                 )
                 buildAnnotatedString {
                     append(spanned.toString())
@@ -146,12 +150,17 @@ fun StudyOptionsView(
                     for (span in urlSpans) {
                         val start = spanned.getSpanStart(span)
                         val end = spanned.getSpanEnd(span)
-                        addLink(LinkAnnotation.Url(span.url), start, end)
-                        addStyle(
-                            SpanStyle(
-                                color = linkColor, textDecoration = TextDecoration.Underline
-                            ), start, end
-                        )
+                        val url = span.url
+                        if (url.startsWith("http://", ignoreCase = true) ||
+                            url.startsWith("https://", ignoreCase = true)
+                        ) {
+                            addLink(LinkAnnotation.Url(url), start, end)
+                            addStyle(
+                                SpanStyle(
+                                    color = linkColor, textDecoration = TextDecoration.Underline
+                                ), start, end
+                            )
+                        }
                     }
                 }
             }
