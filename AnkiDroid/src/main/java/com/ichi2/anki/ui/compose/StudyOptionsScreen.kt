@@ -20,15 +20,22 @@
  ****************************************************************************************/
 package com.ichi2.anki.ui.compose
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -79,6 +86,7 @@ fun StudyOptionsScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun StudyOptionsView(
     studyOptionsData: StudyOptionsData,
@@ -93,7 +101,7 @@ fun StudyOptionsView(
     ) {
         Text(
             text = studyOptionsData.deckName,
-            style = MaterialTheme.typography.headlineMedium,
+            style = MaterialTheme.typography.displaySmallEmphasized,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -101,57 +109,114 @@ fun StudyOptionsView(
         if (studyOptionsData.deckDescription.isNotEmpty()) {
             Text(
                 text = studyOptionsData.deckDescription,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(16.dp))
         }
 
+        Spacer(modifier = Modifier.height(24.dp))
+
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround,
+            horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
-            CountPill("New", studyOptionsData.newCount, MaterialTheme.colorScheme.primary) // TODO: Use string resource
-            CountPill("Learning", studyOptionsData.lrnCount, MaterialTheme.colorScheme.error) // TODO: Use string resource
-            CountPill("Review", studyOptionsData.revCount, Color(0xFF4CAF50)) // TODO: Use string resource
+            StudyOptionCardCount(
+                label = "New", // TODO: Use string resource
+                count = studyOptionsData.newCount,
+                shape = RoundedPolygonShape(MaterialShapes.SoftBurst),
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            )
+            StudyOptionCardCount(
+                label = "Learning", // TODO: Use string resource
+                count = studyOptionsData.lrnCount,
+                shape = RoundedPolygonShape(MaterialShapes.Square),
+                containerColor = MaterialTheme.colorScheme.tertiary,
+                contentColor = MaterialTheme.colorScheme.onTertiary
+            )
+            StudyOptionCardCount(
+                label = "Review", // TODO: Use string resource
+                count = studyOptionsData.revCount,
+                shape = RoundedPolygonShape(MaterialShapes.Ghostish),
+                containerColor = MaterialTheme.colorScheme.secondary,
+                contentColor =  MaterialTheme.colorScheme.onSecondary
+            )
         }
 
         if (studyOptionsData.haveBuried) {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(32.dp))
             Text(
                 text = "Buried cards are not included in counts above.", // TODO: Use string resource
                 style = MaterialTheme.typography.bodySmall,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
             )
+            Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceAround,
+                horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
-                CountPill(
-                    "New", // TODO: Use string resource
-                    studyOptionsData.buriedNew,
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                StudyOptionCardCount(
+                    label = "New", // TODO: Use string resource
+                    count = studyOptionsData.buriedNew,
+                    shape = RoundedPolygonShape(MaterialShapes.Sunny),
+                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    contentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
+                    small = true
                 )
-                CountPill("Learning", studyOptionsData.buriedLrn, MaterialTheme.colorScheme.error.copy(alpha = 0.5f)) // TODO: Use string resource
-                CountPill("Review", studyOptionsData.buriedRev, Color(0xFF4CAF50).copy(alpha = 0.5f)) // TODO: Use string resource
+                StudyOptionCardCount(
+                    label = "Learning", // TODO: Use string resource
+                    count = studyOptionsData.buriedLrn,
+                    shape = RoundedPolygonShape(MaterialShapes.Cookie4Sided),
+                    containerColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f),
+                    contentColor = MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.8f),
+                    small = true
+                )
+                StudyOptionCardCount(
+                    label = "Review", // TODO: Use string resource
+                    count = studyOptionsData.buriedRev,
+                    shape = RoundedPolygonShape(MaterialShapes.Cookie7Sided),
+                    containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
+                    contentColor = MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.8f),
+                    small = true
+                )
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+
+        Surface(
+            shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.tertiaryContainer,
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "Total New") // TODO: Use string resource
-                Text(text = studyOptionsData.totalNewCards.toString(), style = MaterialTheme.typography.bodyLarge)
-            }
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "Total Cards") // TODO: Use string resource
-                Text(text = studyOptionsData.totalCards.toString(), style = MaterialTheme.typography.bodyLarge)
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(12.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "Total New", style = MaterialTheme.typography.labelLarge
+                    )
+                    Text(
+                        text = studyOptionsData.totalNewCards.toString(),
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "Total Cards", style = MaterialTheme.typography.labelLarge
+                    )
+                    Text(
+                        text = studyOptionsData.totalCards.toString(),
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                }
             }
         }
+
 
         Spacer(modifier = Modifier.weight(1f))
 
@@ -164,6 +229,7 @@ fun StudyOptionsView(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun EmptyDeckView(
     studyOptionsData: StudyOptionsData,
@@ -179,7 +245,7 @@ fun EmptyDeckView(
     ) {
         Text(
             text = studyOptionsData.deckName,
-            style = MaterialTheme.typography.headlineMedium,
+            style = MaterialTheme.typography.displaySmallEmphasized,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -192,6 +258,7 @@ fun EmptyDeckView(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun CongratsView(
     studyOptionsData: StudyOptionsData,
@@ -208,7 +275,7 @@ fun CongratsView(
     ) {
         Text(
             text = stringResource(R.string.studyoptions_congrats_finished),
-            style = MaterialTheme.typography.headlineMedium,
+            style = MaterialTheme.typography.displaySmallEmphasized,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -222,14 +289,37 @@ fun CongratsView(
 }
 
 @Composable
-fun CountPill(
+fun StudyOptionCardCount(
     label: String,
     count: Int,
-    color: androidx.compose.ui.graphics.Color,
+    shape: Shape,
+    containerColor: Color,
+    contentColor: Color,
+    modifier: Modifier = Modifier,
+    small: Boolean = false
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = count.toString(), style = MaterialTheme.typography.headlineSmall, color = color)
-        Text(text = label, style = MaterialTheme.typography.bodySmall)
+    val size = if (small) 40.dp else 64.dp
+    val textStyle = if (small) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineSmall
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
+        Box(
+            modifier = Modifier
+                .size(size)
+                .clip(shape)
+                .background(containerColor),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = count.toString(),
+                color = contentColor,
+                style = textStyle,
+                modifier = Modifier
+                    .padding(4.dp)
+                    .basicMarquee()
+            )
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(text = label, style = MaterialTheme.typography.labelMedium)
     }
 }
 
