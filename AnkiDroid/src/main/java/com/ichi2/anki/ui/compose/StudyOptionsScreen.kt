@@ -53,6 +53,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -83,7 +84,11 @@ fun StudyOptionsScreen(
     onStartStudy: () -> Unit,
     onCustomStudy: (Long) -> Unit,
 ) {
-    Surface {
+    Surface(
+        modifier.padding(start = 4.dp, end = 12.dp, bottom = 12.dp),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainerLowest
+    ) {
         if (studyOptionsData == null) {
             // Show a loading indicator or an empty state
             Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -240,7 +245,7 @@ fun StudyOptionsView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(12.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
+                horizontalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterHorizontally),
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
@@ -249,7 +254,8 @@ fun StudyOptionsView(
                     Text(
                         text = studyOptionsData.totalNewCards.toString(),
                         fontSize = 48.sp,
-                        fontFamily = RobotoMono
+                        fontFamily = RobotoMono,
+                        lineHeight = 48.sp
                     )
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -259,7 +265,8 @@ fun StudyOptionsView(
                     Text(
                         text = studyOptionsData.totalCards.toString(),
                         fontSize = 48.sp,
-                        fontFamily = RobotoMono
+                        fontFamily = RobotoMono,
+                        lineHeight = 48.sp
                     )
                 }
             }
