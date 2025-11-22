@@ -304,8 +304,6 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
         )
     }
 
-    private val editNoteLauncher: NoteEditorLauncher
-        get() = NoteEditorLauncher.EditCard(cardBrowserViewModel.currentCardId, Direction.DEFAULT, false)
 
     private val addNoteBrowserLauncher: NoteEditorLauncher
         get() = NoteEditorLauncher.AddNoteFromCardBrowser(cardBrowserViewModel, inCardBrowserActivity = false)
@@ -2337,7 +2335,8 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
 
     fun openNoteEditorForCard(cardId: CardId) {
         cardBrowserViewModel.currentCardId = cardId
-        onEditCardActivityResult.launch(editNoteLauncher.toIntent(this))
+        val launcher = NoteEditorLauncher.EditCard(cardId, Direction.DEFAULT, false)
+        onEditCardActivityResult.launch(launcher.toIntent(this))
     }
 
     fun showCreateFilteredDeckDialogForBrowser() {

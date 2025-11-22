@@ -92,9 +92,6 @@ open class CardBrowser :
 
     private lateinit var viewModel: CardBrowserViewModel
 
-    // Provides an instance of NoteEditorLauncher for editing a note
-    private val editNoteLauncher: NoteEditorLauncher
-        get() = NoteEditorLauncher.EditCard(viewModel.currentCardId, Direction.DEFAULT, false)
 
     private val addNoteLauncher: NoteEditorLauncher
         get() = NoteEditorLauncher.AddNoteFromCardBrowser(viewModel, inCardBrowserActivity = false)
@@ -352,7 +349,8 @@ open class CardBrowser :
     /** Opens the note editor for a card. */
     fun openNoteEditorForCard(cardId: CardId) {
         viewModel.currentCardId = cardId
-        onEditCardActivityResult.launch(editNoteLauncher.toIntent(this))
+        val launcher = NoteEditorLauncher.EditCard(cardId, Direction.DEFAULT, false)
+        onEditCardActivityResult.launch(launcher.toIntent(this))
     }
 
     fun showCreateFilteredDeckDialog() {
