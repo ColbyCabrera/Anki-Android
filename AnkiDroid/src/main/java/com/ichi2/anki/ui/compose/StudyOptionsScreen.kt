@@ -202,7 +202,7 @@ fun StudyOptionsView(
         Spacer(modifier = Modifier.height(32.dp))
 
         Surface(
-            shape = MaterialTheme.shapes.extraLarge,
+            shape = MaterialTheme.shapes.medium,
             color = MaterialTheme.colorScheme.tertiaryContainer,
         ) {
             Row(
@@ -239,9 +239,11 @@ fun StudyOptionsView(
 
         Button(
             onClick = onStartStudy,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(96.dp),
         ) {
-            Text(text = stringResource(R.string.studyoptions_start))
+            Text(text = stringResource(R.string.studyoptions_start), fontSize = 24.sp)
         }
     }
 }
@@ -285,19 +287,30 @@ fun CongratsView(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         Text(
             text = stringResource(R.string.studyoptions_congrats_finished),
             style = MaterialTheme.typography.displaySmallEmphasized,
-            textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )
+        Text(
+            text = stringResource(R.string.daily_limit_reached),
+            style = MaterialTheme.typography.bodyLarge
+        )
+        Text(
+            text = stringResource(R.string.study_more),
+            style = MaterialTheme.typography.bodyLarge
+        )
         if (!studyOptionsData.isFiltered) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = { onCustomStudy(studyOptionsData.deckId) }) {
-                Text(text = "Custom Study") // TODO: Use string resource
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(96.dp)
+                    .padding(top = 12.dp),
+                onClick = { onCustomStudy(studyOptionsData.deckId) }
+            ) {
+                Text(text = "Custom Study", fontSize = 24.sp) // TODO: Use string resource
             }
         }
     }
