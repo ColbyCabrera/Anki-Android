@@ -47,7 +47,6 @@ import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.annotation.StringRes
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.compose.foundation.layout.Column
@@ -77,7 +76,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -124,7 +122,6 @@ import com.ichi2.anki.android.input.shortcut
 import com.ichi2.anki.common.annotations.NeedsTest
 import com.ichi2.anim.ActivityTransitionAnimation.Direction
 import com.ichi2.anki.browser.BrowserColumnSelectionFragment
-import com.ichi2.anki.browser.CardBrowserLaunchOptions
 import com.ichi2.anki.browser.CardBrowserViewModel
 import com.ichi2.anki.browser.CardOrNoteId
 import com.ichi2.anki.browser.MySearchesContract
@@ -203,7 +200,6 @@ import com.ichi2.anki.ui.compose.AnkiDroidApp
 import com.ichi2.anki.ui.compose.AnkiNavigationRail
 import com.ichi2.anki.ui.compose.AppNavigationItem
 import com.ichi2.anki.ui.compose.CongratsActivity
-import com.ichi2.anki.snackbar.showSnackbar
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import com.ichi2.anki.ui.windows.permissions.PermissionsActivity
 import com.ichi2.anki.utils.Destination
