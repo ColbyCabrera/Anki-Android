@@ -53,7 +53,6 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -136,8 +135,7 @@ fun StudyOptionsView(
             val linkColor = MaterialTheme.colorScheme.primary
             val annotatedString = remember(studyOptionsData.deckDescription) {
                 val spanned = HtmlCompat.fromHtml(
-                    studyOptionsData.deckDescription,
-                    HtmlCompat.FROM_HTML_MODE_LEGACY
+                    studyOptionsData.deckDescription, HtmlCompat.FROM_HTML_MODE_LEGACY
                 )
                 buildAnnotatedString {
                     append(spanned.toString())
@@ -148,11 +146,8 @@ fun StudyOptionsView(
                         addLink(LinkAnnotation.Url(span.url), start, end)
                         addStyle(
                             SpanStyle(
-                                color = linkColor,
-                                textDecoration = TextDecoration.Underline
-                            ),
-                            start,
-                            end
+                                color = linkColor, textDecoration = TextDecoration.Underline
+                            ), start, end
                         )
                     }
                 }
@@ -173,21 +168,21 @@ fun StudyOptionsView(
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
             StudyOptionCardCount(
-                label = "New", // TODO: Use string resource
+                label = stringResource(R.string.tags_dialog_option_new_cards),
                 count = studyOptionsData.newCount,
                 shape = RoundedPolygonShape(MaterialShapes.SoftBurst),
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             )
             StudyOptionCardCount(
-                label = "Learning", // TODO: Use string resource
+                label = stringResource(R.string.learning),
                 count = studyOptionsData.lrnCount,
                 shape = RoundedPolygonShape(MaterialShapes.Square),
                 containerColor = MaterialTheme.colorScheme.tertiary,
                 contentColor = MaterialTheme.colorScheme.onTertiary
             )
             StudyOptionCardCount(
-                label = "Review", // TODO: Use string resource
+                label = stringResource(R.string.review),
                 count = studyOptionsData.revCount,
                 shape = RoundedPolygonShape(MaterialShapes.Ghostish),
                 containerColor = MaterialTheme.colorScheme.secondary,
@@ -198,7 +193,7 @@ fun StudyOptionsView(
         if (studyOptionsData.haveBuried) {
             Spacer(modifier = Modifier.height(32.dp))
             Text(
-                text = "Buried cards are not included in counts above.", // TODO: Use string resource
+                text = stringResource(R.string.buried_cards_are_not_included_in_counts_above),
                 style = MaterialTheme.typography.bodySmall,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
@@ -209,7 +204,7 @@ fun StudyOptionsView(
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
                 StudyOptionCardCount(
-                    label = "New", // TODO: Use string resource
+                    label = stringResource(R.string.tags_dialog_option_new_cards),
                     count = studyOptionsData.buriedNew,
                     shape = RoundedPolygonShape(MaterialShapes.Sunny),
                     containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
@@ -217,7 +212,7 @@ fun StudyOptionsView(
                     small = true
                 )
                 StudyOptionCardCount(
-                    label = "Learning", // TODO: Use string resource
+                    label = stringResource(R.string.learning),
                     count = studyOptionsData.buriedLrn,
                     shape = RoundedPolygonShape(MaterialShapes.Cookie4Sided),
                     containerColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f),
@@ -225,7 +220,7 @@ fun StudyOptionsView(
                     small = true
                 )
                 StudyOptionCardCount(
-                    label = "Review", // TODO: Use string resource
+                    label = stringResource(R.string.review),
                     count = studyOptionsData.buriedRev,
                     shape = RoundedPolygonShape(MaterialShapes.Cookie7Sided),
                     containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
@@ -249,7 +244,8 @@ fun StudyOptionsView(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "Total New", style = MaterialTheme.typography.labelMedium
+                        text = stringResource(R.string.total_new),
+                        style = MaterialTheme.typography.labelMedium
                     )
                     Text(
                         text = studyOptionsData.totalNewCards.toString(),
@@ -260,7 +256,8 @@ fun StudyOptionsView(
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "Total Cards", style = MaterialTheme.typography.labelMedium
+                        text = stringResource(R.string.studyoptions_total_label),
+                        style = MaterialTheme.typography.labelMedium
                     )
                     Text(
                         text = studyOptionsData.totalCards.toString(),
@@ -336,8 +333,7 @@ fun CongratsView(
             style = MaterialTheme.typography.bodyLarge
         )
         Text(
-            text = stringResource(R.string.study_more),
-            style = MaterialTheme.typography.bodyLarge
+            text = stringResource(R.string.study_more), style = MaterialTheme.typography.bodyLarge
         )
         if (!studyOptionsData.isFiltered) {
             Button(
@@ -345,9 +341,8 @@ fun CongratsView(
                     .fillMaxWidth()
                     .height(96.dp)
                     .padding(top = 12.dp),
-                onClick = { onCustomStudy(studyOptionsData.deckId) }
-            ) {
-                Text(text = "Custom Study", fontSize = 24.sp) // TODO: Use string resource
+                onClick = { onCustomStudy(studyOptionsData.deckId) }) {
+                Text(text = stringResource(R.string.custom_study), fontSize = 24.sp)
             }
         }
     }
@@ -364,8 +359,7 @@ fun StudyOptionCardCount(
     small: Boolean = false
 ) {
     val size = if (small) 40.dp else 64.dp
-    val fontSize =
-        if (small) 12.sp else 20.sp
+    val fontSize = if (small) 12.sp else 20.sp
 
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
         Box(
