@@ -33,9 +33,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -47,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
@@ -278,6 +281,12 @@ fun StudyOptionsView(
                 .fillMaxWidth()
                 .height(96.dp),
         ) {
+            Icon(
+                painter = painterResource(id = R.drawable.book_ribbon_24px),
+                contentDescription = null,
+                modifier = Modifier.size(32.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
             Text(text = stringResource(R.string.studyoptions_start), fontSize = 24.sp)
         }
     }
@@ -342,6 +351,12 @@ fun CongratsView(
                     .height(96.dp)
                     .padding(top = 12.dp),
                 onClick = { onCustomStudy(studyOptionsData.deckId) }) {
+                Icon(
+                    painter = painterResource(id = R.drawable.book_ribbon_24px),
+                    contentDescription = null,
+                    modifier = Modifier.size(32.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
                 Text(text = stringResource(R.string.custom_study), fontSize = 24.sp)
             }
         }
