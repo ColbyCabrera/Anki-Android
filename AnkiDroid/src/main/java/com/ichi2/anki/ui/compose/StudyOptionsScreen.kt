@@ -119,7 +119,7 @@ fun StudyOptionsView(
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         if (studyOptionsData.deckDescription.isNotEmpty()) {
             Text(
                 text = studyOptionsData.deckDescription,
