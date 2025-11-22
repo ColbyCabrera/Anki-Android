@@ -20,6 +20,7 @@
  ****************************************************************************************/
 package com.ichi2.anki.ui.compose
 
+import android.text.style.URLSpan
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
@@ -40,16 +41,22 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.text.HtmlCompat
 import com.ichi2.anki.R
 import com.ichi2.anki.ui.compose.theme.RobotoMono
 
@@ -121,8 +128,32 @@ fun StudyOptionsView(
         )
         Spacer(modifier = Modifier.height(16.dp))
         if (studyOptionsData.deckDescription.isNotEmpty()) {
+            val linkColor = MaterialTheme.colorScheme.primary
+            val annotatedString = remember(studyOptionsData.deckDescription) {
+                val spanned = HtmlCompat.fromHtml(
+                    studyOptionsData.deckDescription,
+                    HtmlCompat.FROM_HTML_MODE_LEGACY
+                )
+                buildAnnotatedString {
+                    append(spanned.toString())
+                    val urlSpans = spanned.getSpans(0, spanned.length, URLSpan::class.java)
+                    for (span in urlSpans) {
+                        val start = spanned.getSpanStart(span)
+                        val end = spanned.getSpanEnd(span)
+                        addLink(LinkAnnotation.Url(span.url), start, end)
+                        addStyle(
+                            SpanStyle(
+                                color = linkColor,
+                                textDecoration = TextDecoration.Underline
+                            ),
+                            start,
+                            end
+                        )
+                    }
+                }
+            }
             Text(
-                text = studyOptionsData.deckDescription,
+                text = annotatedString,
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center
@@ -327,8 +358,8 @@ fun StudyOptionCardCount(
     small: Boolean = false
 ) {
     val size = if (small) 40.dp else 64.dp
-    val textStyle =
-        if (small) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineSmall
+    val fontSize =
+        if (small) 12.sp else 20.sp
 
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
         Box(
@@ -341,7 +372,8 @@ fun StudyOptionCardCount(
             Text(
                 text = count.toString(),
                 color = contentColor,
-                style = textStyle,
+                fontFamily = RobotoMono,
+                fontSize = fontSize,
                 modifier = Modifier
                     .padding(4.dp)
                     .basicMarquee()
