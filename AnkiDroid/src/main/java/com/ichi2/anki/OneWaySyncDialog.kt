@@ -6,6 +6,7 @@ import com.ichi2.anki.CollectionManager.withCol
 import com.ichi2.anki.dialogs.ConfirmationDialog
 import com.ichi2.anki.dialogs.DialogHandlerMessage
 import com.ichi2.anki.utils.ext.showDialogFragment
+import timber.log.Timber
 
 class OneWaySyncDialog(
     val message: String?,
@@ -20,6 +21,11 @@ class OneWaySyncDialog(
             // Bypass the check once the user confirms
             activity.launchCatchingTask {
                 withCol { modSchemaNoCheck() }
+                try {
+                    withCol { modSchemaNoCheck() }
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to modify schema")
+                }
             }
         }
         dialog.setConfirm(confirm)
