@@ -86,9 +86,8 @@ open class CardBrowser :
     DeckSelectionDialog.DeckSelectionListener,
     TagsDialogListener {
 
-    var fragmented: Boolean
+    val fragmented: Boolean
         get() = resources.configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK == Configuration.SCREENLAYOUT_SIZE_XLARGE
-        private set(_) = throw UnsupportedOperationException()
 
     private lateinit var viewModel: CardBrowserViewModel
 
