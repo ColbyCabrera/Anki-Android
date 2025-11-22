@@ -18,38 +18,43 @@
 package com.ichi2.anki.ui.compose
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.motionScheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Shapes
+import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -59,141 +64,16 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.ichi2.anki.R
 import com.ichi2.anki.SyncIconState
 import com.ichi2.anki.deckpicker.DisplayDeckNode
-
-// Define Expressive Typography
-val GoogleSansRounded = FontFamily(
-    Font(R.font.google_sans_rounded_regular, FontWeight.Normal),
-)
-
-val AppTypography = Typography(
-    displayLarge = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.Bold,
-        fontSize = 57.sp,
-        lineHeight = 64.sp,
-        letterSpacing = (-0.25).sp
-    ),
-    displayMedium = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.Bold,
-        fontSize = 45.sp,
-        lineHeight = 52.sp,
-        letterSpacing = 0.sp
-    ),
-    displaySmall = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.Bold,
-        fontSize = 36.sp,
-        lineHeight = 44.sp,
-        letterSpacing = 0.sp
-    ),
-    headlineLarge = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 32.sp,
-        lineHeight = 40.sp,
-        letterSpacing = 0.sp
-    ),
-    headlineMedium = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 28.sp,
-        lineHeight = 36.sp,
-        letterSpacing = 0.sp
-    ),
-    headlineSmall = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 24.sp,
-        lineHeight = 32.sp,
-        letterSpacing = 0.sp
-    ),
-    titleLarge = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.Medium,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.sp
-    ),
-    titleMedium = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.Medium,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.15.sp
-    ),
-    titleSmall = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.Medium,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.1.sp
-    ),
-    bodyLarge = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.5.sp
-    ),
-    bodyMedium = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.25.sp
-    ),
-    bodySmall = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.Normal,
-        fontSize = 12.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.4.sp
-    ),
-    labelLarge = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.Medium,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.1.sp
-    ),
-    labelMedium = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.Medium,
-        fontSize = 12.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
-    ),
-    labelSmall = TextStyle(
-        fontFamily = GoogleSansRounded,
-        fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
-    )
-)
-
-// Define Expressive Shapes
-val AppShapes = Shapes(
-    extraSmall = RoundedCornerShape(4.dp), // Default M3
-    small = RoundedCornerShape(8.dp), // Expressive: Slightly more rounded
-    medium = RoundedCornerShape(16.dp), // Expressive: More pronounced rounding for cards/buttons
-    large = RoundedCornerShape(24.dp), // Expressive: Very rounded for larger elements like dialogs
-    extraLarge = RoundedCornerShape(32.dp), // Expressive: For prominent elements like FABs or hero containers
-)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -246,6 +126,12 @@ fun AnkiDroidApp(
     if (fragmented) {
         var isSearchOpen by remember { mutableStateOf(false) }
         var isStudyOptionsMenuOpen by remember { mutableStateOf(false) }
+        val searchAnim by animateFloatAsState(
+            targetValue = if (isSearchOpen) 1f else 0f,
+            animationSpec = motionScheme.defaultEffectsSpec()
+        )
+        val density = LocalDensity.current
+        val searchOffsetPx = with(density) { (-8).dp.toPx() }
         val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
         val listState = rememberLazyListState()
         // Tablet layout
@@ -266,7 +152,10 @@ fun AnkiDroidApp(
                         title = {
                             if (!isSearchOpen) Text(
                                 stringResource(R.string.app_name),
-                                style = MaterialTheme.typography.headlineSmall
+                                style = MaterialTheme.typography.displayMediumEmphasized,
+                                modifier = Modifier.graphicsLayer {
+                                    alpha = 1f - searchAnim
+                                }
                             )
                         },
                         navigationIcon = {
@@ -281,35 +170,107 @@ fun AnkiDroidApp(
                         },
                         actions = {
                             if (isSearchOpen) {
-                                TextField(
-                                    value = searchQuery,
-                                    onValueChange = onSearchQueryChanged,
+                                SearchBar(
+                                    inputField = {
+                                        SearchBarDefaults.InputField(
+                                            query = searchQuery,
+                                            onQueryChange = onSearchQueryChanged,
+                                            onSearch = { /* Search is performed as user types */ },
+                                            expanded = true,
+                                            onExpandedChange = { },
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .focusRequester(searchFocusRequester)
+                                                .graphicsLayer {
+                                                    alpha = searchAnim
+                                                    translationY =
+                                                        searchOffsetPx * (1f - searchAnim)
+                                                    scaleX = 0.98f + 0.02f * searchAnim
+                                                    scaleY = 0.98f + 0.02f * searchAnim
+                                                },
+                                            placeholder = { Text(stringResource(R.string.search_decks)) },
+                                            leadingIcon = {
+                                                Icon(
+                                                    painter = painterResource(R.drawable.search_24px),
+                                                    contentDescription = stringResource(R.string.search_decks)
+                                                )
+                                            },
+                                            trailingIcon = {
+                                                IconButton(onClick = {
+                                                    onSearchQueryChanged("")
+                                                    isSearchOpen = false
+                                                }) {
+                                                    Icon(
+                                                        Icons.Default.Close,
+                                                        contentDescription = stringResource(R.string.close),
+                                                    )
+                                                }
+                                            },
+                                        )
+                                    },
+                                    expanded = false,
+                                    onExpandedChange = { },
                                     modifier = Modifier
                                         .weight(1f)
-                                        .focusRequester(searchFocusRequester),
-                                    placeholder = { Text(stringResource(R.string.search_decks)) },
-                                    trailingIcon = {
-                                        IconButton(onClick = {
-                                            onSearchQueryChanged("")
-                                            isSearchOpen = false
-                                        }) {
-                                            Icon(
-                                                Icons.Default.Close,
-                                                contentDescription = stringResource(R.string.close),
-                                            )
-                                        }
-                                    },
+                                        .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                                        .graphicsLayer {
+                                            alpha = searchAnim
+                                        },
+                                    shape = SearchBarDefaults.inputFieldShape,
+                                    content = { }
                                 )
                             } else {
-                                IconButton(onClick = { isSearchOpen = true }) {
+                                FilledIconButton(
+                                    onClick = { isSearchOpen = true },
+                                    modifier = Modifier
+                                        .graphicsLayer {
+                                            alpha = 1f - searchAnim
+                                        },
+                                    colors = IconButtonDefaults.filledIconButtonColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    ),
+                                ) {
                                     Icon(
-                                        Icons.Default.Search,
+                                        painter = painterResource(R.drawable.search_24px),
                                         contentDescription = stringResource(R.string.search_decks),
+                                    )
+                                }
+                                BadgedBox(
+                                    modifier = Modifier
+                                        .height(40.dp)
+                                        .width(48.dp)
+
+                                        .graphicsLayer {
+                                            alpha = 1f - searchAnim
+                                        },
+                                    badge = {
+                                        when (syncState) {
+                                            SyncIconState.PendingChanges -> Badge()
+                                            SyncIconState.OneWay, SyncIconState.NotLoggedIn -> Badge {
+                                                Text(
+                                                    "!"
+                                                )
+                                            }
+
+                                            else -> { /* No badge for Normal state */ }
+                                        }
+                                    }
+                                ) {
+                                    SyncIcon(
+                                        isSyncing = isRefreshing,
+                                        onRefresh = onRefresh
                                     )
                                 }
                             }
                             if (studyOptionsData != null) {
-                                IconButton(onClick = { isStudyOptionsMenuOpen = true }) {
+                                FilledIconButton(
+                                    onClick = { isStudyOptionsMenuOpen = true },
+                                    colors = IconButtonDefaults.filledIconButtonColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    ),
+                                ) {
                                     Icon(
                                         Icons.Default.MoreVert,
                                         contentDescription = stringResource(R.string.more_options),

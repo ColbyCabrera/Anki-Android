@@ -21,22 +21,24 @@
 package com.ichi2.anki.ui.compose.theme
 
 import android.os.Build
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MotionScheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import android.util.TypedValue
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MotionScheme
+import androidx.compose.material3.Shapes
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import com.ichi2.anki.R
-import com.ichi2.anki.ui.compose.AppShapes
 import com.ichi2.themes.Themes
 
 @ColorInt
@@ -47,6 +49,14 @@ private fun ankiColor(@AttrRes attr: Int): Int {
     context.theme.resolveAttribute(attr, typedValue, true)
     return typedValue.data
 }
+
+val AppShapes = Shapes(
+    extraSmall = RoundedCornerShape(4.dp), // Default M3
+    small = RoundedCornerShape(8.dp), // Expressive: Slightly more rounded
+    medium = RoundedCornerShape(16.dp), // Expressive: More pronounced rounding for cards/buttons
+    large = RoundedCornerShape(24.dp), // Expressive: Very rounded for larger elements like dialogs
+    extraLarge = RoundedCornerShape(32.dp), // Expressive: For prominent elements like FABs or hero containers
+)
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
