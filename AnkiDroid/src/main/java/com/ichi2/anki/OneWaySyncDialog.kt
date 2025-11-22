@@ -34,7 +34,6 @@ class OneWaySyncDialog(
         val confirm = Runnable {
             // Bypass the check once the user confirms
             activity.launchCatchingTask {
-                withCol { modSchemaNoCheck() }
                 try {
                     withCol { modSchemaNoCheck() }
                 } catch (e: Exception) {
