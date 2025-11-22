@@ -8,6 +8,20 @@ import com.ichi2.anki.dialogs.DialogHandlerMessage
 import com.ichi2.anki.utils.ext.showDialogFragment
 import timber.log.Timber
 
+/**
+ * Dialog that prompts the user to confirm a one-way sync.
+ *
+ * A one-way sync (also known as a full sync) occurs when the local database schema is modified
+ * in a way that cannot be merged with the server's version. When this happens, the user must
+ * choose to either overwrite the server with their local collection or overwrite their local
+ * collection with the server's version.
+ *
+ * This dialog is typically triggered when an operation throws a [com.ichi2.anki.libanki.exception.ConfirmModSchemaException],
+ * indicating that a schema modification requires a full sync.
+ *
+ * If the user confirms, [com.ichi2.anki.libanki.Collection.modSchemaNoCheck] is called to bypass
+ * the safety check and force the schema modification, effectively marking the collection for a one-way sync.
+ */
 class OneWaySyncDialog(
     val message: String?,
 ) : DialogHandlerMessage(
