@@ -134,6 +134,8 @@ fun AnkiDroidApp(
         val searchOffsetPx = with(density) { (-8).dp.toPx() }
         val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
         val listState = rememberLazyListState()
+        BackHandler(fabMenuExpanded) { fabMenuExpanded = false }
+
         // Tablet layout
         Box(modifier = Modifier.fillMaxSize()) {
             Scaffold(
@@ -154,7 +156,6 @@ fun AnkiDroidApp(
                             onCheckDatabase = onCheckDatabase
                         )
                     }
-                    BackHandler(fabMenuExpanded) { fabMenuExpanded = false }
                 },
                 snackbarHost = {
                     SnackbarHost(snackbarHostState) { snackbarData ->
@@ -175,16 +176,6 @@ fun AnkiDroidApp(
                                     alpha = 1f - searchAnim
                                 }
                             )
-                        },
-                        navigationIcon = {
-                            if (!fragmented) {
-                                IconButton(onClick = onNavigationIconClick) {
-                                    Icon(
-                                        Icons.Default.Menu,
-                                        contentDescription = stringResource(R.string.navigation_drawer_open),
-                                    )
-                                }
-                            }
                         },
                         actions = {
                             if (isSearchOpen) {
