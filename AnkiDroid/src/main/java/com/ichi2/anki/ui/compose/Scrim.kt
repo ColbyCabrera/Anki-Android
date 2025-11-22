@@ -33,7 +33,7 @@ import androidx.compose.ui.Modifier
 
 @Composable
 fun Scrim(
-    visible: Boolean, onDismiss: () -> Unit
+    visible: Boolean, opacity: Float = 0.4f, onDismiss: () -> Unit
 ) {
     AnimatedVisibility(
         visible = visible,
@@ -43,7 +43,7 @@ fun Scrim(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f))
+                .background(MaterialTheme.colorScheme.scrim.copy(alpha = opacity))
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,

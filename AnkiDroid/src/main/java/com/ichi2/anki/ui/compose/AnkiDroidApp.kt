@@ -138,6 +138,24 @@ fun AnkiDroidApp(
         Box(modifier = Modifier.fillMaxSize()) {
             Scaffold(
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                floatingActionButton = {
+                    Scrim(
+                        opacity = 0F,
+                        visible = fabMenuExpanded,
+                        onDismiss = { fabMenuExpanded = false })
+                    ExpandableFabContainer {
+                        ExpandableFab(
+                            expanded = fabMenuExpanded,
+                            onExpandedChange = { fabMenuExpanded = it },
+                            onAddNote = onAddNote,
+                            onAddDeck = onAddDeck,
+                            onAddSharedDeck = onAddSharedDeck,
+                            onAddFilteredDeck = onAddFilteredDeck,
+                            onCheckDatabase = onCheckDatabase
+                        )
+                    }
+                    BackHandler(fabMenuExpanded) { fabMenuExpanded = false }
+                },
                 snackbarHost = {
                     SnackbarHost(snackbarHostState) { snackbarData ->
                         Snackbar(
@@ -392,20 +410,6 @@ fun AnkiDroidApp(
                     }
                 }
             }
-            Scrim(
-                visible = fabMenuExpanded, onDismiss = { fabMenuExpanded = false })
-            ExpandableFabContainer {
-                ExpandableFab(
-                    expanded = fabMenuExpanded,
-                    onExpandedChange = { fabMenuExpanded = it },
-                    onAddNote = onAddNote,
-                    onAddDeck = onAddDeck,
-                    onAddSharedDeck = onAddSharedDeck,
-                    onAddFilteredDeck = onAddFilteredDeck,
-                    onCheckDatabase = onCheckDatabase
-                )
-            }
-            BackHandler(fabMenuExpanded) { fabMenuExpanded = false }
         }
     } else {
         // Phone layout
