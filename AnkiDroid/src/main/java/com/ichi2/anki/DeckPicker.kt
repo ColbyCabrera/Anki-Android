@@ -122,6 +122,7 @@ import com.ichi2.anki.android.input.shortcut
 import com.ichi2.anki.common.annotations.NeedsTest
 import com.ichi2.anim.ActivityTransitionAnimation.Direction
 import com.ichi2.anki.browser.BrowserColumnSelectionFragment
+import com.ichi2.anki.browser.CardBrowserActionHandler
 import com.ichi2.anki.browser.CardBrowserViewModel
 import com.ichi2.anki.browser.CardOrNoteId
 import com.ichi2.anki.browser.MySearchesContract
@@ -305,8 +306,6 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
     }
 
 
-    private val addNoteBrowserLauncher: NoteEditorLauncher
-        get() = NoteEditorLauncher.AddNoteFromCardBrowser(cardBrowserViewModel, inCardBrowserActivity = false)
 
     private val onMySearches = registerForActivityResult(MySearchesContract()) { query ->
         if (query != null) {
@@ -356,6 +355,16 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                 cardBrowserViewModel.search(cardBrowserViewModel.searchQuery.value)
             }
         }
+
+    private val actionHandler: CardBrowserActionHandler by lazy {
+        CardBrowserActionHandler(
+            this,
+            cardBrowserViewModel,
+            launchEditCard = { onEditCardActivityResult.launch(it) },
+            launchAddNote = { onAddNoteBrowserActivityResult.launch(it) },
+            launchPreview = { onPreviewCardsActivityResult.launch(it) }
+        )
+    }
 
     // flag asking user to do a full sync which is used in upgrade path
     private var recommendOneWaySync = false
@@ -709,43 +718,32 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                             )
                                         )
                                     } else {
-                                        launchCatchingTask {
-                                            val cardId = cardBrowserViewModel.queryDataForCardEdit(CardOrNoteId(row.id))
-                                            openNoteEditorForCard(cardId)
-                                        }
+                                        actionHandler.openNoteEditorForCard(row.id)
                                     }
                                 },
                                 onAddNote = {
-                                    onAddNoteBrowserActivityResult.launch(addNoteBrowserLauncher.toIntent(this@DeckPicker))
+                                    actionHandler.addNote()
                                 },
                                 onPreview = {
-                                    launchCatchingTask {
-                                        val intentData = cardBrowserViewModel.queryPreviewIntentData()
-                                        val intent = PreviewerFragment.getIntent(
-                                            this@DeckPicker,
-                                            intentData.idsFile,
-                                            intentData.currentIndex
-                                        )
-                                        onPreviewCardsActivityResult.launch(intent)
-                                    }
+                                    actionHandler.onPreview()
                                 },
                                 onFilter = cardBrowserViewModel::search,
                                 onSelectAll = { cardBrowserViewModel.toggleSelectAllOrNone() },
                                 onOptions = { showBrowserOptionsDialog = true },
-                                onCreateFilteredDeck = { showCreateFilteredDeckDialogForBrowser() },
-                                onEditNote = { openNoteEditorForCard(cardBrowserViewModel.currentCardId) },
+                                onCreateFilteredDeck = { actionHandler.showCreateFilteredDeckDialog() },
+                                onEditNote = { actionHandler.openNoteEditorForCard(cardBrowserViewModel.currentCardId) },
                                 onCardInfo = {
                                     val cardId = cardBrowserViewModel.currentCardId
                                     val destination = CardInfoDestination(cardId, getString(R.string.card_info_title))
                                     startActivity(destination.toIntent(this@DeckPicker))
                                 },
-                                onChangeDeck = { showChangeDeckDialog() },
-                                onReposition = { repositionSelectedCards() },
-                                onSetDueDate = { rescheduleSelectedCards() },
-                                onEditTags = { showEditTagsDialog() },
-                                onGradeNow = { onGradeNow() },
-                                onResetProgress = { onResetProgress() },
-                                onExportCard = { exportSelected() },
+                                onChangeDeck = { actionHandler.showChangeDeckDialog() },
+                                onReposition = { actionHandler.repositionSelectedCards() },
+                                onSetDueDate = { actionHandler.rescheduleSelectedCards() },
+                                onEditTags = { actionHandler.showEditTagsDialog() },
+                                onGradeNow = { actionHandler.onGradeNow() },
+                                onResetProgress = { actionHandler.onResetProgress() },
+                                onExportCard = { actionHandler.exportSelected() },
                                 onFilterByTag = {
                                     cardBrowserViewModel.loadAllTags()
                                     cardBrowserViewModel.loadDeckTags()
@@ -2314,150 +2312,11 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
         indeterminateTags: List<String>,
         stateFilter: CardStateFilter
     ) {
-        cardBrowserViewModel.updateTags(selectedTags)
+        actionHandler.onSelectedTags(selectedTags, indeterminateTags, stateFilter)
     }
 
     override fun onDeckSelected(deck: SelectableDeck?) {
-        val did = (deck as? SelectableDeck.Deck)?.deckId ?: return
-        moveSelectedCardsToDeck(did)
-    }
-
-    private fun moveSelectedCardsToDeck(did: DeckId) = launchCatchingTask {
-        val changed = withProgress { cardBrowserViewModel.moveSelectedCardsToDeck(did).await() }
-        cardBrowserViewModel.search(cardBrowserViewModel.searchQuery.value)
-        val message = resources.getQuantityString(
-            R.plurals.card_browser_cards_moved,
-            changed.count,
-            changed.count
-        )
-        showThemedToast(this@DeckPicker, message, false)
-    }
-
-    fun openNoteEditorForCard(cardId: CardId) {
-        cardBrowserViewModel.currentCardId = cardId
-        val launcher = NoteEditorLauncher.EditCard(cardId, Direction.DEFAULT, false)
-        onEditCardActivityResult.launch(launcher.toIntent(this))
-    }
-
-    fun showCreateFilteredDeckDialogForBrowser() {
-        val createFilteredDeckDialog = CreateDeckDialog(
-            this,
-            R.string.new_deck,
-            CreateDeckDialog.DeckDialogType.FILTERED_DECK,
-            null
-        )
-        createFilteredDeckDialog.onNewDeckCreated = { deckId ->
-            val intent = FilteredDeckOptions.getIntent(this@DeckPicker, deckId)
-            startActivity(intent)
-        }
-        launchCatchingTask {
-            withProgress {
-                createFilteredDeckDialog.showFilteredDeckDialog()
-            }
-        }
-    }
-
-    fun showChangeDeckDialog() = launchCatchingTask {
-        if (!cardBrowserViewModel.hasSelectedAnyRows()) {
-            Timber.i("Not showing Change Deck - No Cards")
-            return@launchCatchingTask
-        }
-        val selectableDecks = cardBrowserViewModel.getAvailableDecks()
-        val dialog = DeckSelectionDialog.newInstance(
-            getString(R.string.move_all_to_deck),
-            null,
-            false,
-            selectableDecks
-        )
-        dialog.show(supportFragmentManager, "deck_selection_dialog")
-    }
-
-    fun rescheduleSelectedCards() {
-        if (!cardBrowserViewModel.hasSelectedAnyRows()) {
-            Timber.i("Attempted reschedule - no cards selected")
-            return
-        }
-        if (warnUserIfInNotesOnlyMode()) return
-
-        launchCatchingTask {
-            val allCardIds = cardBrowserViewModel.queryAllSelectedCardIds()
-            SetDueDateDialog.newInstance(allCardIds)
-                .show(supportFragmentManager, "set_due_date_dialog")
-        }
-    }
-
-    fun repositionSelectedCards() {
-        Timber.i("CardBrowser:: Reposition button pressed")
-        if (warnUserIfInNotesOnlyMode()) return
-        launchCatchingTask {
-            when (val repositionCardsResult = cardBrowserViewModel.prepareToRepositionCards()) {
-                is RepositionCardsRequest.ContainsNonNewCardsError -> {
-                    SimpleMessageDialog.newInstance(
-                        title = getString(R.string.vague_error),
-                        message = getString(R.string.reposition_card_not_new_error),
-                        reload = false
-                    ).show(supportFragmentManager, "reposition_error_dialog")
-                    return@launchCatchingTask
-                }
-
-                is RepositionCardsRequest.RepositionData -> {
-                    val top = repositionCardsResult.queueTop
-                    val bottom = repositionCardsResult.queueBottom
-                    if (top == null || bottom == null) {
-                        return@launchCatchingTask
-                    }
-                    val repositionDialog = RepositionCardFragment.newInstance(
-                        queueTop = top,
-                        queueBottom = bottom,
-                        random = repositionCardsResult.random,
-                        shift = repositionCardsResult.shift
-                    )
-                    repositionDialog.show(supportFragmentManager, "reposition_dialog")
-                }
-            }
-        }
-    }
-
-    fun onResetProgress() {
-        if (warnUserIfInNotesOnlyMode()) return
-        ForgetCardsDialog().show(supportFragmentManager, "reset_progress_dialog")
-    }
-
-    fun onGradeNow() {
-        if (warnUserIfInNotesOnlyMode()) return
-        launchCatchingTask {
-            val cids = cardBrowserViewModel.queryAllSelectedCardIds()
-            GradeNowDialog.showDialog(this@DeckPicker, cids)
-        }
-    }
-
-    fun exportSelected() {
-        val (type, selectedIds) = cardBrowserViewModel.querySelectionExportData() ?: return
-        ExportDialogFragment.newInstance(type, selectedIds)
-            .show(supportFragmentManager, "exportDialog")
-    }
-
-    fun showEditTagsDialog() = launchCatchingTask {
-        if (!cardBrowserViewModel.hasSelectedAnyRows()) {
-            Timber.d("showEditTagsDialog: called with empty selection")
-            return@launchCatchingTask
-        }
-
-        val noteIds = cardBrowserViewModel.queryAllSelectedNoteIds()
-
-        TagsDialog(this@DeckPicker)
-            .withArguments(this@DeckPicker, TagsDialog.DialogType.EDIT_TAGS, noteIds)
-            .show(supportFragmentManager, "edit_tags_dialog")
-    }
-
-    fun warnUserIfInNotesOnlyMode(): Boolean {
-        if (cardBrowserViewModel.cardsOrNotes == CardsOrNotes.NOTES && cardBrowserViewModel.hasSelectedAnyRows()) {
-             lifecycleScope.launch {
-                 viewModel.snackbarMessage.emit(getString(R.string.card_browser_unavailable_when_notes_mode))
-             }
-            return true
-        }
-        return false
+        actionHandler.onDeckSelected(deck)
     }
 
     override val shortcuts
@@ -2555,7 +2414,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
 
     override fun getCsvFileImportResultLauncher(): ActivityResultLauncher<Intent> =
         csvImportResultLauncher
-}
+
 
 /** Android's onCreateOptionsMenu does not play well with coroutines, as
  * it expects the menu to have been fully configured by the time the routine
@@ -2571,70 +2430,7 @@ data class OptionsMenuState(
     val isColEmpty: Boolean,
 )
 
-/**
- * The state of the sync icon in the toolbar.
- *
- * This is used to show a badge when the collection is "dirty" (i.e. has [PendingChanges]).
- *
- * @see DeckPicker.updateSyncIconFromState
- * @see DeckPickerViewModel.fetchSyncIconState
- */
-enum class SyncIconState {
-    /** No changes to sync. */
-    Normal,
 
-    /** The collection has been modified, but not synced. */
-    PendingChanges,
-
-    /** A one-way sync is recommended. */
-    OneWay,
-
-    /** The user is not logged in. */
-    NotLoggedIn,
-}
-
-class CollectionLoadingErrorDialog : DialogHandlerMessage(
-    WhichDialogHandler.MSG_SHOW_COLLECTION_LOADING_ERROR_DIALOG,
-    "CollectionLoadErrorDialog",
-) {
-    override fun handleAsyncMessage(activity: AnkiActivity) {
-        // Collection could not be opened
-        activity.showDatabaseErrorDialog(DatabaseErrorDialogType.DIALOG_LOAD_FAILED)
-    }
-
-    override fun toMessage() = emptyMessage(this.what)
-}
-
-class OneWaySyncDialog(
-    val message: String?,
-) : DialogHandlerMessage(
-    which = WhichDialogHandler.MSG_SHOW_ONE_WAY_SYNC_DIALOG,
-    analyticName = "OneWaySyncDialog",
-) {
-    override fun handleAsyncMessage(activity: AnkiActivity) {
-        // Confirmation dialog for one-way sync
-        val dialog = ConfirmationDialog()
-        val confirm = Runnable {
-            // Bypass the check once the user confirms
-            activity.launchCatchingTask {
-                withCol { modSchemaNoCheck() }
-            }
-        }
-        dialog.setConfirm(confirm)
-        dialog.setArgs(message)
-        activity.showDialogFragment(dialog)
-    }
-
-    override fun toMessage(): Message = Message.obtain().apply {
-        what = this@OneWaySyncDialog.what
-        data = bundleOf("message" to message)
-    }
-
-    companion object {
-        fun fromMessage(message: Message): DialogHandlerMessage =
-            OneWaySyncDialog(message.data.getString("message"))
-    }
-}
 
 /**
  * [launchCatchingTask], showing a one-way sync dialog: [R.string.full_sync_confirmation]
@@ -2659,3 +2455,4 @@ private fun AnkiActivity.launchCatchingRequiringOneWaySync(block: suspend () -> 
             showDialogFragment(confirmModSchemaDialog)
         }
     }
+}

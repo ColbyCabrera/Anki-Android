@@ -1,0 +1,228 @@
+package com.ichi2.anki.browser
+
+import android.content.Intent
+import com.ichi2.anim.ActivityTransitionAnimation.Direction
+import com.ichi2.anki.AnkiActivity
+import com.ichi2.anki.FilteredDeckOptions
+import com.ichi2.anki.R
+import com.ichi2.anki.dialogs.CreateDeckDialog
+import com.ichi2.anki.dialogs.DeckSelectionDialog
+import com.ichi2.anki.dialogs.GradeNowDialog
+import com.ichi2.anki.dialogs.SimpleMessageDialog
+import com.ichi2.anki.dialogs.tags.TagsDialog
+import com.ichi2.anki.export.ExportDialogFragment
+import com.ichi2.anki.launchCatchingTask
+import com.ichi2.anki.libanki.CardId
+import com.ichi2.anki.libanki.DeckId
+import com.ichi2.anki.model.CardStateFilter
+import com.ichi2.anki.model.CardsOrNotes
+import com.ichi2.anki.model.SelectableDeck
+import com.ichi2.anki.noteeditor.NoteEditorLauncher
+import com.ichi2.anki.previewer.PreviewerFragment
+import com.ichi2.anki.scheduling.ForgetCardsDialog
+import com.ichi2.anki.scheduling.SetDueDateDialog
+import com.ichi2.anki.snackbar.showSnackbar
+import com.ichi2.anki.undoAndShowSnackbar
+import timber.log.Timber
+
+/**
+ * Helper class to handle common actions for the Card Browser.
+ * This is used by both [com.ichi2.anki.CardBrowser] and [com.ichi2.anki.DeckPicker] (in tablet mode).
+ */
+class CardBrowserActionHandler(
+    private val activity: AnkiActivity,
+    private val viewModel: CardBrowserViewModel,
+    private val launchEditCard: (Intent) -> Unit,
+    private val launchAddNote: (Intent) -> Unit,
+    private val launchPreview: (Intent) -> Unit
+) {
+
+    private suspend fun <T> withProgress(block: suspend () -> T): T {
+        try {
+            activity.showProgressBar()
+            return block()
+        } finally {
+            activity.hideProgressBar()
+        }
+    }
+
+    fun onSelectedTags(
+        selectedTags: List<String>,
+        indeterminateTags: List<String>,
+        stateFilter: CardStateFilter
+    ) {
+        viewModel.updateTags(selectedTags)
+    }
+
+    fun onDeckSelected(deck: SelectableDeck?) {
+        val did = (deck as? SelectableDeck.Deck)?.deckId ?: return
+        moveSelectedCardsToDeck(did)
+    }
+
+    private fun moveSelectedCardsToDeck(did: DeckId) = activity.launchCatchingTask {
+        val changed = withProgress { viewModel.moveSelectedCardsToDeck(did).await() }
+        viewModel.search(viewModel.searchQuery.value)
+        val message = activity.resources.getQuantityString(
+            R.plurals.card_browser_cards_moved,
+            changed.count,
+            changed.count
+        )
+        activity.showSnackbar(message) {
+            this.setAction(R.string.undo) { activity.launchCatchingTask { activity.undoAndShowSnackbar() } }
+        }
+    }
+
+    fun openNoteEditorForCard(cardId: CardId) {
+        viewModel.currentCardId = cardId
+        val launcher = NoteEditorLauncher.EditCard(cardId, Direction.DEFAULT, false)
+        launchEditCard(launcher.toIntent(activity))
+    }
+
+    fun showChangeDeckDialog() = activity.launchCatchingTask {
+        if (!viewModel.hasSelectedAnyRows()) {
+            Timber.i("Not showing Change Deck - No Cards")
+            return@launchCatchingTask
+        }
+        val selectableDecks = viewModel.getAvailableDecks()
+        val dialog = DeckSelectionDialog.newInstance(
+            activity.getString(R.string.move_all_to_deck),
+            null,
+            false,
+            selectableDecks
+        )
+        dialog.show(activity.supportFragmentManager, "deck_selection_dialog")
+    }
+
+    fun rescheduleSelectedCards() {
+        if (!viewModel.hasSelectedAnyRows()) {
+            Timber.i("Attempted reschedule - no cards selected")
+            return
+        }
+        if (warnUserIfInNotesOnlyMode()) return
+
+        activity.launchCatchingTask {
+            val allCardIds = viewModel.queryAllSelectedCardIds()
+            SetDueDateDialog.newInstance(allCardIds)
+                .show(activity.supportFragmentManager, "set_due_date_dialog")
+        }
+    }
+
+    fun repositionSelectedCards() {
+        Timber.i("CardBrowser:: Reposition button pressed")
+        if (warnUserIfInNotesOnlyMode()) return
+        activity.launchCatchingTask {
+            when (val repositionCardsResult = viewModel.prepareToRepositionCards()) {
+                is RepositionCardsRequest.ContainsNonNewCardsError -> {
+                    SimpleMessageDialog.newInstance(
+                        title = activity.getString(R.string.vague_error),
+                        message = activity.getString(R.string.reposition_card_not_new_error),
+                        reload = false
+                    ).show(activity.supportFragmentManager, "reposition_error_dialog")
+                    return@launchCatchingTask
+                }
+
+                is RepositionCardsRequest.RepositionData -> {
+                    val top = repositionCardsResult.queueTop
+                    val bottom = repositionCardsResult.queueBottom
+                    if (top == null || bottom == null) {
+                        return@launchCatchingTask
+                    }
+                    val repositionDialog = RepositionCardFragment.newInstance(
+                        queueTop = top,
+                        queueBottom = bottom,
+                        random = repositionCardsResult.random,
+                        shift = repositionCardsResult.shift
+                    )
+                    repositionDialog.show(activity.supportFragmentManager, "reposition_dialog")
+                }
+            }
+        }
+    }
+
+    fun onResetProgress() {
+        if (warnUserIfInNotesOnlyMode()) return
+        ForgetCardsDialog().show(activity.supportFragmentManager, "reset_progress_dialog")
+    }
+
+    fun onGradeNow() {
+        if (warnUserIfInNotesOnlyMode()) return
+        activity.launchCatchingTask {
+            val cids = viewModel.queryAllSelectedCardIds()
+            GradeNowDialog.showDialog(activity, cids)
+        }
+    }
+
+    fun exportSelected() {
+        val (type, selectedIds) = viewModel.querySelectionExportData() ?: return
+        ExportDialogFragment.newInstance(type, selectedIds)
+            .show(activity.supportFragmentManager, "exportDialog")
+    }
+
+    fun showEditTagsDialog() = activity.launchCatchingTask {
+        if (!viewModel.hasSelectedAnyRows()) {
+            Timber.d("showEditTagsDialog: called with empty selection")
+            return@launchCatchingTask
+        }
+
+        val noteIds = viewModel.queryAllSelectedNoteIds()
+
+        TagsDialog(activity as? com.ichi2.anki.dialogs.tags.TagsDialogListener)
+            .withArguments(activity, TagsDialog.DialogType.EDIT_TAGS, noteIds)
+            .show(activity.supportFragmentManager, "edit_tags_dialog")
+    }
+
+    fun showCreateFilteredDeckDialog() {
+        val createFilteredDeckDialog = CreateDeckDialog(
+            activity,
+            R.string.new_deck,
+            CreateDeckDialog.DeckDialogType.FILTERED_DECK,
+            null
+        )
+        createFilteredDeckDialog.onNewDeckCreated = { deckId ->
+            val intent = FilteredDeckOptions.getIntent(activity, deckId)
+            activity.startActivity(intent)
+        }
+        activity.launchCatchingTask {
+            withProgress {
+                createFilteredDeckDialog.showFilteredDeckDialog()
+            }
+        }
+    }
+
+    /**
+     * If the user is in notes only mode, and there are notes selected,
+     * show a snackbar explaining that the operation is not possible.
+     * @return true if the user was warned, false otherwise.
+     */
+    fun warnUserIfInNotesOnlyMode(): Boolean {
+        if (viewModel.cardsOrNotes == CardsOrNotes.NOTES && viewModel.hasSelectedAnyRows()) {
+            activity.showSnackbar(
+                activity.getString(R.string.card_browser_unavailable_when_notes_mode),
+                duration = 5000
+            ) {
+                setAction(activity.getString(R.string.cards)) {
+                    viewModel.setCardsOrNotes(CardsOrNotes.CARDS)
+                }
+            }
+            return true
+        }
+        return false
+    }
+
+    fun addNote() {
+        val launcher = NoteEditorLauncher.AddNoteFromCardBrowser(viewModel, inCardBrowserActivity = activity is com.ichi2.anki.CardBrowser)
+        launchAddNote(launcher.toIntent(activity))
+    }
+
+    fun onPreview() {
+        activity.launchCatchingTask {
+            val intentData = viewModel.queryPreviewIntentData()
+            val intent = PreviewerFragment.getIntent(
+                activity,
+                intentData.idsFile,
+                intentData.currentIndex
+            )
+            launchPreview(intent)
+        }
+    }
+}
