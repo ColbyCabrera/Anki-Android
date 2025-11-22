@@ -2386,9 +2386,9 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
         }
     }
 
-    fun repositionSelectedCards(): Boolean {
+    fun repositionSelectedCards() {
         Timber.i("CardBrowser:: Reposition button pressed")
-        if (warnUserIfInNotesOnlyMode()) return false
+        if (warnUserIfInNotesOnlyMode()) return
         launchCatchingTask {
             when (val repositionCardsResult = cardBrowserViewModel.prepareToRepositionCards()) {
                 is RepositionCardsRequest.ContainsNonNewCardsError -> {
@@ -2416,7 +2416,6 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                 }
             }
         }
-        return true
     }
 
     fun onResetProgress() {

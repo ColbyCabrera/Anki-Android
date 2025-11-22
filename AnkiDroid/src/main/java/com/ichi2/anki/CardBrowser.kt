@@ -437,9 +437,9 @@ open class CardBrowser :
         }
     }
 
-    private fun repositionSelectedCards(): Boolean {
+    private fun repositionSelectedCards() {
         Timber.i("CardBrowser:: Reposition button pressed")
-        if (warnUserIfInNotesOnlyMode()) return false
+        if (warnUserIfInNotesOnlyMode()) return
         launchCatchingTask {
             when (val repositionCardsResult = viewModel.prepareToRepositionCards()) {
                 is RepositionCardsRequest.ContainsNonNewCardsError -> {
@@ -467,7 +467,6 @@ open class CardBrowser :
                 }
             }
         }
-        return true
     }
 
     private fun onResetProgress() {
