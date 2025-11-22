@@ -136,7 +136,7 @@ fun StudyOptionsView(
         Spacer(modifier = Modifier.height(16.dp))
         if (studyOptionsData.deckDescription.isNotEmpty()) {
             val linkColor = MaterialTheme.colorScheme.primary
-            val annotatedString = remember(studyOptionsData.deckDescription) {
+            val annotatedString = remember(studyOptionsData.deckDescription, linkColor) {
                 val spanned = HtmlCompat.fromHtml(
                     studyOptionsData.deckDescription, HtmlCompat.FROM_HTML_MODE_LEGACY
                 )
