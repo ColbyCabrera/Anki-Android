@@ -109,6 +109,10 @@ class CardBrowserActionHandler(
 
     fun repositionSelectedCards() {
         Timber.i("CardBrowser:: Reposition button pressed")
+        if (!viewModel.hasSelectedAnyRows()) {
+            Timber.i("Attempted reposition - no cards selected")
+            return
+        }
         if (warnUserIfInNotesOnlyMode()) return
         activity.launchCatchingTask {
             when (val repositionCardsResult = viewModel.prepareToRepositionCards()) {
