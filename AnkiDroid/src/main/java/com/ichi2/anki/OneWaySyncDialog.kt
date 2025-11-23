@@ -6,6 +6,7 @@ import com.ichi2.anki.CollectionManager.withCol
 import com.ichi2.anki.dialogs.ConfirmationDialog
 import com.ichi2.anki.dialogs.DialogHandlerMessage
 import com.ichi2.anki.utils.ext.showDialogFragment
+import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
 /**
@@ -37,7 +38,11 @@ class OneWaySyncDialog(
                 try {
                     withCol { modSchemaNoCheck() }
                 } catch (e: Exception) {
+                    if (e is CancellationException) {
+                        throw e
+                    }
                     Timber.e(e, "Failed to modify schema")
+                    activity.showSimpleMessageDialog("Failed to modify schema")
                 }
             }
         }
