@@ -99,6 +99,7 @@ fun CardBrowserScreen(
     viewModel: CardBrowserViewModel,
     onCardClicked: (BrowserRowWithId) -> Unit,
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
     onAddNote: () -> Unit,
     onPreview: () -> Unit,
     onFilter: (String) -> Unit,
@@ -138,7 +139,7 @@ fun CardBrowserScreen(
     }
 
     Box(modifier = modifier) {
-        Column {
+        Column(modifier = Modifier.padding(top = contentPadding.calculateTopPadding())) {
             CardBrowserHeader(columns = columnHeadings)
             HorizontalDivider()
             when (val state = searchState) {
@@ -161,7 +162,8 @@ fun CardBrowserScreen(
                         val toolbarHeightInDp = with(LocalDensity.current) { toolbarHeight.toDp() }
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(
-                                top = 0.dp, bottom = toolbarHeightInDp + 32.dp
+                                top = 0.dp,
+                                bottom = toolbarHeightInDp + 32.dp + contentPadding.calculateBottomPadding()
                             )
                         ) {
                             items(
@@ -204,14 +206,15 @@ fun CardBrowserScreen(
             onMoreOptions = { showMoreOptionsMenu = true },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .offset(y = -ScreenOffset - 16.dp)
+                .offset(y = -ScreenOffset)
+                .padding(bottom = contentPadding.calculateBottomPadding())
                 .onSizeChanged { toolbarHeight = it.height })
 
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = with(LocalDensity.current) { toolbarHeight.toDp() + 32.dp })
+                .padding(bottom = with(LocalDensity.current) { toolbarHeight.toDp() + 32.dp + contentPadding.calculateBottomPadding() })
         )
 
         if (showFilterSheet) {

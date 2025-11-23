@@ -28,7 +28,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -117,9 +116,7 @@ private val ratings = listOf(
 // You can rename this class to be more descriptive
 class InvertedTopCornersShape(private val cornerRadius: Dp) : Shape {
     override fun createOutline(
-        size: Size,
-        layoutDirection: LayoutDirection,
-        density: Density
+        size: Size, layoutDirection: LayoutDirection, density: Density
     ): Outline {
         val cornerRadiusPx = with(density) { cornerRadius.toPx() }
 
@@ -130,12 +127,8 @@ class InvertedTopCornersShape(private val cornerRadius: Dp) : Shape {
             // Arc from (r, 0) down to (0, r)
             arcTo(
                 rect = Rect(
-                    left = 0f,
-                    top = 0f,
-                    right = 2 * cornerRadiusPx,
-                    bottom = 2 * cornerRadiusPx
-                ),
-                startAngleDegrees = 270f,   // Top-center of the rect
+                    left = 0f, top = 0f, right = 2 * cornerRadiusPx, bottom = 2 * cornerRadiusPx
+                ), startAngleDegrees = 270f,   // Top-center of the rect
                 sweepAngleDegrees = -90f, // Sweep counter-clockwise
                 forceMoveTo = false
             )
@@ -152,8 +145,7 @@ class InvertedTopCornersShape(private val cornerRadius: Dp) : Shape {
                     top = 0f,
                     right = size.width,
                     bottom = 2 * cornerRadiusPx
-                ),
-                startAngleDegrees = 270f, // Top-center of the rect
+                ), startAngleDegrees = 270f, // Top-center of the rect
                 sweepAngleDegrees = 90f,  // Sweep clockwise
                 forceMoveTo = false
             )
@@ -231,9 +223,7 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
             ) { viewModel.onEvent(ReviewerEvent.UnanswerCard) }
         }) { paddingValues ->
             Box(
-                modifier = Modifier
-                    .consumeWindowInsets(paddingValues)
-                    .padding(top = paddingValues.calculateTopPadding()),
+                modifier = Modifier.padding(paddingValues),
             ) {
                 Surface(
                     modifier = Modifier
@@ -255,104 +245,108 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                     isAnswerShown = state.isAnswerShown,
                     toolbarHeight = (toolbarHeightDp + 48.dp).value.toInt()
                 )
-            }
-        }
-        HorizontalFloatingToolbar(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .offset(y = -ScreenOffset - 16.dp)
-                .onSizeChanged { toolbarHeight = it.height },
-            expanded = true,
-            colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(),
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(
-                    onClick = { showBottomSheet = true },
-                    modifier = Modifier.height(48.dp),
+
+                HorizontalFloatingToolbar(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .offset(y = -ScreenOffset)
+                        .onSizeChanged { toolbarHeight = it.height },
+                    expanded = true,
+                    colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(),
                 ) {
-                    Icon(
-                        Icons.Filled.MoreVert,
-                        contentDescription = stringResource(R.string.more_options)
-                    )
-                }
-                Box(
-                    modifier = Modifier.animateContentSize(motionScheme.fastSpatialSpec())
-                ) {
-                    if (!state.isAnswerShown) {
-                        val interactionSource = remember { MutableInteractionSource() }
-                        val isPressed by interactionSource.collectIsPressedAsState()
-                        val defaultHorizontalPadding =
-                            ButtonDefaults.MediumContentPadding.calculateLeftPadding(
-                                layoutDirection = LocalLayoutDirection.current
-                            )
-                        val horizontalPadding by animateDpAsState(
-                            if (isPressed) defaultHorizontalPadding + 4.dp else defaultHorizontalPadding,
-                            motionScheme.fastSpatialSpec()
-                        )
-                        Button(
-                            onClick = { viewModel.onEvent(ReviewerEvent.ShowAnswer) },
-                            modifier = Modifier.height(56.dp),
-                            interactionSource = interactionSource,
-                            contentPadding = PaddingValues(horizontal = horizontalPadding),
-                            colors = ButtonDefaults.buttonColors(
-                                MaterialTheme.colorScheme.secondaryContainer,
-                                MaterialTheme.colorScheme.onSecondaryContainer
-                            )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(
+                            onClick = { showBottomSheet = true },
+                            modifier = Modifier.height(48.dp),
                         ) {
-                            Text(
-                                text = stringResource(R.string.show_answer),
-                                softWrap = false,
-                                overflow = TextOverflow.Clip
+                            Icon(
+                                Icons.Filled.MoreVert,
+                                contentDescription = stringResource(R.string.more_options)
                             )
                         }
-                    } else {
-                        ButtonGroup(
-                            horizontalArrangement = Arrangement.spacedBy(2.dp),
-                            overflowIndicator = { }) {
-
-                            ratings.forEachIndexed { index, (_, rating) ->
-                                customItem(
-                                    buttonGroupContent = {
-                                        val interactionSource =
-                                            remember { MutableInteractionSource() }
-                                        Button(
-                                            onClick = {
-                                                viewModel.onEvent(
-                                                    ReviewerEvent.RateCard(
-                                                        rating
-                                                    )
-                                                )
-                                            },
-                                            modifier = Modifier
-                                                .animateWidth(interactionSource)
-                                                .height(56.dp),
-                                            contentPadding = ButtonDefaults.ExtraSmallContentPadding,
-                                            shape = when (index) {
-                                                0 -> ButtonGroupDefaults.connectedLeadingButtonShape
-                                                3 -> ButtonGroupDefaults.connectedTrailingButtonShape
-                                                else -> ButtonGroupDefaults.connectedMiddleButtonShapes().shape
-                                            },
-                                            interactionSource = interactionSource,
-                                            colors = ButtonDefaults.buttonColors(
-                                                MaterialTheme.colorScheme.secondaryContainer,
-                                                MaterialTheme.colorScheme.onSecondaryContainer
-                                            )
-                                        ) {
-                                            Text(
-                                                state.nextTimes[index],
-                                                softWrap = false,
-                                                overflow = TextOverflow.Visible
-                                            )
-                                        }
-                                    },
-                                    menuContent = {},
+                        Box(
+                            modifier = Modifier.animateContentSize(motionScheme.fastSpatialSpec())
+                        ) {
+                            if (!state.isAnswerShown) {
+                                val interactionSource = remember { MutableInteractionSource() }
+                                val isPressed by interactionSource.collectIsPressedAsState()
+                                val defaultHorizontalPadding =
+                                    ButtonDefaults.MediumContentPadding.calculateLeftPadding(
+                                        layoutDirection = LocalLayoutDirection.current
+                                    )
+                                val horizontalPadding by animateDpAsState(
+                                    if (isPressed) defaultHorizontalPadding + 4.dp else defaultHorizontalPadding,
+                                    motionScheme.fastSpatialSpec()
                                 )
+                                Button(
+                                    onClick = { viewModel.onEvent(ReviewerEvent.ShowAnswer) },
+                                    modifier = Modifier.height(56.dp),
+                                    interactionSource = interactionSource,
+                                    contentPadding = PaddingValues(horizontal = horizontalPadding),
+                                    colors = ButtonDefaults.buttonColors(
+                                        MaterialTheme.colorScheme.primary,
+                                        MaterialTheme.colorScheme.onPrimary
+                                    )
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.show_answer),
+                                        softWrap = false,
+                                        overflow = TextOverflow.Clip
+                                    )
+                                }
+                            } else {
+                                ButtonGroup(
+                                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                                    overflowIndicator = { }) {
+
+                                    ratings.forEachIndexed { index, (_, rating) ->
+                                        customItem(
+                                            buttonGroupContent = {
+                                                val interactionSource =
+                                                    remember { MutableInteractionSource() }
+                                                Button(
+                                                    onClick = {
+                                                        viewModel.onEvent(
+                                                            ReviewerEvent.RateCard(
+                                                                rating
+                                                            )
+                                                        )
+                                                    },
+                                                    modifier = Modifier
+                                                        .animateWidth(
+                                                            interactionSource
+                                                        )
+                                                        .height(56.dp),
+                                                    contentPadding = ButtonDefaults.ExtraSmallContentPadding,
+                                                    shape = when (index) {
+                                                        0 -> ButtonGroupDefaults.connectedLeadingButtonShape
+                                                        3 -> ButtonGroupDefaults.connectedTrailingButtonShape
+                                                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes().shape
+                                                    },
+                                                    interactionSource = interactionSource,
+                                                    colors = ButtonDefaults.buttonColors(
+                                                        MaterialTheme.colorScheme.primary,
+                                                        MaterialTheme.colorScheme.onPrimary
+                                                    )
+                                                ) {
+                                                    Text(
+                                                        state.nextTimes[index],
+                                                        softWrap = false,
+                                                        overflow = TextOverflow.Visible
+                                                    )
+                                                }
+                                            },
+                                            menuContent = {},
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
         }
+
         if (showBottomSheet) {
             ModalBottomSheet(
                 onDismissRequest = {
@@ -365,32 +359,32 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                 val menuOptions = remember {
                     listOf(
                         Triple(R.string.redo, Icons.AutoMirrored.Filled.Undo) {
-                            // TODO
-                        }, Triple(R.string.enable_whiteboard, Icons.Filled.Edit) {
-                            // TODO
-                        }, Triple(R.string.cardeditor_title_edit_card, Icons.Filled.EditNote) {
-                            viewModel.onEvent(ReviewerEvent.EditCard)
-                        }, Triple(R.string.menu_edit_tags, Icons.AutoMirrored.Filled.Label) {
-                            // TODO
-                        }, Triple(R.string.menu_bury_card, Icons.Filled.VisibilityOff) {
-                            viewModel.onEvent(ReviewerEvent.BuryCard)
-                        }, Triple(R.string.menu_suspend_card, Icons.Filled.Pause) {
-                            viewModel.onEvent(ReviewerEvent.SuspendCard)
-                        }, Triple(R.string.menu_delete_note, Icons.Filled.Delete) {
-                            // TODO
-                        }, Triple(R.string.menu_mark_note, Icons.Filled.Star) {
-                            viewModel.onEvent(ReviewerEvent.ToggleMark)
-                        }, Triple(R.string.card_editor_reschedule_card, Icons.Filled.Schedule) {
-                            // TODO
-                        }, Triple(R.string.replay_media, Icons.Filled.Replay) {
-                            // TODO
-                        }, Triple(
-                            R.string.menu_enable_voice_playback, Icons.Filled.RecordVoiceOver
-                        ) {
-                            // TODO
-                        }, Triple(R.string.deck_options, Icons.Filled.Tune) {
-                            // TODO
-                        })
+                        // TODO
+                    }, Triple(R.string.enable_whiteboard, Icons.Filled.Edit) {
+                        // TODO
+                    }, Triple(R.string.cardeditor_title_edit_card, Icons.Filled.EditNote) {
+                        viewModel.onEvent(ReviewerEvent.EditCard)
+                    }, Triple(R.string.menu_edit_tags, Icons.AutoMirrored.Filled.Label) {
+                        // TODO
+                    }, Triple(R.string.menu_bury_card, Icons.Filled.VisibilityOff) {
+                        viewModel.onEvent(ReviewerEvent.BuryCard)
+                    }, Triple(R.string.menu_suspend_card, Icons.Filled.Pause) {
+                        viewModel.onEvent(ReviewerEvent.SuspendCard)
+                    }, Triple(R.string.menu_delete_note, Icons.Filled.Delete) {
+                        // TODO
+                    }, Triple(R.string.menu_mark_note, Icons.Filled.Star) {
+                        viewModel.onEvent(ReviewerEvent.ToggleMark)
+                    }, Triple(R.string.card_editor_reschedule_card, Icons.Filled.Schedule) {
+                        // TODO
+                    }, Triple(R.string.replay_media, Icons.Filled.Replay) {
+                        // TODO
+                    }, Triple(
+                        R.string.menu_enable_voice_playback, Icons.Filled.RecordVoiceOver
+                    ) {
+                        // TODO
+                    }, Triple(R.string.deck_options, Icons.Filled.Tune) {
+                        // TODO
+                    })
                 }
                 menuOptions.forEach { (textRes, icon, action) ->
                     ListItem(
