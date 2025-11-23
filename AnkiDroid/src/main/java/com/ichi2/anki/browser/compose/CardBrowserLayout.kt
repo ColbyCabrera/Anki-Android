@@ -101,14 +101,14 @@ private val transparentTextFieldColors: @Composable () -> TextFieldColors = {
         disabledIndicatorColor = Color.Transparent,
         focusedContainerColor = Color.Transparent,
         unfocusedContainerColor = Color.Transparent,
-        disabledContainerColor = Color.Transparent
+        disabledContainerColor = Color.Transparent,
     )
 }
 
 @OptIn(
     ExperimentalMaterial3WindowSizeClassApi::class,
     ExperimentalMaterial3Api::class,
-    ExperimentalMaterial3ExpressiveApi::class
+    ExperimentalMaterial3ExpressiveApi::class,
 )
 @Composable
 fun CardBrowserLayout(
@@ -131,15 +131,16 @@ fun CardBrowserLayout(
     onGradeNow: () -> Unit,
     onResetProgress: () -> Unit,
     onExportCard: () -> Unit,
-    onFilterByTag: () -> Unit
+    onFilterByTag: () -> Unit,
 ) {
     val activity = LocalActivity.current
-    val isTablet = if (activity != null) {
-        val windowSizeClass = calculateWindowSizeClass(activity)
-        windowSizeClass.widthSizeClass > WindowWidthSizeClass.Compact
-    } else {
-        false
-    }
+    val isTablet =
+        if (activity != null) {
+            val windowSizeClass = calculateWindowSizeClass(activity)
+            windowSizeClass.widthSizeClass > WindowWidthSizeClass.Compact
+        } else {
+            false
+        }
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val isSearchOpen by viewModel.flowOfSearchQueryExpanded.collectAsStateWithLifecycle()
     var showDeckMenu by remember { mutableStateOf(false) }
@@ -147,7 +148,7 @@ fun CardBrowserLayout(
     var availableDecks by remember { mutableStateOf<List<SelectableDeck.Deck>>(emptyList()) }
     val searchAnim by animateFloatAsState(
         targetValue = if (isSearchOpen) 1f else 0f,
-        animationSpec = motionScheme.defaultEffectsSpec()
+        animationSpec = motionScheme.defaultEffectsSpec(),
     )
     val density = LocalDensity.current
     val searchOffsetPx = with(density) { (-8).dp.toPx() }
@@ -173,9 +174,10 @@ fun CardBrowserLayout(
 
     var deckSearchQuery by remember { mutableStateOf("") }
 
-    val deckHierarchy = remember(availableDecks, deckSearchQuery) {
-        buildDeckHierarchy(availableDecks, deckSearchQuery)
-    }
+    val deckHierarchy =
+        remember(availableDecks, deckSearchQuery) {
+            buildDeckHierarchy(availableDecks, deckSearchQuery)
+        }
 
     val expandedDecks = remember { mutableStateMapOf<String, Boolean>() }
 
@@ -192,30 +194,34 @@ fun CardBrowserLayout(
     Row(modifier = Modifier.fillMaxSize()) {
         if (fragmented) {
             AnkiNavigationRail(
-                selectedItem = AppNavigationItem.CardBrowser, onNavigate = { item ->
+                selectedItem = AppNavigationItem.CardBrowser,
+                onNavigate = { item ->
                     when (item) {
                         AppNavigationItem.Decks -> onNavigateUp()
-                        AppNavigationItem.CardBrowser -> { /* Already here */
+                        AppNavigationItem.CardBrowser -> { // Already here
                         }
 
-                        AppNavigationItem.Statistics -> activity?.startActivity(
-                            Statistics.getIntent(
-                                activity
+                        AppNavigationItem.Statistics ->
+                            activity?.startActivity(
+                                Statistics.getIntent(
+                                    activity,
+                                ),
                             )
-                        )
 
-                        AppNavigationItem.Settings -> activity?.startActivity(
-                            PreferencesActivity.getIntent(
-                                activity
+                        AppNavigationItem.Settings ->
+                            activity?.startActivity(
+                                PreferencesActivity.getIntent(
+                                    activity,
+                                ),
                             )
-                        )
 
-                        AppNavigationItem.Help -> activity?.startActivity(
-                            Intent(
-                                activity,
-                                HelpActivity::class.java
+                        AppNavigationItem.Help ->
+                            activity?.startActivity(
+                                Intent(
+                                    activity,
+                                    HelpActivity::class.java,
+                                ),
                             )
-                        )
 
                         AppNavigationItem.Support -> {
                             val uri =
@@ -223,43 +229,55 @@ fun CardBrowserLayout(
                             activity?.startActivity(Intent(Intent.ACTION_VIEW, uri))
                         }
                     }
-                })
+                },
+            )
         }
         Scaffold(
-            modifier = Modifier.weight(1f), topBar = {
+            modifier = Modifier.weight(1f),
+            topBar = {
                 TopAppBar(title = {
-                    Row(modifier = Modifier.graphicsLayer {
-                        alpha = 1f - searchAnim
-                    }) {
+                    Row(
+                        modifier =
+                            Modifier.graphicsLayer {
+                                alpha = 1f - searchAnim
+                            },
+                    ) {
                         TextButton(onClick = { showDeckMenu = true }) {
                             val selectedDeck by viewModel.flowOfDeckSelection.collectAsStateWithLifecycle(
-                                null
+                                null,
                             )
-                            val deckName = when (val deck = selectedDeck) {
-                                is SelectableDeck.Deck -> deck.name
-                                else -> stringResource(R.string.card_browser_all_decks)
-                            }
+                            val deckName =
+                                when (val deck = selectedDeck) {
+                                    is SelectableDeck.Deck -> deck.name
+                                    else -> stringResource(R.string.card_browser_all_decks)
+                                }
                             Text(
-                                text = deckName, maxLines = 1, overflow = TextOverflow.Ellipsis
+                                text = deckName,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
                             )
                             Icon(
                                 Icons.Default.ArrowDropDown,
-                                contentDescription = stringResource(R.string.select_deck)
+                                contentDescription = stringResource(R.string.select_deck),
                             )
                         }
                         DropdownMenu(
-                            expanded = showDeckMenu, onDismissRequest = {
+                            expanded = showDeckMenu,
+                            onDismissRequest = {
                                 showDeckMenu = false
                                 deckSearchQuery = ""
                                 expandedDecks.clear()
-                            }, shape = MaterialTheme.shapes.large
+                            },
+                            shape = MaterialTheme.shapes.large,
                         ) {
                             Surface(
-                                modifier = Modifier.padding(
-                                    vertical = 8.dp, horizontal = 12.dp
-                                ),
+                                modifier =
+                                    Modifier.padding(
+                                        vertical = 8.dp,
+                                        horizontal = 12.dp,
+                                    ),
                                 color = MaterialTheme.colorScheme.surface,
-                                shape = CircleShape
+                                shape = CircleShape,
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     TextField(
@@ -271,7 +289,7 @@ fun CardBrowserLayout(
                                         leadingIcon = {
                                             Icon(
                                                 Icons.Default.Search,
-                                                contentDescription = stringResource(R.string.card_browser_search_hint)
+                                                contentDescription = stringResource(R.string.card_browser_search_hint),
                                             )
                                         },
                                         trailingIcon = {
@@ -279,7 +297,7 @@ fun CardBrowserLayout(
                                                 IconButton(onClick = { deckSearchQuery = "" }) {
                                                     Icon(
                                                         Icons.Default.Close,
-                                                        contentDescription = stringResource(R.string.close)
+                                                        contentDescription = stringResource(R.string.close),
                                                     )
                                                 }
                                             }
@@ -298,7 +316,8 @@ fun CardBrowserLayout(
                                     showDeckMenu = false
                                     deckSearchQuery = ""
                                     expandedDecks.clear()
-                                })
+                                },
+                            )
                             DeckHierarchyMenu(
                                 deckHierarchy = deckHierarchy,
                                 expandedDecks = expandedDecks,
@@ -310,7 +329,7 @@ fun CardBrowserLayout(
                                     deckSearchQuery = ""
                                     expandedDecks.clear()
                                 },
-                                searchQuery = deckSearchQuery
+                                searchQuery = deckSearchQuery,
                             )
                         }
                     }
@@ -318,10 +337,11 @@ fun CardBrowserLayout(
                     if (!isSearchOpen) {
                         FilledIconButton(
                             onClick = onNavigateUp,
-                            colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            ),
+                            colors =
+                                IconButtonDefaults.filledIconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                ),
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.arrow_back_24px),
@@ -334,8 +354,9 @@ fun CardBrowserLayout(
                         var textFieldValue by remember {
                             mutableStateOf(
                                 TextFieldValue(
-                                    searchQuery, selection = TextRange(0, searchQuery.length)
-                                )
+                                    searchQuery,
+                                    selection = TextRange(0, searchQuery.length),
+                                ),
                             )
                         }
 
@@ -347,55 +368,62 @@ fun CardBrowserLayout(
 
                         SearchBar(
                             inputField = {
-                            TextField(
-                                value = textFieldValue,
-                                onValueChange = {
-                                    textFieldValue = it
-                                    viewModel.setSearchQuery(it.text)
-                                },
-                                placeholder = { Text(text = stringResource(R.string.card_browser_search_hint)) },
-                                leadingIcon = {
-                                    Icon(
-                                        Icons.Default.Search,
-                                        contentDescription = stringResource(R.string.card_browser_search_hint)
-                                    )
-                                },
-                                trailingIcon = {
-                                    IconButton(onClick = { viewModel.collapseSearchQuery() }) {
+                                TextField(
+                                    value = textFieldValue,
+                                    onValueChange = {
+                                        textFieldValue = it
+                                        viewModel.setSearchQuery(it.text)
+                                    },
+                                    placeholder = { Text(text = stringResource(R.string.card_browser_search_hint)) },
+                                    leadingIcon = {
                                         Icon(
-                                            Icons.Default.Close,
-                                            contentDescription = stringResource(R.string.close)
+                                            Icons.Default.Search,
+                                            contentDescription = stringResource(R.string.card_browser_search_hint),
                                         )
-                                    }
-                                },
-                                colors = transparentTextFieldColors(),
-                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                keyboardActions = KeyboardActions(
-                                    onSearch = {
-                                        viewModel.search(textFieldValue.text)
-                                        keyboardController?.hide()
-                                    }),
-                                singleLine = true,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .focusRequester(focusRequester)
-                                    .graphicsLayer {
-                                        alpha = searchAnim
-                                        translationY = searchOffsetPx * (1f - searchAnim)
-                                        scaleX = 0.98f + 0.02f * searchAnim
-                                        scaleY = 0.98f + 0.02f * searchAnim
-                                    })
-                        },
+                                    },
+                                    trailingIcon = {
+                                        IconButton(onClick = { viewModel.collapseSearchQuery() }) {
+                                            Icon(
+                                                Icons.Default.Close,
+                                                contentDescription = stringResource(R.string.close),
+                                            )
+                                        }
+                                    },
+                                    colors = transparentTextFieldColors(),
+                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                    keyboardActions =
+                                        KeyboardActions(
+                                            onSearch = {
+                                                viewModel.search(textFieldValue.text)
+                                                keyboardController?.hide()
+                                            },
+                                        ),
+                                    singleLine = true,
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .focusRequester(focusRequester)
+                                            .graphicsLayer {
+                                                alpha = searchAnim
+                                                translationY = searchOffsetPx * (1f - searchAnim)
+                                                scaleX = 0.98f + 0.02f * searchAnim
+                                                scaleY = 0.98f + 0.02f * searchAnim
+                                            },
+                                )
+                            },
                             expanded = false,
                             onExpandedChange = { },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 10.dp, end = 6.dp, bottom = 16.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 10.dp, end = 6.dp, bottom = 16.dp),
                             shape = SearchBarDefaults.inputFieldShape,
-                            colors = SearchBarDefaults.colors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            ),
-                            content = { })
+                            colors =
+                                SearchBarDefaults.colors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                ),
+                            content = { },
+                        )
                     } else {
                         FilledTonalIconButton(
                             onClick = {
@@ -405,12 +433,13 @@ fun CardBrowserLayout(
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.search_24px),
-                                contentDescription = stringResource(R.string.card_browser_search_hint)
+                                contentDescription = stringResource(R.string.card_browser_search_hint),
                             )
                         }
                     }
                 })
-            }) { paddingValues ->
+            },
+        ) { paddingValues ->
             if (isTablet) {
                 CardBrowserScreen(
                     viewModel = viewModel,
@@ -432,7 +461,7 @@ fun CardBrowserLayout(
                     onGradeNow = onGradeNow,
                     onResetProgress = onResetProgress,
                     onExportCard = onExportCard,
-                    onFilterByTag = onFilterByTag
+                    onFilterByTag = onFilterByTag,
                 )
                 // TODO: Re-enable NoteEditor split view after migration is complete
                 // NoteEditor(
@@ -460,7 +489,7 @@ fun CardBrowserLayout(
                     onGradeNow = onGradeNow,
                     onResetProgress = onResetProgress,
                     onExportCard = onExportCard,
-                    onFilterByTag = onFilterByTag
+                    onFilterByTag = onFilterByTag,
                 )
             }
         }
@@ -468,28 +497,30 @@ fun CardBrowserLayout(
 }
 
 private fun buildDeckHierarchy(
-    decks: List<SelectableDeck.Deck>, searchQuery: String
+    decks: List<SelectableDeck.Deck>,
+    searchQuery: String,
 ): Map<String, List<SelectableDeck.Deck>> {
     val hierarchy = mutableMapOf<String, MutableList<SelectableDeck.Deck>>()
     val topLevelDecks = mutableListOf<SelectableDeck.Deck>()
 
-    val decksToShow = if (searchQuery.isEmpty()) {
-        decks
-    } else {
-        val matchingDecks = decks.filter { it.name.contains(searchQuery, ignoreCase = true) }
-        val requiredDecks = mutableSetOf<SelectableDeck.Deck>()
-        val allDecksByName = decks.associateBy { it.name }
+    val decksToShow =
+        if (searchQuery.isEmpty()) {
+            decks
+        } else {
+            val matchingDecks = decks.filter { it.name.contains(searchQuery, ignoreCase = true) }
+            val requiredDecks = mutableSetOf<SelectableDeck.Deck>()
+            val allDecksByName = decks.associateBy { it.name }
 
-        for (deck in matchingDecks) {
-            requiredDecks.add(deck)
-            var currentName = deck.name
-            while (currentName.contains("::")) {
-                currentName = currentName.substringBeforeLast("::")
-                allDecksByName[currentName]?.let { requiredDecks.add(it) }
+            for (deck in matchingDecks) {
+                requiredDecks.add(deck)
+                var currentName = deck.name
+                while (currentName.contains("::")) {
+                    currentName = currentName.substringBeforeLast("::")
+                    allDecksByName[currentName]?.let { requiredDecks.add(it) }
+                }
             }
+            requiredDecks.toList()
         }
-        requiredDecks.toList()
-    }
 
     for (deck in decksToShow) {
         val parts = deck.name.split("::")
@@ -511,7 +542,7 @@ private fun DeckHierarchyMenu(
     expandedDecks: MutableMap<String, Boolean>,
     onDeckSelected: (SelectableDeck.Deck) -> Unit,
     searchQuery: String,
-    parentName: String = ""
+    parentName: String = "",
 ) {
     val children = deckHierarchy[parentName] ?: return
 
@@ -526,14 +557,20 @@ private fun DeckHierarchyMenu(
                 if (hasChildren) {
                     IconButton(onClick = { expandedDecks[deck.name] = !isExpanded }) {
                         Icon(
-                            painter = if (isExpanded) painterResource(R.drawable.keyboard_arrow_right_24px)
-                            else painterResource(
-                                R.drawable.keyboard_arrow_down_24px
-                            ), contentDescription = "Expand"
+                            painter =
+                                if (isExpanded) {
+                                    painterResource(R.drawable.keyboard_arrow_right_24px)
+                                } else {
+                                    painterResource(
+                                        R.drawable.keyboard_arrow_down_24px,
+                                    )
+                                },
+                            contentDescription = "Expand",
                         )
                     }
                 }
-            })
+            },
+        )
         if (isExpanded && hasChildren) {
             Column(modifier = Modifier.padding(start = 16.dp)) {
                 DeckHierarchyMenu(
@@ -541,7 +578,7 @@ private fun DeckHierarchyMenu(
                     expandedDecks,
                     onDeckSelected,
                     searchQuery,
-                    deck.name
+                    deck.name,
                 )
             }
         }

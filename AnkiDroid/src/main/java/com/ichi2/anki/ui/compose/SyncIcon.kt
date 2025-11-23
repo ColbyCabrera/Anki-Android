@@ -38,7 +38,10 @@ import com.ichi2.anki.R
 import kotlinx.coroutines.launch
 
 @Composable
-fun SyncIcon(isSyncing: Boolean, onRefresh: () -> Unit) {
+fun SyncIcon(
+    isSyncing: Boolean,
+    onRefresh: () -> Unit,
+) {
     val rotation = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
 
@@ -48,23 +51,25 @@ fun SyncIcon(isSyncing: Boolean, onRefresh: () -> Unit) {
             scope.launch {
                 rotation.animateTo(
                     targetValue = rotation.value + 360f,
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessLow
-                    )
+                    animationSpec =
+                        spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessLow,
+                        ),
                 )
             }
         },
         enabled = !isSyncing,
-        colors = IconButtonDefaults.filledIconButtonColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-        ),
+        colors =
+            IconButtonDefaults.filledIconButtonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            ),
     ) {
         Icon(
             painter = painterResource(R.drawable.sync_24px),
             contentDescription = stringResource(R.string.sync_now),
-            modifier = Modifier.rotate(rotation.value)
+            modifier = Modifier.rotate(rotation.value),
         )
     }
 }

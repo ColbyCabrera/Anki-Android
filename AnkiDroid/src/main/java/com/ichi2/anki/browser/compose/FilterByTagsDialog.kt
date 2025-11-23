@@ -35,12 +35,13 @@ fun FilterByTagsDialog(
     initialSelection: Set<String>,
     deckTags: Set<String> = emptySet(),
     initialFilterByDeck: Boolean = false,
-    onFilterByDeckChanged: (Boolean) -> Unit = {}
+    onFilterByDeckChanged: (Boolean) -> Unit = {},
 ) {
-    val tagsState = when (allTags) {
-        is CardBrowserViewModel.TagsState.Loading -> TagsState.Loading
-        is CardBrowserViewModel.TagsState.Loaded -> TagsState.Loaded(allTags.tags)
-    }
+    val tagsState =
+        when (allTags) {
+            is CardBrowserViewModel.TagsState.Loading -> TagsState.Loading
+            is CardBrowserViewModel.TagsState.Loaded -> TagsState.Loaded(allTags.tags)
+        }
 
     TagsDialog(
         onDismissRequest = onDismissRequest,
@@ -53,6 +54,6 @@ fun FilterByTagsDialog(
         title = stringResource(id = R.string.card_browser_search_by_tag),
         confirmButtonText = stringResource(id = R.string.dialog_ok),
         showFilterByDeckToggle = true,
-        onAddTag = { /* Not used in this context */ }
+        onAddTag = { /* Not used in this context */ },
     )
 }

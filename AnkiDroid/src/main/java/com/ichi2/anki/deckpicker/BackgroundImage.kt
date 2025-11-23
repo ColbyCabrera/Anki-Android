@@ -147,9 +147,10 @@ object BackgroundImage {
     fun isTooLarge(context: Context): Boolean {
         val imageFile = getImageFile(context) ?: return false
 
-        val options = BitmapFactory.Options().apply {
-            inJustDecodeBounds = true
-        }
+        val options =
+            BitmapFactory.Options().apply {
+                inJustDecodeBounds = true
+            }
         BitmapFactory.decodeFile(imageFile.absolutePath, options)
 
         val width = options.outWidth

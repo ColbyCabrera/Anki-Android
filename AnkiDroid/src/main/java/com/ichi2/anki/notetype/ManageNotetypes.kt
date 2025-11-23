@@ -84,7 +84,6 @@ class ManageNotetypes : AnkiActivity() {
         setTitle(R.string.model_browser_label)
         actionBar = enableToolbar()
         setContent {
-
             ManageNoteTypesScreen(
                 noteTypes = currentNotetypes,
                 onAddNoteType = {
@@ -103,7 +102,6 @@ class ManageNotetypes : AnkiActivity() {
                 onRename = ::renameNotetype,
                 onDelete = ::deleteNotetype,
             )
-
         }
         launchCatchingTask { runAndRefreshAfter() } // shows the initial note types list
     }
@@ -137,13 +135,14 @@ class ManageNotetypes : AnkiActivity() {
      */
     @NeedsTest("verify note types list still filtered by search query after rename or delete")
     private fun filterNoteTypes(query: String) {
-        currentNotetypes = if (query.isEmpty()) {
-            currentNotetypes
-        } else {
-            currentNotetypes.filter {
-                it.name.lowercase().contains(query.lowercase())
+        currentNotetypes =
+            if (query.isEmpty()) {
+                currentNotetypes
+            } else {
+                currentNotetypes.filter {
+                    it.name.lowercase().contains(query.lowercase())
+                }
             }
-        }
     }
 
     @SuppressLint("CheckResult")
@@ -155,36 +154,42 @@ class ManageNotetypes : AnkiActivity() {
                     withCol { getNotetypeNames().map { it.toUiModel() } }
                 },
             )
-            val dialog = AlertDialog.Builder(this@ManageNotetypes).show {
-                    title(R.string.rename_model)
-                    positiveButton(R.string.rename) { it ->
-                        launchCatchingTask(
-                            // TODO: Change to CardTypeException: https://github.com/ankidroid/Anki-Android-Backend/issues/537
-                            // Card template 1 in note type 'character' has a problem.
-                            // Expected to find a field replacement on the front of the card template.
-                            skipCrashReport = { it is BackendException },
-                        ) {
-                            runAndRefreshAfter {
-                                val initialNotetype = getNotetype(manageNoteTypeUiModel.id)
-                                val renamedNotetype = initialNotetype.copy {
-                                    this.name = (it as AlertDialog).getInputField().text.toString()
+            val dialog =
+                AlertDialog
+                    .Builder(this@ManageNotetypes)
+                    .show {
+                        title(R.string.rename_model)
+                        positiveButton(R.string.rename) { it ->
+                            launchCatchingTask(
+                                // TODO: Change to CardTypeException: https://github.com/ankidroid/Anki-Android-Backend/issues/537
+                                // Card template 1 in note type 'character' has a problem.
+                                // Expected to find a field replacement on the front of the card template.
+                                skipCrashReport = { it is BackendException },
+                            ) {
+                                runAndRefreshAfter {
+                                    val initialNotetype = getNotetype(manageNoteTypeUiModel.id)
+                                    val renamedNotetype =
+                                        initialNotetype.copy {
+                                            this.name = (it as AlertDialog).getInputField().text.toString()
+                                        }
+                                    updateNotetype(renamedNotetype)
                                 }
-                                updateNotetype(renamedNotetype)
                             }
                         }
-                    }
-                    negativeButton(R.string.dialog_cancel)
-                    setView(R.layout.dialog_generic_text_input)
-                }.input(
-                    prefill = manageNoteTypeUiModel.name,
-                    waitForPositiveButton = false,
-                    displayKeyboard = true,
-                    callback = { dialog, text ->
-                        dialog.positiveButton.isEnabled =
-                            text.isNotEmpty() && !allNotetypes.map { it.name }
-                                .contains(text.toString())
-                    },
-                )
+                        negativeButton(R.string.dialog_cancel)
+                        setView(R.layout.dialog_generic_text_input)
+                    }.input(
+                        prefill = manageNoteTypeUiModel.name,
+                        waitForPositiveButton = false,
+                        displayKeyboard = true,
+                        callback = { dialog, text ->
+                            dialog.positiveButton.isEnabled =
+                                text.isNotEmpty() &&
+                                !allNotetypes
+                                    .map { it.name }
+                                    .contains(text.toString())
+                        },
+                    )
             // start with the button disabled as dialog shows the initial name
             dialog.positiveButton.isEnabled = false
         }
@@ -192,18 +197,19 @@ class ManageNotetypes : AnkiActivity() {
 
     private fun deleteNotetype(manageNoteTypeUiModel: ManageNoteTypeUiModel) {
         launchCatchingTask {
-            @StringRes val messageResourceId: Int? = if (userAcceptsSchemaChange()) {
-                withProgress {
-                    withCol {
-                        if (getNotetypeNames().size <= 1) {
-                            return@withCol null
+            @StringRes val messageResourceId: Int? =
+                if (userAcceptsSchemaChange()) {
+                    withProgress {
+                        withCol {
+                            if (getNotetypeNames().size <= 1) {
+                                return@withCol null
+                            }
+                            R.string.model_delete_warning
                         }
-                        R.string.model_delete_warning
                     }
+                } else {
+                    return@launchCatchingTask
                 }
-            } else {
-                return@launchCatchingTask
-            }
             if (messageResourceId == null) {
                 showSnackbar(getString(R.string.toast_last_model))
                 return@launchCatchingTask
@@ -228,27 +234,30 @@ class ManageNotetypes : AnkiActivity() {
      * @param action the action to run before the notetypes refresh, if not provided simply refresh
      */
     suspend fun runAndRefreshAfter(action: com.ichi2.anki.libanki.Collection.() -> Unit = {}) {
-        val updatedNotetypes = withProgress {
-            withCol {
-                action()
-                getNotetypeNameIdUseCount().map { it.toUiModel() }
+        val updatedNotetypes =
+            withProgress {
+                withCol {
+                    action()
+                    getNotetypeNameIdUseCount().map { it.toUiModel() }
+                }
             }
-        }
 
         currentNotetypes = updatedNotetypes
 
         filterNoteTypes(searchQuery)
-        actionBar.subtitle = resources.getQuantityString(
-            R.plurals.model_browser_types_available,
-            updatedNotetypes.size,
-            updatedNotetypes.size,
-        )
+        actionBar.subtitle =
+            resources.getQuantityString(
+                R.plurals.model_browser_types_available,
+                updatedNotetypes.size,
+                updatedNotetypes.size,
+            )
     }
 
     private inline fun <reified T : AnkiActivity> launchForChanges(extras: Map<String, Any>) {
-        val targetIntent = Intent(this@ManageNotetypes, T::class.java).apply {
-            extras.forEach { toExtra(it) }
-        }
+        val targetIntent =
+            Intent(this@ManageNotetypes, T::class.java).apply {
+                extras.forEach { toExtra(it) }
+            }
         outsideChangesLauncher.launch(targetIntent)
     }
 
