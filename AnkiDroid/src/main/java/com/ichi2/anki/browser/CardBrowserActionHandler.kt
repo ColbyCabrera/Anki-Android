@@ -69,9 +69,7 @@ class CardBrowserActionHandler(
         val changed = withProgress { viewModel.moveSelectedCardsToDeck(did).await() }
         viewModel.search(viewModel.searchQuery.value)
         val message = activity.resources.getQuantityString(
-            R.plurals.card_browser_cards_moved,
-            changed.count,
-            changed.count
+            R.plurals.card_browser_cards_moved, changed.count, changed.count
         )
         activity.showSnackbar(message) {
             this.setAction(R.string.undo) { activity.launchCatchingTask { activity.undoAndShowSnackbar() } }
@@ -88,10 +86,7 @@ class CardBrowserActionHandler(
         if (!ensureSelection("Change Deck")) return@launchCatchingTask
         val selectableDecks = viewModel.getAvailableDecks()
         val dialog = DeckSelectionDialog.newInstance(
-            activity.getString(R.string.move_all_to_deck),
-            null,
-            false,
-            selectableDecks
+            activity.getString(R.string.move_all_to_deck), null, false, selectableDecks
         )
         dialog.show(activity.supportFragmentManager, "deck_selection_dialog")
     }
@@ -175,17 +170,16 @@ class CardBrowserActionHandler(
 
         val noteIds = viewModel.queryAllSelectedNoteIds()
 
-        TagsDialog(activity as TagsDialogListener)
-            .withArguments(activity, TagsDialog.DialogType.EDIT_TAGS, noteIds)
-            .show(activity.supportFragmentManager, "edit_tags_dialog")
+        TagsDialog(activity as TagsDialogListener).withArguments(
+                activity,
+                TagsDialog.DialogType.EDIT_TAGS,
+                noteIds
+            ).show(activity.supportFragmentManager, "edit_tags_dialog")
     }
 
     fun showCreateFilteredDeckDialog() {
         val createFilteredDeckDialog = CreateDeckDialog(
-            activity,
-            R.string.new_deck,
-            CreateDeckDialog.DeckDialogType.FILTERED_DECK,
-            null
+            activity, R.string.new_deck, CreateDeckDialog.DeckDialogType.FILTERED_DECK, null
         )
         createFilteredDeckDialog.onNewDeckCreated = { deckId ->
             val intent = FilteredDeckOptions.getIntent(activity, deckId)
@@ -219,7 +213,10 @@ class CardBrowserActionHandler(
     }
 
     fun addNote() {
-        val launcher = NoteEditorLauncher.AddNoteFromCardBrowser(viewModel, inCardBrowserActivity = activity is com.ichi2.anki.CardBrowser)
+        val launcher = NoteEditorLauncher.AddNoteFromCardBrowser(
+            viewModel,
+            inCardBrowserActivity = activity is com.ichi2.anki.CardBrowser
+        )
         launchAddNote(launcher.toIntent(activity))
     }
 
@@ -227,9 +224,7 @@ class CardBrowserActionHandler(
         activity.launchCatchingTask {
             val intentData = viewModel.queryPreviewIntentData()
             val intent = PreviewerFragment.getIntent(
-                activity,
-                intentData.idsFile,
-                intentData.currentIndex
+                activity, intentData.idsFile, intentData.currentIndex
             )
             launchPreview(intent)
         }
