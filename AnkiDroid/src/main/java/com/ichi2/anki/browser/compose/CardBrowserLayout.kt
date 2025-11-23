@@ -54,7 +54,6 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
@@ -82,10 +81,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ichi2.anki.R
 import androidx.core.net.toUri
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ichi2.anki.HelpActivity
+import com.ichi2.anki.R
 import com.ichi2.anki.browser.BrowserRowWithId
 import com.ichi2.anki.browser.CardBrowserViewModel
 import com.ichi2.anki.model.SelectableDeck
@@ -193,28 +192,42 @@ fun CardBrowserLayout(
     Row(modifier = Modifier.fillMaxSize()) {
         if (fragmented) {
             AnkiNavigationRail(
-                selectedItem = AppNavigationItem.CardBrowser,
-                onNavigate = { item ->
+                selectedItem = AppNavigationItem.CardBrowser, onNavigate = { item ->
                     when (item) {
                         AppNavigationItem.Decks -> onNavigateUp()
-                        AppNavigationItem.CardBrowser -> { /* Already here */ }
-                        AppNavigationItem.Statistics -> activity?.startActivity(Statistics.getIntent(activity))
-                        AppNavigationItem.Settings -> activity?.startActivity(PreferencesActivity.getIntent(activity))
-                        AppNavigationItem.Help -> activity?.startActivity(Intent(activity, HelpActivity::class.java))
+                        AppNavigationItem.CardBrowser -> { /* Already here */
+                        }
+
+                        AppNavigationItem.Statistics -> activity?.startActivity(
+                            Statistics.getIntent(
+                                activity
+                            )
+                        )
+
+                        AppNavigationItem.Settings -> activity?.startActivity(
+                            PreferencesActivity.getIntent(
+                                activity
+                            )
+                        )
+
+                        AppNavigationItem.Help -> activity?.startActivity(
+                            Intent(
+                                activity,
+                                HelpActivity::class.java
+                            )
+                        )
+
                         AppNavigationItem.Support -> {
                             val uri =
                                 "https://github.com/ankidroid/Anki-Android/wiki/Contributing".toUri()
                             activity?.startActivity(Intent(Intent.ACTION_VIEW, uri))
                         }
                     }
-                }
-            )
+                })
         }
         Scaffold(
-            modifier = Modifier.weight(1f),
-            topBar = {
-            TopAppBar(
-                title = {
+            modifier = Modifier.weight(1f), topBar = {
+                TopAppBar(title = {
                     Row(modifier = Modifier.graphicsLayer {
                         alpha = 1f - searchAnim
                     }) {
@@ -226,23 +239,25 @@ fun CardBrowserLayout(
                                 is SelectableDeck.Deck -> deck.name
                                 else -> stringResource(R.string.card_browser_all_decks)
                             }
-                            Text(text = deckName, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(
+                                text = deckName, maxLines = 1, overflow = TextOverflow.Ellipsis
+                            )
                             Icon(
                                 Icons.Default.ArrowDropDown,
                                 contentDescription = stringResource(R.string.select_deck)
                             )
                         }
                         DropdownMenu(
-                            expanded = showDeckMenu,
-                            onDismissRequest = {
+                            expanded = showDeckMenu, onDismissRequest = {
                                 showDeckMenu = false
                                 deckSearchQuery = ""
                                 expandedDecks.clear()
-                            },
-                            shape = MaterialTheme.shapes.large
+                            }, shape = MaterialTheme.shapes.large
                         ) {
                             Surface(
-                                modifier = Modifier.padding(vertical = 8.dp, horizontal = 12.dp),
+                                modifier = Modifier.padding(
+                                    vertical = 8.dp, horizontal = 12.dp
+                                ),
                                 color = MaterialTheme.colorScheme.surface,
                                 shape = CircleShape
                             ) {
@@ -283,8 +298,7 @@ fun CardBrowserLayout(
                                     showDeckMenu = false
                                     deckSearchQuery = ""
                                     expandedDecks.clear()
-                                }
-                            )
+                                })
                             DeckHierarchyMenu(
                                 deckHierarchy = deckHierarchy,
                                 expandedDecks = expandedDecks,
@@ -300,8 +314,7 @@ fun CardBrowserLayout(
                             )
                         }
                     }
-                },
-                navigationIcon = {
+                }, navigationIcon = {
                     if (!isSearchOpen) {
                         FilledIconButton(
                             onClick = onNavigateUp,
@@ -316,14 +329,12 @@ fun CardBrowserLayout(
                             )
                         }
                     }
-                },
-                actions = {
+                }, actions = {
                     if (isSearchOpen) {
                         var textFieldValue by remember {
                             mutableStateOf(
                                 TextFieldValue(
-                                    searchQuery,
-                                    selection = TextRange(0, searchQuery.length)
+                                    searchQuery, selection = TextRange(0, searchQuery.length)
                                 )
                             )
                         }
@@ -336,47 +347,45 @@ fun CardBrowserLayout(
 
                         SearchBar(
                             inputField = {
-                                TextField(
-                                    value = textFieldValue,
-                                    onValueChange = {
-                                        textFieldValue = it
-                                        viewModel.setSearchQuery(it.text)
-                                    },
-                                    placeholder = { Text(text = stringResource(R.string.card_browser_search_hint)) },
-                                    leadingIcon = {
+                            TextField(
+                                value = textFieldValue,
+                                onValueChange = {
+                                    textFieldValue = it
+                                    viewModel.setSearchQuery(it.text)
+                                },
+                                placeholder = { Text(text = stringResource(R.string.card_browser_search_hint)) },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Search,
+                                        contentDescription = stringResource(R.string.card_browser_search_hint)
+                                    )
+                                },
+                                trailingIcon = {
+                                    IconButton(onClick = { viewModel.collapseSearchQuery() }) {
                                         Icon(
-                                            Icons.Default.Search,
-                                            contentDescription = stringResource(R.string.card_browser_search_hint)
+                                            Icons.Default.Close,
+                                            contentDescription = stringResource(R.string.close)
                                         )
-                                    },
-                                    trailingIcon = {
-                                        IconButton(onClick = { viewModel.collapseSearchQuery() }) {
-                                            Icon(
-                                                Icons.Default.Close,
-                                                contentDescription = stringResource(R.string.close)
-                                            )
-                                        }
-                                    },
-                                    colors = transparentTextFieldColors(),
-                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                    keyboardActions = KeyboardActions(
-                                        onSearch = {
-                                            viewModel.search(textFieldValue.text)
-                                            keyboardController?.hide()
-                                        }
-                                    ),
-                                    singleLine = true,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .focusRequester(focusRequester)
-                                        .graphicsLayer {
-                                            alpha = searchAnim
-                                            translationY = searchOffsetPx * (1f - searchAnim)
-                                            scaleX = 0.98f + 0.02f * searchAnim
-                                            scaleY = 0.98f + 0.02f * searchAnim
-                                        }
-                                )
-                            },
+                                    }
+                                },
+                                colors = transparentTextFieldColors(),
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                keyboardActions = KeyboardActions(
+                                    onSearch = {
+                                        viewModel.search(textFieldValue.text)
+                                        keyboardController?.hide()
+                                    }),
+                                singleLine = true,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .focusRequester(focusRequester)
+                                    .graphicsLayer {
+                                        alpha = searchAnim
+                                        translationY = searchOffsetPx * (1f - searchAnim)
+                                        scaleX = 0.98f + 0.02f * searchAnim
+                                        scaleY = 0.98f + 0.02f * searchAnim
+                                    })
+                        },
                             expanded = false,
                             onExpandedChange = { },
                             modifier = Modifier
@@ -386,8 +395,7 @@ fun CardBrowserLayout(
                             colors = SearchBarDefaults.colors(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                             ),
-                            content = { }
-                        )
+                            content = { })
                     } else {
                         FilledTonalIconButton(
                             onClick = {
@@ -401,13 +409,9 @@ fun CardBrowserLayout(
                             )
                         }
                     }
-                }
-            )
-        }) { paddingValues ->
-        if (isTablet) {
-            Row(
-                Modifier.padding(paddingValues)
-            ) {
+                })
+            }) { paddingValues ->
+            if (isTablet) {
                 CardBrowserScreen(
                     viewModel = viewModel,
                     onCardClicked = onCardClicked,
@@ -434,39 +438,37 @@ fun CardBrowserLayout(
                 // NoteEditor(
                 //     modifier = Modifier.weight(1f)
                 // )
+            } else {
+                // Don't apply paddingValues here to allow content to draw behind system bars
+                // Instead pass them to CardBrowserScreen
+                CardBrowserScreen(
+                    viewModel = viewModel,
+                    onCardClicked = onCardClicked,
+                    contentPadding = paddingValues,
+                    onAddNote = onAddNote,
+                    onPreview = onPreview,
+                    onFilter = onFilter,
+                    onSelectAll = onSelectAll,
+                    onOptions = onOptions,
+                    onCreateFilteredDeck = onCreateFilteredDeck,
+                    onEditNote = onEditNote,
+                    onCardInfo = onCardInfo,
+                    onChangeDeck = onChangeDeck,
+                    onReposition = onReposition,
+                    onSetDueDate = onSetDueDate,
+                    onEditTags = onEditTags,
+                    onGradeNow = onGradeNow,
+                    onResetProgress = onResetProgress,
+                    onExportCard = onExportCard,
+                    onFilterByTag = onFilterByTag
+                )
             }
-        } else {
-            // Don't apply paddingValues here to allow content to draw behind system bars
-            // Instead pass them to CardBrowserScreen
-            CardBrowserScreen(
-                viewModel = viewModel,
-                onCardClicked = onCardClicked,
-                contentPadding = paddingValues,
-                onAddNote = onAddNote,
-                onPreview = onPreview,
-                onFilter = onFilter,
-                onSelectAll = onSelectAll,
-                onOptions = onOptions,
-                onCreateFilteredDeck = onCreateFilteredDeck,
-                onEditNote = onEditNote,
-                onCardInfo = onCardInfo,
-                onChangeDeck = onChangeDeck,
-                onReposition = onReposition,
-                onSetDueDate = onSetDueDate,
-                onEditTags = onEditTags,
-                onGradeNow = onGradeNow,
-                onResetProgress = onResetProgress,
-                onExportCard = onExportCard,
-                onFilterByTag = onFilterByTag
-            )
         }
-    }
     }
 }
 
 private fun buildDeckHierarchy(
-    decks: List<SelectableDeck.Deck>,
-    searchQuery: String
+    decks: List<SelectableDeck.Deck>, searchQuery: String
 ): Map<String, List<SelectableDeck.Deck>> {
     val hierarchy = mutableMapOf<String, MutableList<SelectableDeck.Deck>>()
     val topLevelDecks = mutableListOf<SelectableDeck.Deck>()
@@ -531,11 +533,16 @@ private fun DeckHierarchyMenu(
                         )
                     }
                 }
-            }
-        )
+            })
         if (isExpanded && hasChildren) {
             Column(modifier = Modifier.padding(start = 16.dp)) {
-                DeckHierarchyMenu(deckHierarchy, expandedDecks, onDeckSelected, searchQuery, deck.name)
+                DeckHierarchyMenu(
+                    deckHierarchy,
+                    expandedDecks,
+                    onDeckSelected,
+                    searchQuery,
+                    deck.name
+                )
             }
         }
     }
