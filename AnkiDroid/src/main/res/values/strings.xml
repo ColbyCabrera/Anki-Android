@@ -48,4 +48,9 @@
     <string name="donate">Donate</string>
     <string name="ankiweb_is_not_affiliated_with_this_app">AnkiWeb is not affiliated with this app</string>
     <string name="undo_empty">Nothing to undo</string>
+    <string name="browser">Browser</string>
+    <string name="total_new">Total New</string>
+    <string name="learning">Learning</string>
+    <string name="review">Review</string>
+    <string name="buried_cards_are_not_included_in_counts_above">Buried cards are not included in counts above.</string>
 </resources>

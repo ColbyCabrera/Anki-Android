@@ -111,4 +111,7 @@
 
     <string name="browser_find_replace_loading_fields">Retrieving fields names&#8230;</string>
     <string name="note_editor_tags_title">Tags</string>
+
+    <string name="card_browser_no_cards_selected">No cards selected</string>
+    <string name="card_browser_reposition_invalid_bounds">Could not determine card range</string>
 </resources>
