@@ -37,6 +37,7 @@ import android.view.SubMenu
 import android.view.View
 import android.webkit.WebView
 import android.widget.LinearLayout
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.CheckResult
@@ -200,16 +201,10 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
             return
         }
         super.onCreate(savedInstanceState)
-        WindowCompat.setDecorFitsSystemWindows(window, false)
+        enableEdgeToEdge()
 
         val composeView = ComposeView(this)
         setContentView(composeView)
-
-        ViewCompat.setOnApplyWindowInsetsListener(composeView) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
 
         if (!ensureStoragePermissions()) {
             return
