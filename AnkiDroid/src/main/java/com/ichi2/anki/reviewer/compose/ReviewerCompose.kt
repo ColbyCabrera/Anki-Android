@@ -295,8 +295,8 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                             interactionSource = interactionSource,
                             contentPadding = PaddingValues(horizontal = horizontalPadding),
                             colors = ButtonDefaults.buttonColors(
-                                MaterialTheme.colorScheme.secondaryContainer,
-                                MaterialTheme.colorScheme.onSecondaryContainer
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.onPrimary
                             )
                         ) {
                             Text(
@@ -334,8 +334,8 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                                             },
                                             interactionSource = interactionSource,
                                             colors = ButtonDefaults.buttonColors(
-                                                MaterialTheme.colorScheme.secondaryContainer,
-                                                MaterialTheme.colorScheme.onSecondaryContainer
+                                                MaterialTheme.colorScheme.primary,
+                                                MaterialTheme.colorScheme.onPrimary
                                             )
                                         ) {
                                             Text(
