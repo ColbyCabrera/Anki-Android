@@ -86,6 +86,7 @@ class CardBrowserActionHandler(
     fun showChangeDeckDialog() = activity.launchCatchingTask {
         if (!viewModel.hasSelectedAnyRows()) {
             Timber.i("Not showing Change Deck - No Cards")
+            activity.showSnackbar(activity.getString(R.string.card_browser_no_cards_selected))
             return@launchCatchingTask
         }
         val selectableDecks = viewModel.getAvailableDecks()
@@ -135,6 +136,11 @@ class CardBrowserActionHandler(
                     val bottom = repositionCardsResult.queueBottom
                     if (top == null || bottom == null) {
                         Timber.w("repositionSelectedCards: queueTop or queueBottom is null, aborting")
+                        SimpleMessageDialog.newInstance(
+                            title = activity.getString(R.string.vague_error),
+                            message = activity.getString(R.string.card_browser_reposition_invalid_bounds),
+                            reload = false
+                        ).show(activity.supportFragmentManager, "reposition_invalid_bounds_dialog")
                         return@launchCatchingTask
                     }
                     val repositionDialog = RepositionCardFragment.newInstance(
@@ -150,11 +156,21 @@ class CardBrowserActionHandler(
     }
 
     fun onResetProgress() {
+        if (!viewModel.hasSelectedAnyRows()) {
+            Timber.i("Attempted reset progress - no cards selected")
+            activity.showSnackbar(activity.getString(R.string.card_browser_no_cards_selected))
+            return
+        }
         if (warnUserIfInNotesOnlyMode()) return
         ForgetCardsDialog().show(activity.supportFragmentManager, "reset_progress_dialog")
     }
 
     fun onGradeNow() {
+        if (!viewModel.hasSelectedAnyRows()) {
+            Timber.i("Attempted grade now - no cards selected")
+            activity.showSnackbar(activity.getString(R.string.card_browser_no_cards_selected))
+            return
+        }
         if (warnUserIfInNotesOnlyMode()) return
         activity.launchCatchingTask {
             val cids = viewModel.queryAllSelectedCardIds()
