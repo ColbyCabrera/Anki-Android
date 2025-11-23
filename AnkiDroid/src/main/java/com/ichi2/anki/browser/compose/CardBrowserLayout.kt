@@ -54,6 +54,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
@@ -411,6 +412,7 @@ fun CardBrowserLayout(
                     viewModel = viewModel,
                     onCardClicked = onCardClicked,
                     modifier = Modifier.weight(1f),
+                    contentPadding = paddingValues,
                     onAddNote = onAddNote,
                     onPreview = onPreview,
                     onFilter = onFilter,
@@ -434,33 +436,29 @@ fun CardBrowserLayout(
                 // )
             }
         } else {
-            Row(
-                modifier = Modifier.padding(
-                    top = paddingValues.calculateTopPadding(),
-                    bottom = 0.dp
-                )
-            ) {
-                CardBrowserScreen(
-                    viewModel = viewModel,
-                    onCardClicked = onCardClicked,
-                    onAddNote = onAddNote,
-                    onPreview = onPreview,
-                    onFilter = onFilter,
-                    onSelectAll = onSelectAll,
-                    onOptions = onOptions,
-                    onCreateFilteredDeck = onCreateFilteredDeck,
-                    onEditNote = onEditNote,
-                    onCardInfo = onCardInfo,
-                    onChangeDeck = onChangeDeck,
-                    onReposition = onReposition,
-                    onSetDueDate = onSetDueDate,
-                    onEditTags = onEditTags,
-                    onGradeNow = onGradeNow,
-                    onResetProgress = onResetProgress,
-                    onExportCard = onExportCard,
-                    onFilterByTag = onFilterByTag
-                )
-            }
+            // Don't apply paddingValues here to allow content to draw behind system bars
+            // Instead pass them to CardBrowserScreen
+            CardBrowserScreen(
+                viewModel = viewModel,
+                onCardClicked = onCardClicked,
+                contentPadding = paddingValues,
+                onAddNote = onAddNote,
+                onPreview = onPreview,
+                onFilter = onFilter,
+                onSelectAll = onSelectAll,
+                onOptions = onOptions,
+                onCreateFilteredDeck = onCreateFilteredDeck,
+                onEditNote = onEditNote,
+                onCardInfo = onCardInfo,
+                onChangeDeck = onChangeDeck,
+                onReposition = onReposition,
+                onSetDueDate = onSetDueDate,
+                onEditTags = onEditTags,
+                onGradeNow = onGradeNow,
+                onResetProgress = onResetProgress,
+                onExportCard = onExportCard,
+                onFilterByTag = onFilterByTag
+            )
         }
     }
     }
