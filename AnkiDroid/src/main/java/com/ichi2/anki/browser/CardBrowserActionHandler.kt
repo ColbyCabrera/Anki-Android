@@ -48,9 +48,14 @@ class CardBrowserActionHandler(
 
     fun onSelectedTags(
         selectedTags: List<String>,
-        indeterminateTags: List<String>,
-        stateFilter: CardStateFilter
+        @Suppress("UNUSED_PARAMETER") indeterminateTags: List<String>,
+        @Suppress("UNUSED_PARAMETER") stateFilter: CardStateFilter
     ) {
+        // _indeterminateTags and _stateFilter are used in the TagSelectionDialog to update UI state,
+        // but they are not needed here in the action handler because viewModel.updateTags()
+        // only requires the list of selected tags to perform the bulk update on the backend.
+        // We suppress the UNUSED_PARAMETER warning instead of removing them to maintain consistency
+        // with the TagsDialogListener interface, which this method signature mirrors.
         viewModel.updateTags(selectedTags)
     }
 
