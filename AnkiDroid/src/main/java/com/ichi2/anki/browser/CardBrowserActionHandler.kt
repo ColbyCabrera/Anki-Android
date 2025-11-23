@@ -84,11 +84,7 @@ class CardBrowserActionHandler(
     }
 
     fun showChangeDeckDialog() = activity.launchCatchingTask {
-        if (!viewModel.hasSelectedAnyRows()) {
-            Timber.i("Not showing Change Deck - No Cards")
-            activity.showSnackbar(activity.getString(R.string.card_browser_no_cards_selected))
-            return@launchCatchingTask
-        }
+        if (!ensureSelection("Change Deck")) return@launchCatchingTask
         val selectableDecks = viewModel.getAvailableDecks()
         val dialog = DeckSelectionDialog.newInstance(
             activity.getString(R.string.move_all_to_deck),
@@ -100,10 +96,7 @@ class CardBrowserActionHandler(
     }
 
     fun rescheduleSelectedCards() {
-        if (!viewModel.hasSelectedAnyRows()) {
-            Timber.i("Attempted reschedule - no cards selected")
-            return
-        }
+        if (!ensureSelection("reschedule")) return
         if (warnUserIfInNotesOnlyMode()) return
 
         activity.launchCatchingTask {
@@ -115,10 +108,7 @@ class CardBrowserActionHandler(
 
     fun repositionSelectedCards() {
         Timber.i("CardBrowser:: Reposition button pressed")
-        if (!viewModel.hasSelectedAnyRows()) {
-            Timber.i("Attempted reposition - no cards selected")
-            return
-        }
+        if (!ensureSelection("reposition")) return
         if (warnUserIfInNotesOnlyMode()) return
         activity.launchCatchingTask {
             when (val repositionCardsResult = viewModel.prepareToRepositionCards()) {
@@ -156,21 +146,13 @@ class CardBrowserActionHandler(
     }
 
     fun onResetProgress() {
-        if (!viewModel.hasSelectedAnyRows()) {
-            Timber.i("Attempted reset progress - no cards selected")
-            activity.showSnackbar(activity.getString(R.string.card_browser_no_cards_selected))
-            return
-        }
+        if (!ensureSelection("reset progress")) return
         if (warnUserIfInNotesOnlyMode()) return
         ForgetCardsDialog().show(activity.supportFragmentManager, "reset_progress_dialog")
     }
 
     fun onGradeNow() {
-        if (!viewModel.hasSelectedAnyRows()) {
-            Timber.i("Attempted grade now - no cards selected")
-            activity.showSnackbar(activity.getString(R.string.card_browser_no_cards_selected))
-            return
-        }
+        if (!ensureSelection("grade now")) return
         if (warnUserIfInNotesOnlyMode()) return
         activity.launchCatchingTask {
             val cids = viewModel.queryAllSelectedCardIds()
@@ -250,5 +232,14 @@ class CardBrowserActionHandler(
             )
             launchPreview(intent)
         }
+    }
+
+    private fun ensureSelection(action: String): Boolean {
+        if (!viewModel.hasSelectedAnyRows()) {
+            Timber.i("Attempted $action - no cards selected")
+            activity.showSnackbar(activity.getString(R.string.card_browser_no_cards_selected))
+            return false
+        }
+        return true
     }
 }
