@@ -134,6 +134,7 @@ class CardBrowserActionHandler(
                     val top = repositionCardsResult.queueTop
                     val bottom = repositionCardsResult.queueBottom
                     if (top == null || bottom == null) {
+                        Timber.w("repositionSelectedCards: queueTop or queueBottom is null, aborting")
                         return@launchCatchingTask
                     }
                     val repositionDialog = RepositionCardFragment.newInstance(
