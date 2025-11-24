@@ -23,6 +23,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -74,6 +76,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
@@ -131,6 +134,7 @@ fun CardBrowserScreen(
     var toolbarHeight by remember { mutableIntStateOf(0) }
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+    val layoutDirection = LocalLayoutDirection.current
 
     LaunchedEffect(viewModel.flowOfSnackbarMessage) {
         viewModel.flowOfSnackbarMessage.collect { messageRes ->
@@ -139,7 +143,13 @@ fun CardBrowserScreen(
     }
 
     Box(modifier = modifier) {
-        Column(modifier = Modifier.padding(top = contentPadding.calculateTopPadding())) {
+        Column(
+            modifier = Modifier.padding(
+                top = contentPadding.calculateTopPadding(),
+                start = contentPadding.calculateStartPadding(layoutDirection),
+                end = contentPadding.calculateEndPadding(layoutDirection)
+            )
+        ) {
             CardBrowserHeader(columns = columnHeadings)
             HorizontalDivider()
             when (val state = searchState) {
