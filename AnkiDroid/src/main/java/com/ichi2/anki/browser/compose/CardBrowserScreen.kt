@@ -121,7 +121,7 @@ fun CardBrowserScreen(
     val columnHeadings by viewModel.flowOfColumnHeadings.collectAsStateWithLifecycle()
     val selectedRows by viewModel.flowOfSelectedRows.collectAsStateWithLifecycle(initialValue = emptySet())
     val hasSelection = selectedRows.isNotEmpty()
-    val searchState by viewModel.flowOfSearchState.collectAsStateWithLifecycle(initialValue = SearchState.Initializing)
+    val searchState by viewModel.searchState.collectAsStateWithLifecycle()
     var showFilterSheet by remember { mutableStateOf(false) }
     var showMoreOptionsMenu by remember { mutableStateOf(false) }
     var showSortMenu by remember { mutableStateOf(false) }

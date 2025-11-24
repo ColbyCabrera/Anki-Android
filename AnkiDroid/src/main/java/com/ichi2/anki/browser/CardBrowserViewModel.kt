@@ -141,7 +141,8 @@ class CardBrowserViewModel(
 
     val cards = BrowserRowCollection(CARDS, mutableListOf())
 
-    val flowOfSearchState = MutableSharedFlow<SearchState>()
+    private val _searchState = MutableStateFlow<SearchState>(SearchState.Initializing)
+    val searchState: StateFlow<SearchState> = _searchState
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery
@@ -918,7 +919,7 @@ class CardBrowserViewModel(
             ChangeCardOrder.DirectionChange -> {
                 reverseDirectionFlow.update { ReverseDirection(isSortDescending = !isSortDescendingValue) }
                 cards.reverse()
-                viewModelScope.launch { flowOfSearchState.emit(SearchState.Completed) }
+                viewModelScope.launch { _searchState.emit(SearchState.Completed) }
             }
         }
     }
@@ -1264,9 +1265,9 @@ class CardBrowserViewModel(
             searchJob?.cancel()
             searchJob =
                 launchCatchingIO(
-                    errorMessageHandler = { error -> flowOfSearchState.emit(SearchState.Error(error)) },
+                    errorMessageHandler = { error -> _searchState.emit(SearchState.Error(error)) },
                 ) {
-                    flowOfSearchState.emit(SearchState.Searching)
+                    _searchState.emit(SearchState.Searching)
                     Timber.d("performing search: '%s'", query)
                     val newBrowserRows = withCol {
                         val ids = when (cardsOrNotes) {
@@ -1285,7 +1286,7 @@ class CardBrowserViewModel(
                     ensureActive()
                     _browserRows.value = newBrowserRows
                     this@CardBrowserViewModel.cards.replaceWith(cardsOrNotes, newBrowserRows.map { CardOrNoteId(it.id) })
-                    flowOfSearchState.emit(SearchState.Completed)
+                    _searchState.emit(SearchState.Completed)
                     selectUnvalidatedRowIds(cardOrNoteIdsToSelect)
                 }
         }
