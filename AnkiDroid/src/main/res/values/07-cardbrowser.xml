@@ -54,7 +54,7 @@
     <string name="card_browser_search_hint" comment="Message displayed in the search text field in the card browser.">Search</string>
     <string name="card_browser_cram_search" maxLength="28" comment = "Menu entry to start a search.">Search</string>
     <string name="card_browser_change_display_order_title">Choose display order</string>
-    <string name="card_details_tags">Tags</string>
+    <string name="card_details_tags" comment="Tags label in card details. Duplicate of note_editor_tags_title for card browser context">Tags</string>
     <string-array name="card_browser_order_labels">
         <item>No sorting (faster)</item>
         <item>By sort field</item>

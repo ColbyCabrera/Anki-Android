@@ -93,8 +93,8 @@ using the + icon.</string>
     <string name="menu_bury_note" maxLength="28">Bury note</string>
     <string name="menu_bury" maxLength="28">Bury</string>
     <string name="menu_suspend" maxLength="28">Suspend</string>
-    <string name="menu_suspend_card">Suspend Card</string>
-    <string name="menu_suspend_note">Suspend Note</string>
+    <string name="menu_suspend_card" maxLength="28">Suspend Card</string>
+    <string name="menu_suspend_note" maxLength="28">Suspend Note</string>
     <string name="webview_crash_unknwon_detailed">Unknown webview crash</string>
     <string name="menu_delete_note" maxLength="28">Delete note</string>
     <string name="menu_flag" maxLength="41">Flag</string>
@@ -114,11 +114,11 @@ using the + icon.</string>
     <string name="menu_disable_voice_playback">Disable voice playback</string>
     <string name="directory_inaccessible">AnkiDroid directory is inaccessible</string>
     <string name="startup_no_storage_permission">Please grant AnkiDroid the ‘Storage’ permission to continue</string>
-    <string name="rebuild_filtered_deck">Rebuilding filtered deck…</string>
+    <string name="rebuild_filtered_deck" tools:ignore="UnusedResources">Rebuilding filtered deck…</string>
     <string name="rebuild_cram_label" maxLength="28">Rebuild</string>
     <string name="empty_cram_label" maxLength="28">Empty</string>
     <string name="create_subdeck">Create subdeck</string>
-    <string name="empty_filtered_deck">Emptying filtered deck…</string>
+    <string name="empty_filtered_deck" tools:ignore="UnusedResources">Emptying filtered deck…</string>
     <string name="search_deck" comment="Deck search for selecting it">Deck Search</string>
     <string name="empty_deck">This deck is empty</string>
     <string name="search_for_download_deck" comment="Deck search value for downloading deck" maxLength="28">Deck Search</string>
