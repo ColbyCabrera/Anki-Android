@@ -7,12 +7,12 @@
     <string name="deck_options">Deck options</string>
     <string name="add_card">Add card</string>
     <string name="get_shared">Get shared decks</string>
-    <string name="search_decks">Search decks</string>
+    <string name="search_decks" maxLength="28">Search decks</string>
     <string name="close">Close</string>
     <string name="more_options">More options</string>
-    <string name="custom_study">Custom Study</string>
+    <string name="custom_study" maxLength="28">Custom Study</string>
     <string name="unanswer_card">Unanswer card</string>
-    <string name="unbury">Unbury</string>
+    <string name="unbury" maxLength="28">Unbury</string>
     <string name="new_deck">Create deck</string>
     <string name="new_dynamic_deck">Create filtered deck</string>
     <string name="add">Add</string>

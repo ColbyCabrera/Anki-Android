@@ -93,8 +93,8 @@ using the + icon.</string>
     <string name="menu_bury_note" maxLength="28">Bury note</string>
     <string name="menu_bury" maxLength="28">Bury</string>
     <string name="menu_suspend" maxLength="28">Suspend</string>
-    <string name="menu_suspend_card">Suspend Card</string>
-    <string name="menu_suspend_note">Suspend Note</string>
+    <string name="menu_suspend_card" maxLength="28">Suspend Card</string>
+    <string name="menu_suspend_note" maxLength="28">Suspend Note</string>
     <string name="webview_crash_unknwon_detailed">Unknown webview crash</string>
     <string name="menu_delete_note" maxLength="28">Delete note</string>
     <string name="menu_flag" maxLength="41">Flag</string>
