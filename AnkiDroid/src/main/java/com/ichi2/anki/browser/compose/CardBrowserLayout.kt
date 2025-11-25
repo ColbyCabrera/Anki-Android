@@ -61,6 +61,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -156,7 +157,7 @@ fun CardBrowserLayout(
     // Use an integer revision counter as an event-style trigger so that
     // requesting the keyboard doesn't reset the trigger inside the effect
     // (which would cause an extra recomposition and restart the effect).
-    var keyboardTrigger by remember { mutableStateOf(0) }
+    var keyboardTrigger by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(keyboardTrigger) {
         // Only run after an explicit trigger increment (> 0). This avoids
