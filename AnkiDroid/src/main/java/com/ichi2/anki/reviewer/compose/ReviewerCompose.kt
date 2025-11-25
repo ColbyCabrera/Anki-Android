@@ -103,6 +103,7 @@ import com.ichi2.anki.reviewer.ReviewerEvent
 import com.ichi2.anki.reviewer.ReviewerViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import com.ichi2.anki.Whiteboard as WhiteboardView
 
 private val ratings = listOf(
     "Again" to CardAnswer.Rating.AGAIN,
@@ -125,8 +126,12 @@ class InvertedTopCornersShape(private val cornerRadius: Dp) : Shape {
             // Arc from (r, 0) down to (0, r)
             arcTo(
                 rect = Rect(
-                    left = 0f, top = 0f, right = 2 * cornerRadiusPx, bottom = 2 * cornerRadiusPx
-                ), startAngleDegrees = 270f,   // Top-center of the rect
+                    left = 0f,
+                    top = 0f,
+                    right = 2 * cornerRadiusPx,
+                    bottom = 2 * cornerRadiusPx
+                ),
+                startAngleDegrees = 270f,   // Top-center of the rect
                 sweepAngleDegrees = -90f, // Sweep counter-clockwise
                 forceMoveTo = false
             )
@@ -143,7 +148,8 @@ class InvertedTopCornersShape(private val cornerRadius: Dp) : Shape {
                     top = 0f,
                     right = size.width,
                     bottom = 2 * cornerRadiusPx
-                ), startAngleDegrees = 270f, // Top-center of the rect
+                ),
+                startAngleDegrees = 270f, // Top-center of the rect
                 sweepAngleDegrees = 90f,  // Sweep clockwise
                 forceMoveTo = false
             )
@@ -156,7 +162,7 @@ class InvertedTopCornersShape(private val cornerRadius: Dp) : Shape {
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun ReviewerContent(viewModel: ReviewerViewModel) {
+fun ReviewerContent(viewModel: ReviewerViewModel, whiteboard: WhiteboardView?) {
     val state by viewModel.state.collectAsState()
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
@@ -196,7 +202,8 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(snackbarHost = {
             SnackbarHost(
-                snackbarHostState, modifier = Modifier.padding(bottom = toolbarHeightDp + 32.dp)
+                snackbarHostState,
+                modifier = Modifier.padding(bottom = toolbarHeightDp + 32.dp)
             ) { data ->
                 Snackbar(
                     snackbarData = data,
@@ -241,6 +248,12 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                     mediaDirectory = state.mediaDirectory,
                     isAnswerShown = state.isAnswerShown,
                     toolbarHeight = (toolbarHeightDp + 48.dp).value.toInt()
+                )
+
+                Whiteboard(
+                    enabled = state.isWhiteboardEnabled,
+                    whiteboard = whiteboard,
+                    modifier = Modifier.padding(bottom = toolbarHeightDp + 48.dp)
                 )
 
                 HorizontalFloatingToolbar(
@@ -362,8 +375,8 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                                 },
                                 */
                             Triple(
-                                first = if (state.isWhiteboardEnabled) R.string.disable_whiteboard else R.string.enable_whiteboard,
-                                second = Icons.Filled.Edit
+                                if (state.isWhiteboardEnabled) R.string.disable_whiteboard else R.string.enable_whiteboard,
+                                Icons.Filled.Edit
                             ) {
                                 viewModel.onEvent(ReviewerEvent.ToggleWhiteboard)
                             }, Triple(R.string.cardeditor_title_edit_card, Icons.Filled.EditNote) {

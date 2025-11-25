@@ -49,12 +49,10 @@ import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.widget.ThemeUtils
 import androidx.appcompat.widget.Toolbar
 import androidx.appcompat.widget.TooltipCompat
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import anki.frontend.SetSchedulingStatesRequest
 import anki.scheduler.CardAnswer.Rating
@@ -169,6 +167,8 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     var whiteboard: Whiteboard? = null
         protected set
 
+    private val whiteboardState = mutableStateOf<Whiteboard?>(null)
+
     // Record Audio
     private var isMicToolBarVisible = false
 
@@ -213,7 +213,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
         composeView.setContent {
             AnkiDroidTheme {
-                com.ichi2.anki.reviewer.compose.ReviewerContent(viewModel)
+                com.ichi2.anki.reviewer.compose.ReviewerContent(viewModel, whiteboardState.value)
             }
         }
 
@@ -1560,6 +1560,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     private fun createWhiteboard() {
         val whiteboard = createInstance(this, true, this).also { whiteboard ->
             this.whiteboard = whiteboard
+            this.whiteboardState.value = whiteboard
         }
 
         // We use the pen color of the selected deck at the time the whiteboard is enabled.
