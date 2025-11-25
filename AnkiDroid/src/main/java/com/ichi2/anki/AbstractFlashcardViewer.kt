@@ -1428,6 +1428,10 @@ abstract class AbstractFlashcardViewer : NavigationDrawerActivity(), ViewerComma
             Timber.w("media is not played as the activity is inactive")
             return
         }
+        if (!this::cardMediaPlayer.isInitialized) {
+            Timber.w("media is not played as cardMediaPlayer is not initialized")
+            return
+        }
         if (!cardMediaPlayer.config.autoplay && !doMediaReplay) return
         // Use TTS if TTS preference enabled and no other media source
         val useTTS = tts.enabled && !cardMediaPlayer.hasMedia(displayAnswer)
