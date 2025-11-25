@@ -127,8 +127,12 @@ class InvertedTopCornersShape(private val cornerRadius: Dp) : Shape {
             // Arc from (r, 0) down to (0, r)
             arcTo(
                 rect = Rect(
-                    left = 0f, top = 0f, right = 2 * cornerRadiusPx, bottom = 2 * cornerRadiusPx
-                ), startAngleDegrees = 270f,   // Top-center of the rect
+                    left = 0f,
+                    top = 0f,
+                    right = 2 * cornerRadiusPx,
+                    bottom = 2 * cornerRadiusPx
+                ),
+                startAngleDegrees = 270f,   // Top-center of the rect
                 sweepAngleDegrees = -90f, // Sweep counter-clockwise
                 forceMoveTo = false
             )
@@ -145,7 +149,8 @@ class InvertedTopCornersShape(private val cornerRadius: Dp) : Shape {
                     top = 0f,
                     right = size.width,
                     bottom = 2 * cornerRadiusPx
-                ), startAngleDegrees = 270f, // Top-center of the rect
+                ),
+                startAngleDegrees = 270f, // Top-center of the rect
                 sweepAngleDegrees = 90f,  // Sweep clockwise
                 forceMoveTo = false
             )
@@ -198,7 +203,8 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(snackbarHost = {
             SnackbarHost(
-                snackbarHostState, modifier = Modifier.padding(bottom = toolbarHeightDp + 32.dp)
+                snackbarHostState,
+                modifier = Modifier.padding(bottom = toolbarHeightDp + 32.dp)
             ) { data ->
                 Snackbar(
                     snackbarData = data,
@@ -359,9 +365,9 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                     remember(state.isWhiteboardEnabled, state.isVoicePlaybackEnabled) {
                         listOf(
                             Triple(R.string.redo, Icons.AutoMirrored.Filled.Undo) {
-                            viewModel.onEvent(ReviewerEvent.Redo)
-                        }, Triple(
-                            if (state.isWhiteboardEnabled) R.string.disable_whiteboard else R.string.enable_whiteboard,
+                                viewModel.onEvent(ReviewerEvent.Redo)
+                            }, Triple(
+                                if (state.isWhiteboardEnabled) R.string.disable_whiteboard else R.string.enable_whiteboard,
                             Icons.Filled.Edit
                         ) {
                             viewModel.onEvent(ReviewerEvent.ToggleWhiteboard)
@@ -375,8 +381,6 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
                             viewModel.onEvent(ReviewerEvent.SuspendCard)
                         }, Triple(R.string.menu_delete_note, Icons.Filled.Delete) {
                             viewModel.onEvent(ReviewerEvent.DeleteNote)
-                        }, Triple(R.string.menu_mark_note, Icons.Filled.Star) {
-                            viewModel.onEvent(ReviewerEvent.ToggleMark)
                         }, Triple(R.string.card_editor_reschedule_card, Icons.Filled.Schedule) {
                             viewModel.onEvent(ReviewerEvent.RescheduleCard)
                         }, Triple(R.string.replay_media, Icons.Filled.Replay) {
