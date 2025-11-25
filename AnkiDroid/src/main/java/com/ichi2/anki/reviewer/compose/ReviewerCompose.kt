@@ -35,7 +35,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Label
-import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EditNote
@@ -44,7 +43,6 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -127,12 +125,8 @@ class InvertedTopCornersShape(private val cornerRadius: Dp) : Shape {
             // Arc from (r, 0) down to (0, r)
             arcTo(
                 rect = Rect(
-                    left = 0f,
-                    top = 0f,
-                    right = 2 * cornerRadiusPx,
-                    bottom = 2 * cornerRadiusPx
-                ),
-                startAngleDegrees = 270f,   // Top-center of the rect
+                    left = 0f, top = 0f, right = 2 * cornerRadiusPx, bottom = 2 * cornerRadiusPx
+                ), startAngleDegrees = 270f,   // Top-center of the rect
                 sweepAngleDegrees = -90f, // Sweep counter-clockwise
                 forceMoveTo = false
             )
@@ -149,8 +143,7 @@ class InvertedTopCornersShape(private val cornerRadius: Dp) : Shape {
                     top = 0f,
                     right = size.width,
                     bottom = 2 * cornerRadiusPx
-                ),
-                startAngleDegrees = 270f, // Top-center of the rect
+                ), startAngleDegrees = 270f, // Top-center of the rect
                 sweepAngleDegrees = 90f,  // Sweep clockwise
                 forceMoveTo = false
             )
@@ -203,8 +196,7 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(snackbarHost = {
             SnackbarHost(
-                snackbarHostState,
-                modifier = Modifier.padding(bottom = toolbarHeightDp + 32.dp)
+                snackbarHostState, modifier = Modifier.padding(bottom = toolbarHeightDp + 32.dp)
             ) { data ->
                 Snackbar(
                     snackbarData = data,
@@ -363,36 +355,39 @@ fun ReviewerContent(viewModel: ReviewerViewModel) {
             ) {
                 val menuOptions =
                     remember(state.isWhiteboardEnabled, state.isVoicePlaybackEnabled) {
-                        listOf(
-                            Triple(R.string.redo, Icons.AutoMirrored.Filled.Undo) {
-                                viewModel.onEvent(ReviewerEvent.Redo)
+                        listOf(/*
+                                THIS DOESNT WORK AS UNDO ISNT IMPLEMENTED
+                                Triple(R.string.redo, Icons.AutoMirrored.Filled.Undo) {
+                                    viewModel.onEvent(ReviewerEvent.Redo)
+                                },
+                                */
+                            Triple(
+                                first = if (state.isWhiteboardEnabled) R.string.disable_whiteboard else R.string.enable_whiteboard,
+                                second = Icons.Filled.Edit
+                            ) {
+                                viewModel.onEvent(ReviewerEvent.ToggleWhiteboard)
+                            }, Triple(R.string.cardeditor_title_edit_card, Icons.Filled.EditNote) {
+                                viewModel.onEvent(ReviewerEvent.EditCard)
+                            }, Triple(R.string.menu_edit_tags, Icons.AutoMirrored.Filled.Label) {
+                                viewModel.onEvent(ReviewerEvent.EditTags)
+                            }, Triple(R.string.menu_bury_card, Icons.Filled.VisibilityOff) {
+                                viewModel.onEvent(ReviewerEvent.BuryCard)
+                            }, Triple(R.string.menu_suspend_card, Icons.Filled.Pause) {
+                                viewModel.onEvent(ReviewerEvent.SuspendCard)
+                            }, Triple(R.string.menu_delete_note, Icons.Filled.Delete) {
+                                viewModel.onEvent(ReviewerEvent.DeleteNote)
+                            }, Triple(R.string.card_editor_reschedule_card, Icons.Filled.Schedule) {
+                                viewModel.onEvent(ReviewerEvent.RescheduleCard)
+                            }, Triple(R.string.replay_media, Icons.Filled.Replay) {
+                                viewModel.onEvent(ReviewerEvent.ReplayMedia)
                             }, Triple(
-                                if (state.isWhiteboardEnabled) R.string.disable_whiteboard else R.string.enable_whiteboard,
-                            Icons.Filled.Edit
-                        ) {
-                            viewModel.onEvent(ReviewerEvent.ToggleWhiteboard)
-                        }, Triple(R.string.cardeditor_title_edit_card, Icons.Filled.EditNote) {
-                            viewModel.onEvent(ReviewerEvent.EditCard)
-                        }, Triple(R.string.menu_edit_tags, Icons.AutoMirrored.Filled.Label) {
-                            viewModel.onEvent(ReviewerEvent.EditTags)
-                        }, Triple(R.string.menu_bury_card, Icons.Filled.VisibilityOff) {
-                            viewModel.onEvent(ReviewerEvent.BuryCard)
-                        }, Triple(R.string.menu_suspend_card, Icons.Filled.Pause) {
-                            viewModel.onEvent(ReviewerEvent.SuspendCard)
-                        }, Triple(R.string.menu_delete_note, Icons.Filled.Delete) {
-                            viewModel.onEvent(ReviewerEvent.DeleteNote)
-                        }, Triple(R.string.card_editor_reschedule_card, Icons.Filled.Schedule) {
-                            viewModel.onEvent(ReviewerEvent.RescheduleCard)
-                        }, Triple(R.string.replay_media, Icons.Filled.Replay) {
-                            viewModel.onEvent(ReviewerEvent.ReplayMedia)
-                        }, Triple(
-                            if (state.isVoicePlaybackEnabled) R.string.menu_disable_voice_playback else R.string.menu_enable_voice_playback,
-                            Icons.Filled.RecordVoiceOver
-                        ) {
-                            viewModel.onEvent(ReviewerEvent.ToggleVoicePlayback)
-                        }, Triple(R.string.deck_options, Icons.Filled.Tune) {
-                            viewModel.onEvent(ReviewerEvent.DeckOptions)
-                        })
+                                if (state.isVoicePlaybackEnabled) R.string.menu_disable_voice_playback else R.string.menu_enable_voice_playback,
+                                Icons.Filled.RecordVoiceOver
+                            ) {
+                                viewModel.onEvent(ReviewerEvent.ToggleVoicePlayback)
+                            }, Triple(R.string.deck_options, Icons.Filled.Tune) {
+                                viewModel.onEvent(ReviewerEvent.DeckOptions)
+                            })
                     }
                 menuOptions.forEach { (textRes, icon, action) ->
                     ListItem(
