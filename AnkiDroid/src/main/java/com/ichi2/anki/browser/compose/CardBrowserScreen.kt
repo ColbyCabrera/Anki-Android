@@ -93,6 +93,7 @@ import com.ichi2.anki.browser.CardBrowserViewModel
 import com.ichi2.anki.browser.CardBrowserViewModel.SearchState
 import com.ichi2.anki.browser.CardOrNoteId
 import com.ichi2.anki.browser.ColumnHeading
+import com.ichi2.anki.model.CardsOrNotes
 import com.ichi2.anki.model.SelectableDeck
 import com.ichi2.anki.model.SortType
 import kotlinx.coroutines.launch
@@ -539,7 +540,7 @@ fun MoreOptionsBottomSheet(
     onChangeDisplayOrder: () -> Unit,
     onCreateFilteredDeck: () -> Unit,
     selectionCount: Int,
-    cardsOrNotes: com.ichi2.anki.model.CardsOrNotes,
+    cardsOrNotes: CardsOrNotes,
     onEditNote: () -> Unit,
     onDeleteNote: () -> Unit,
     onCardInfo: () -> Unit,
@@ -613,10 +614,9 @@ fun MoreOptionsBottomSheet(
             )
             ListItem(
                 headlineContent = {
-                    val exportStringRes = if (cardsOrNotes == com.ichi2.anki.model.CardsOrNotes.CARDS) {
-                        R.plurals.card_browser_export_cards
-                    } else {
-                        R.plurals.card_browser_export_notes
+                    val exportStringRes = when (cardsOrNotes) {
+                        CardsOrNotes.CARDS -> R.plurals.card_browser_export_cards
+                        CardsOrNotes.NOTES -> R.plurals.card_browser_export_notes
                     }
                     Text(pluralStringResource(exportStringRes, selectionCount))
                 },
