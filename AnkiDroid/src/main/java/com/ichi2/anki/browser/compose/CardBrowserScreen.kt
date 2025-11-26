@@ -79,6 +79,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -248,7 +249,8 @@ fun CardBrowserScreen(
                     onCreateFilteredDeck()
                     showMoreOptionsMenu = false
                 },
-                hasSelection = hasSelection,
+                selectionCount = selectedRows.size,
+                cardsOrNotes = viewModel.cardsOrNotes,
                 onEditNote = {
                     onEditNote()
                     showMoreOptionsMenu = false
@@ -536,7 +538,8 @@ fun MoreOptionsBottomSheet(
     onDismissRequest: () -> Unit,
     onChangeDisplayOrder: () -> Unit,
     onCreateFilteredDeck: () -> Unit,
-    hasSelection: Boolean,
+    selectionCount: Int,
+    cardsOrNotes: com.ichi2.anki.model.CardsOrNotes,
     onEditNote: () -> Unit,
     onDeleteNote: () -> Unit,
     onCardInfo: () -> Unit,
@@ -553,6 +556,7 @@ fun MoreOptionsBottomSheet(
 ) {
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
+    val hasSelection = selectionCount > 0
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
@@ -563,40 +567,59 @@ fun MoreOptionsBottomSheet(
         if (hasSelection) {
             ListItem(
                 headlineContent = { Text(stringResource(R.string.cardeditor_title_edit_card)) },
-                modifier = Modifier.clickable { onEditNote() })
+                modifier = Modifier.clickable(enabled = selectionCount == 1) { onEditNote() },
+            )
             ListItem(
-                headlineContent = { Text(stringResource(R.string.menu_delete_note)) },
-                modifier = Modifier.clickable { onDeleteNote() })
+                headlineContent = { Text(pluralStringResource(R.plurals.card_browser_delete_notes, selectionCount)) },
+                modifier = Modifier.clickable { onDeleteNote() },
+            )
             ListItem(
                 headlineContent = { Text(stringResource(R.string.card_info_title)) },
-                modifier = Modifier.clickable { onCardInfo() })
+                modifier = Modifier.clickable { onCardInfo() },
+            )
             ListItem(
                 headlineContent = { Text(stringResource(R.string.sentence_toggle_suspend)) },
-                modifier = Modifier.clickable { onToggleSuspend() })
+                modifier = Modifier.clickable { onToggleSuspend() },
+            )
             ListItem(
                 headlineContent = { Text(stringResource(R.string.sentence_toggle_bury)) },
-                modifier = Modifier.clickable { onToggleBury() })
+                modifier = Modifier.clickable { onToggleBury() },
+            )
             ListItem(
                 headlineContent = { Text(stringResource(R.string.card_browser_change_deck)) },
-                modifier = Modifier.clickable { onChangeDeck() })
+                modifier = Modifier.clickable { onChangeDeck() },
+            )
             ListItem(
                 headlineContent = { Text(stringResource(R.string.card_editor_reposition_card)) },
-                modifier = Modifier.clickable { onReposition() })
+                modifier = Modifier.clickable { onReposition() },
+            )
             ListItem(
                 headlineContent = { Text(stringResource(R.string.sentence_set_due_date)) },
-                modifier = Modifier.clickable { onSetDueDate() })
+                modifier = Modifier.clickable { onSetDueDate() },
+            )
             ListItem(
                 headlineContent = { Text(stringResource(R.string.menu_edit_tags)) },
-                modifier = Modifier.clickable { onEditTags() })
+                modifier = Modifier.clickable { onEditTags() },
+            )
             ListItem(
                 headlineContent = { Text(stringResource(R.string.sentence_grade_now)) },
-                modifier = Modifier.clickable { onGradeNow() })
+                modifier = Modifier.clickable { onGradeNow() },
+            )
             ListItem(
                 headlineContent = { Text(stringResource(R.string.reset_progress)) },
-                modifier = Modifier.clickable { onResetProgress() })
+                modifier = Modifier.clickable { onResetProgress() },
+            )
             ListItem(
-                headlineContent = { Text(stringResource(R.string.export_card)) },
-                modifier = Modifier.clickable { onExportCard() })
+                headlineContent = {
+                    val exportStringRes = if (cardsOrNotes == com.ichi2.anki.model.CardsOrNotes.CARDS) {
+                        R.plurals.card_browser_export_cards
+                    } else {
+                        R.plurals.card_browser_export_notes
+                    }
+                    Text(pluralStringResource(exportStringRes, selectionCount))
+                },
+                modifier = Modifier.clickable { onExportCard() },
+            )
         } else {
             ListItem(
                 headlineContent = { Text(stringResource(R.string.card_browser_change_display_order)) },
