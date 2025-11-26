@@ -19,8 +19,8 @@ import android.app.Application
 import android.content.Intent
 import android.media.MediaPlayer
 import android.net.Uri
-import androidx.core.text.htmlEncode
 import androidx.core.net.toUri
+import androidx.core.text.htmlEncode
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import anki.scheduler.CardAnswer
@@ -28,6 +28,7 @@ import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.cardviewer.CardMediaPlayer
 import com.ichi2.anki.cardviewer.MediaErrorBehavior
 import com.ichi2.anki.cardviewer.MediaErrorListener
+import com.ichi2.anki.cardviewer.SingleCardSide
 import com.ichi2.anki.cardviewer.TypeAnswer
 import com.ichi2.anki.libanki.Card
 import com.ichi2.anki.libanki.CardId
@@ -38,7 +39,6 @@ import com.ichi2.anki.libanki.TtsPlayer
 import com.ichi2.anki.libanki.sched.CurrentQueueState
 import com.ichi2.anki.preferences.sharedPrefs
 import com.ichi2.anki.servicelayer.NoteService
-import java.io.File
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,6 +49,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.io.File
 
 data class ReviewerState(
     val newCount: Int = 0,
@@ -63,7 +64,9 @@ data class ReviewerState(
     val isMarked: Boolean = false,
     val flag: Int = 0,
     val mediaDirectory: File? = null,
-    val isFinished: Boolean = false
+    val isFinished: Boolean = false,
+    val isWhiteboardEnabled: Boolean = false,
+    val isVoicePlaybackEnabled: Boolean = false
 )
 
 sealed class ReviewerEvent {
@@ -80,19 +83,36 @@ sealed class ReviewerEvent {
     object SuspendCard : ReviewerEvent()
     object UnanswerCard : ReviewerEvent()
     object ReloadCard : ReviewerEvent()
+    object Redo : ReviewerEvent()
+    object ToggleWhiteboard : ReviewerEvent()
+    data class OnWhiteboardStateChanged(val enabled: Boolean) : ReviewerEvent()
+    object EditTags : ReviewerEvent()
+    object DeleteNote : ReviewerEvent()
+    object RescheduleCard : ReviewerEvent()
+    object ReplayMedia : ReviewerEvent()
+    object ToggleVoicePlayback : ReviewerEvent()
+    data class OnVoicePlaybackStateChanged(val enabled: Boolean) : ReviewerEvent()
+    object DeckOptions : ReviewerEvent()
 }
 
 sealed class ReviewerEffect {
     data class NavigateToEditCard(val cardId: CardId) : ReviewerEffect()
     object NavigateToDeckPicker : ReviewerEffect()
     data class ShowSnackbar(val message: String) : ReviewerEffect()
+    object PerformRedo : ReviewerEffect()
+    object ToggleWhiteboard : ReviewerEffect()
+    data class ShowTagsDialog(val card: Card) : ReviewerEffect()
+    data class ShowDeleteNoteDialog(val card: Card) : ReviewerEffect()
+    data class ShowDueDateDialog(val card: Card) : ReviewerEffect()
+    data class ReplayMedia(val card: Card) : ReviewerEffect()
+    object ToggleVoicePlayback : ReviewerEffect()
+    object NavigateToDeckOptions : ReviewerEffect()
 }
 
 class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
 
     companion object {
-        private const val PLAY_BUTTON_TEMPLATE =
-            """
+        private const val PLAY_BUTTON_TEMPLATE = """
                 <a href="%s" class="replay-button" title="%s" aria-label="Play %s" role="button">
                     <svg xmlns="http://www.w3.org/2000/svg" height="56px" width="56px" class="play-action" viewBox="0 -960 960 960" width="24px">
                         <path d="M320-273v-414q0-17 12-28.5t28-11.5q5 0 10.5 1.5T381-721l326 207q9 6 13.5 15t4.5 19q0 10-4.5 19T707-446L381-239q-5 3-10.5 4.5T360-233q-16 0-28-11.5T320-273Z"/>
@@ -115,17 +135,22 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
             override fun onError(uri: Uri): MediaErrorBehavior {
                 Timber.w("Error playing media: %s", uri)
                 return MediaErrorBehavior.CONTINUE_MEDIA
-        }
+            }
 
-        override fun onMediaPlayerError(mp: MediaPlayer?, which: Int, extra: Int, uri: Uri): MediaErrorBehavior {
-            Timber.w("Error playing media: %s", uri)
-            return MediaErrorBehavior.CONTINUE_MEDIA
-        }
+            override fun onMediaPlayerError(
+                mp: MediaPlayer?,
+                which: Int,
+                extra: Int,
+                uri: Uri
+            ): MediaErrorBehavior {
+                Timber.w("Error playing media: %s", uri)
+                return MediaErrorBehavior.CONTINUE_MEDIA
+            }
 
-        override fun onTtsError(error: TtsPlayer.TtsError, isAutomaticPlayback: Boolean) {
-            Timber.w("TTS error: %s", error)
-        }
-    })
+            override fun onTtsError(error: TtsPlayer.TtsError, isAutomaticPlayback: Boolean) {
+                Timber.w("TTS error: %s", error)
+            }
+        })
 
     /** A job that is running for the current card. This is used to prevent multiple actions from running at the same time. */
     private var cardActionJob: Job? = null
@@ -153,7 +178,64 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
             is ReviewerEvent.BuryCard -> buryCard()
             is ReviewerEvent.SuspendCard -> suspendCard()
             is ReviewerEvent.ReloadCard -> reloadCard()
+            is ReviewerEvent.Redo -> redo()
+            is ReviewerEvent.ToggleWhiteboard -> toggleWhiteboard()
+            is ReviewerEvent.OnWhiteboardStateChanged -> onWhiteboardStateChanged(event.enabled)
+            is ReviewerEvent.EditTags -> editTags()
+            is ReviewerEvent.DeleteNote -> deleteNote()
+            is ReviewerEvent.RescheduleCard -> rescheduleCard()
+            is ReviewerEvent.ReplayMedia -> replayMedia()
+            is ReviewerEvent.ToggleVoicePlayback -> toggleVoicePlayback()
+            is ReviewerEvent.OnVoicePlaybackStateChanged -> onVoicePlaybackStateChanged(event.enabled)
+            is ReviewerEvent.DeckOptions -> deckOptions()
         }
+    }
+
+    private fun deckOptions() {
+        viewModelScope.launch { _effect.emit(ReviewerEffect.NavigateToDeckOptions) }
+    }
+
+    private fun onVoicePlaybackStateChanged(enabled: Boolean) {
+        _state.update { it.copy(isVoicePlaybackEnabled = enabled) }
+    }
+
+    private fun toggleVoicePlayback() {
+        viewModelScope.launch { _effect.emit(ReviewerEffect.ToggleVoicePlayback) }
+    }
+
+    private fun replayMedia() {
+        currentCard ?: return
+        viewModelScope.launch {
+            val side = if (_state.value.isAnswerShown) SingleCardSide.BACK else SingleCardSide.FRONT
+            cardMediaPlayer.replayAll(side)
+        }
+    }
+
+    private fun rescheduleCard() {
+        val card = currentCard ?: return
+        viewModelScope.launch { _effect.emit(ReviewerEffect.ShowDueDateDialog(card)) }
+    }
+
+    private fun deleteNote() {
+        val card = currentCard ?: return
+        viewModelScope.launch { _effect.emit(ReviewerEffect.ShowDeleteNoteDialog(card)) }
+    }
+
+    private fun editTags() {
+        val card = currentCard ?: return
+        viewModelScope.launch { _effect.emit(ReviewerEffect.ShowTagsDialog(card)) }
+    }
+
+    private fun onWhiteboardStateChanged(enabled: Boolean) {
+        _state.update { it.copy(isWhiteboardEnabled = enabled) }
+    }
+
+    private fun toggleWhiteboard() {
+        viewModelScope.launch { _effect.emit(ReviewerEffect.ToggleWhiteboard) }
+    }
+
+    private fun redo() {
+        viewModelScope.launch { _effect.emit(ReviewerEffect.PerformRedo) }
     }
 
     private suspend fun reloadCardSuspend() {
@@ -246,15 +328,19 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    private suspend fun getNextCard(): Pair<Card, CurrentQueueState>? = CollectionManager.withCol {
+        this.sched.currentQueueState()?.let {
+            it.topCard.renderOutput(this, reload = true)
+            Pair(it.topCard, it)
+        }
+    }
+
     private suspend fun loadCardSuspend() {
         val cardAndQueueState = getNextCard()
         if (cardAndQueueState == null) {
             _state.update {
                 it.copy(
-                    isFinished = true,
-                    newCount = 0,
-                    learnCount = 0,
-                    reviewCount = 0
+                    isFinished = true, newCount = 0, learnCount = 0, reviewCount = 0
                 )
             }
             _effect.emit(ReviewerEffect.NavigateToDeckPicker)
@@ -288,12 +374,8 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
                 )
             }
         }
-    }
-
-    private suspend fun getNextCard(): Pair<Card, CurrentQueueState>? = CollectionManager.withCol {
-        this.sched.currentQueueState()?.let {
-            it.topCard.renderOutput(this, reload = true)
-            Pair(it.topCard, it)
+        if (cardMediaPlayer.config.autoplay) {
+            cardMediaPlayer.playAllForSide(SingleCardSide.FRONT.toCardSide())
         }
     }
 
@@ -320,6 +402,9 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
                         nextTimes = paddedLabels
                     )
                 }
+            }
+            if (cardMediaPlayer.config.autoplay) {
+                cardMediaPlayer.playAllForSide(SingleCardSide.BACK.toCardSide())
             }
         }.also {
             it.invokeOnCompletion { cardActionJob = null }
@@ -422,8 +507,7 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun processHtml(
-        html: String,
-        renderOutput: TemplateManager.TemplateRenderContext.TemplateRenderOutput
+        html: String, renderOutput: TemplateManager.TemplateRenderContext.TemplateRenderOutput
     ): String {
         val processedHtml = Sound.replaceAvRefsWith(html, renderOutput) { avTag, avRef ->
             when (avTag) {

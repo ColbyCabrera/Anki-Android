@@ -49,12 +49,10 @@ import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.widget.ThemeUtils
 import androidx.appcompat.widget.Toolbar
 import androidx.appcompat.widget.TooltipCompat
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import anki.frontend.SetSchedulingStatesRequest
 import anki.scheduler.CardAnswer.Rating
@@ -98,6 +96,7 @@ import com.ichi2.anki.reviewer.AutomaticAnswerAction
 import com.ichi2.anki.reviewer.FullScreenMode.Companion.fromPreference
 import com.ichi2.anki.reviewer.FullScreenMode.Companion.isFullScreenReview
 import com.ichi2.anki.reviewer.ReviewerEffect
+import com.ichi2.anki.reviewer.ReviewerEvent
 import com.ichi2.anki.reviewer.ReviewerUi
 import com.ichi2.anki.reviewer.ReviewerViewModel
 import com.ichi2.anki.scheduling.ForgetCardsDialog
@@ -168,6 +167,8 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     var whiteboard: Whiteboard? = null
         protected set
 
+    private val whiteboardState = mutableStateOf<Whiteboard?>(null)
+
     // Record Audio
     private var isMicToolBarVisible = false
 
@@ -212,7 +213,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
         composeView.setContent {
             AnkiDroidTheme {
-                com.ichi2.anki.reviewer.compose.ReviewerContent(viewModel)
+                com.ichi2.anki.reviewer.compose.ReviewerContent(viewModel, whiteboardState.value)
             }
         }
 
@@ -223,6 +224,37 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
                     is ReviewerEffect.NavigateToEditCard -> {
                         // Handled in Compose
                     }
+
+                    is ReviewerEffect.PerformRedo -> redo()
+                    is ReviewerEffect.ToggleWhiteboard -> toggleWhiteboard()
+                    is ReviewerEffect.ShowTagsDialog -> {
+                        currentCard = effect.card
+                        showTagsDialog()
+                    }
+
+                    is ReviewerEffect.ShowDeleteNoteDialog -> {
+                        currentCard = effect.card
+                        showDeleteNoteDialog()
+                    }
+
+                    is ReviewerEffect.ShowDueDateDialog -> {
+                        currentCard = effect.card
+                        showDueDateDialog()
+                    }
+
+                    is ReviewerEffect.ReplayMedia -> {
+                        currentCard = effect.card
+                        playMedia(true)
+                    }
+
+                    is ReviewerEffect.ToggleVoicePlayback -> openOrToggleMicToolbar()
+                    is ReviewerEffect.NavigateToDeckOptions -> {
+                        val i = com.ichi2.anki.pages.DeckOptions.getIntent(
+                            this@Reviewer, getColUnsafe.decks.current().id
+                        )
+                        deckOptionsLauncher.launch(i)
+                    }
+
                     else -> {}
                 }
             }
@@ -346,6 +378,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         lifecycleScope.launch {
             prefWhiteboard =
                 withContext(Dispatchers.IO) { MetaDB.getWhiteboardState(this@Reviewer, parentDid) }
+            viewModel.onEvent(ReviewerEvent.OnWhiteboardStateChanged(prefWhiteboard))
             if (prefWhiteboard) {
                 // DEFECT: Slight inefficiency here, as we set the database using these methods
                 val whiteboardVisibility = withContext(Dispatchers.IO) {
@@ -370,6 +403,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
             if (isMicToolbarEnabled) {
                 openMicToolbar()
             }
+            viewModel.onEvent(ReviewerEvent.OnVoicePlaybackStateChanged(isMicToolBarVisible))
 
             withCol { startTimebox() }
             updateCardAndRedraw()
@@ -564,6 +598,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
     public override fun toggleWhiteboard() {
         prefWhiteboard = !prefWhiteboard
+        viewModel.onEvent(ReviewerEvent.OnWhiteboardStateChanged(prefWhiteboard))
         Timber.i("Reviewer:: Whiteboard enabled state set to %b", prefWhiteboard)
         // Even though the visibility is now stored in its own setting, we want it to be dependent
         // on the enabled status
@@ -754,6 +789,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
             micToolBarLayer.visibility = View.VISIBLE
         }
         isMicToolBarVisible = !isMicToolBarVisible
+        viewModel.onEvent(ReviewerEvent.OnVoicePlaybackStateChanged(isMicToolBarVisible))
 
         lifecycleScope.launch(Dispatchers.IO) {
             MetaDB.storeMicToolbarState(this@Reviewer, parentDid, isMicToolBarVisible)
@@ -1524,6 +1560,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     private fun createWhiteboard() {
         val whiteboard = createInstance(this, true, this).also { whiteboard ->
             this.whiteboard = whiteboard
+            this.whiteboardState.value = whiteboard
         }
 
         // We use the pen color of the selected deck at the time the whiteboard is enabled.

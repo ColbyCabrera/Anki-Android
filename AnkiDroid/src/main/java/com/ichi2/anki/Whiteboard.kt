@@ -88,7 +88,7 @@ class Whiteboard(
     @get:CheckResult
     @get:VisibleForTesting
     var foregroundColor = 0
-    private val colorPalette: LinearLayout
+    private val colorPalette: LinearLayout?
     var onPaintColorChangeListener: OnPaintColorChangeListener? = null
     private val currentStrokeWidth: Int
         get() = ankiActivity.sharedPrefs().getInt("whiteBoardStrokeWidth", 6)
@@ -437,7 +437,7 @@ class Whiteboard(
         set(color) {
             Timber.d("Setting pen color to %d", color)
             paint.color = color
-            colorPalette.visibility = GONE
+            colorPalette?.visibility = GONE
             onPaintColorChangeListener?.onPaintColorChange(color)
         }
 
@@ -594,7 +594,7 @@ class Whiteboard(
                 )
             whiteboard.layoutParams = lp2
             val fl = context.findViewById<FrameLayout>(R.id.whiteboard)
-            fl.addView(whiteboard)
+            fl?.addView(whiteboard)
             whiteboard.isEnabled = true
             return whiteboard
         }
@@ -607,12 +607,12 @@ class Whiteboard(
         val whitePenColorButton = activity.findViewById<Button>(R.id.pen_color_white)
         val blackPenColorButton = activity.findViewById<Button>(R.id.pen_color_black)
         if (!inverted) {
-            whitePenColorButton.visibility = GONE
-            blackPenColorButton.setOnClickListener { view: View -> onClick(view) }
+            whitePenColorButton?.visibility = GONE
+            blackPenColorButton?.setOnClickListener { view: View -> onClick(view) }
             foregroundColor = Color.BLACK
         } else {
-            blackPenColorButton.visibility = GONE
-            whitePenColorButton.setOnClickListener { view: View -> onClick(view) }
+            blackPenColorButton?.visibility = GONE
+            whitePenColorButton?.setOnClickListener { view: View -> onClick(view) }
             foregroundColor = Color.WHITE
         }
         paint =
@@ -631,14 +631,14 @@ class Whiteboard(
 
         // selecting pen color to draw
         colorPalette = activity.findViewById(R.id.whiteboard_editor)
-        activity.findViewById<View>(R.id.pen_color_red).setOnClickListener { view: View -> onClick(view) }
-        activity.findViewById<View>(R.id.pen_color_green).setOnClickListener { view: View -> onClick(view) }
-        activity.findViewById<View>(R.id.pen_color_blue).setOnClickListener { view: View -> onClick(view) }
-        activity.findViewById<View>(R.id.pen_color_yellow).setOnClickListener { view: View -> onClick(view) }
-        activity.findViewById<View>(R.id.pen_color_custom).apply {
+        activity.findViewById<View>(R.id.pen_color_red)?.setOnClickListener { view: View -> onClick(view) }
+        activity.findViewById<View>(R.id.pen_color_green)?.setOnClickListener { view: View -> onClick(view) }
+        activity.findViewById<View>(R.id.pen_color_blue)?.setOnClickListener { view: View -> onClick(view) }
+        activity.findViewById<View>(R.id.pen_color_yellow)?.setOnClickListener { view: View -> onClick(view) }
+        activity.findViewById<View>(R.id.pen_color_custom)?.apply {
             setOnClickListener { view: View -> onClick(view) }
         }
-        activity.findViewById<View>(R.id.stroke_width).apply {
+        activity.findViewById<View>(R.id.stroke_width)?.apply {
             setOnClickListener { view: View -> onClick(view) }
         }
     }
