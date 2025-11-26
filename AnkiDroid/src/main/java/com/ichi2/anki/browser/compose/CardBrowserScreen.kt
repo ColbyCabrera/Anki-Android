@@ -565,10 +565,12 @@ fun MoreOptionsBottomSheet(
         contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
         if (hasSelection) {
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.cardeditor_title_edit_card)) },
-                modifier = Modifier.clickable(enabled = selectionCount == 1) { onEditNote() },
-            )
+            if (selectionCount == 1) {
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.cardeditor_title_edit_card)) },
+                    modifier = Modifier.clickable { onEditNote() },
+                )
+            }
             ListItem(
                 headlineContent = { Text(pluralStringResource(R.plurals.card_browser_delete_notes, selectionCount)) },
                 modifier = Modifier.clickable { onDeleteNote() },
