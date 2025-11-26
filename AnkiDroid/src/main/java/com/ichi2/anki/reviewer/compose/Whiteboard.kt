@@ -23,19 +23,14 @@ import com.ichi2.anki.Whiteboard
 
 @Composable
 fun Whiteboard(
-    modifier: Modifier = Modifier,
-    enabled: Boolean,
-    whiteboard: Whiteboard?
+    modifier: Modifier = Modifier, enabled: Boolean, whiteboard: Whiteboard?
 ) {
     if (enabled && whiteboard != null) {
         AndroidView(
             factory = {
+                (whiteboard.parent as? android.view.ViewGroup)?.removeView(whiteboard)
                 whiteboard
-            },
-            update = { view ->
-                view.visibility = if (enabled) android.view.View.VISIBLE else android.view.View.GONE
-            },
-            modifier = modifier.fillMaxSize()
+            }, modifier = modifier.fillMaxSize()
         )
     }
 }
