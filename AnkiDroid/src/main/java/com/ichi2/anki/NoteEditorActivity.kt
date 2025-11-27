@@ -19,14 +19,17 @@ package com.ichi2.anki
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
+import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.commit
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.ui.NavDisplay
 import com.ichi2.anki.android.input.ShortcutGroup
 import com.ichi2.anki.android.input.ShortcutGroupProvider
 import com.ichi2.anki.libanki.Collection
-import com.ichi2.anki.noteeditor.NoteEditorLauncher
+import com.ichi2.anki.noteeditor.NoteEditorRoute
+import com.ichi2.anki.noteeditor.compose.NoteEditorScreenRoute
 import com.ichi2.anki.snackbar.BaseSnackbarBuilderProvider
 import com.ichi2.anki.snackbar.SnackbarBuilder
 import timber.log.Timber
@@ -40,17 +43,10 @@ import kotlin.reflect.jvm.jvmName
  */
 
 // TODO: Move intent handling to [NoteEditorActivity] from [NoteEditorFragment]
-class NoteEditorActivity :
-    AnkiActivity(),
-    BaseSnackbarBuilderProvider,
-    DispatchKeyEventListener,
+class NoteEditorActivity : AnkiActivity(), BaseSnackbarBuilderProvider, DispatchKeyEventListener,
     ShortcutGroupProvider {
     override val baseSnackbarBuilder: SnackbarBuilder = { }
 
-    lateinit var noteEditorFragment: NoteEditorFragment
-
-    private val mainToolbar: androidx.appcompat.widget.Toolbar
-        get() = findViewById(R.id.toolbar)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -62,80 +58,22 @@ class NoteEditorActivity :
             return
         }
 
-        setContentView(R.layout.note_editor)
+        setContent {
+            val backStack = rememberNavBackStack(NoteEditorRoute)
 
-        /**
-         * The [NoteEditorActivity] activity supports multiple note editing workflows using fragments.
-         * It dynamically chooses the appropriate fragment to load and the arguments to pass to it,
-         * based on intent extras provided at launch time.
-         *
-         * - [FRAGMENT_NAME_EXTRA]: Fully qualified name of the fragment class to instantiate.
-         *   If set to [NoteEditorFragment], the activity initializes it with the arguments in
-         *   [FRAGMENT_ARGS_EXTRA].
-         *
-         * - [FRAGMENT_ARGS_EXTRA]: Bundle containing parameters for the fragment (e.g. note ID,
-         *   deck ID, etc.). Used to populate fields or determine editor behavior.
-         *
-         * This logic is encapsulated in the [launcher]  assignment, which selects the correct
-         * fragment mode (e.g. add note, edit note) based on intent contents.
-         */
-        val launcher =
-            if (intent.hasExtra(FRAGMENT_NAME_EXTRA)) {
-                val fragmentClassName = intent.getStringExtra(FRAGMENT_NAME_EXTRA)
-                if (fragmentClassName == NoteEditorFragment::class.java.name) {
-                    val fragmentArgs = intent.getBundleExtra(FRAGMENT_ARGS_EXTRA)
-                    if (fragmentArgs != null) {
-                        NoteEditorLauncher.PassArguments(fragmentArgs)
-                    } else {
-                        NoteEditorLauncher.AddNote()
-                    }
+            NavDisplay(backStack = backStack, onBack = {
+                if (backStack.size > 1) {
+                    backStack.removeAt(backStack.lastIndex)
                 } else {
-                    NoteEditorLauncher.AddNote()
+                    finish()
                 }
-            } else {
-                // Regular NoteEditor intent handling
-                intent.getBundleExtra(FRAGMENT_ARGS_EXTRA)?.let { fragmentArgs ->
-                    // If FRAGMENT_ARGS_EXTRA is provided, use it directly
-                    NoteEditorLauncher.PassArguments(fragmentArgs)
-                } ?: intent.extras?.let { bundle ->
-                    // Check if the bundle contains FRAGMENT_ARGS_EXTRA (for launchers that wrap their args)
-                    bundle.getBundle(FRAGMENT_ARGS_EXTRA)?.let { wrappedFragmentArgs ->
-                        NoteEditorLauncher.PassArguments(wrappedFragmentArgs)
-                    } ?: NoteEditorLauncher.PassArguments(bundle)
-                } ?: NoteEditorLauncher.AddNote()
-            }
-
-        val existingFragment = supportFragmentManager.findFragmentByTag(FRAGMENT_TAG)
-
-        if (existingFragment == null) {
-            supportFragmentManager.commit {
-                replace(R.id.note_editor_fragment_frame, NoteEditorFragment.newInstance(launcher), FRAGMENT_TAG)
-                setReorderingAllowed(true)
-                /**
-                 * Initializes the noteEditorFragment reference only after the transaction is committed.
-                 * This ensures the fragment is fully created and available in the activity before
-                 * any code attempts to interact with it, preventing potential null reference issues.
-                 */
-                runOnCommit {
-                    noteEditorFragment = supportFragmentManager.findFragmentByTag(FRAGMENT_TAG) as NoteEditorFragment
+            }, entryProvider = entryProvider {
+                entry<NoteEditorRoute> {
+                    NoteEditorScreenRoute(
+                        onNavigateBack = { finish() })
                 }
-            }
-        } else {
-            noteEditorFragment = existingFragment as NoteEditorFragment
+            })
         }
-
-        enableToolbar()
-        // Hide legacy toolbar in favor of the Compose top app bar managed by the fragment
-        mainToolbar.visibility = View.GONE
-
-        // R.id.home is handled in setNavigationOnClickListener
-        // Set a listener for back button clicks in the toolbar
-        mainToolbar.setNavigationOnClickListener {
-            Timber.i("NoteEditor:: Back button on the menu was pressed")
-            onBackPressedDispatcher.onBackPressed()
-        }
-
-        startLoadingCollection()
     }
 
     override fun onCollectionLoaded(col: Collection) {
@@ -144,11 +82,8 @@ class NoteEditorActivity :
         registerReceiver()
     }
 
-    override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean =
-        noteEditorFragment.dispatchKeyEvent(event) || super.dispatchKeyEvent(event)
-
     override val shortcuts: ShortcutGroup
-        get() = noteEditorFragment.shortcuts
+        get() = ShortcutGroup(emptyList(), R.string.app_name)
 
     companion object {
         const val FRAGMENT_ARGS_EXTRA = "fragmentArgs"
@@ -169,11 +104,10 @@ class NoteEditorActivity :
             fragmentClass: KClass<out Fragment>,
             arguments: Bundle? = null,
             intentAction: String? = null,
-        ): Intent =
-            Intent(context, NoteEditorActivity::class.java).apply {
-                putExtra(FRAGMENT_NAME_EXTRA, fragmentClass.jvmName)
-                putExtra(FRAGMENT_ARGS_EXTRA, arguments)
-                action = intentAction
-            }
+        ): Intent = Intent(context, NoteEditorActivity::class.java).apply {
+            putExtra(FRAGMENT_NAME_EXTRA, fragmentClass.jvmName)
+            putExtra(FRAGMENT_ARGS_EXTRA, arguments)
+            action = intentAction
+        }
     }
 }
