@@ -53,5 +53,8 @@
     <string name="learning">Learning</string>
     <string name="review">Review</string>
     <string name="buried_cards_are_not_included_in_counts_above">Buried cards are not included in counts above.</string>
-    <string name="note_editor_cards">Cards</string>
+    <string name="note_editor_cards">Cards: %1$s</string>
+    <string name="copy_note">Copy note</string>
+    <string name="font_size">Font size</string>
+    <string name="show_toolbar">Show toolbar</string>
 </resources>
