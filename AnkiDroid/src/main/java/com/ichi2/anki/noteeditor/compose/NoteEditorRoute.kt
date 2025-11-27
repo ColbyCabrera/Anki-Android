@@ -16,23 +16,17 @@
 package com.ichi2.anki.noteeditor.compose
 
 import android.app.Activity
-import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.ichi2.anki.AnkiActivity
 import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.NoteEditorActivity
-import com.ichi2.anki.R
-import com.ichi2.anki.multimedia.MultimediaActivity
 import com.ichi2.anki.noteeditor.NoteEditorViewModel
-import com.ichi2.anki.noteeditor.NoteEditorRoute
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -54,18 +48,18 @@ fun NoteEditorScreenRoute(
     val deckTags by viewModel.deckTags.collectAsState()
 
     // Launchers
-    val multimediaLauncher = rememberLauncherForActivityResult(
+    rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode != Activity.RESULT_CANCELED) {
-            val extras = result.data?.extras ?: return@rememberLauncherForActivityResult
+            result.data?.extras ?: return@rememberLauncherForActivityResult
             // TODO: Handle multimedia result properly. 
             // Currently NoteEditorViewModel doesn't expose a direct method for this, 
             // but we can implement it later or assuming the user just wants the editor to work for now.
         }
     }
 
-    val templateEditLauncher = rememberLauncherForActivityResult(
+    rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) {
         // Handle template edit result (reload required)
@@ -78,16 +72,16 @@ fun NoteEditorScreenRoute(
         val arguments = intent?.getBundleExtra(NoteEditorActivity.FRAGMENT_ARGS_EXTRA)
 
         if (intent != null && arguments != null) {
-            val callerValue = arguments.getInt("CALLER", 0) // NoteEditorCaller.NO_CALLER.value
+            arguments.getInt("CALLER", 0) // NoteEditorCaller.NO_CALLER.value
             // We can't easily access NoteEditorCaller enum here without dependency, so we use raw values or just check IDs
             // But we can check for card ID or deck ID directly
-            
+
             val cardId = arguments.getLong("CARD_ID", -1L).takeIf { it != -1L }
             val deckId = arguments.getLong("DECK_ID", 0L)
-            
+
             // Determine if adding or editing based on cardId presence
             val isAdding = cardId == null
-            
+
             // Get collection
             try {
                 val col = CollectionManager.getColUnsafe()
@@ -102,14 +96,14 @@ fun NoteEditorScreenRoute(
                 // Handle error (maybe navigate back)
             }
         } else {
-             // Fallback or error
-             Timber.w("No arguments found for NoteEditor")
-             try {
+            // Fallback or error
+            Timber.w("No arguments found for NoteEditor")
+            try {
                 val col = CollectionManager.getColUnsafe()
                 viewModel.initializeEditor(col = col)
-             } catch (e: Exception) {
-                 Timber.e(e, "Failed to initialize editor (fallback)")
-             }
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to initialize editor (fallback)")
+            }
         }
     }
 
@@ -138,7 +132,7 @@ fun NoteEditorScreenRoute(
             // multimediaLauncher.launch(intent)
         },
         onToggleStickyClick = { viewModel.toggleStickyField(it) },
-        onSaveClick = { 
+        onSaveClick = {
             scope.launch {
                 val result = viewModel.saveNote()
                 if (result is com.ichi2.anki.NoteFieldsCheckResult.Success) {
@@ -146,7 +140,7 @@ fun NoteEditorScreenRoute(
                 }
             }
         },
-        onPreviewClick = { 
+        onPreviewClick = {
             scope.launch {
                 val cardId = viewModel.getCurrentCardId()
                 if (cardId != null) {

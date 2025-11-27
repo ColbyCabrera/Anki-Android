@@ -192,7 +192,11 @@ fun NoteEditorToolbar(
 /**
  * Icon button for toolbar using Material3 IconButton with tooltip
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(
+    ExperimentalMaterial3ExpressiveApi::class,
+    ExperimentalFoundationApi::class,
+    ExperimentalMaterial3Api::class
+)
 @Composable
 private fun ToolbarIconButton(
     modifier: Modifier = Modifier,
@@ -203,14 +207,14 @@ private fun ToolbarIconButton(
     onLongClick: (() -> Unit)? = null,
 ) {
     val tooltipState = rememberTooltipState()
-    
+
     // Ensure tooltip is dismissed when the composable is disposed
     DisposableEffect(Unit) {
         onDispose {
             tooltipState.dismiss()
         }
     }
-    
+
     TooltipBox(
         positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
             positioning = TooltipAnchorPosition.Above
@@ -272,7 +276,8 @@ private fun ToolbarIconButton(
 /**
  * Text button for custom toolbar buttons (needs combinedClickable for long press)
  */
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class,
+@OptIn(
+    ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class,
     ExperimentalMaterial3ExpressiveApi::class
 )
 @Composable
@@ -285,14 +290,14 @@ private fun ToolbarTextButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val tooltipState = rememberTooltipState()
-    
+
     // Ensure tooltip is dismissed when the composable is disposed
     DisposableEffect(Unit) {
         onDispose {
             tooltipState.dismiss()
         }
     }
-    
+
     TooltipBox(
         positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
             positioning = TooltipAnchorPosition.Above
@@ -347,6 +352,7 @@ private fun ToolbarIcon(
             contentDescription = contentDescription,
             tint = tint
         )
+
         painter != null -> Icon(
             painter = painter,
             contentDescription = contentDescription,

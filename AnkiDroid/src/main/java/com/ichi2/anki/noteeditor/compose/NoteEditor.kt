@@ -333,7 +333,9 @@ fun NoteEditorScreen(
                 // Cards Button
                 Button(
                     onClick = onCardsClick,
-                    modifier = Modifier.height(52.dp).widthIn(max = 164.dp),
+                    modifier = Modifier
+                        .height(52.dp)
+                        .widthIn(max = 164.dp),
                     enabled = state.isCardsButtonEnabled,
                     colors = ButtonDefaults.filledTonalButtonColors()
                 ) {
@@ -421,19 +423,19 @@ fun DeckSelector(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
-    
+
     // Ensure dropdown is dismissed when composable is disposed
     DisposableEffect(Unit) {
         onDispose {
             expanded = false
         }
     }
-    
+
     // Build deck hierarchy from flat list
     val deckHierarchy = remember(availableDecks) {
         buildDeckHierarchy(availableDecks)
     }
-    
+
     val expandedDecks = remember { mutableStateMapOf<String, Boolean>() }
 
     ExposedDropdownMenuBox(
