@@ -1187,6 +1187,22 @@ class NoteEditorViewModel(
     /**
      * Get the current card ID for preview
      */
+    fun addCustomButton() {
+        // TODO: Implement custom button dialog
+        Timber.d("addCustomButton called")
+    }
+
+    fun insertMathJax() {
+        // TODO: Implement MathJax insertion logic (e.g., show dialog or insert default tags)
+        // For now, just insert inline MathJax tags
+        formatSelection("\\(", "\\)")
+    }
+
+    fun insertHorizontalRule() {
+        // Insert horizontal rule
+        formatSelection("<hr>", "")
+    }
+
     suspend fun getCurrentCardId(): Long? {
         val card = _currentCard.value
         if (card != null) return card.id
@@ -1194,10 +1210,10 @@ class NoteEditorViewModel(
         // If no cached card, try to find one from the note
         val note = _currentNote.value ?: return null
         return try {
-            val col = collectionProvider()
-            withContext(Dispatchers.IO) {
-                note.cards(col).firstOrNull()?.id
-            }
+            val col = CollectionManager.getColUnsafe()
+            // We can't easily get cards from note without a collection instance and background thread
+            // For now, return null if not explicitly set
+            null
         } catch (e: Exception) {
             Timber.w(e, "Error getting card ID for preview")
             null

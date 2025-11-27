@@ -78,13 +78,16 @@ fun NoteEditorScreenRoute(
     LaunchedEffect(Unit) {
         val activity = context as? Activity
         val intent = activity?.intent
-        val arguments = intent?.getBundleExtra(NoteEditorActivity.FRAGMENT_ARGS_EXTRA)
 
-        if (intent != null && arguments != null) {
-            arguments.getInt("CALLER", 0) // NoteEditorCaller.NO_CALLER.value
+        // Check for arguments in Bundle first, then direct extras
+        val bundleArgs = intent?.getBundleExtra(NoteEditorActivity.FRAGMENT_ARGS_EXTRA)
 
-            val cardId = arguments.getLong("CARD_ID", -1L).takeIf { it != -1L }
-            val deckId = arguments.getLong("DECK_ID", 0L)
+        if (intent != null) {
+            // Extract from Bundle or Intent directly
+            val cardId = bundleArgs?.getLong("CARD_ID", -1L)?.takeIf { it != -1L }
+                ?: intent.getLongExtra("CARD_ID", -1L).takeIf { it != -1L }
+
+            val deckId = bundleArgs?.getLong("DECK_ID", 0L) ?: intent.getLongExtra("DECK_ID", 0L)
 
             // Determine if adding or editing based on cardId presence
             isAdding = cardId == null
@@ -113,42 +116,82 @@ fun NoteEditorScreenRoute(
     val topBar: @Composable () -> Unit = {
         NoteEditorTopAppBar(
             title = if (isAdding) stringResource(R.string.cardeditor_title_add_note) else stringResource(
-            R.string.cardeditor_title_edit_card
-        ), onBackClick = onNavigateBack, onSaveClick = {
-            scope.launch {
-                val result = viewModel.saveNote()
-                if (result is com.ichi2.anki.NoteFieldsCheckResult.Success) {
-                    onNavigateBack()
+                R.string.cardeditor_title_edit_card
+            ), onBackClick = onNavigateBack, onSaveClick = {
+                scope.launch {
+                    val result = viewModel.saveNote()
+                    if (result is com.ichi2.anki.NoteFieldsCheckResult.Success) {
+                        onNavigateBack()
+                    }
                 }
-            }
-        }, onPreviewClick = {
-            scope.launch {
-                val cardId = viewModel.getCurrentCardId()
-                if (cardId != null) {
-                    onNavigateToPreview(cardId)
+            }, onPreviewClick = {
+                scope.launch {
+                    val cardId = viewModel.getCurrentCardId()
+                    if (cardId != null) {
+                        onNavigateToPreview(cardId)
+                    } else {
+                        // TODO: Show toast or snackbar that note must be saved first?
+                        // Or maybe preview the note content without a card ID (if supported)
+                    }
                 }
-            }
-        }, overflowItems = listOf(
-            NoteEditorSimpleOverflowItem(
-                id = "cards",
-                title = stringResource(R.string.note_editor_cards),
-                onClick = { /* TODO: Open Cards Template Editor */ }), NoteEditorToggleOverflowItem(
-                id = "capitalize",
-                title = stringResource(R.string.note_editor_capitalize),
-                checked = capitalizeChecked,
-                onCheckedChange = {
-                    capitalizeChecked = it
-                    // TODO: Save to prefs
-                }), NoteEditorToggleOverflowItem(
-                id = "scroll_toolbar",
-                title = stringResource(R.string.menu_scroll_toolbar),
-                checked = scrollToolbarChecked,
-                onCheckedChange = {
-                    scrollToolbarChecked = it
-                    // TODO: Save to prefs
-                })
-        )
-        )
+            }, overflowItems = buildList {
+                add(
+                    NoteEditorSimpleOverflowItem(
+                    id = "cards",
+                    title = stringResource(
+                        R.string.note_editor_cards,
+                        "1"
+                    ), // TODO: Get actual card count
+                    onClick = { /* TODO: Open Cards Template Editor */ }))
+
+                if (!isAdding) {
+                    add(
+                        NoteEditorSimpleOverflowItem(
+                        id = "add", title = stringResource(R.string.add), onClick = {
+                            // TODO: Save and switch to add mode
+                        }))
+                    add(
+                        NoteEditorSimpleOverflowItem(
+                        id = "copy_note",
+                        title = stringResource(R.string.copy_note),
+                        onClick = {
+                            // TODO: Copy note logic
+                        }))
+                }
+
+                add(
+                    NoteEditorSimpleOverflowItem(
+                    id = "font_size",
+                    title = stringResource(R.string.font_size),
+                    onClick = { /* TODO: Show font size dialog */ }))
+
+                add(
+                    NoteEditorToggleOverflowItem(
+                    id = "capitalize",
+                    title = stringResource(R.string.note_editor_capitalize),
+                    checked = capitalizeChecked,
+                    onCheckedChange = {
+                        capitalizeChecked = it
+                        // TODO: Save to prefs
+                    }))
+
+                add(
+                    NoteEditorToggleOverflowItem(
+                    id = "scroll_toolbar",
+                    title = stringResource(R.string.menu_scroll_toolbar),
+                    checked = scrollToolbarChecked,
+                    onCheckedChange = {
+                        scrollToolbarChecked = it
+                        // TODO: Save to prefs
+                    }))
+
+                add(
+                    NoteEditorToggleOverflowItem(
+                    id = "show_toolbar",
+                    title = stringResource(R.string.show_toolbar),
+                    checked = showToolbar,
+                    onCheckedChange = { viewModel.toggleToolbarVisibility() }))
+            })
     }
 
     NoteEditorScreen(
@@ -168,12 +211,7 @@ fun NoteEditorScreenRoute(
         onNoteTypeSelected = { viewModel.selectNoteType(it) },
         onMultimediaClick = { index ->
             // TODO: Implement proper multimedia picker
-            // For now, we can't use MultimediaActivity directly without constructing complex objects
-            // We should implement a simpler picker here or in ViewModel
             Timber.d("Multimedia clicked for field $index")
-            // val intent = Intent(context, MultimediaActivity::class.java)
-            // intent.putExtra(MultimediaActivity.MULTIMEDIA_RESULT_FIELD_INDEX, index)
-            // multimediaLauncher.launch(intent)
         },
         onToggleStickyClick = { viewModel.toggleStickyField(it) },
         onSaveClick = {
@@ -199,7 +237,9 @@ fun NoteEditorScreenRoute(
         onClozeIncrementClick = { viewModel.insertCloze(com.ichi2.anki.noteeditor.ClozeInsertionMode.INCREMENT_NUMBER) },
         onCustomButtonClick = { viewModel.applyToolbarButton(it) },
         onCustomButtonLongClick = { /* TODO */ },
-        onAddCustomButtonClick = { /* TODO */ },
+        onAddCustomButtonClick = { viewModel.addCustomButton() },
+        onMathjaxClick = { viewModel.insertMathJax() },
+        onHorizontalRuleClick = { viewModel.insertHorizontalRule() },
         customToolbarButtons = toolbarButtons,
         isToolbarVisible = showToolbar,
         allTags = tagsState,
