@@ -7,6 +7,7 @@ plugins {
     id("com.google.android.gms.oss-licenses-plugin")
     id("de.mannodermaus.android-junit5")
     id("org.jetbrains.kotlin.plugin.compose")
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -163,6 +164,10 @@ dependencies {
     debugImplementation(libs.acra.limiter)
     debugImplementation(libs.square.leakcanary.android)
     releaseImplementation(libs.acra.noop)
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+    implementation(libs.kotlinx.serialization.json)
 }
 
 // ./gradlew :AnkiDroid:googlePlayLicenses
