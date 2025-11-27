@@ -17,47 +17,10 @@
  ****************************************************************************************/
 
 /**
- * COMPOSE MIGRATION STATUS & CLEANUP PLAN
- * ========================================
- * 
- * This file is undergoing a gradual migration from XML-based Views to Jetpack Compose.
- * The Compose UI is now functional for the core note editor, toolbar, fields, deck/notetype
- * selectors, and tags/cards buttons. Legacy XML code paths remain as fallback references
- * and are guarded or commented out.
- * 
- * AREAS WITH PENDING CLEANUP (with line references as of latest commit):
- * - Lines ~489-493:   Snackbar anchor (toolbar reference) - migrate to Compose scaffold
- * - Lines ~840-851:   Field/Tags/Cards button XML references - now in Compose
- * - Lines ~963-966:   Note type and deck selector XML comments
- * - Lines ~1032-1040: Tags button and note type spinner listeners
- * - Lines ~2080-2083: Tab order/focus handling for deck spinner (Android <O compatibility)
- * - Lines ~2972-2983: Note type change listener and tags button enable/disable
- * 
- * MIGRATION PLAN & TIMELINE:
- * 1. ✅ Phase 1 (Completed): Core Compose UI for fields, toolbar, selectors
- * 2. 🔄 Phase 2 (In Progress): Add integration tests for both XML fallback and Compose paths
- *    - Test snackbar anchoring in both modes
- *    - Test field layout, sticky buttons, multimedia buttons
- *    - Test image occlusion buttons and workflows
- *    - Test note type/deck selection and persistence
- *    - Test tags dialog integration
- *    - Test keyboard shortcuts and tab order
- * 3. ⏳ Phase 3 (Q1 2026): Remove all legacy XML references once tests pass
- *    - Remove commented XML view lookups
- *    - Remove legacy field container and toolbar XML
- *    - Clean up conditional fallback code
- *    - Verify all functionality migrated and tested
- * 4. ⏳ Phase 4 (Q2 2026): Full Compose adoption
- *    - Remove feature flags/preferences guarding Compose
- *    - Archive legacy layout XML files
- *    - Final performance and accessibility audit
- * 
- * TESTING REQUIREMENTS BEFORE REMOVAL:
- * - Integration tests covering both legacy and Compose code paths
- * - Accessibility testing (TalkBack, Switch Access)
- * - Performance benchmarks (layout inflation, memory)
- * - Compatibility testing across Android versions (API 23+)
- * - Regression testing for multimedia, image occlusion, cloze deletions
+ * Note Editor Fragment
+ *
+ * This fragment hosts the Note Editor UI.
+ * It has been migrated to use Jetpack Compose.
  */
 
 package com.ichi2.anki
