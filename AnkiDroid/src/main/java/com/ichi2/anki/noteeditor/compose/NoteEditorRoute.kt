@@ -22,10 +22,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.NoteEditorActivity
+import com.ichi2.anki.R
 import com.ichi2.anki.noteeditor.NoteEditorViewModel
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -53,8 +57,8 @@ fun NoteEditorScreenRoute(
     ) { result ->
         if (result.resultCode != Activity.RESULT_CANCELED) {
             result.data?.extras ?: return@rememberLauncherForActivityResult
-            // TODO: Handle multimedia result properly. 
-            // Currently NoteEditorViewModel doesn't expose a direct method for this, 
+            // TODO: Handle multimedia result properly.
+            // Currently NoteEditorViewModel doesn't expose a direct method for this,
             // but we can implement it later or assuming the user just wants the editor to work for now.
         }
     }
@@ -65,6 +69,11 @@ fun NoteEditorScreenRoute(
         // Handle template edit result (reload required)
     }
 
+    // State for title and preferences
+    var isAdding by remember { androidx.compose.runtime.mutableStateOf(true) }
+    var capitalizeChecked by remember { androidx.compose.runtime.mutableStateOf(true) } // Default true, should load from prefs
+    var scrollToolbarChecked by remember { androidx.compose.runtime.mutableStateOf(true) } // Default true
+
     // Initial Setup
     LaunchedEffect(Unit) {
         val activity = context as? Activity
@@ -73,27 +82,21 @@ fun NoteEditorScreenRoute(
 
         if (intent != null && arguments != null) {
             arguments.getInt("CALLER", 0) // NoteEditorCaller.NO_CALLER.value
-            // We can't easily access NoteEditorCaller enum here without dependency, so we use raw values or just check IDs
-            // But we can check for card ID or deck ID directly
 
             val cardId = arguments.getLong("CARD_ID", -1L).takeIf { it != -1L }
             val deckId = arguments.getLong("DECK_ID", 0L)
 
             // Determine if adding or editing based on cardId presence
-            val isAdding = cardId == null
+            isAdding = cardId == null
 
             // Get collection
             try {
                 val col = CollectionManager.getColUnsafe()
                 viewModel.initializeEditor(
-                    col = col,
-                    cardId = cardId,
-                    deckId = deckId,
-                    isAddingNote = isAdding
+                    col = col, cardId = cardId, deckId = deckId, isAddingNote = isAdding
                 )
             } catch (e: Exception) {
                 Timber.e(e, "Failed to initialize editor")
-                // Handle error (maybe navigate back)
             }
         } else {
             // Fallback or error
@@ -105,6 +108,47 @@ fun NoteEditorScreenRoute(
                 Timber.e(e, "Failed to initialize editor (fallback)")
             }
         }
+    }
+
+    val topBar: @Composable () -> Unit = {
+        NoteEditorTopAppBar(
+            title = if (isAdding) stringResource(R.string.cardeditor_title_add_note) else stringResource(
+            R.string.cardeditor_title_edit_card
+        ), onBackClick = onNavigateBack, onSaveClick = {
+            scope.launch {
+                val result = viewModel.saveNote()
+                if (result is com.ichi2.anki.NoteFieldsCheckResult.Success) {
+                    onNavigateBack()
+                }
+            }
+        }, onPreviewClick = {
+            scope.launch {
+                val cardId = viewModel.getCurrentCardId()
+                if (cardId != null) {
+                    onNavigateToPreview(cardId)
+                }
+            }
+        }, overflowItems = listOf(
+            NoteEditorSimpleOverflowItem(
+                id = "cards",
+                title = stringResource(R.string.note_editor_cards),
+                onClick = { /* TODO: Open Cards Template Editor */ }), NoteEditorToggleOverflowItem(
+                id = "capitalize",
+                title = stringResource(R.string.note_editor_capitalize),
+                checked = capitalizeChecked,
+                onCheckedChange = {
+                    capitalizeChecked = it
+                    // TODO: Save to prefs
+                }), NoteEditorToggleOverflowItem(
+                id = "scroll_toolbar",
+                title = stringResource(R.string.menu_scroll_toolbar),
+                checked = scrollToolbarChecked,
+                onCheckedChange = {
+                    scrollToolbarChecked = it
+                    // TODO: Save to prefs
+                })
+        )
+        )
     }
 
     NoteEditorScreen(
@@ -161,6 +205,7 @@ fun NoteEditorScreenRoute(
         allTags = tagsState,
         deckTags = deckTags,
         onUpdateTags = { viewModel.updateTags(it) },
-        onAddTag = { viewModel.addTag(it) }
+        onAddTag = { viewModel.addTag(it) },
+        topBar = topBar
     )
 }
