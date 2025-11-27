@@ -1184,4 +1184,23 @@ class NoteEditorViewModel(
             }
         }
     }
+    /**
+     * Get the current card ID for preview
+     */
+    suspend fun getCurrentCardId(): Long? {
+        val card = _currentCard.value
+        if (card != null) return card.id
+        
+        // If no cached card, try to find one from the note
+        val note = _currentNote.value ?: return null
+        return try {
+            val col = collectionProvider()
+            withContext(Dispatchers.IO) {
+                note.cards(col).firstOrNull()?.id
+            }
+        } catch (e: Exception) {
+            Timber.w(e, "Error getting card ID for preview")
+            null
+        }
+    }
 }

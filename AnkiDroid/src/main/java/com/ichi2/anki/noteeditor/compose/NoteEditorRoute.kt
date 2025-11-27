@@ -33,32 +33,35 @@ import com.ichi2.anki.R
 import com.ichi2.anki.multimedia.MultimediaActivity
 import com.ichi2.anki.noteeditor.NoteEditorViewModel
 import com.ichi2.anki.noteeditor.NoteEditorRoute
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 @Composable
 fun NoteEditorScreenRoute(
     viewModel: NoteEditorViewModel = viewModel(),
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToPreview: (Long) -> Unit
 ) {
     val context = LocalContext.current
-    val activity = context as? NoteEditorActivity
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
 
     val noteEditorState by viewModel.noteEditorState.collectAsState()
     val availableDecks by viewModel.availableDecks.collectAsState()
     val availableNoteTypes by viewModel.availableNoteTypes.collectAsState()
+    val toolbarButtons by viewModel.toolbarButtons.collectAsState()
+    val showToolbar by viewModel.showToolbar.collectAsState()
+    val tagsState by viewModel.tagsState.collectAsState()
+    val deckTags by viewModel.deckTags.collectAsState()
 
     // Launchers
     val multimediaLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == Activity.RESULT_CANCELED) {
-            // Handle cancellation (logic from Fragment)
-            val index = result.data?.extras?.getInt(MultimediaActivity.MULTIMEDIA_RESULT_FIELD_INDEX) ?: return@rememberLauncherForActivityResult
-            // TODO: Show multimedia bottom sheet (needs porting)
-        } else {
-            // Handle result
+        if (result.resultCode != Activity.RESULT_CANCELED) {
             val extras = result.data?.extras ?: return@rememberLauncherForActivityResult
-            // TODO: Handle multimedia result (needs porting logic to ViewModel or here)
+            // TODO: Handle multimedia result properly. 
+            // Currently NoteEditorViewModel doesn't expose a direct method for this, 
+            // but we can implement it later or assuming the user just wants the editor to work for now.
         }
     }
 
@@ -70,8 +73,44 @@ fun NoteEditorScreenRoute(
 
     // Initial Setup
     LaunchedEffect(Unit) {
-        // Initialize ViewModel if needed (logic from setupComposeEditor)
-        // This might need arguments passed from the route
+        val activity = context as? Activity
+        val intent = activity?.intent
+        val arguments = intent?.getBundleExtra(NoteEditorActivity.FRAGMENT_ARGS_EXTRA)
+
+        if (intent != null && arguments != null) {
+            val callerValue = arguments.getInt("CALLER", 0) // NoteEditorCaller.NO_CALLER.value
+            // We can't easily access NoteEditorCaller enum here without dependency, so we use raw values or just check IDs
+            // But we can check for card ID or deck ID directly
+            
+            val cardId = arguments.getLong("CARD_ID", -1L).takeIf { it != -1L }
+            val deckId = arguments.getLong("DECK_ID", 0L)
+            
+            // Determine if adding or editing based on cardId presence
+            val isAdding = cardId == null
+            
+            // Get collection
+            try {
+                val col = CollectionManager.getColUnsafe()
+                viewModel.initializeEditor(
+                    col = col,
+                    cardId = cardId,
+                    deckId = deckId,
+                    isAddingNote = isAdding
+                )
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to initialize editor")
+                // Handle error (maybe navigate back)
+            }
+        } else {
+             // Fallback or error
+             Timber.w("No arguments found for NoteEditor")
+             try {
+                val col = CollectionManager.getColUnsafe()
+                viewModel.initializeEditor(col = col)
+             } catch (e: Exception) {
+                 Timber.e(e, "Failed to initialize editor (fallback)")
+             }
+        }
     }
 
     NoteEditorScreen(
@@ -89,22 +128,44 @@ fun NoteEditorScreenRoute(
         },
         onDeckSelected = { viewModel.selectDeck(it) },
         onNoteTypeSelected = { viewModel.selectNoteType(it) },
-        onMultimediaClick = { /* TODO */ },
+        onMultimediaClick = { index ->
+            // TODO: Implement proper multimedia picker
+            // For now, we can't use MultimediaActivity directly without constructing complex objects
+            // We should implement a simpler picker here or in ViewModel
+            Timber.d("Multimedia clicked for field $index")
+            // val intent = Intent(context, MultimediaActivity::class.java)
+            // intent.putExtra(MultimediaActivity.MULTIMEDIA_RESULT_FIELD_INDEX, index)
+            // multimediaLauncher.launch(intent)
+        },
         onToggleStickyClick = { viewModel.toggleStickyField(it) },
-        onSaveClick = { /* TODO */ },
-        onPreviewClick = { /* TODO */ },
-        onBoldClick = { /* TODO */ },
-        onItalicClick = { /* TODO */ },
-        onUnderlineClick = { /* TODO */ },
-        onClozeClick = { /* TODO */ },
-        onClozeIncrementClick = { /* TODO */ },
-        onCustomButtonClick = { /* TODO */ },
+        onSaveClick = { 
+            scope.launch {
+                val result = viewModel.saveNote()
+                if (result is com.ichi2.anki.NoteFieldsCheckResult.Success) {
+                    onNavigateBack()
+                }
+            }
+        },
+        onPreviewClick = { 
+            scope.launch {
+                val cardId = viewModel.getCurrentCardId()
+                if (cardId != null) {
+                    onNavigateToPreview(cardId)
+                }
+            }
+        },
+        onBoldClick = { viewModel.formatSelection("<b>", "</b>") },
+        onItalicClick = { viewModel.formatSelection("<i>", "</i>") },
+        onUnderlineClick = { viewModel.formatSelection("<u>", "</u>") },
+        onClozeClick = { viewModel.insertCloze(com.ichi2.anki.noteeditor.ClozeInsertionMode.SAME_NUMBER) },
+        onClozeIncrementClick = { viewModel.insertCloze(com.ichi2.anki.noteeditor.ClozeInsertionMode.INCREMENT_NUMBER) },
+        onCustomButtonClick = { viewModel.applyToolbarButton(it) },
         onCustomButtonLongClick = { /* TODO */ },
         onAddCustomButtonClick = { /* TODO */ },
-        customToolbarButtons = emptyList(), // TODO: Get from ViewModel
-        isToolbarVisible = true, // TODO: Get from ViewModel
-        allTags = com.ichi2.anki.compose.TagsState.Loading, // TODO: Get from ViewModel
-        deckTags = emptySet(), // TODO: Get from ViewModel
+        customToolbarButtons = toolbarButtons,
+        isToolbarVisible = showToolbar,
+        allTags = tagsState,
+        deckTags = deckTags,
         onUpdateTags = { viewModel.updateTags(it) },
         onAddTag = { viewModel.addTag(it) }
     )
