@@ -158,6 +158,7 @@ dependencies {
     testImplementation(libs.robolectric)
     testImplementation(libs.strikt.core)
     testImplementation(libs.turbine)
+    testImplementation("androidx.compose.ui:ui-test-junit4:1.7.6")
     annotationProcessor(libs.google.dagger.compiler)
     ksp(libs.androidx.room.compiler)
     debugImplementation(libs.acra.limiter)

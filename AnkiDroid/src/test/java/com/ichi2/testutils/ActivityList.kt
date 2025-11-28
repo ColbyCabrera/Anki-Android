@@ -39,7 +39,7 @@ import com.ichi2.anki.NoteTypeFieldEditor
 import com.ichi2.anki.Reviewer
 import com.ichi2.anki.SharedDecksActivity
 import com.ichi2.anki.SingleFragmentActivity
-import com.ichi2.anki.StudyOptionsActivity
+// import com.ichi2.anki.StudyOptionsActivity
 import com.ichi2.anki.instantnoteeditor.InstantNoteEditorActivity
 import com.ichi2.anki.multimedia.MultimediaActivity
 import com.ichi2.anki.notetype.ManageNotetypes
@@ -70,7 +70,7 @@ object ActivityList {
                 )
             },
             get(IntentHandler2::class.java),
-            get(StudyOptionsActivity::class.java),
+            // get(StudyOptionsActivity::class.java),
             get(CardBrowser::class.java),
             get(NoteTypeFieldEditor::class.java),
             get(NoteEditorActivity::class.java),

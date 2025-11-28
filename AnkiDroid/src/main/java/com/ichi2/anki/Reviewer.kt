@@ -195,7 +195,8 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
     private val flagItemIds = mutableSetOf<Int>()
 
-    private val viewModel: ReviewerViewModel by viewModels()
+    @VisibleForTesting
+    internal val viewModel: ReviewerViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         if (showedActivityFailedScreen(savedInstanceState)) {

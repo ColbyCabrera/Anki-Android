@@ -558,4 +558,4 @@ class ReviewerTest : RobolectricTest() {
     }
 }
 
-val Reviewer.isDisplayingMark: Boolean get() = this.cardMarker!!.isDisplayingMark
+val Reviewer.isDisplayingMark: Boolean get() = this.viewModel.state.value.isMarked

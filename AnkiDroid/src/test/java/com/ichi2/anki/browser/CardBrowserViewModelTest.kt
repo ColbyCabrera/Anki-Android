@@ -172,7 +172,7 @@ class CardBrowserViewModelTest : JvmTest() {
 
         assertThat("All decks should be selected", hasSelectedAllDecks())
 
-        val addIntent = CardBrowser.createAddNoteLauncher(this).toIntent(mockIt())
+        val addIntent = com.ichi2.anki.noteeditor.NoteEditorLauncher.AddNoteFromCardBrowser(this).toIntent(mockIt())
         val bundle = addIntent.getBundleExtra(NoteEditorActivity.FRAGMENT_ARGS_EXTRA)
         IntentAssert.doesNotHaveExtra(bundle, NoteEditorFragment.EXTRA_DID)
     }
@@ -455,7 +455,7 @@ class CardBrowserViewModelTest : JvmTest() {
 
     @Test
     fun `change card order to NO_SORTING is a no-op if done twice`() = runViewModelTest {
-        flowOfSearchState.test {
+        searchState.test {
             ignoreEventsDuringViewModelInit()
             assertThat("initial order", order, equalTo(SORT_FIELD))
             assertThat("initial direction", !isSortDescendingValue)
@@ -478,7 +478,7 @@ class CardBrowserViewModelTest : JvmTest() {
 
     @Test
     fun `change direction of results`() = runViewModelTest {
-        flowOfSearchState.test {
+        searchState.test {
             ignoreEventsDuringViewModelInit()
             assertThat("initial order", order, equalTo(SORT_FIELD))
             assertThat("initial direction", !isSortDescendingValue)

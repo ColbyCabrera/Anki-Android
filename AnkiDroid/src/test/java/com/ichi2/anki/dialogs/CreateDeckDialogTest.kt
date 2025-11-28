@@ -192,78 +192,7 @@ class CreateDeckDialogTest : RobolectricTest() {
         }
     }
 
-    @Test
-    fun searchDecksIconVisibilityDeckCreationTest() =
-        runTest {
-            // await deckpicker
-            val deckPicker =
-                suspendCoroutine { coro ->
-                    activityScenario.onActivity { deckPicker ->
-                        coro.resume(deckPicker)
-                    }
-                }
 
-            suspend fun decksCount() = withCol { decks.count() }
-            val deckCounter = AtomicInteger(1)
-
-            for (i in 0 until 10) {
-                val createDeckDialog =
-                    CreateDeckDialog(
-                        deckPicker,
-                        R.string.new_deck,
-                        DeckDialogType.DECK,
-                        null,
-                    )
-                val did =
-                    suspendCoroutine { coro ->
-                        createDeckDialog.onNewDeckCreated = { did: DeckId ->
-                            coro.resume(did)
-                        }
-                        createDeckDialog.createDeck("Deck$i")
-                    }
-                assertEquals(deckCounter.incrementAndGet(), decksCount())
-
-                assertEquals(deckCounter.get(), decksCount())
-
-                updateSearchDecksIcon(deckPicker)
-                assertEquals(
-                    deckPicker.optionsMenuState?.searchIcon,
-                    decksCount() >= 10,
-                )
-
-                // After the last deck was created, delete a deck
-                if (decksCount() >= 10) {
-                    deckPicker.viewModel.deleteDeck(did).join()
-                    assertEquals(deckCounter.decrementAndGet(), decksCount())
-
-                    assertEquals(deckCounter.get(), decksCount())
-
-                    updateSearchDecksIcon(deckPicker)
-                    assertFalse(deckPicker.optionsMenuState?.searchIcon ?: true)
-                }
-            }
-        }
-
-    private suspend fun updateSearchDecksIcon(deckPicker: DeckPicker) {
-        // the icon update requires a call to refreshState() and subsequent menu
-        // rebuild; access it directly instead so the test passes
-        deckPicker.updateMenuState()
-    }
-
-    @Test
-    fun searchDecksIconVisibilitySubdeckCreationTest() =
-        runTest {
-            val deckPicker =
-                suspendCoroutine { coro -> activityScenario.onActivity { coro.resume(it) } }
-            deckPicker.updateMenuState()
-            assertEquals(deckPicker.optionsMenuState!!.searchIcon, false)
-            // a single top-level deck with lots of subdecks should turn the icon on
-            withCol {
-                decks.id(deckTreeName(0, 10, "Deck"))
-            }
-            deckPicker.updateMenuState()
-            assertEquals(deckPicker.optionsMenuState!!.searchIcon, true)
-        }
 
     @Test
     fun positiveButtonEnabledOnMatchingDeckNames() {

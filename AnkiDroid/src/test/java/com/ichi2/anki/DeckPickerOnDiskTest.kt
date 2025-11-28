@@ -28,6 +28,7 @@ import com.ichi2.testutils.DbUtils
 import com.ichi2.testutils.common.Flaky
 import com.ichi2.testutils.common.OS
 import com.ichi2.utils.ResourceLoader
+import kotlinx.coroutines.flow.first
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.junit.Before
@@ -63,7 +64,7 @@ class DeckPickerOnDiskTest : RobolectricTest() {
 
     @Test
     @Flaky(OS.WINDOWS)
-    fun version16CollectionOpens() {
+    fun version16CollectionOpens() = runTest {
         try {
             setupColV16()
             InitialActivityWithConflictTest.setupForValid(targetContext)
@@ -85,7 +86,7 @@ class DeckPickerOnDiskTest : RobolectricTest() {
             )
             assertThat(
                 "Decks should be visible",
-                deckPicker.visibleDeckCount,
+               deckPicker.viewModel.flowOfDeckList.first().data.size,
                 equalTo(1),
             )
         } finally {

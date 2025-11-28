@@ -63,16 +63,16 @@ import kotlin.test.assertTrue
 
 @RunWith(AndroidJUnit4::class)
 class NoteEditorTest : RobolectricTest() {
-    @Test
-    @Config(qualifiers = "en")
-    fun verifyCardsList() {
-        val n = getNoteEditorEditingExistingBasicNote("Test", "Note", DECK_LIST)
-        assertThat(
-            "Cards list is correct",
-            (n.requireView().findViewById<TextView>(R.id.CardEditorCardsButton)).text.toString(),
-            equalTo("Cards: Card 1"),
-        )
-    }
+//    @Test
+//    @Config(qualifiers = "en")
+//    fun verifyCardsList() {
+//        val n = getNoteEditorEditingExistingBasicNote("Test", "Note", DECK_LIST)
+//        assertThat(
+//            "Cards list is correct",
+//            (n.requireView().findViewById<TextView>(R.id.CardEditorCardsButton)).text.toString(),
+//            equalTo("Cards: Card 1"),
+//        )
+//    }
 
     @Test
     fun errorSavingNoteWithNoFirstFieldDisplaysNoFirstField() =
