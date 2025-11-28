@@ -64,7 +64,7 @@ sealed interface NoteEditorEvent {
     data object ShowHeadingDialog : NoteEditorEvent
     data object ShowFontSizeDialog : NoteEditorEvent
     data object ShowAddCustomButtonDialog : NoteEditorEvent
-    data class NavigateToPreview(val cardId: Long) : NoteEditorEvent
+    data class NavigateToPreview(val cardIds: List<Long>, val currentCardId: Long) : NoteEditorEvent
 }
 
 
@@ -1302,12 +1302,33 @@ class NoteEditorViewModel(
 
     fun onPreviewClick() {
         viewModelScope.launch {
-            val cardId = getCurrentCardId()
-            if (cardId != null) {
-                _events.send(NoteEditorEvent.NavigateToPreview(cardId))
-            } else {
+            val note = _currentNote.value
+            if (note == null) {
+                Timber.w("Cannot preview: No current note")
+                return@launch
+            }
+
+            val currentCardId = getCurrentCardId()
+            if (currentCardId == null) {
                 Timber.w("Cannot preview: No current card ID found")
                 // TODO: Show error message to user?
+                return@launch
+            }
+
+            val cardIds = withContext(Dispatchers.IO) {
+                try {
+                    val col = collectionProvider()
+                    col.findCards("nid:${note.id}")
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to get cards for preview")
+                    emptyList()
+                }
+            }
+
+            if (cardIds.isNotEmpty()) {
+                _events.send(NoteEditorEvent.NavigateToPreview(cardIds, currentCardId))
+            } else {
+                Timber.w("Cannot preview: No cards found for note")
             }
         }
     }
@@ -1392,5 +1413,4 @@ class NoteEditorViewModel(
         }
         updateFieldEditedFlag()
     }
-
 }

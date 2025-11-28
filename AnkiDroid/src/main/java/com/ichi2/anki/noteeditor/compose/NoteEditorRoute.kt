@@ -23,6 +23,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -42,7 +43,7 @@ fun NoteEditorScreenRoute(
     onNavigateToPreview: (Long) -> Unit
 ) {
     val context = LocalContext.current
-    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val scope = rememberCoroutineScope()
 
     val noteEditorState by viewModel.noteEditorState.collectAsState()
     val availableDecks by viewModel.availableDecks.collectAsState()
@@ -132,10 +133,7 @@ fun NoteEditorScreenRoute(
                     }
                 }
             }, onPreviewClick = {
-                scope.launch {
-                    val cardId = viewModel.getCurrentCardId()
-                    onNavigateToPreview(cardId ?: 0L)
-                }
+                viewModel.onPreviewClick()
             },
             overflowItems = buildList {
 
@@ -224,12 +222,7 @@ fun NoteEditorScreenRoute(
             }
         },
         onPreviewClick = {
-            scope.launch {
-                val cardId = viewModel.getCurrentCardId()
-                if (cardId != null) {
-                    onNavigateToPreview(cardId)
-                }
-            }
+            viewModel.onPreviewClick()
         },
         onBoldClick = { viewModel.formatSelection("<b>", "</b>") },
         onItalicClick = { viewModel.formatSelection("<i>", "</i>") },

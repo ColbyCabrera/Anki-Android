@@ -63,6 +63,7 @@ import com.ichi2.anki.multimediacard.fields.EFieldType
 import com.ichi2.anki.multimediacard.fields.IField
 import com.ichi2.anki.multimediacard.fields.ImageField
 import com.ichi2.anki.multimediacard.fields.MediaClipField
+import com.ichi2.anki.previewer.PreviewerFragment
 import com.ichi2.anki.servicelayer.NoteService
 import com.ichi2.anki.previewer.TemplatePreviewerPage
 import com.ichi2.anki.previewer.TemplatePreviewerArguments
@@ -122,7 +123,7 @@ class NoteEditorActivity : AnkiActivity(), BaseSnackbarBuilderProvider, Dispatch
                     is NoteEditorEvent.ShowHeadingDialog -> displayInsertHeadingDialog()
                     is NoteEditorEvent.ShowFontSizeDialog -> displayFontSizeDialog()
                     is NoteEditorEvent.ShowAddCustomButtonDialog -> displayAddToolbarDialog()
-                    is NoteEditorEvent.NavigateToPreview -> performPreview()
+                    is NoteEditorEvent.NavigateToPreview -> performPreview(event.cardIds, event.currentCardId)
                 }
             }
         }
@@ -342,25 +343,11 @@ class NoteEditorActivity : AnkiActivity(), BaseSnackbarBuilderProvider, Dispatch
         noteEditorViewModel.formatSelection(prefix, suffix)
     }
 
-    private suspend fun performPreview() {
-        // Simplified preview logic for Compose
-        val fields = noteEditorViewModel.noteEditorState.value.fields.map { fieldState ->
-             NoteService.convertToHtmlNewline(fieldState.value.text, false) // simplified
-        }.toMutableList()
+    private fun performPreview(cardIds: List<Long>, currentCardId: Long) {
+        val idsFile = com.ichi2.anki.browser.IdsFile(cacheDir, cardIds)
+        val currentIndex = cardIds.indexOf(currentCardId).takeIf { it >= 0 } ?: 0
 
-        val tags = noteEditorViewModel.noteEditorState.value.tags.toMutableList()
-        val notetype = CollectionManager.getColUnsafe().notetypes.current() // Simplified
-        val noteId = 0L // Simplified
-
-        val args = TemplatePreviewerArguments(
-            notetypeFile = NotetypeFile(this, notetype),
-            fields = fields,
-            tags = tags,
-            id = noteId,
-            ord = 0,
-            fillEmpty = false,
-        )
-        val intent = TemplatePreviewerPage.getIntent(this, args)
+        val intent = PreviewerFragment.getIntent(this, idsFile, currentIndex)
         startActivity(intent)
     }
 
