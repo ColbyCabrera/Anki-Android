@@ -1351,34 +1351,23 @@ class NoteEditorViewModel(
      * Get the current note as a multimedia editable note
      */
     fun getCurrentMultimediaEditableNote(): IMultimediaEditableNote {
-        val note = _currentNote.value ?: return object : IMultimediaEditableNote {
-            override val numberOfFields: Int = 0
-            override fun getField(index: Int): IField? = null
-            override fun setField(index: Int, field: IField?): Boolean = false
-            override val isModified: Boolean = false
-            override val initialFieldCount: Int = 0
-            override fun getInitialField(index: Int): IField? = null
+        val note = _currentNote.value
+        val fieldCount = note?.fields?.size ?: 0
+        return SimpleMultimediaEditableNote(fieldCount)
+    }
+
+    private class SimpleMultimediaEditableNote(
+        override val numberOfFields: Int
+    ) : IMultimediaEditableNote {
+        override fun getField(index: Int): IField? = null
+
+        override fun setField(index: Int, field: IField?): Boolean {
+            return index in 0 until numberOfFields && field != null
         }
 
-        return object : IMultimediaEditableNote {
-            override val numberOfFields: Int = note.fields.size
-
-            override fun getField(index: Int): IField? {
-                // Simplified: We don't have easy access to IField conversion here without parsing
-                // For now return null or a basic implementation if needed
-                return null
-            }
-
-            override fun setField(index: Int, field: IField?): Boolean {
-                return index in note.fields.indices && field != null
-                // We don't update the note directly here as we rely on the result callback
-                // to update the field via addMediaFileToField
-            }
-
-            override val isModified: Boolean = true // Assume modified if we are editing
-            override val initialFieldCount: Int = note.fields.size
-            override fun getInitialField(index: Int): IField? = null
-        }
+        override val isModified: Boolean = true
+        override val initialFieldCount: Int = numberOfFields
+        override fun getInitialField(index: Int): IField? = null
     }
 
     /**
