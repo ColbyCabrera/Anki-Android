@@ -29,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.NoteEditorActivity
+import com.ichi2.anki.NoteEditorConstants
 import com.ichi2.anki.R
 import com.ichi2.anki.noteeditor.NoteEditorViewModel
 import kotlinx.coroutines.launch
@@ -84,10 +85,10 @@ fun NoteEditorScreenRoute(
 
         if (intent != null) {
             // Extract from Bundle or Intent directly
-            val cardId = bundleArgs?.getLong("CARD_ID", -1L)?.takeIf { it != -1L }
-                ?: intent.getLongExtra("CARD_ID", -1L).takeIf { it != -1L }
+            val cardId = bundleArgs?.getLong(NoteEditorConstants.EXTRA_CARD_ID, -1L)?.takeIf { it != -1L }
+                ?: intent.getLongExtra(NoteEditorConstants.EXTRA_CARD_ID, -1L).takeIf { it != -1L }
 
-            val deckId = bundleArgs?.getLong("DECK_ID", 0L) ?: intent.getLongExtra("DECK_ID", 0L)
+            val deckId = bundleArgs?.getLong(NoteEditorConstants.EXTRA_DID, 0L) ?: intent.getLongExtra(NoteEditorConstants.EXTRA_DID, 0L)
 
             // Determine if adding or editing based on cardId presence
             isAdding = cardId == null
