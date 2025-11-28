@@ -54,7 +54,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import com.ichi2.anki.CardTemplateEditor
 import com.ichi2.anki.CollectionManager
-import com.ichi2.anki.NoteEditorFragment
 import com.ichi2.anki.NotetypeFile
 import com.ichi2.anki.multimedia.AudioRecordingFragment
 import com.ichi2.anki.multimedia.AudioVideoFragment
@@ -74,12 +73,11 @@ import kotlin.reflect.KClass
 import kotlin.reflect.jvm.jvmName
 
 /**
- * To find the actual note Editor, @see [NoteEditorFragment]
- * This activity contains the NoteEditorFragment, and, on x-large screens, the previewer fragment.
+ * This activity contains the NoteEditor logic, and, on x-large screens, the previewer fragment.
  * It also ensures that changes in the note are transmitted to the previewer
  */
 
-// TODO: Move intent handling to [NoteEditorActivity] from [NoteEditorFragment]
+// TODO: Move intent handling to [NoteEditorActivity]
 class NoteEditorActivity : AnkiActivity(), BaseSnackbarBuilderProvider, DispatchKeyEventListener,
     ShortcutGroupProvider {
     override val baseSnackbarBuilder: SnackbarBuilder = { }

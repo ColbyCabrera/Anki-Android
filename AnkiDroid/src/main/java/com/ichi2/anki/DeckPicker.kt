@@ -263,7 +263,7 @@ private fun DeckPicker.deckPickerPainter(): Painter? {
  *
  * On a tablet, this is a fragmented view, with study options to the right.
  *
- * Often used as navigation to: [Reviewer], [NoteEditorFragment] (adding notes), [SharedDecksDownloadFragment]
+ * Often used as navigation to: [Reviewer], [NoteEditorActivity] (adding notes), [SharedDecksDownloadFragment]
  *
  * Responsibilities:
  * * Setup/upgrades of the application: [handleStartup]
@@ -347,9 +347,9 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
             val data = result.data
             if (data != null && (
                 data.getBooleanExtra(
-                    NoteEditorFragment.RELOAD_REQUIRED_EXTRA_KEY,
+                    NoteEditorConstants.RELOAD_REQUIRED_EXTRA_KEY,
                     false
-                ) || data.getBooleanExtra(NoteEditorFragment.NOTE_CHANGED_EXTRA_KEY, false)
+                ) || data.getBooleanExtra(NoteEditorConstants.NOTE_CHANGED_EXTRA_KEY, false)
                 )
             ) {
                 cardBrowserViewModel.search(cardBrowserViewModel.searchQuery.value)

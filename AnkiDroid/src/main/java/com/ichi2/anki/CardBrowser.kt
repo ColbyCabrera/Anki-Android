@@ -119,9 +119,9 @@ open class CardBrowser :
             val data = result.data
             if (data != null && (
                 data.getBooleanExtra(
-                    NoteEditorFragment.RELOAD_REQUIRED_EXTRA_KEY,
+                    NoteEditorConstants.RELOAD_REQUIRED_EXTRA_KEY,
                     false
-                ) || data.getBooleanExtra(NoteEditorFragment.NOTE_CHANGED_EXTRA_KEY, false)
+                ) || data.getBooleanExtra(NoteEditorConstants.NOTE_CHANGED_EXTRA_KEY, false)
                 )
             ) {
                 viewModel.search(viewModel.searchQuery.value)

@@ -16,7 +16,6 @@
 package com.ichi2.anki.noteeditor
 
 import com.ichi2.anki.libanki.Consts
-import com.ichi2.anki.noteeditor.Toolbar.TextWrapper
 import com.ichi2.utils.HashUtil.hashSetInit
 import timber.log.Timber
 import java.util.ArrayList
@@ -29,7 +28,7 @@ class CustomToolbarButton(
     val prefix: String,
     val suffix: String,
 ) {
-    fun toFormatter(): Toolbar.TextFormatter = TextWrapper(prefix, suffix)
+    fun toToolbarButtonModel(): ToolbarButtonModel = ToolbarButtonModel(index, buttonText, prefix, suffix)
 
     companion object {
         const val KEEP_EMPTY_ENTRIES = -1
