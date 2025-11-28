@@ -42,6 +42,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.receiveAsFlow
 import timber.log.Timber
 import kotlin.math.max
 import kotlin.math.min
@@ -49,6 +50,19 @@ import kotlin.math.min
 enum class ClozeInsertionMode {
     SAME_NUMBER,
     INCREMENT_NUMBER
+}
+
+/**
+ * Events emitted by the ViewModel to be handled by the UI (Fragment/Activity)
+ */
+sealed interface NoteEditorEvent {
+    data class ShowMultimediaPicker(val fieldIndex: Int) : NoteEditorEvent
+    data object ShowCardTemplateEditor : NoteEditorEvent
+    data object ShowMathJaxDialog : NoteEditorEvent
+    data object ShowHeadingDialog : NoteEditorEvent
+    data object ShowFontSizeDialog : NoteEditorEvent
+    data object ShowAddCustomButtonDialog : NoteEditorEvent
+    data class NavigateToPreview(val cardId: Long) : NoteEditorEvent
 }
 
 /**
@@ -173,6 +187,9 @@ class NoteEditorViewModel(
 
     private val _deckTags = MutableStateFlow<Set<String>>(emptySet())
     val deckTags: StateFlow<Set<String>> = _deckTags.asStateFlow()
+
+    private val _events = kotlinx.coroutines.channels.Channel<NoteEditorEvent>(kotlinx.coroutines.channels.Channel.BUFFERED)
+    val events = _events.receiveAsFlow()
 
     // Store initial field values to detect actual changes
     private var initialFieldValues: List<String> = emptyList()
@@ -1188,14 +1205,55 @@ class NoteEditorViewModel(
      * Get the current card ID for preview
      */
     fun addCustomButton() {
-        // TODO: Implement custom button dialog
-        Timber.d("addCustomButton called")
+        viewModelScope.launch {
+            _events.send(NoteEditorEvent.ShowAddCustomButtonDialog)
+        }
     }
 
     fun insertMathJax() {
-        // TODO: Implement MathJax insertion logic (e.g., show dialog or insert default tags)
-        // For now, just insert inline MathJax tags
         formatSelection("\\(", "\\)")
+    }
+
+    fun onMathjaxLongClick() {
+        viewModelScope.launch {
+            _events.send(NoteEditorEvent.ShowMathJaxDialog)
+        }
+    }
+
+    fun onHeadingClick() {
+        viewModelScope.launch {
+            _events.send(NoteEditorEvent.ShowHeadingDialog)
+        }
+    }
+
+    fun onFontSizeClick() {
+        viewModelScope.launch {
+            _events.send(NoteEditorEvent.ShowFontSizeDialog)
+        }
+    }
+
+    fun onCardsClick() {
+        viewModelScope.launch {
+            _events.send(NoteEditorEvent.ShowCardTemplateEditor)
+        }
+    }
+
+    fun onMultimediaClicked(fieldIndex: Int) {
+        viewModelScope.launch {
+            _events.send(NoteEditorEvent.ShowMultimediaPicker(fieldIndex))
+        }
+    }
+
+    fun onPreviewClick() {
+        viewModelScope.launch {
+            val cardId = getCurrentCardId()
+            if (cardId != null) {
+                _events.send(NoteEditorEvent.NavigateToPreview(cardId))
+            } else {
+                Timber.w("Cannot preview: No current card ID found")
+                // TODO: Show error message to user?
+            }
+        }
     }
 
     fun insertHorizontalRule() {

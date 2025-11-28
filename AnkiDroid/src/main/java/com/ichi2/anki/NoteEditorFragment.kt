@@ -66,15 +66,10 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import androidx.appcompat.widget.PopupMenu
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.core.content.FileProvider
 import androidx.core.content.IntentCompat
 import androidx.core.content.edit
@@ -143,19 +138,18 @@ import com.ichi2.anki.multimediacard.fields.IField
 import com.ichi2.anki.multimediacard.fields.ImageField
 import com.ichi2.anki.multimediacard.fields.MediaClipField
 import com.ichi2.anki.multimediacard.impl.MultimediaEditableNote
+import com.ichi2.anki.noteeditor.ClozeInsertionMode
 import com.ichi2.anki.noteeditor.CustomToolbarButton
 import com.ichi2.anki.noteeditor.FieldState
 import com.ichi2.anki.noteeditor.FieldState.FieldChangeType
+import com.ichi2.anki.noteeditor.NoteEditorEvent
 import com.ichi2.anki.noteeditor.NoteEditorLauncher
-import com.ichi2.anki.noteeditor.compose.NoteEditorSimpleOverflowItem
-import com.ichi2.anki.noteeditor.compose.NoteEditorToggleOverflowItem
-import com.ichi2.anki.noteeditor.compose.NoteEditorTopAppBar
+import com.ichi2.utils.configureView
 import com.ichi2.anki.noteeditor.NoteEditorViewModel
-import com.ichi2.anki.noteeditor.ToolbarButtonModel
-import com.ichi2.anki.noteeditor.ClozeInsertionMode
 import com.ichi2.anki.noteeditor.Toolbar
 import com.ichi2.anki.noteeditor.Toolbar.TextWrapper
-import com.ichi2.anki.noteeditor.compose.NoteEditorScreen
+import com.ichi2.anki.noteeditor.ToolbarButtonModel
+import com.ichi2.anki.noteeditor.compose.NoteEditorScreenRoute
 import com.ichi2.anki.observability.undoableOp
 import com.ichi2.anki.pages.ImageOcclusion
 import com.ichi2.anki.preferences.sharedPrefs
@@ -186,7 +180,6 @@ import com.ichi2.utils.KeyUtils
 import com.ichi2.utils.MapUtil
 import com.ichi2.utils.NoteFieldDecorator
 import com.ichi2.utils.TextViewUtil
-import com.ichi2.utils.configureView
 import com.ichi2.utils.message
 import com.ichi2.utils.negativeButton
 import com.ichi2.utils.neutralButton
@@ -195,6 +188,7 @@ import com.ichi2.utils.show
 import com.ichi2.utils.title
 import com.ichi2.widget.WidgetStatus
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.ankiweb.rsdroid.BackendException
@@ -222,13 +216,8 @@ const val CALLER_KEY = "caller"
  */
 @KotlinCleanup("Go through the class and select elements to fix")
 @KotlinCleanup("see if we can lateinit")
-class NoteEditorFragment :
-    Fragment(R.layout.note_editor_fragment),
-    DeckSelectionListener,
-    TagsDialogListener,
-    BaseSnackbarBuilderProvider,
-    DispatchKeyEventListener,
-    MenuProvider,
+class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectionListener,
+    TagsDialogListener, BaseSnackbarBuilderProvider, DispatchKeyEventListener, MenuProvider,
     ShortcutGroupProvider {
     /** Whether any change are saved. E.g. multimedia, new card added, field changed and saved. */
     private var changed = false
@@ -285,13 +274,13 @@ class NoteEditorFragment :
 
     // indicates which activity called Note Editor
     private var caller = NoteEditorCaller.NO_CALLER
-    
-    /** 
+
+    /**
      * Indicates whether the Compose UI is being used (true) or the legacy XML UI (false).
      * Set during initialization and used to deterministically route UI operations.
      */
     private var isComposeMode = false
-    
+
     private var editFields: LinkedList<FieldEditText>? = null
     private var sourceText: Array<String?>? = null
     private val fieldState = FieldState.fromEditor(this)
@@ -312,172 +301,165 @@ class NoteEditorFragment :
     private val inCardBrowserActivity
         get() = requireArguments().getBoolean(IN_CARD_BROWSER_ACTIVITY)
 
-    private val requestAddLauncher =
-        registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult(),
-            NoteEditorActivityResultCallback {
-                if (it.resultCode != RESULT_CANCELED) {
-                    changed = true
-                }
-            },
-        )
+    private val requestAddLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+        NoteEditorActivityResultCallback {
+            if (it.resultCode != RESULT_CANCELED) {
+                changed = true
+            }
+        },
+    )
 
-    private val multimediaFragmentLauncher =
-        registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult(),
-            NoteEditorActivityResultCallback { result ->
-                if (result.resultCode == RESULT_CANCELED) {
-                    Timber.d("Multimedia result canceled")
-                    val index = result.data?.extras?.getInt(MULTIMEDIA_RESULT_FIELD_INDEX) ?: return@NoteEditorActivityResultCallback
-                    showMultimediaBottomSheet()
-                    handleMultimediaActions(index)
-                    return@NoteEditorActivityResultCallback
-                }
+    private val multimediaFragmentLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+        NoteEditorActivityResultCallback { result ->
+            if (result.resultCode == RESULT_CANCELED) {
+                Timber.d("Multimedia result canceled")
+                val index = result.data?.extras?.getInt(MULTIMEDIA_RESULT_FIELD_INDEX)
+                    ?: return@NoteEditorActivityResultCallback
+                showMultimediaBottomSheet()
+                handleMultimediaActions(index)
+                return@NoteEditorActivityResultCallback
+            }
 
-                Timber.d("Getting multimedia result")
-                val extras = result.data?.extras ?: return@NoteEditorActivityResultCallback
-                handleMultimediaResult(extras)
-            },
-        )
+            Timber.d("Getting multimedia result")
+            val extras = result.data?.extras ?: return@NoteEditorActivityResultCallback
+            handleMultimediaResult(extras)
+        },
+    )
 
-    private val requestTemplateEditLauncher =
-        registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult(),
-            NoteEditorActivityResultCallback {
-                // Note type can change regardless of exit type - update ourselves and CardBrowser
-                reloadRequired = true
-                
-                if (isComposeMode) {
-                    // In Compose mode, the note is managed by the ViewModel
-                    // We need to update cards info after template changes
-                    Timber.d("onActivityResult() template edit return in Compose mode")
-                    lifecycleScope.launch {
-                        try {
-                            val col = getColUnsafe
-                            
-                            // Get the current note from ViewModel (which has the correct note type)
-                            val currentNote = noteEditorViewModel.currentNote.value
-                            if (currentNote != null) {
-                                // Sync the fragment's editorNote with the ViewModel's current note
-                                editorNote = currentNote
-                                // Reload the note type to ensure we have the latest version
-                                val notetype = col.notetypes.get(currentNote.noteTypeId)
-                                if (notetype != null) {
-                                    // Update cards display
-                                    updateCards(notetype)
-                                    Timber.d("Updated cards for note type: %s", notetype.name)
-                                } else {
-                                    Timber.w("Note type not found for note")
-                                    showSnackbar(R.string.something_wrong)
-                                }
+    private val requestTemplateEditLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+        NoteEditorActivityResultCallback {
+            // Note type can change regardless of exit type - update ourselves and CardBrowser
+            reloadRequired = true
+
+            if (isComposeMode) {
+                // In Compose mode, the note is managed by the ViewModel
+                // We need to update cards info after template changes
+                Timber.d("onActivityResult() template edit return in Compose mode")
+                lifecycleScope.launch {
+                    try {
+                        val col = getColUnsafe
+
+                        // Get the current note from ViewModel (which has the correct note type)
+                        val currentNote = noteEditorViewModel.currentNote.value
+                        if (currentNote != null) {
+                            // Sync the fragment's editorNote with the ViewModel's current note
+                            editorNote = currentNote
+                            // Reload the note type to ensure we have the latest version
+                            val notetype = col.notetypes.get(currentNote.noteTypeId)
+                            if (notetype != null) {
+                                // Update cards display
+                                updateCards(notetype)
+                                Timber.d("Updated cards for note type: %s", notetype.name)
                             } else {
-                                Timber.w("Current note is null after template edit")
+                                Timber.w("Note type not found for note")
                                 showSnackbar(R.string.something_wrong)
                             }
-                        } catch (e: Exception) {
-                            Timber.e(e, "Error updating editor after template edit")
+                        } else {
+                            Timber.w("Current note is null after template edit")
                             showSnackbar(R.string.something_wrong)
                         }
+                    } catch (e: Exception) {
+                        Timber.e(e, "Error updating editor after template edit")
+                        showSnackbar(R.string.something_wrong)
                     }
-                    return@NoteEditorActivityResultCallback
                 }
-                
-                // Legacy XML mode
-                if (editorNote == null) {
-                    Timber.w("onActivityResult() template edit return - editorNote is null")
-                    showSnackbar(R.string.something_wrong)
-                    closeNoteEditor()
-                    return@NoteEditorActivityResultCallback
-                }
-                
-                editorNote!!.notetype = getColUnsafe.notetypes.get(editorNote!!.noteTypeId)!!
-                if (currentEditedCard == null ||
-                    !editorNote!!
-                        .cardIds(getColUnsafe)
-                        .contains(currentEditedCard!!.id)
-                ) {
-                    if (!addNote) {
-                    /* This can occur, for example, if the
+                return@NoteEditorActivityResultCallback
+            }
+
+            // Legacy XML mode
+            if (editorNote == null) {
+                Timber.w("onActivityResult() template edit return - editorNote is null")
+                showSnackbar(R.string.something_wrong)
+                closeNoteEditor()
+                return@NoteEditorActivityResultCallback
+            }
+
+            editorNote!!.notetype = getColUnsafe.notetypes.get(editorNote!!.noteTypeId)!!
+            if (currentEditedCard == null || !editorNote!!.cardIds(getColUnsafe)
+                    .contains(currentEditedCard!!.id)
+            ) {
+                if (!addNote) {/* This can occur, for example, if the
                      * card type was deleted or if the note
                      * type was changed without moving this
                      * card to another type. */
-                        Timber.d("onActivityResult() template edit return - current card is gone, close note editor")
-                        showSnackbar(getString(R.string.template_for_current_card_deleted))
-                        closeNoteEditor()
-                    } else {
-                        Timber.d("onActivityResult() template edit return, in add mode, just re-display")
-                    }
+                    Timber.d("onActivityResult() template edit return - current card is gone, close note editor")
+                    showSnackbar(getString(R.string.template_for_current_card_deleted))
+                    closeNoteEditor()
                 } else {
-                    Timber.d("onActivityResult() template edit return - current card exists")
-                    // reload current card - the template ordinals are possibly different post-edit
-                    currentEditedCard = getColUnsafe.getCard(currentEditedCard!!.id)
-                    @NeedsTest("#17282 returning from template editor saves further made changes")
-                    // make sure the card's note is available going forward
-                    currentEditedCard!!.note(getColUnsafe)
-                    editorNote = currentEditedCard!!.note // update the NoteEditor's working note reference
-                    updateCards(editorNote!!.notetype)
+                    Timber.d("onActivityResult() template edit return, in add mode, just re-display")
                 }
-            },
-        )
+            } else {
+                Timber.d("onActivityResult() template edit return - current card exists")
+                // reload current card - the template ordinals are possibly different post-edit
+                currentEditedCard = getColUnsafe.getCard(currentEditedCard!!.id)
+                @NeedsTest("#17282 returning from template editor saves further made changes")
+                // make sure the card's note is available going forward
+                currentEditedCard!!.note(getColUnsafe)
+                editorNote =
+                    currentEditedCard!!.note // update the NoteEditor's working note reference
+                updateCards(editorNote!!.notetype)
+            }
+        },
+    )
 
-    private val ioEditorLauncher =
-        registerForActivityResult(
-            ActivityResultContracts.GetContent(),
-        ) { uri ->
-            if (uri != null) {
-                ImportUtils.getFileCachedCopy(requireContext(), uri)?.let { path ->
-                    setupImageOcclusionEditor(path)
-                }
+    private val ioEditorLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent(),
+    ) { uri ->
+        if (uri != null) {
+            ImportUtils.getFileCachedCopy(requireContext(), uri)?.let { path ->
+                setupImageOcclusionEditor(path)
             }
         }
+    }
 
-    private val requestIOEditorCloser =
-        registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult(),
-            NoteEditorActivityResultCallback { result ->
-                if (result.resultCode != RESULT_CANCELED) {
-                    changed = true
-                    if (!addNote) {
-                        reloadRequired = true
-                        closeNoteEditor(RESULT_UPDATED_IO_NOTE, null)
-                    }
+    private val requestIOEditorCloser = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+        NoteEditorActivityResultCallback { result ->
+            if (result.resultCode != RESULT_CANCELED) {
+                changed = true
+                if (!addNote) {
+                    reloadRequired = true
+                    closeNoteEditor(RESULT_UPDATED_IO_NOTE, null)
                 }
-            },
-        )
+            }
+        },
+    )
 
     /**
      * Listener for handling content received via drag and drop or copy and paste.
      * This listener processes URIs contained in the payload and attempts to paste the content into the target EditText view.
      */
-    private val onReceiveContentListener =
-        OnReceiveContentListener { view, payload ->
-            val (uriContent, remaining) = payload.partition { item -> item.uri != null }
+    private val onReceiveContentListener = OnReceiveContentListener { view, payload ->
+        val (uriContent, remaining) = payload.partition { item -> item.uri != null }
 
-            if (uriContent == null) {
-                return@OnReceiveContentListener remaining
-            }
-
-            val clip = uriContent.clip
-            val description = clip.description
-
-            if (!hasMedia(description)) {
-                return@OnReceiveContentListener remaining
-            }
-
-            for (uri in clip.items().map { it.uri }) {
-                lifecycleScope.launch {
-                    try {
-                        val pasteAsPng = shouldPasteAsPng()
-                        onPaste(view as EditText, uri, description, pasteAsPng)
-                    } catch (e: Exception) {
-                        Timber.w(e)
-                        CrashReportService.sendExceptionReport(e, "NoteEditor::onReceiveContent")
-                    }
-                }
-            }
-
+        if (uriContent == null) {
             return@OnReceiveContentListener remaining
         }
+
+        val clip = uriContent.clip
+        val description = clip.description
+
+        if (!hasMedia(description)) {
+            return@OnReceiveContentListener remaining
+        }
+
+        for (uri in clip.items().map { it.uri }) {
+            lifecycleScope.launch {
+                try {
+                    val pasteAsPng = shouldPasteAsPng()
+                    onPaste(view as EditText, uri, description, pasteAsPng)
+                } catch (e: Exception) {
+                    Timber.w(e)
+                    CrashReportService.sendExceptionReport(e, "NoteEditor::onReceiveContent")
+                }
+            }
+        }
+
+        return@OnReceiveContentListener remaining
+    }
 
     private inner class NoteEditorActivityResultCallback(
         private val callback: (result: ActivityResult) -> Unit,
@@ -497,10 +479,10 @@ class NoteEditorFragment :
         }
         require(deck is SelectableDeck.Deck)
         deckId = deck.deckId
-        
+
         // Update ViewModel for Compose UI
         noteEditorViewModel.selectDeck(deck.name)
-        
+
         // Update legacy spinner if it exists
         if (deckSpinnerSelection != null) {
             // this is called because DeckSpinnerSelection.onDeckAdded doesn't update the list
@@ -512,8 +494,7 @@ class NoteEditorFragment :
     }
 
     private enum class AddClozeType {
-        SAME_NUMBER,
-        INCREMENT_NUMBER,
+        SAME_NUMBER, INCREMENT_NUMBER,
     }
 
     @VisibleForTesting
@@ -544,12 +525,11 @@ class NoteEditorFragment :
 
     @VisibleForTesting
     val snackbarErrorText: String
-        get() =
-            when {
-                addNoteErrorMessage != null -> addNoteErrorMessage!!
-                allFieldsHaveContent() -> resources.getString(R.string.note_editor_no_cards_created_all_fields)
-                else -> resources.getString(R.string.note_editor_no_cards_created)
-            }
+        get() = when {
+            addNoteErrorMessage != null -> addNoteErrorMessage!!
+            allFieldsHaveContent() -> resources.getString(R.string.note_editor_no_cards_created_all_fields)
+            else -> resources.getString(R.string.note_editor_no_cards_created)
+        }
 
     override val baseSnackbarBuilder: SnackbarBuilder = {
         // TODO(Compose Migration): Re-implement snackbar anchor with Compose scaffold
@@ -566,7 +546,8 @@ class NoteEditorFragment :
     // ANDROID METHODS
     // ----------------------------------------------------------------------------
     override fun onCreate(savedInstanceState: Bundle?) {
-        tagsDialogFactory = TagsDialogFactory(this).attachToFragmentManager<TagsDialogFactory>(parentFragmentManager)
+        tagsDialogFactory =
+            TagsDialogFactory(this).attachToFragmentManager<TagsDialogFactory>(parentFragmentManager)
         super.onCreate(savedInstanceState)
         fieldState.setInstanceState(savedInstanceState)
         val intent = requireActivity().intent
@@ -582,7 +563,8 @@ class NoteEditorFragment :
                 savedInstanceState.getSerializableCompat<HashMap<Int, String?>>("toggleSticky")!!
             changed = savedInstanceState.getBoolean(NOTE_CHANGED_EXTRA_KEY)
         } else {
-            caller = fromValue(requireArguments().getInt(EXTRA_CALLER, NoteEditorCaller.NO_CALLER.value))
+            caller =
+                fromValue(requireArguments().getInt(EXTRA_CALLER, NoteEditorCaller.NO_CALLER.value))
             if (caller == NoteEditorCaller.NO_CALLER) {
                 val action = intent.action
                 if (ACTION_CREATE_FLASHCARD == action || ACTION_CREATE_FLASHCARD_SEND == action || Intent.ACTION_PROCESS_TEXT == action) {
@@ -599,9 +581,9 @@ class NoteEditorFragment :
         savedInstanceState: Bundle?,
     ) {
         super.onViewCreated(view, savedInstanceState)
-        
+
         try {
-            setupComposeEditor(getColUnsafe)
+            setupComposeEditor(getColUnsafe, savedInstanceState)
         } catch (ex: BackendException) {
             // Specific backend exceptions (database locked, corrupt, etc.)
             Timber.w(ex, "setupComposeEditor - backend exception")
@@ -619,7 +601,7 @@ class NoteEditorFragment :
             requireAnkiActivity().onCollectionLoadError()
             return
         }
-        
+
         // TODO this callback doesn't handle predictive back navigation!
         // see #14678, added to temporarily fix for a bug
         requireActivity().onBackPressedDispatcher.addCallback(this) {
@@ -627,28 +609,29 @@ class NoteEditorFragment :
             closeCardEditorWithCheck()
         }
     }
-    
+
     /**
      * Setup the Compose-based note editor
      */
-    private fun setupComposeEditor(col: Collection) {
+    private fun setupComposeEditor(col: Collection, savedInstanceState: Bundle?) {
         val intent = requireActivity().intent
         Timber.d("NoteEditor() setupComposeEditor: caller: %s", caller)
-        
+
         // Set Compose mode flag
         isComposeMode = true
-        
+
         requireAnkiActivity().registerReceiver()
 
         try {
-            clipboard = requireActivity().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            clipboard =
+                requireActivity().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         } catch (e: Exception) {
             Timber.w(e)
         }
 
         aedictIntent = false
         currentEditedCard = null
-        
+
         // Determine if we're adding or editing
         when (caller) {
             NoteEditorCaller.NO_CALLER -> {
@@ -656,15 +639,18 @@ class NoteEditorFragment :
                 requireActivity().finish()
                 return
             }
+
             NoteEditorCaller.EDIT, NoteEditorCaller.PREVIEWER_EDIT -> {
-                val cardId = requireNotNull(requireArguments().getLong(EXTRA_CARD_ID)) { "EXTRA_CARD_ID" }
+                val cardId =
+                    requireNotNull(requireArguments().getLong(EXTRA_CARD_ID)) { "EXTRA_CARD_ID" }
                 currentEditedCard = col.getCard(cardId)
                 editorNote = currentEditedCard!!.note(col)
                 addNote = false
             }
+
             NoteEditorCaller.NOTEEDITOR_INTENT_ADD,
             NoteEditorCaller.INSTANT_NOTE_EDITOR,
-            -> {
+                -> {
                 fetchIntentInformation(intent)
                 if (sourceText == null) {
                     requireActivity().finish()
@@ -676,6 +662,7 @@ class NoteEditorFragment :
                 }
                 addNote = true
             }
+
             else -> {
                 addNote = true
             }
@@ -703,7 +690,9 @@ class NoteEditorFragment :
                         if (addNote) {
                             // For new notes, use the calculated deck from ViewModel
                             noteEditorViewModel.noteEditorState.value.selectedDeckName.let { deckName ->
-                                withCol { decks.allNamesAndIds().find { it.name == deckName }?.id ?: 0L }
+                                withCol {
+                                    decks.allNamesAndIds().find { it.name == deckName }?.id ?: 0L
+                                }
                             }
                         } else {
                             // For existing cards, use the card's current deck
@@ -736,234 +725,57 @@ class NoteEditorFragment :
 
         composeView?.setContent {
             AnkiDroidTheme {
-                val noteEditorState by noteEditorViewModel.noteEditorState.collectAsState()
-                val availableDecks by noteEditorViewModel.availableDecks.collectAsState()
-                val availableNoteTypes by noteEditorViewModel.availableNoteTypes.collectAsState()
-                val toolbarButtons by noteEditorViewModel.toolbarButtons.collectAsState()
-                val showToolbar by noteEditorViewModel.showToolbar.collectAsState()
-                val allTags by noteEditorViewModel.tagsState.collectAsState()
-                val deckTags by noteEditorViewModel.deckTags.collectAsState()
-                val snackbarHostState = remember { androidx.compose.material3.SnackbarHostState() }
-                var capitalizeChecked by remember { mutableStateOf(sharedPrefs().getBoolean(PREF_NOTE_EDITOR_CAPITALIZE, true)) }
-                var scrollToolbarChecked by remember { mutableStateOf(sharedPrefs().getBoolean(PREF_NOTE_EDITOR_SCROLL_TOOLBAR, true)) }
+                remember { androidx.compose.material3.SnackbarHostState() }
 
-                NoteEditorScreen(
-                    state = noteEditorState,
-                    availableDecks = availableDecks,
-                    availableNoteTypes = availableNoteTypes,
-                    onFieldValueChange = { index, value ->
-                        noteEditorViewModel.updateFieldValue(index, value)
-                        // Edit state now managed by ViewModel
-                    },
-                    onFieldFocus = { index ->
-                        noteEditorViewModel.onFieldFocus(index)
-                    },
-                    onCardsClick = {
-                        showCardTemplateEditor()
-                    },
-                    onDeckSelected = { deckName ->
-                        // Find the deck ID and update both fragment and ViewModel
-                        launchCatchingTask {
-                            val deck = withCol {
-                                decks.allNamesAndIds().find { it.name == deckName }
-                            }
-                            if (deck == null) {
-                                Timber.w("onDeckSelected: Deck not found for name '%s'", deckName)
-                                showSnackbar(getString(R.string.deck_not_found))
-                                return@launchCatchingTask
-                            }
-                            deckId = deck.id
-                            noteEditorViewModel.selectDeck(deckName)
+                NoteEditorScreenRoute(
+                    onNavigateBack = { closeCardEditorWithCheck() },
+                    onNavigateToPreview = { cardId ->
+                        lifecycleScope.launch {
+                            performPreview()
                         }
-                    },
-                    onNoteTypeSelected = { noteTypeName ->
-                        noteEditorViewModel.selectNoteType(noteTypeName)
-                        // Update cards info after note type change
-                        launchCatchingTask {
-                            val col = getColUnsafe
-                            val notetype = col.notetypes.all().find { it.name == noteTypeName }
-                            if (notetype != null) {
-                                updateCards(notetype)
-                            }
-                        }
-                    },
-                    onMultimediaClick = { index ->
-                        showMultimediaBottomSheet()
-                        handleMultimediaActions(index)
-                    },
-                    onToggleStickyClick = { index ->
-                        noteEditorViewModel.toggleStickyField(index)
-                    },
-                    onSaveClick = {
-                        launchCatchingTask { saveNote() }
-                    },
-                    onPreviewClick = {
-                        launchCatchingTask { performPreview() }
-                    },
-                    onBoldClick = {
-                        applyFormatter("<b>", "</b>")
-                    },
-                    onItalicClick = {
-                        applyFormatter("<i>", "</i>")
-                    },
-                    onUnderlineClick = {
-                        applyFormatter("<u>", "</u>")
-                    },
-                    onHorizontalRuleClick = {
-                        applyFormatter("<hr>", "")
-                    },
-                    onHeadingClick = {
-                        displayInsertHeadingDialog()
-                    },
-                    onFontSizeClick = {
-                        displayFontSizeDialog()
-                    },
-                    onMathjaxClick = {
-                        applyFormatter("\\(", "\\)")
-                    },
-                    onMathjaxLongClick = {
-                        displayInsertMathJaxEquationsDialog()
-                    },
-                    onClozeClick = {
-                        handleClozeInsertion(ClozeInsertionMode.SAME_NUMBER)
-                    },
-                    onClozeIncrementClick = {
-                        handleClozeInsertion(ClozeInsertionMode.INCREMENT_NUMBER)
-                    },
-                    onCustomButtonClick = { button ->
-                        noteEditorViewModel.applyToolbarButton(button)
-                        // Edit state now managed by ViewModel
-                    },
-                    onCustomButtonLongClick = { button ->
-                        displayEditToolbarDialog(button.toCustomToolbarButton())
-                    },
-                    onAddCustomButtonClick = {
-                        displayAddToolbarDialog()
-                    },
-                    customToolbarButtons = toolbarButtons,
-                    isToolbarVisible = showToolbar,
-                    allTags = allTags,
-                    deckTags = deckTags,
-                    onUpdateTags = { tags ->
-                        noteEditorViewModel.updateTags(tags)
-                        isTagsEdited = true
-                    },
-                    onAddTag = { tag ->
-                        noteEditorViewModel.addTag(tag)
-                        isTagsEdited = true
-                    },
-                    topBar = {
-                        val title = stringResource(
-                            if (noteEditorState.isAddingNote) {
-                                R.string.cardeditor_title_add_note
-                            } else {
-                                R.string.cardeditor_title_edit_card
-                            },
-                        )
-                        val allowSaveAndPreview = !(noteEditorState.isAddingNote && noteEditorState.isImageOcclusion)
-                        val copyEnabled = noteEditorState.fields.any { it.value.text.isNotBlank() }
-
-                        val overflowItems = listOf(
-                            NoteEditorSimpleOverflowItem(
-                                id = "add_note",
-                                title = stringResource(R.string.menu_add),
-                                visible = !inCardBrowserActivity && !noteEditorState.isAddingNote,
-                            ) {
-                                addNewNote()
-                            },
-                            NoteEditorSimpleOverflowItem(
-                                id = "copy_note",
-                                title = stringResource(R.string.note_editor_copy_note),
-                                visible = !noteEditorState.isAddingNote,
-                                enabled = copyEnabled,
-                            ) {
-                                copyNote()
-                            },
-                            NoteEditorSimpleOverflowItem(
-                                id = "font_size",
-                                title = stringResource(R.string.menu_font_size),
-                            ) {
-                                displayFontSizeDialog()
-                            },
-                            NoteEditorToggleOverflowItem(
-                                id = "show_toolbar",
-                                title = stringResource(R.string.menu_show_toolbar),
-                                checked = showToolbar,
-                                onCheckedChange = { isChecked ->
-                                    sharedPrefs().edit {
-                                        putBoolean(PREF_NOTE_EDITOR_SHOW_TOOLBAR, isChecked)
-                                    }
-                                    updateToolbar()
-                                },
-                            ),
-                            NoteEditorToggleOverflowItem(
-                                id = "capitalize",
-                                title = stringResource(R.string.note_editor_capitalize),
-                                checked = capitalizeChecked,
-                                onCheckedChange = { isChecked ->
-                                    capitalizeChecked = isChecked
-                                    toggleCapitalize(isChecked)
-                                },
-                            ),
-                            NoteEditorToggleOverflowItem(
-                                id = "scroll_toolbar",
-                                title = stringResource(R.string.menu_scroll_toolbar),
-                                checked = scrollToolbarChecked,
-                                onCheckedChange = { isChecked ->
-                                    scrollToolbarChecked = isChecked
-                                    sharedPrefs().edit {
-                                        putBoolean(PREF_NOTE_EDITOR_SCROLL_TOOLBAR, isChecked)
-                                    }
-                                    updateToolbar()
-                                },
-                            ),
-                        )
-
-                        NoteEditorTopAppBar(
-                            title = title,
-                            onBackClick = { requireActivity().onBackPressedDispatcher.onBackPressed() },
-                            showSaveAction = allowSaveAndPreview,
-                            saveEnabled = allowSaveAndPreview,
-                            onSaveClick = {
-                                launchCatchingTask { saveNote() }
-                            },
-                            showPreviewAction = allowSaveAndPreview,
-                            previewEnabled = allowSaveAndPreview,
-                            onPreviewClick = {
-                                launchCatchingTask { performPreview() }
-                            },
-                            overflowItems = overflowItems,
-                        )
-                    },
-                    onImageOcclusionSelectImage = {
-                        try {
-                            ioEditorLauncher.launch("image/*")
-                        } catch (_: ActivityNotFoundException) {
-                            Timber.w("No app found to handle image selection")
-                            requireActivity().showSnackbar(R.string.activity_start_failed)
-                        }
-                    },
-                    onImageOcclusionPasteImage = {
-                        if (ClipboardUtil.hasImage(clipboard)) {
-                            val uri = ClipboardUtil.getUri(clipboard)
-                            val i =
-                                Intent().apply {
-                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                    clipData = ClipData.newUri(requireActivity().contentResolver, uri.toString(), uri)
-                                }
-                            ImportUtils.getFileCachedCopy(requireContext(), i)?.let { path ->
-                                setupImageOcclusionEditor(path)
-                            }
-                        } else {
-                            showSnackbar(TR.editingNoImageFoundOnClipboard())
-                        }
-                    },
-                    onImageOcclusionEdit = {
-                        setupImageOcclusionEditor()
-                    },
-                    snackbarHostState = snackbarHostState
-                )
+                    })
             }
+        }
+
+        // Listen for ViewModel events
+        lifecycleScope.launch {
+            noteEditorViewModel.events.collectLatest { event ->
+                when (event) {
+                    is NoteEditorEvent.ShowMultimediaPicker -> handleMultimediaActions(event.fieldIndex)
+                    is NoteEditorEvent.ShowCardTemplateEditor -> showCardTemplateEditor()
+                    is NoteEditorEvent.ShowMathJaxDialog -> displayInsertMathJaxEquationsDialog()
+                    is NoteEditorEvent.ShowHeadingDialog -> displayInsertHeadingDialog()
+                    is NoteEditorEvent.ShowFontSizeDialog -> displayFontSizeDialog()
+                    is NoteEditorEvent.ShowAddCustomButtonDialog -> displayAddToolbarDialog()
+                    is NoteEditorEvent.NavigateToPreview -> performPreview()
+                }
+            }
+        }
+
+        // Initialize the editor with the current note
+        if (savedInstanceState == null) {
+            // Initial load
+            noteEditorViewModel.initializeEditor(
+                col = col,
+                cardId = if (addNote) null else currentEditedCard?.id,
+                deckId = deckId,
+                isAddingNote = addNote,
+                initialFieldText = sourceText?.get(0)
+            ) { success, error ->
+                if (!success) {
+                    Timber.e("Failed to initialize editor: $error")
+                    requireAnkiActivity().onCollectionLoadError()
+                }
+            }
+        } else {
+            // Process death restoration is handled by ViewModel's SavedStateHandle
+            // But we need to re-initialize to reconnect to the DB
+            noteEditorViewModel.initializeEditor(
+                col = col,
+                cardId = if (addNote) null else currentEditedCard?.id,
+                deckId = deckId,
+                isAddingNote = addNote
+            )
         }
     }
 
@@ -980,12 +792,11 @@ class NoteEditorFragment :
      */
     @NeedsTest("Test when the user directly passes image to the edit note field")
     private suspend fun handleImageIntent(data: Intent) {
-        val imageUri =
-            if (data.action == Intent.ACTION_SEND) {
-                BundleCompat.getParcelable(requireArguments(), Intent.EXTRA_STREAM, Uri::class.java)
-            } else {
-                data.data
-            }
+        val imageUri = if (data.action == Intent.ACTION_SEND) {
+            BundleCompat.getParcelable(requireArguments(), Intent.EXTRA_STREAM, Uri::class.java)
+        } else {
+            data.data
+        }
 
         if (imageUri == null) {
             Timber.d("NoteEditor:: Image Uri is null")
@@ -994,7 +805,10 @@ class NoteEditorFragment :
         }
 
         try {
-            requireContext().contentResolver.takePersistableUriPermission(imageUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            requireContext().contentResolver.takePersistableUriPermission(
+                imageUri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
             Timber.d("Persisted URI permission for $imageUri")
         } catch (e: SecurityException) {
             Timber.w(e, "Unable to persist URI permission")
@@ -1106,7 +920,8 @@ class NoteEditorFragment :
         // pasteOcclusionImageButton = requireView().findViewById(R.id.PasteImageForOcclusionButton)
 
         try {
-            clipboard = requireActivity().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            clipboard =
+                requireActivity().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         } catch (e: Exception) {
             Timber.w(e)
         }
@@ -1119,28 +934,33 @@ class NoteEditorFragment :
                 requireActivity().finish()
                 return
             }
+
             NoteEditorCaller.EDIT -> {
-                val cardId = requireNotNull(requireArguments().getLong(EXTRA_CARD_ID)) { "EXTRA_CARD_ID" }
+                val cardId =
+                    requireNotNull(requireArguments().getLong(EXTRA_CARD_ID)) { "EXTRA_CARD_ID" }
                 currentEditedCard = col.getCard(cardId)
                 editorNote = currentEditedCard!!.note(col)
                 addNote = false
             }
+
             NoteEditorCaller.PREVIEWER_EDIT -> {
                 val id = requireArguments().getLong(EXTRA_EDIT_FROM_CARD_ID)
                 currentEditedCard = col.getCard(id)
                 editorNote = currentEditedCard!!.note(getColUnsafe)
             }
+
             NoteEditorCaller.STUDYOPTIONS,
             NoteEditorCaller.DECKPICKER,
             NoteEditorCaller.REVIEWER_ADD,
             NoteEditorCaller.CARDBROWSER_ADD,
             NoteEditorCaller.NOTEEDITOR,
-            -> {
+                -> {
                 addNote = true
             }
+
             NoteEditorCaller.NOTEEDITOR_INTENT_ADD,
             NoteEditorCaller.INSTANT_NOTE_EDITOR,
-            -> {
+                -> {
                 fetchIntentInformation(intent)
                 if (sourceText == null) {
                     requireActivity().finish()
@@ -1193,11 +1013,11 @@ class NoteEditorFragment :
                 //  See https://github.com/ankitects/anki/blob/6f3550464d37aee1b8b784e431cbfce8382d3ce7/rslib/src/image_occlusion/imagedata.rs#L154
                 if (ClipboardUtil.hasImage(clipboard)) {
                     val uri = ClipboardUtil.getUri(clipboard)
-                    val i =
-                        Intent().apply {
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            clipData = ClipData.newUri(requireActivity().contentResolver, uri.toString(), uri)
-                        }
+                    val i = Intent().apply {
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        clipData =
+                            ClipData.newUri(requireActivity().contentResolver, uri.toString(), uri)
+                    }
                     ImportUtils.getFileCachedCopy(requireContext(), i)?.let { path ->
                         setupImageOcclusionEditor(path)
                     }
@@ -1229,15 +1049,14 @@ class NoteEditorFragment :
         if (!addNote && editorNote!!.notetype.templates.length() > 1) {
             deckTextView.setText(R.string.CardEditorCardDeck)
         }
-        deckSpinnerSelection =
-            DeckSpinnerSelection(
-                requireContext() as AppCompatActivity,
-                requireView().findViewById(R.id.note_deck_spinner),
-                showAllDecks = false,
-                alwaysShowDefault = true,
-                showFilteredDecks = false,
-                fragmentManagerSupplier = { childFragmentManager },
-            )
+        deckSpinnerSelection = DeckSpinnerSelection(
+            requireContext() as AppCompatActivity,
+            requireView().findViewById(R.id.note_deck_spinner),
+            showAllDecks = false,
+            alwaysShowDefault = true,
+            showFilteredDecks = false,
+            fragmentManagerSupplier = { childFragmentManager },
+        )
         deckSpinnerSelection!!.initializeNoteEditorDeckSpinner(col)
         deckId = requireArguments().getLong(EXTRA_DID, deckId)
         val getTextFromSearchView = requireArguments().getString(EXTRA_TEXT_FROM_SEARCH_VIEW)
@@ -1254,10 +1073,9 @@ class NoteEditorFragment :
             try {
                 // If content has been shared, we can't share to an image occlusion note type
                 if (currentNotetypeIsImageOcclusion() && (sourceText != null || caller == NoteEditorCaller.ADD_IMAGE)) {
-                    val noteType =
-                        col.notetypes.all().first {
-                            !it.isImageOcclusion
-                        }
+                    val noteType = col.notetypes.all().first {
+                        !it.isImageOcclusion
+                    }
                     changeNoteType(noteType.id)
                 }
             } catch (e: NoSuchElementException) {
@@ -1270,9 +1088,10 @@ class NoteEditorFragment :
 
             if (sourceText != null) {
                 if (aedictIntent && editFields!!.size == 3 && sourceText!![1]!!.contains("[")) {
-                    contents =
-                        sourceText!![1]!!
-                            .replaceFirst("\\[".toRegex(), "\u001f" + sourceText!![0] + "\u001f")
+                    contents = sourceText!![1]!!.replaceFirst(
+                            "\\[".toRegex(),
+                            "\u001f" + sourceText!![0] + "\u001f"
+                        )
                     contents = contents.dropLast(1)
                 } else if (!editFields!!.isEmpty()) {
                     editFields!![0].setText(sourceText!![0])
@@ -1286,7 +1105,11 @@ class NoteEditorFragment :
             contents?.let { setEditFieldTexts(it) }
             tags?.let { setTags(it) }
             // If the activity was called to handle an image addition, launch a coroutine to process the image intent.
-            if (caller == NoteEditorCaller.ADD_IMAGE) lifecycleScope.launch { handleImageIntent(intent) }
+            if (caller == NoteEditorCaller.ADD_IMAGE) lifecycleScope.launch {
+                handleImageIntent(
+                    intent
+                )
+            }
         } else {
             // TODO(Compose Migration): Note type selector now in Compose via ViewModel
             // See: https://github.com/ankidroid/Anki-Android/issues/XXXXX
@@ -1329,7 +1152,8 @@ class NoteEditorFragment :
 
         if (caller == NoteEditorCaller.IMG_OCCLUSION) {
             // val saveImageUri = ImageIntentManager.getImageUri()
-            val saveImageUri = BundleCompat.getParcelable(requireArguments(), EXTRA_IMG_OCCLUSION, Uri::class.java)
+            val saveImageUri =
+                BundleCompat.getParcelable(requireArguments(), EXTRA_IMG_OCCLUSION, Uri::class.java)
             if (saveImageUri != null) {
                 ImportUtils.getFileCachedCopy(requireContext(), saveImageUri)?.let { path ->
                     setupImageOcclusionEditor(path)
@@ -1345,12 +1169,11 @@ class NoteEditorFragment :
             if (isPictureTaken) {
                 currentImageOccPath?.let { imagePath ->
                     val photoFile = File(imagePath)
-                    val imageUri: Uri =
-                        FileProvider.getUriForFile(
-                            requireContext(),
-                            requireActivity().packageName + ".apkgfileprovider",
-                            photoFile,
-                        )
+                    val imageUri: Uri = FileProvider.getUriForFile(
+                        requireContext(),
+                        requireActivity().packageName + ".apkgfileprovider",
+                        photoFile,
+                    )
                     startCrop(imageUri)
                 }
             } else {
@@ -1365,12 +1188,11 @@ class NoteEditorFragment :
                 Activity.RESULT_OK -> {
 
                     result.data?.let {
-                        val cropResultData =
-                            IntentCompat.getParcelableExtra(
-                                it,
-                                CROP_IMAGE_RESULT,
-                                ImageCropper.CropResultData::class.java,
-                            )
+                        val cropResultData = IntentCompat.getParcelableExtra(
+                            it,
+                            CROP_IMAGE_RESULT,
+                            ImageCropper.CropResultData::class.java,
+                        )
                         Timber.d("Cropped image data: $cropResultData")
                         if (cropResultData?.uriPath == null) return@registerForActivityResult
                         setupImageOcclusionEditor(cropResultData.uriPath)
@@ -1390,23 +1212,21 @@ class NoteEditorFragment :
     }
 
     private fun dispatchCameraEvent() {
-        val photoFile: File? =
-            try {
-                requireContext().createImageFile()
-            } catch (e: Exception) {
-                Timber.w(e, "Error creating the file")
-                return
-            }
+        val photoFile: File? = try {
+            requireContext().createImageFile()
+        } catch (e: Exception) {
+            Timber.w(e, "Error creating the file")
+            return
+        }
 
         currentImageOccPath = photoFile?.absolutePath
 
         photoFile?.let {
-            val photoURI: Uri =
-                FileProvider.getUriForFile(
-                    requireContext(),
-                    requireActivity().packageName + ".apkgfileprovider",
-                    it,
-                )
+            val photoURI: Uri = FileProvider.getUriForFile(
+                requireContext(),
+                requireActivity().packageName + ".apkgfileprovider",
+                it,
+            )
             cameraLauncher.launch(photoURI)
         }
     }
@@ -1467,9 +1287,7 @@ class NoteEditorFragment :
 
     private fun displayInsertMathJaxEquationsDialog() {
         data class MathJaxOption(
-            val label: String,
-            val prefix: String,
-            val suffix: String
+            val label: String, val prefix: String, val suffix: String
         )
 
         val options = arrayOf(
@@ -1501,20 +1319,19 @@ class NoteEditorFragment :
         if (!event.isCtrlPressed || event.isAltPressed || event.isMetaPressed || event.isShiftPressed) {
             return false
         }
-        val digit =
-            when (event.keyCode) {
-                KeyEvent.KEYCODE_0, KeyEvent.KEYCODE_NUMPAD_0 -> 0
-                KeyEvent.KEYCODE_1, KeyEvent.KEYCODE_NUMPAD_1 -> 1
-                KeyEvent.KEYCODE_2, KeyEvent.KEYCODE_NUMPAD_2 -> 2
-                KeyEvent.KEYCODE_3, KeyEvent.KEYCODE_NUMPAD_3 -> 3
-                KeyEvent.KEYCODE_4, KeyEvent.KEYCODE_NUMPAD_4 -> 4
-                KeyEvent.KEYCODE_5, KeyEvent.KEYCODE_NUMPAD_5 -> 5
-                KeyEvent.KEYCODE_6, KeyEvent.KEYCODE_NUMPAD_6 -> 6
-                KeyEvent.KEYCODE_7, KeyEvent.KEYCODE_NUMPAD_7 -> 7
-                KeyEvent.KEYCODE_8, KeyEvent.KEYCODE_NUMPAD_8 -> 8
-                KeyEvent.KEYCODE_9, KeyEvent.KEYCODE_NUMPAD_9 -> 9
-                else -> return false
-            }
+        val digit = when (event.keyCode) {
+            KeyEvent.KEYCODE_0, KeyEvent.KEYCODE_NUMPAD_0 -> 0
+            KeyEvent.KEYCODE_1, KeyEvent.KEYCODE_NUMPAD_1 -> 1
+            KeyEvent.KEYCODE_2, KeyEvent.KEYCODE_NUMPAD_2 -> 2
+            KeyEvent.KEYCODE_3, KeyEvent.KEYCODE_NUMPAD_3 -> 3
+            KeyEvent.KEYCODE_4, KeyEvent.KEYCODE_NUMPAD_4 -> 4
+            KeyEvent.KEYCODE_5, KeyEvent.KEYCODE_NUMPAD_5 -> 5
+            KeyEvent.KEYCODE_6, KeyEvent.KEYCODE_NUMPAD_6 -> 6
+            KeyEvent.KEYCODE_7, KeyEvent.KEYCODE_NUMPAD_7 -> 7
+            KeyEvent.KEYCODE_8, KeyEvent.KEYCODE_NUMPAD_8 -> 8
+            KeyEvent.KEYCODE_9, KeyEvent.KEYCODE_NUMPAD_9 -> 9
+            else -> return false
+        }
         val applied = noteEditorViewModel.applyToolbarShortcut(digit)
         // Edit state now managed by ViewModel
         return applied
@@ -1523,11 +1340,10 @@ class NoteEditorFragment :
     private fun ToolbarButtonModel.toCustomToolbarButton(): CustomToolbarButton =
         CustomToolbarButton(index = index, buttonText = text, prefix = prefix, suffix = suffix)
 
-    private fun AddClozeType.toClozeMode(): ClozeInsertionMode =
-        when (this) {
-            AddClozeType.SAME_NUMBER -> ClozeInsertionMode.SAME_NUMBER
-            AddClozeType.INCREMENT_NUMBER -> ClozeInsertionMode.INCREMENT_NUMBER
-        }
+    private fun AddClozeType.toClozeMode(): ClozeInsertionMode = when (this) {
+        AddClozeType.SAME_NUMBER -> ClozeInsertionMode.SAME_NUMBER
+        AddClozeType.INCREMENT_NUMBER -> ClozeInsertionMode.INCREMENT_NUMBER
+    }
 
     override fun onStop() {
         super.onStop()
@@ -1545,14 +1361,14 @@ class NoteEditorFragment :
         }
         val keyCode = event.keyCode
         when (keyCode) {
-            KeyEvent.KEYCODE_NUMPAD_ENTER, KeyEvent.KEYCODE_ENTER ->
-                if (event.isCtrlPressed) {
-                    // disable it in case of image occlusion
-                    if (allowSaveAndPreview()) {
-                        launchCatchingTask { saveNote() }
-                        return true
-                    }
+            KeyEvent.KEYCODE_NUMPAD_ENTER, KeyEvent.KEYCODE_ENTER -> if (event.isCtrlPressed) {
+                // disable it in case of image occlusion
+                if (allowSaveAndPreview()) {
+                    launchCatchingTask { saveNote() }
+                    return true
                 }
+            }
+
             KeyEvent.KEYCODE_D -> // null check in case Spinner is moved into options menu in the future
                 if (event.isCtrlPressed) {
                     if (isComposeMode) {
@@ -1562,27 +1378,29 @@ class NoteEditorFragment :
                     }
                     return true
                 }
-            KeyEvent.KEYCODE_L ->
-                if (event.isCtrlPressed) {
-                    showCardTemplateEditor()
-                    return true
-                }
-            KeyEvent.KEYCODE_N ->
-                if (event.isCtrlPressed && noteTypeSpinner != null) {
-                    noteTypeSpinner!!.performClick()
-                    return true
-                }
-            KeyEvent.KEYCODE_T ->
-                if (event.isCtrlPressed && event.isShiftPressed) {
-                    showTagsDialog()
-                    return true
-                }
+
+            KeyEvent.KEYCODE_L -> if (event.isCtrlPressed) {
+                showCardTemplateEditor()
+                return true
+            }
+
+            KeyEvent.KEYCODE_N -> if (event.isCtrlPressed && noteTypeSpinner != null) {
+                noteTypeSpinner!!.performClick()
+                return true
+            }
+
+            KeyEvent.KEYCODE_T -> if (event.isCtrlPressed && event.isShiftPressed) {
+                showTagsDialog()
+                return true
+            }
+
             KeyEvent.KEYCODE_C -> {
                 if (event.isCtrlPressed && event.isShiftPressed) {
-                        insertCloze(if (event.isAltPressed) AddClozeType.SAME_NUMBER else AddClozeType.INCREMENT_NUMBER)
+                    insertCloze(if (event.isAltPressed) AddClozeType.SAME_NUMBER else AddClozeType.INCREMENT_NUMBER)
                     return true
                 }
             }
+
             KeyEvent.KEYCODE_P -> {
                 if (event.isCtrlPressed) {
                     Timber.i("Ctrl+P: Preview Pressed")
@@ -1615,13 +1433,12 @@ class NoteEditorFragment :
             Timber.i("Index out of range: %d", index)
             return
         }
-        val field: FieldEditText? =
-            try {
-                editFields!![index]
-            } catch (e: IndexOutOfBoundsException) {
-                Timber.w(e, "Error selecting index %d", index)
-                return
-            }
+        val field: FieldEditText? = try {
+            editFields!![index]
+        } catch (e: IndexOutOfBoundsException) {
+            Timber.w(e, "Error selecting index %d", index)
+            return
+        }
         field!!.requestFocus()
         Timber.d("Selected field")
     }
@@ -1646,18 +1463,16 @@ class NoteEditorFragment :
         } else {
             var first: String?
             var second: String?
-            first =
-                if (extras.getString(Intent.EXTRA_SUBJECT) != null) {
-                    extras.getString(Intent.EXTRA_SUBJECT)
-                } else {
-                    ""
-                }
-            second =
-                if (extras.getString(Intent.EXTRA_TEXT) != null) {
-                    extras.getString(Intent.EXTRA_TEXT)
-                } else {
-                    ""
-                }
+            first = if (extras.getString(Intent.EXTRA_SUBJECT) != null) {
+                extras.getString(Intent.EXTRA_SUBJECT)
+            } else {
+                ""
+            }
+            second = if (extras.getString(Intent.EXTRA_TEXT) != null) {
+                extras.getString(Intent.EXTRA_TEXT)
+            } else {
+                ""
+            }
             // Some users add cards via SEND intent from clipboard. In this case SUBJECT is empty
             if ("" == first) {
                 // Assume that if only one field was sent then it should be the front
@@ -1761,7 +1576,8 @@ class NoteEditorFragment :
             closeEditorAfterSave = true
         } else if (caller == NoteEditorCaller.NOTEEDITOR_INTENT_ADD) {
             closeEditorAfterSave = true
-            closeIntent = Intent().apply { putExtra(EXTRA_ID, requireArguments().getString(EXTRA_ID)) }
+            closeIntent =
+                Intent().apply { putExtra(EXTRA_ID, requireArguments().getString(EXTRA_ID)) }
         } else if (!editFields!!.isEmpty()) {
             editFields!!.first().focusWithKeyboard()
         }
@@ -1802,7 +1618,7 @@ class NoteEditorFragment :
                     // Mark as changed so the caller knows to refresh
                     changed = true
                     reloadRequired = true
-                    
+
                     // Handle post-save actions for new notes
                     if (addNote) {
                         // Clear source text so it doesn't get reused
@@ -1811,23 +1627,32 @@ class NoteEditorFragment :
                         showSnackbar(TR.addingAdded(), Snackbar.LENGTH_SHORT)
                         // Update sticky fields from the saved note
                         updateFieldsFromStickyText()
-                        
+
                         // Determine if we should close the editor
                         val shouldClose = when (caller) {
-                            NoteEditorCaller.NOTEEDITOR,
-                            NoteEditorCaller.NOTEEDITOR_INTENT_ADD -> true
+                            NoteEditorCaller.NOTEEDITOR, NoteEditorCaller.NOTEEDITOR_INTENT_ADD -> true
                             else -> aedictIntent
                         }
-                        
+
                         if (shouldClose) {
                             if (caller == NoteEditorCaller.NOTEEDITOR_INTENT_ADD || aedictIntent) {
-                                showThemedToast(requireContext(), R.string.note_message, shortLength = true)
+                                showThemedToast(
+                                    requireContext(),
+                                    R.string.note_message,
+                                    shortLength = true
+                                )
                             }
-                            val closeIntent = if (caller == NoteEditorCaller.NOTEEDITOR_INTENT_ADD) {
-                                Intent().apply { putExtra(EXTRA_ID, requireArguments().getString(EXTRA_ID)) }
-                            } else {
-                                null
-                            }
+                            val closeIntent =
+                                if (caller == NoteEditorCaller.NOTEEDITOR_INTENT_ADD) {
+                                    Intent().apply {
+                                        putExtra(
+                                            EXTRA_ID,
+                                            requireArguments().getString(EXTRA_ID)
+                                        )
+                                    }
+                                } else {
+                                    null
+                                }
                             closeNoteEditor(closeIntent ?: Intent())
                         } else {
                             // Reset edit state for next note
@@ -1839,6 +1664,7 @@ class NoteEditorFragment :
                         closeNoteEditor()
                     }
                 }
+
                 is NoteFieldsCheckResult.Failure -> {
                     // Set the error message for the snackbar error text
                     addNoteErrorMessage = result.localizedMessage
@@ -1848,14 +1674,14 @@ class NoteEditorFragment :
             }
             return
         }
-        
+
         // Legacy XML UI path
         if (editFields == null) {
             Timber.w("saveNote: editFields is null in XML mode")
             showSnackbar(R.string.something_wrong)
             return
         }
-        
+
         val res = resources
         if (selectedTags == null) {
             selectedTags = ArrayList(0)
@@ -1869,7 +1695,11 @@ class NoteEditorFragment :
                 updateField(f)
             }
             // Save deck to noteType
-            Timber.d("setting 'last deck' of note type %s to %d", editorNote!!.notetype.name, deckId)
+            Timber.d(
+                "setting 'last deck' of note type %s to %d",
+                editorNote!!.notetype.name,
+                deckId
+            )
             editorNote!!.notetype.did = deckId
             // Save tags to model
             editorNote!!.setTagsFromStr(getColUnsafe, tagsAsString(selectedTags!!.toSet()))
@@ -1883,7 +1713,8 @@ class NoteEditorFragment :
             lifecycleScope.launch {
                 val noteFieldsCheck = checkNoteFieldsResponse(editorNote!!)
                 if (noteFieldsCheck is NoteFieldsCheckResult.Failure) {
-                    addNoteErrorMessage = noteFieldsCheck.localizedMessage ?: getString(R.string.something_wrong)
+                    addNoteErrorMessage =
+                        noteFieldsCheck.localizedMessage ?: getString(R.string.something_wrong)
                     displayErrorSavingNote()
                     return@launch
                 }
@@ -1896,19 +1727,17 @@ class NoteEditorFragment :
             val oldNoteType = currentEditedCard?.noteType(getColUnsafe)
             if (newNoteType?.id != oldNoteType?.id) {
                 reloadRequired = true
-                if (noteTypeChangeCardMap!!.size < editorNote!!.numberOfCards(getColUnsafe) ||
-                    noteTypeChangeCardMap!!.containsValue(
+                if (noteTypeChangeCardMap!!.size < editorNote!!.numberOfCards(getColUnsafe) || noteTypeChangeCardMap!!.containsValue(
                         null,
                     )
                 ) {
                     // If cards will be lost via the new mapping then show a confirmation dialog before proceeding with the change
                     val dialog = ConfirmationDialog()
                     dialog.setArgs(res.getString(R.string.confirm_map_cards_to_nothing))
-                    val confirm =
-                        Runnable {
-                            // Bypass the check once the user confirms
-                            changeNoteType(oldNoteType!!, newNoteType!!)
-                        }
+                    val confirm = Runnable {
+                        // Bypass the check once the user confirms
+                        changeNoteType(oldNoteType!!, newNoteType!!)
+                    }
                     dialog.setConfirm(confirm)
                     showDialogFragment(dialog)
                 } else {
@@ -1978,7 +1807,13 @@ class NoteEditorFragment :
 
         val noteId = editorNote!!.id
         undoableOp {
-            notetypes.change(oldNotetype, noteId, newNotetype, noteTypeChangeFieldMap!!, noteTypeChangeCardMap!!)
+            notetypes.change(
+                oldNotetype,
+                noteId,
+                newNotetype,
+                noteTypeChangeFieldMap!!,
+                noteTypeChangeCardMap!!
+            )
         }
         // refresh the note object to reflect the database changes
         withCol { editorNote!!.load(this@withCol) }
@@ -2024,8 +1859,7 @@ class NoteEditorFragment :
                 }
             }
         }
-        menu.findItem(R.id.action_show_toolbar).isChecked =
-            !shouldHideToolbar()
+        menu.findItem(R.id.action_show_toolbar).isChecked = !shouldHideToolbar()
         menu.findItem(R.id.action_capitalize).isChecked =
             sharedPrefs().getBoolean(PREF_NOTE_EDITOR_CAPITALIZE, true)
         menu.findItem(R.id.action_scroll_toolbar).isChecked =
@@ -2037,11 +1871,10 @@ class NoteEditorFragment :
      * option to save/preview the card as it has a built in option and the user is notified
      * when the card is saved successfully
      */
-    private fun allowSaveAndPreview(): Boolean =
-        when {
-            addNote && currentNotetypeIsImageOcclusion() -> false
-            else -> true
-        }
+    private fun allowSaveAndPreview(): Boolean = when {
+        addNote && currentNotetypeIsImageOcclusion() -> false
+        else -> true
+    }
 
     override fun onMenuItemSelected(item: MenuItem): Boolean {
         Timber.d("NoteEditor::onMenuItemSelected")
@@ -2053,6 +1886,7 @@ class NoteEditorFragment :
                 }
                 return true
             }
+
             R.id.action_save -> {
                 Timber.i("NoteEditor:: Save note button pressed")
                 if (allowSaveAndPreview()) {
@@ -2060,16 +1894,19 @@ class NoteEditorFragment :
                 }
                 return true
             }
+
             R.id.action_add_note_from_note_editor -> {
                 Timber.i("NoteEditor:: Add Note button pressed")
                 addNewNote()
                 return true
             }
+
             R.id.action_copy_note -> {
                 Timber.i("NoteEditor:: Copy Note button pressed")
                 copyNote()
                 return true
             }
+
             R.id.action_font_size -> {
                 Timber.i("NoteEditor:: Font Size button pressed")
                 val fontSizeDialog = IntegerDialog()
@@ -2078,6 +1915,7 @@ class NoteEditorFragment :
                 showDialogFragment(fontSizeDialog)
                 return true
             }
+
             R.id.action_show_toolbar -> {
                 item.isChecked = !item.isChecked
                 this.sharedPrefs().edit {
@@ -2085,12 +1923,14 @@ class NoteEditorFragment :
                 }
                 updateToolbar()
             }
+
             R.id.action_capitalize -> {
                 Timber.i("NoteEditor:: Capitalize button pressed. New State: %b", !item.isChecked)
                 item.isChecked = !item.isChecked // Needed for Android 9
                 toggleCapitalize(item.isChecked)
                 return true
             }
+
             R.id.action_scroll_toolbar -> {
                 item.isChecked = !item.isChecked
                 this.sharedPrefs().edit {
@@ -2181,7 +2021,7 @@ class NoteEditorFragment :
             }
             editFields?.mapTo(mutableListOf()) { it.fieldText.toFieldText() } ?: mutableListOf()
         }
-        
+
         val tags = selectedTags ?: mutableListOf()
 
         // Get the note type - either from editorNote or from collection for new notes
@@ -2190,33 +2030,31 @@ class NoteEditorFragment :
         } else {
             withCol { notetypes.current() }
         }
-        
+
         // Get the note ID - use 0 for new notes (not yet saved)
         val noteId = editorNote?.id ?: 0L
 
-        val ord =
-            if (notetype.isCloze) {
-                val tempNote = withCol { Note.fromNotetypeId(this@withCol, notetype.id) }
-                tempNote.fields = fields // makes possible to get the cloze numbers from the fields
-                val clozeNumbers = withCol { clozeNumbersInNote(tempNote) }
-                if (clozeNumbers.isNotEmpty()) {
-                    clozeNumbers.first() - 1
-                } else {
-                    0
-                }
+        val ord = if (notetype.isCloze) {
+            val tempNote = withCol { Note.fromNotetypeId(this@withCol, notetype.id) }
+            tempNote.fields = fields // makes possible to get the cloze numbers from the fields
+            val clozeNumbers = withCol { clozeNumbersInNote(tempNote) }
+            if (clozeNumbers.isNotEmpty()) {
+                clozeNumbers.first() - 1
             } else {
-                currentEditedCard?.ord ?: 0
+                0
             }
+        } else {
+            currentEditedCard?.ord ?: 0
+        }
 
-        val args =
-            TemplatePreviewerArguments(
-                notetypeFile = NotetypeFile(requireContext(), notetype),
-                fields = fields,
-                tags = tags,
-                id = noteId,
-                ord = ord,
-                fillEmpty = false,
-            )
+        val args = TemplatePreviewerArguments(
+            notetypeFile = NotetypeFile(requireContext(), notetype),
+            fields = fields,
+            tags = tags,
+            id = noteId,
+            ord = ord,
+            fillEmpty = false,
+        )
         val intent = TemplatePreviewerPage.getIntent(requireContext(), args)
         startActivity(intent)
     }
@@ -2244,12 +2082,11 @@ class NoteEditorFragment :
     }
 
     private fun closeNoteEditor(intent: Intent = Intent()) {
-        val result: Int =
-            if (changed) {
-                Activity.RESULT_OK
-            } else {
-                RESULT_CANCELED
-            }
+        val result: Int = if (changed) {
+            Activity.RESULT_OK
+        } else {
+            RESULT_CANCELED
+        }
         if (reloadRequired) {
             intent.putExtra(RELOAD_REQUIRED_EXTRA_KEY, true)
         }
@@ -2281,12 +2118,11 @@ class NoteEditorFragment :
             Timber.i("Closing note editor")
 
             // Set the finish animation if there is one on the intent which created the activity
-            val animation =
-                BundleCompat.getParcelable(
-                    requireArguments(),
-                    AnkiActivity.FINISH_ANIMATION_EXTRA,
-                    ActivityTransitionAnimation.Direction::class.java,
-                )
+            val animation = BundleCompat.getParcelable(
+                requireArguments(),
+                AnkiActivity.FINISH_ANIMATION_EXTRA,
+                ActivityTransitionAnimation.Direction::class.java,
+            )
             if (animation != null) {
                 requireAnkiActivity().finishWithAnimation(animation)
             } else {
@@ -2298,10 +2134,9 @@ class NoteEditorFragment :
     private fun showDeckSelectionDialog() {
         launchCatchingTask {
             val selectableDecks = withCol {
-                decks.allNamesAndIds()
-                    .map { SelectableDeck.Deck(it.id, it.name) }
+                decks.allNamesAndIds().map { SelectableDeck.Deck(it.id, it.name) }
             }
-            
+
             val dialog = DeckSelectionDialog.newInstance(
                 title = getString(R.string.select_deck_title),
                 summaryMessage = null,
@@ -2320,15 +2155,14 @@ class NoteEditorFragment :
         } else {
             selectedTags?.let { ArrayList(it) } ?: arrayListOf()
         }
-        
-        val dialog =
-            with(requireContext()) {
-                tagsDialogFactory!!.newTagsDialog().withArguments(
-                    context = this,
-                    type = TagsDialog.DialogType.EDIT_TAGS,
-                    checkedTags = selTags,
-                )
-            }
+
+        val dialog = with(requireContext()) {
+            tagsDialogFactory!!.newTagsDialog().withArguments(
+                context = this,
+                type = TagsDialog.DialogType.EDIT_TAGS,
+                checkedTags = selTags,
+            )
+        }
         showDialogFragment(dialog)
     }
 
@@ -2357,7 +2191,7 @@ class NoteEditorFragment :
             // Legacy XML mode: use currentlySelectedNotetype
             currentlySelectedNotetype?.id
         }
-        
+
         if (noteTypeId == null) {
             Timber.w("showCardTemplateEditor(): noteTypeId is null")
             requireActivity().runOnUiThread {
@@ -2368,7 +2202,7 @@ class NoteEditorFragment :
             }
             return
         }
-        
+
         intent.putExtra("noteTypeId", noteTypeId)
         Timber.d(
             "showCardTemplateEditor() for model %s",
@@ -2385,7 +2219,7 @@ class NoteEditorFragment :
                 // Legacy XML mode: use currentEditedCard
                 Triple(currentEditedCard?.id, currentEditedCard?.ord, currentEditedCard?.nid)
             }
-            
+
             if (cardInfo.third != null) {
                 intent.putExtra("noteId", cardInfo.third)
                 Timber.d("showCardTemplateEditor() with note %s", cardInfo.third)
@@ -2431,19 +2265,27 @@ class NoteEditorFragment :
         } else {
             withCol { notetypes.current() }
         }
-        
+
         val note = NoteService.createEmptyNote(notetype)
         val fields = currentFieldStrings.requireNoNulls()
-        
+
         // Get the note type ID - either from editorNote or from the notetype
         val noteTypeId = editorNote?.noteTypeId ?: notetype.id
-        withCol { NoteService.updateMultimediaNoteFromFields(this@withCol, fields, noteTypeId, note) }
+        withCol {
+            NoteService.updateMultimediaNoteFromFields(
+                this@withCol,
+                fields,
+                noteTypeId,
+                note
+            )
+        }
 
         return note
     }
 
     /** Determines whether pasted images should be handled as PNG format. **/
-    private suspend fun shouldPasteAsPng() = withCol { config.getBool(ConfigKey.Bool.PASTE_IMAGES_AS_PNG) }
+    private suspend fun shouldPasteAsPng() =
+        withCol { config.getBool(ConfigKey.Bool.PASTE_IMAGES_AS_PNG) }
 
     val currentFields: Fields
         get() = editorNote!!.notetype.fields
@@ -2456,7 +2298,7 @@ class NoteEditorFragment :
                 val fields = noteEditorViewModel.noteEditorState.value.fields
                 return Array(fields.size) { i -> fields[i].value.text }
             }
-            
+
             if (editFields == null) {
                 Timber.w("currentFieldStrings: editFields is null in XML mode")
                 return arrayOfNulls(0)
@@ -2476,7 +2318,7 @@ class NoteEditorFragment :
         if (fieldsLayoutContainer == null) {
             return
         }
-        
+
         val editLines = fieldState.loadFieldEditLines(type)
         fieldsLayoutContainer?.removeAllViews()
         customViewIds.clear()
@@ -2519,12 +2361,8 @@ class NoteEditorFragment :
             editLineView.configureView(
                 requireActivity(),
                 MEDIA_MIME_TYPES,
-                DropHelper.Options
-                    .Builder()
-                    .setHighlightColor(R.color.material_lime_green_A700)
-                    .setHighlightCornerRadiusPx(0)
-                    .addInnerEditTexts(newEditText)
-                    .build(),
+                DropHelper.Options.Builder().setHighlightColor(R.color.material_lime_green_A700)
+                    .setHighlightCornerRadiusPx(0).addInnerEditTexts(newEditText).build(),
                 onReceiveContentListener,
             )
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
@@ -2532,7 +2370,8 @@ class NoteEditorFragment :
                 // See: https://github.com/ankidroid/Anki-Android/issues/XXXXX
                 // Legacy XML focus chain - may need Compose equivalent for accessibility
                 if (i == 0) {
-                    requireView().findViewById<View>(R.id.note_deck_spinner).nextFocusForwardId = newEditText.id
+                    requireView().findViewById<View>(R.id.note_deck_spinner).nextFocusForwardId =
+                        newEditText.id
                 }
                 if (previous != null) {
                     previous.lastViewInTabOrder.nextFocusForwardId = newEditText.id
@@ -2542,7 +2381,12 @@ class NoteEditorFragment :
             editLineView.enableAnimation = requireAnkiActivity().animationEnabled()
 
             // Use custom implementation of ActionMode.Callback customize selection and insert menus
-            editLineView.setActionModeCallbacks(getActionModeCallback(newEditText, View.generateViewId()))
+            editLineView.setActionModeCallbacks(
+                getActionModeCallback(
+                    newEditText,
+                    View.generateViewId()
+                )
+            )
             editLineView.setHintLocale(getHintLocaleForField(editLineView.name))
             initFieldEditText(newEditText, i, !editNoteTypeMode)
             editFields!!.add(newEditText)
@@ -2596,21 +2440,20 @@ class NoteEditorFragment :
     private fun getActionModeCallback(
         textBox: FieldEditText,
         clozeMenuId: Int,
-    ): ActionMode.Callback =
-        CustomActionModeCallback(
-            isClozeType,
-            getString(R.string.multimedia_editor_popup_cloze),
-            clozeMenuId,
-            onActionItemSelected = { mode, item ->
-                if (item.itemId == clozeMenuId) {
-                    convertSelectedTextToCloze(textBox, AddClozeType.INCREMENT_NUMBER)
-                    mode.finish()
-                    true
-                } else {
-                    false
-                }
-            },
-        )
+    ): ActionMode.Callback = CustomActionModeCallback(
+        isClozeType,
+        getString(R.string.multimedia_editor_popup_cloze),
+        clozeMenuId,
+        onActionItemSelected = { mode, item ->
+            if (item.itemId == clozeMenuId) {
+                convertSelectedTextToCloze(textBox, AddClozeType.INCREMENT_NUMBER)
+                mode.finish()
+                true
+            } else {
+                false
+            }
+        },
+    )
 
     @VisibleForTesting
     fun showMultimediaBottomSheet() {
@@ -2633,94 +2476,88 @@ class NoteEditorFragment :
         multimediaActionJob?.cancel()
 
         // Based on the type of multimedia action received, perform the corresponding operation
-        multimediaActionJob =
-            lifecycleScope.launch {
-                val note: MultimediaEditableNote = getCurrentMultimediaEditableNote()
-                if (note.isEmpty) return@launch
+        multimediaActionJob = lifecycleScope.launch {
+            val note: MultimediaEditableNote = getCurrentMultimediaEditableNote()
+            if (note.isEmpty) return@launch
 
-                multimediaViewModel.multimediaAction.first { action ->
-                    when (action) {
-                        MultimediaBottomSheet.MultimediaAction.SELECT_IMAGE_FILE -> {
-                            Timber.i("Selected Image option")
-                            val field = ImageField()
-                            note.setField(fieldIndex, field)
-                            openMultimediaImageFragment(fieldIndex = fieldIndex, field, note)
-                        }
-
-                        MultimediaBottomSheet.MultimediaAction.SELECT_AUDIO_FILE -> {
-                            Timber.i("Selected audio clip option")
-                            val field = MediaClipField()
-                            note.setField(fieldIndex, field)
-                            val mediaIntent =
-                                AudioVideoFragment.getIntent(
-                                    requireContext(),
-                                    MultimediaActivityExtra(fieldIndex, field, note),
-                                    AudioVideoFragment.MediaOption.AUDIO_CLIP,
-                                )
-
-                            multimediaFragmentLauncher.launch(mediaIntent)
-                        }
-
-                        MultimediaBottomSheet.MultimediaAction.OPEN_DRAWING -> {
-                            Timber.i("Selected Drawing option")
-                            val field = ImageField()
-                            note.setField(fieldIndex, field)
-
-                            val drawingIntent =
-                                MultimediaImageFragment.getIntent(
-                                    requireContext(),
-                                    MultimediaActivityExtra(fieldIndex, field, note),
-                                    MultimediaImageFragment.ImageOptions.DRAWING,
-                                )
-
-                            multimediaFragmentLauncher.launch(drawingIntent)
-                        }
-
-                        MultimediaBottomSheet.MultimediaAction.SELECT_AUDIO_RECORDING -> {
-                            Timber.i("Selected audio recording option")
-                            val field = AudioRecordingField()
-                            note.setField(fieldIndex, field)
-                            val audioRecordingIntent =
-                                AudioRecordingFragment.getIntent(
-                                    requireContext(),
-                                    MultimediaActivityExtra(fieldIndex, field, note),
-                                )
-
-                            multimediaFragmentLauncher.launch(audioRecordingIntent)
-                        }
-
-                        MultimediaBottomSheet.MultimediaAction.SELECT_VIDEO_FILE -> {
-                            Timber.i("Selected video clip option")
-                            val field = MediaClipField()
-                            note.setField(fieldIndex, field)
-                            val mediaIntent =
-                                AudioVideoFragment.getIntent(
-                                    requireContext(),
-                                    MultimediaActivityExtra(fieldIndex, field, note),
-                                    AudioVideoFragment.MediaOption.VIDEO_CLIP,
-                                )
-
-                            multimediaFragmentLauncher.launch(mediaIntent)
-                        }
-
-                        MultimediaBottomSheet.MultimediaAction.OPEN_CAMERA -> {
-                            Timber.i("Selected Camera option")
-
-                            val field = ImageField()
-                            note.setField(fieldIndex, field)
-                            val imageIntent =
-                                MultimediaImageFragment.getIntent(
-                                    requireContext(),
-                                    MultimediaActivityExtra(fieldIndex, field, note),
-                                    MultimediaImageFragment.ImageOptions.CAMERA,
-                                )
-
-                            multimediaFragmentLauncher.launch(imageIntent)
-                        }
+            multimediaViewModel.multimediaAction.first { action ->
+                when (action) {
+                    MultimediaBottomSheet.MultimediaAction.SELECT_IMAGE_FILE -> {
+                        Timber.i("Selected Image option")
+                        val field = ImageField()
+                        note.setField(fieldIndex, field)
+                        openMultimediaImageFragment(fieldIndex = fieldIndex, field, note)
                     }
-                    true
+
+                    MultimediaBottomSheet.MultimediaAction.SELECT_AUDIO_FILE -> {
+                        Timber.i("Selected audio clip option")
+                        val field = MediaClipField()
+                        note.setField(fieldIndex, field)
+                        val mediaIntent = AudioVideoFragment.getIntent(
+                            requireContext(),
+                            MultimediaActivityExtra(fieldIndex, field, note),
+                            AudioVideoFragment.MediaOption.AUDIO_CLIP,
+                        )
+
+                        multimediaFragmentLauncher.launch(mediaIntent)
+                    }
+
+                    MultimediaBottomSheet.MultimediaAction.OPEN_DRAWING -> {
+                        Timber.i("Selected Drawing option")
+                        val field = ImageField()
+                        note.setField(fieldIndex, field)
+
+                        val drawingIntent = MultimediaImageFragment.getIntent(
+                            requireContext(),
+                            MultimediaActivityExtra(fieldIndex, field, note),
+                            MultimediaImageFragment.ImageOptions.DRAWING,
+                        )
+
+                        multimediaFragmentLauncher.launch(drawingIntent)
+                    }
+
+                    MultimediaBottomSheet.MultimediaAction.SELECT_AUDIO_RECORDING -> {
+                        Timber.i("Selected audio recording option")
+                        val field = AudioRecordingField()
+                        note.setField(fieldIndex, field)
+                        val audioRecordingIntent = AudioRecordingFragment.getIntent(
+                            requireContext(),
+                            MultimediaActivityExtra(fieldIndex, field, note),
+                        )
+
+                        multimediaFragmentLauncher.launch(audioRecordingIntent)
+                    }
+
+                    MultimediaBottomSheet.MultimediaAction.SELECT_VIDEO_FILE -> {
+                        Timber.i("Selected video clip option")
+                        val field = MediaClipField()
+                        note.setField(fieldIndex, field)
+                        val mediaIntent = AudioVideoFragment.getIntent(
+                            requireContext(),
+                            MultimediaActivityExtra(fieldIndex, field, note),
+                            AudioVideoFragment.MediaOption.VIDEO_CLIP,
+                        )
+
+                        multimediaFragmentLauncher.launch(mediaIntent)
+                    }
+
+                    MultimediaBottomSheet.MultimediaAction.OPEN_CAMERA -> {
+                        Timber.i("Selected Camera option")
+
+                        val field = ImageField()
+                        note.setField(fieldIndex, field)
+                        val imageIntent = MultimediaImageFragment.getIntent(
+                            requireContext(),
+                            MultimediaActivityExtra(fieldIndex, field, note),
+                            MultimediaImageFragment.ImageOptions.CAMERA,
+                        )
+
+                        multimediaFragmentLauncher.launch(imageIntent)
+                    }
                 }
+                true
             }
+        }
     }
 
     private fun openMultimediaImageFragment(
@@ -2729,23 +2566,21 @@ class NoteEditorFragment :
         multimediaNote: IMultimediaEditableNote,
         imageUri: Uri? = null,
     ) {
-        val multimediaExtra = MultimediaActivityExtra(fieldIndex, field, multimediaNote, imageUri?.toString())
+        val multimediaExtra =
+            MultimediaActivityExtra(fieldIndex, field, multimediaNote, imageUri?.toString())
 
-        val imageIntent =
-            MultimediaImageFragment.getIntent(
-                requireContext(),
-                multimediaExtra,
-                MultimediaImageFragment.ImageOptions.GALLERY,
-            )
+        val imageIntent = MultimediaImageFragment.getIntent(
+            requireContext(),
+            multimediaExtra,
+            MultimediaImageFragment.ImageOptions.GALLERY,
+        )
 
         multimediaFragmentLauncher.launch(imageIntent)
     }
 
     private fun handleMultimediaResult(extras: Bundle) {
         val index = extras.getInt(MULTIMEDIA_RESULT_FIELD_INDEX)
-        val field =
-            extras.getSerializableCompat<IField>(MULTIMEDIA_RESULT)
-                ?: return
+        val field = extras.getSerializableCompat<IField>(MULTIMEDIA_RESULT) ?: return
 
         // Process successful result only if field has data
         if (field.type != EFieldType.TEXT || field.mediaFile != null) {
@@ -2778,18 +2613,17 @@ class NoteEditorFragment :
 
             // Get the formatted value to insert
             val formattedValue = field.formattedValue ?: ""
-            
+
             if (isComposeMode) {
                 // Compose UI - update field through ViewModel
                 val currentState = noteEditorViewModel.noteEditorState.value
                 val fieldState = currentState.fields.find { it.index == index }
-                
+
                 if (fieldState != null) {
                     if (field.type === EFieldType.TEXT) {
                         // Completely replace text for text fields (because current text was passed in)
                         noteEditorViewModel.updateFieldValue(
-                            index,
-                            TextFieldValue(text = formattedValue)
+                            index, TextFieldValue(text = formattedValue)
                         )
                     } else {
                         // For media fields, insert at cursor position or replace selection
@@ -2803,10 +2637,8 @@ class NoteEditorFragment :
                         }
                         val newCursor = start + formattedValue.length
                         noteEditorViewModel.updateFieldValue(
-                            index,
-                            TextFieldValue(
-                                text = newText,
-                                selection = TextRange(newCursor)
+                            index, TextFieldValue(
+                                text = newText, selection = TextRange(newCursor)
                             )
                         )
                     }
@@ -2819,9 +2651,9 @@ class NoteEditorFragment :
                     Timber.w("addMediaFileToField: editFields is null in XML mode")
                     return@launch
                 }
-                
+
                 val fieldEditText = editFields!![index]
-                
+
                 // Completely replace text for text fields (because current text was passed in)
                 if (field.type === EFieldType.TEXT) {
                     fieldEditText.setText(formattedValue)
@@ -2829,7 +2661,7 @@ class NoteEditorFragment :
                     insertStringInField(fieldEditText, formattedValue)
                 }
             }
-            
+
             changed = true
         }
     }
@@ -2840,14 +2672,13 @@ class NoteEditorFragment :
         description: ClipDescription,
         pasteAsPng: Boolean,
     ): Boolean {
-        val mediaTag =
-            MediaRegistration.onPaste(
-                requireContext(),
-                uri,
-                description,
-                pasteAsPng,
-                showError = { type -> showSnackbar(type.toHumanReadableString(requireContext())) },
-            ) ?: return false
+        val mediaTag = MediaRegistration.onPaste(
+            requireContext(),
+            uri,
+            description,
+            pasteAsPng,
+            showError = { type -> showSnackbar(type.toHumanReadableString(requireContext())) },
+        ) ?: return false
 
         insertStringInField(editText, mediaTag)
         return true
@@ -2977,29 +2808,27 @@ class NoteEditorFragment :
         // Listen for changes in the first field so we can re-check duplicate status.
         editText!!.addTextChangedListener(EditFieldTextWatcher(index))
         if (index == 0) {
-            editText.onFocusChangeListener =
-                OnFocusChangeListener { _: View?, hasFocus: Boolean ->
-                    try {
-                        if (hasFocus) {
-                            // we only want to decorate when we lose focus
-                            return@OnFocusChangeListener
-                        }
-                        @SuppressLint("CheckResult")
-                        val currentFieldStrings = currentFieldStrings
-                        if (currentFieldStrings.size != 2 || currentFieldStrings[1]!!.isNotEmpty()) {
-                            // we only decorate on 2-field cards while second field is still empty
-                            return@OnFocusChangeListener
-                        }
-                        val firstField = currentFieldStrings[0]
-                        val decoratedText = NoteFieldDecorator.aplicaHuevo(firstField)
-                        if (decoratedText != firstField) {
-                            // we only apply the decoration if it is actually different from the first field
-                            setFieldValueFromUi(1, decoratedText)
-                        }
-                    } catch (e: Exception) {
-                        Timber.w(e, "Unable to decorate text field")
+            editText.onFocusChangeListener = OnFocusChangeListener { _: View?, hasFocus: Boolean ->
+                try {
+                    if (hasFocus) {
+                        // we only want to decorate when we lose focus
+                        return@OnFocusChangeListener
                     }
+                    @SuppressLint("CheckResult") val currentFieldStrings = currentFieldStrings
+                    if (currentFieldStrings.size != 2 || currentFieldStrings[1]!!.isNotEmpty()) {
+                        // we only decorate on 2-field cards while second field is still empty
+                        return@OnFocusChangeListener
+                    }
+                    val firstField = currentFieldStrings[0]
+                    val decoratedText = NoteFieldDecorator.aplicaHuevo(firstField)
+                    if (decoratedText != firstField) {
+                        // we only apply the decoration if it is actually different from the first field
+                        setFieldValueFromUi(1, decoratedText)
+                    }
+                } catch (e: Exception) {
+                    Timber.w(e, "Unable to decorate text field")
                 }
+            }
         }
 
         // Sets the background color of disabled EditText.
@@ -3019,13 +2848,12 @@ class NoteEditorFragment :
     private fun getHintLocaleForField(name: String?): Locale? = getFieldByName(name)?.languageHint
 
     private fun getFieldByName(name: String?): Field? {
-        val pair: Pair<Int, Field>? =
-            try {
-                Notetypes.fieldMap(currentlySelectedNotetype!!)[name]
-            } catch (_: Exception) {
-                Timber.w("Failed to obtain field '%s'", name)
-                return null
-            }
+        val pair: Pair<Int, Field>? = try {
+            Notetypes.fieldMap(currentlySelectedNotetype!!)[name]
+        } catch (_: Exception) {
+            Timber.w("Failed to obtain field '%s'", name)
+            return null
+        }
         return pair?.second
     }
 
@@ -3050,7 +2878,7 @@ class NoteEditorFragment :
     private fun setDuplicateFieldStyles() {
         // Compose mode doesn't use this method - duplicate checking is handled in ViewModel
         if (isComposeMode) return
-        
+
         // #15579 can be null if switching between two image occlusion types
         if (editFields == null) {
             Timber.w("setDuplicateFieldStyles: editFields is null in XML mode")
@@ -3104,8 +2932,7 @@ class NoteEditorFragment :
             }
 
             val currentDeckId = getColUnsafe.config.get(CURRENT_DECK) ?: 1L
-            return if (getColUnsafe.decks.isFiltered(currentDeckId)) {
-                /*
+            return if (getColUnsafe.decks.isFiltered(currentDeckId)) {/*
                  * If the deck in mCurrentDid is a filtered (dynamic) deck, then we can't create cards in it,
                  * and we set mCurrentDid to the Default deck. Otherwise, we keep the number that had been
                  * selected previously in the activity.
@@ -3130,15 +2957,14 @@ class NoteEditorFragment :
         note: Note?,
         changeType: FieldChangeType,
     ) {
-        editorNote =
-            if (note == null || addNote) {
-                getColUnsafe.run {
-                    val notetype = notetypes.current()
-                    Note.fromNotetypeId(this@run, notetype.id)
-                }
-            } else {
-                note
+        editorNote = if (note == null || addNote) {
+            getColUnsafe.run {
+                val notetype = notetypes.current()
+                Note.fromNotetypeId(this@run, notetype.id)
             }
+        } else {
+            note
+        }
         if (selectedTags == null) {
             selectedTags = editorNote!!.tags
             // Update ViewModel state for Compose UI
@@ -3175,10 +3001,8 @@ class NoteEditorFragment :
 
     private val toolbarButtons: ArrayList<CustomToolbarButton>
         get() {
-            val set =
-                this
-                    .sharedPrefs()
-                    .getStringSet(PREF_NOTE_EDITOR_CUSTOM_BUTTONS, HashUtil.hashSetInit(0))
+            val set = this.sharedPrefs()
+                .getStringSet(PREF_NOTE_EDITOR_CUSTOM_BUTTONS, HashUtil.hashSetInit(0))
             return CustomToolbarButton.fromStringSet(set!!)
         }
 
@@ -3209,13 +3033,12 @@ class NoteEditorFragment :
         val toolbarButtons = toolbarButtons
         val currentButtonIndex = currentButton.index
 
-        toolbarButtons[currentButtonIndex] =
-            CustomToolbarButton(
-                index = currentButtonIndex,
-                buttonText = buttonText.ifEmpty { currentButton.buttonText },
-                prefix = prefix.ifEmpty { currentButton.prefix },
-                suffix = suffix.ifEmpty { currentButton.suffix },
-            )
+        toolbarButtons[currentButtonIndex] = CustomToolbarButton(
+            index = currentButtonIndex,
+            buttonText = buttonText.ifEmpty { currentButton.buttonText },
+            prefix = prefix.ifEmpty { currentButton.prefix },
+            suffix = suffix.ifEmpty { currentButton.suffix },
+        )
 
         saveToolbarButtons(toolbarButtons)
         updateToolbar()
@@ -3243,12 +3066,9 @@ class NoteEditorFragment :
     }
 
     private val toolbarDialog: AlertDialog.Builder
-        get() =
-            AlertDialog
-                .Builder(requireContext())
-                .neutralButton(R.string.help) {
-                    requireContext().openUrl(R.string.link_manual_note_format_toolbar)
-                }.negativeButton(R.string.dialog_cancel)
+        get() = AlertDialog.Builder(requireContext()).neutralButton(R.string.help) {
+                requireContext().openUrl(R.string.link_manual_note_format_toolbar)
+            }.negativeButton(R.string.dialog_cancel)
 
     private fun displayAddToolbarDialog() {
         val v = layoutInflater.inflate(R.layout.note_editor_toolbar_add_custom_item, null)
@@ -3273,17 +3093,14 @@ class NoteEditorFragment :
         etIcon.setText(currentButton.buttonText)
         et.setText(currentButton.prefix)
         et2.setText(currentButton.suffix)
-        val editToolbarDialog =
-            toolbarDialog
-                .setView(view)
-                .positiveButton(R.string.save) {
-                    editToolbarButton(
-                        etIcon.text.toString(),
-                        et.text.toString(),
-                        et2.text.toString(),
-                        currentButton,
-                    )
-                }.create()
+        val editToolbarDialog = toolbarDialog.setView(view).positiveButton(R.string.save) {
+                editToolbarButton(
+                    etIcon.text.toString(),
+                    et.text.toString(),
+                    et2.text.toString(),
+                    currentButton,
+                )
+            }.create()
         btnDelete.setOnClickListener {
             suggestRemoveButton(
                 currentButton,
@@ -3301,19 +3118,18 @@ class NoteEditorFragment :
     }
 
     override val shortcuts
-        get() =
-            ShortcutGroup(
-                listOf(
-                    shortcut("Ctrl+ENTER") { getString(R.string.save) },
-                    shortcut("Ctrl+D") { getString(R.string.select_deck) },
-                    shortcut("Ctrl+L") { getString(R.string.card_template_editor_group) },
-                    shortcut("Ctrl+N") { getString(R.string.select_note_type) },
-                    shortcut("Ctrl+Shift+T") { getString(R.string.tag_editor) },
-                    shortcut("Ctrl+Shift+C") { getString(R.string.multimedia_editor_popup_cloze) },
-                    shortcut("Ctrl+P") { getString(R.string.card_editor_preview_card) },
-                ),
-                R.string.note_editor_group,
-            )
+        get() = ShortcutGroup(
+            listOf(
+                shortcut("Ctrl+ENTER") { getString(R.string.save) },
+                shortcut("Ctrl+D") { getString(R.string.select_deck) },
+                shortcut("Ctrl+L") { getString(R.string.card_template_editor_group) },
+                shortcut("Ctrl+N") { getString(R.string.select_note_type) },
+                shortcut("Ctrl+Shift+T") { getString(R.string.tag_editor) },
+                shortcut("Ctrl+Shift+C") { getString(R.string.multimedia_editor_popup_cloze) },
+                shortcut("Ctrl+P") { getString(R.string.card_editor_preview_card) },
+            ),
+            R.string.note_editor_group,
+        )
 
     private fun updateTags() {
         // Tags are now managed by Compose UI and ViewModel
@@ -3322,19 +3138,16 @@ class NoteEditorFragment :
             // Compose UI - tags are displayed through noteEditorViewModel state
             return
         }
-        
+
         // Legacy XML UI path
         if (selectedTags == null) {
             selectedTags = ArrayList(0)
         }
-        tagsButton?.text =
-            resources.getString(
-                R.string.CardEditorTags,
-                getColUnsafe.tags
-                    .join(getColUnsafe.tags.canonify(selectedTags!!))
-                    .trim()
-                    .replace(" ", ", "),
-            )
+        tagsButton?.text = resources.getString(
+            R.string.CardEditorTags,
+            getColUnsafe.tags.join(getColUnsafe.tags.canonify(selectedTags!!)).trim()
+                .replace(" ", ", "),
+        )
     }
 
     /** Update the list of card templates for current note type  */
@@ -3348,11 +3161,9 @@ class NoteEditorFragment :
         for ((i, tmpl) in tmpls.withIndex()) {
             var name = tmpl.jsonObject.optString("name")
             // If more than one card, and we have an existing card, underline existing card
-            if (!addNote &&
-                tmpls.length() > 1 &&
-                noteType.jsonObject === editorNote!!.notetype.jsonObject &&
-                currentEditedCard != null &&
-                currentEditedCard!!.template(getColUnsafe).jsonObject.optString("name") == name
+            if (!addNote && tmpls.length() > 1 && noteType.jsonObject === editorNote!!.notetype.jsonObject && currentEditedCard != null && currentEditedCard!!.template(
+                    getColUnsafe
+                ).jsonObject.optString("name") == name
             ) {
                 name = "<u>$name</u>"
             }
@@ -3365,23 +3176,23 @@ class NoteEditorFragment :
         if (!addNote && tmpls.length() < editorNote!!.notetype.templates.length()) {
             cardsList = StringBuilder("<font color='red'>$cardsList</font>")
         }
-        
+
         val cardsInfoText = resources.getString(R.string.CardEditorCards, cardsList.toString())
-        
+
         // Update ViewModel for Compose UI
         noteEditorViewModel.updateCardsInfo(cardsInfoText)
-        
+
         // Legacy XML view - may be null during Compose migration
-        cardsButton?.text =
-            HtmlCompat.fromHtml(
-                cardsInfoText,
-                HtmlCompat.FROM_HTML_MODE_LEGACY,
-            )
+        cardsButton?.text = HtmlCompat.fromHtml(
+            cardsInfoText,
+            HtmlCompat.FROM_HTML_MODE_LEGACY,
+        )
     }
 
     private fun updateField(field: FieldEditText?): Boolean {
         val fieldContent = field!!.text?.toString() ?: ""
-        val correctedFieldContent = NoteService.convertToHtmlNewline(fieldContent, shouldReplaceNewlines())
+        val correctedFieldContent =
+            NoteService.convertToHtmlNewline(fieldContent, shouldReplaceNewlines())
         if (editorNote!!.values()[field.ord] != correctedFieldContent) {
             editorNote!!.values()[field.ord] = correctedFieldContent
             return true
@@ -3392,18 +3203,21 @@ class NoteEditorFragment :
     private fun tagsAsString(tags: Set<String>): String = tags.joinToString(" ")
 
     private val currentlySelectedNotetype: NotetypeJson?
-        get() =
-            noteTypeSpinner?.selectedItemPosition?.let { position ->
-                allNoteTypeIds?.get(position)?.let { noteTypeId ->
-                    getColUnsafe.notetypes.get(noteTypeId)
-                }
+        get() = noteTypeSpinner?.selectedItemPosition?.let { position ->
+            allNoteTypeIds?.get(position)?.let { noteTypeId ->
+                getColUnsafe.notetypes.get(noteTypeId)
             }
+        }
 
     /**
      * Update all the field EditText views based on the currently selected note type and the noteTypeChangeFieldMap
      */
     private fun updateFieldsFromMap(newNotetype: NotetypeJson?) {
-        val type = FieldChangeType.refreshWithMap(newNotetype, noteTypeChangeFieldMap, shouldReplaceNewlines())
+        val type = FieldChangeType.refreshWithMap(
+            newNotetype,
+            noteTypeChangeFieldMap,
+            shouldReplaceNewlines()
+        )
         populateEditFields(type, true)
         updateCards(newNotetype)
     }
@@ -3420,7 +3234,8 @@ class NoteEditorFragment :
     val fieldsFromSelectedNote: Array<Array<String>>
         get() = editorNote!!.items()
 
-    private fun currentNotetypeIsImageOcclusion() = currentlySelectedNotetype?.isImageOcclusion == true
+    private fun currentNotetypeIsImageOcclusion() =
+        currentlySelectedNotetype?.isImageOcclusion == true
 
     private fun setupImageOcclusionEditor(imagePath: String = "") {
         val kind: String
@@ -3428,12 +3243,11 @@ class NoteEditorFragment :
         if (addNote) {
             kind = "add"
             // if opened from an intent, the selected note type may not be suitable for IO
-            id =
-                if (currentNotetypeIsImageOcclusion()) {
-                    currentlySelectedNotetype!!.id
-                } else {
-                    0
-                }
+            id = if (currentNotetypeIsImageOcclusion()) {
+                currentlySelectedNotetype!!.id
+            } else {
+                0
+            }
         } else {
             kind = "edit"
             id = editorNote?.id!!
@@ -3511,14 +3325,15 @@ class NoteEditorFragment :
             }
             // Configure the interface according to whether note type is getting changed or not
             if (allNoteTypeIds!![pos] != noteNoteTypeId) {
-                @KotlinCleanup("Check if this ever happens")
-                val tmpls =
-                    try {
-                        newNoteType.templates
-                    } catch (_: Exception) {
-                        Timber.w("error in obtaining templates from note type %s", allNoteTypeIds!![pos])
-                        return
-                    }
+                @KotlinCleanup("Check if this ever happens") val tmpls = try {
+                    newNoteType.templates
+                } catch (_: Exception) {
+                    Timber.w(
+                        "error in obtaining templates from note type %s",
+                        allNoteTypeIds!![pos]
+                    )
+                    return
+                }
                 // Initialize mapping between fields of old note type -> new note type
                 val itemsLength = editorNote!!.items().size
                 noteTypeChangeFieldMap = HashUtil.hashMapInit(itemsLength)
@@ -3590,10 +3405,9 @@ class NoteEditorFragment :
     private val nextClozeIndex: Int
         get() {
             // BUG: This assumes all fields are inserted as: {{cloze:Text}}
-            val fieldValues: MutableList<String> =
-                ArrayList(
-                    editFields!!.size,
-                )
+            val fieldValues: MutableList<String> = ArrayList(
+                editFields!!.size,
+            )
             for (e in editFields!!) {
                 val editable = e.text
                 val fieldValue = editable?.toString() ?: ""
@@ -3692,19 +3506,13 @@ class NoteEditorFragment :
         enum class NoteEditorCaller(
             val value: Int,
         ) {
-            NO_CALLER(0),
-            EDIT(1),
-            STUDYOPTIONS(2),
-            DECKPICKER(3),
-            REVIEWER_ADD(11),
-            CARDBROWSER_ADD(7),
-            NOTEEDITOR(8),
-            PREVIEWER_EDIT(9),
-            NOTEEDITOR_INTENT_ADD(10),
-            IMG_OCCLUSION(12),
-            ADD_IMAGE(13),
-            INSTANT_NOTE_EDITOR(14),
-            ;
+            NO_CALLER(0), EDIT(1), STUDYOPTIONS(2), DECKPICKER(3), REVIEWER_ADD(11), CARDBROWSER_ADD(
+                7
+            ),
+            NOTEEDITOR(8), PREVIEWER_EDIT(9), NOTEEDITOR_INTENT_ADD(10), IMG_OCCLUSION(12), ADD_IMAGE(
+                13
+            ),
+            INSTANT_NOTE_EDITOR(14), ;
 
             companion object {
                 fun fromValue(value: Int) = NoteEditorCaller.entries.first { it.value == value }
@@ -3727,9 +3535,7 @@ class NoteEditorFragment :
             }
 
         private fun shouldReplaceNewlines(): Boolean =
-            AnkiDroidApp.instance
-                .sharedPrefs()
-                .getBoolean(PREF_NOTE_EDITOR_NEWLINE_REPLACE, true)
+            AnkiDroidApp.instance.sharedPrefs().getBoolean(PREF_NOTE_EDITOR_NEWLINE_REPLACE, true)
 
         @VisibleForTesting
         @CheckResult
@@ -3740,8 +3546,6 @@ class NoteEditorFragment :
         }
 
         private fun shouldHideToolbar(): Boolean =
-            !AnkiDroidApp.instance
-                .sharedPrefs()
-                .getBoolean(PREF_NOTE_EDITOR_SHOW_TOOLBAR, true)
+            !AnkiDroidApp.instance.sharedPrefs().getBoolean(PREF_NOTE_EDITOR_SHOW_TOOLBAR, true)
     }
 }

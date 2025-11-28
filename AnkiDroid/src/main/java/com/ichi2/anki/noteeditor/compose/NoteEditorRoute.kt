@@ -137,12 +137,11 @@ fun NoteEditorScreenRoute(
             }, overflowItems = buildList {
                 add(
                     NoteEditorSimpleOverflowItem(
-                    id = "cards",
-                    title = stringResource(
-                        R.string.note_editor_cards,
-                        "1"
-                    ), // TODO: Get actual card count
-                    onClick = { /* TODO: Open Cards Template Editor */ }))
+                        id = "cards",
+                        title = noteEditorState.cardsInfo,
+                        onClick = { viewModel.onCardsClick() }
+                    )
+                )
 
                 if (!isAdding) {
                     add(
@@ -161,9 +160,11 @@ fun NoteEditorScreenRoute(
 
                 add(
                     NoteEditorSimpleOverflowItem(
-                    id = "font_size",
-                    title = stringResource(R.string.font_size),
-                    onClick = { /* TODO: Show font size dialog */ }))
+                        id = "font_size",
+                        title = stringResource(R.string.menu_font_size),
+                        onClick = { viewModel.onFontSizeClick() }
+                    )
+                )
 
                 add(
                     NoteEditorToggleOverflowItem(
@@ -205,13 +206,12 @@ fun NoteEditorScreenRoute(
             viewModel.onFieldFocus(index)
         },
         onCardsClick = {
-            // Launch template editor
+            viewModel.onCardsClick()
         },
         onDeckSelected = { viewModel.selectDeck(it) },
         onNoteTypeSelected = { viewModel.selectNoteType(it) },
         onMultimediaClick = { index ->
-            // TODO: Implement proper multimedia picker
-            Timber.d("Multimedia clicked for field $index")
+            viewModel.onMultimediaClicked(index)
         },
         onToggleStickyClick = { viewModel.toggleStickyField(it) },
         onSaveClick = {
@@ -236,9 +236,12 @@ fun NoteEditorScreenRoute(
         onClozeClick = { viewModel.insertCloze(com.ichi2.anki.noteeditor.ClozeInsertionMode.SAME_NUMBER) },
         onClozeIncrementClick = { viewModel.insertCloze(com.ichi2.anki.noteeditor.ClozeInsertionMode.INCREMENT_NUMBER) },
         onCustomButtonClick = { viewModel.applyToolbarButton(it) },
-        onCustomButtonLongClick = { /* TODO */ },
+        onCustomButtonLongClick = { /* TODO: Edit custom button */ },
         onAddCustomButtonClick = { viewModel.addCustomButton() },
         onMathjaxClick = { viewModel.insertMathJax() },
+        onMathjaxLongClick = { viewModel.onMathjaxLongClick() },
+        onHeadingClick = { viewModel.onHeadingClick() },
+        onFontSizeClick = { viewModel.onFontSizeClick() },
         onHorizontalRuleClick = { viewModel.insertHorizontalRule() },
         customToolbarButtons = toolbarButtons,
         isToolbarVisible = showToolbar,
