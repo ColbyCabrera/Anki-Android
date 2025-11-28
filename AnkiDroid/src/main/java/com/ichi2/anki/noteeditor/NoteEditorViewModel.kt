@@ -30,6 +30,8 @@ import com.ichi2.anki.libanki.Note
 import com.ichi2.anki.libanki.NotetypeJson
 import com.ichi2.anki.libanki.Note.ClozeUtils
 import com.ichi2.anki.compose.TagsState
+import com.ichi2.anki.multimediacard.IMultimediaEditableNote
+import com.ichi2.anki.multimediacard.fields.IField
 import com.ichi2.anki.noteeditor.compose.NoteEditorState
 import com.ichi2.anki.noteeditor.compose.NoteFieldState
 import com.ichi2.anki.servicelayer.NoteService
@@ -64,6 +66,7 @@ sealed interface NoteEditorEvent {
     data object ShowAddCustomButtonDialog : NoteEditorEvent
     data class NavigateToPreview(val cardId: Long) : NoteEditorEvent
 }
+
 
 /**
  * Represents the result of a note save operation with type-safe data.
@@ -322,11 +325,11 @@ class NoteEditorViewModel(
     private fun loadTags(col: Collection) {
         viewModelScope.launch {
             _tagsState.value = TagsState.Loading
-            
+
             // Perform all DB operations on IO dispatcher
             val (allTags, deckSpecificTags) = withContext(Dispatchers.IO) {
                 val all = col.tags.all().sorted()
-                
+
                 val deckSpecific = if (_deckId.value != 0L) {
                     // Query all notes in the selected deck using the deck search operator
                     val noteIds = try {
@@ -353,10 +356,10 @@ class NoteEditorViewModel(
                 } else {
                     emptySet()
                 }
-                
+
                 all to deckSpecific
             }
-            
+
             // Back on Main dispatcher - update UI state
             _tagsState.value = TagsState.Loaded(allTags)
             _deckTags.value = deckSpecificTags
@@ -482,13 +485,13 @@ class NoteEditorViewModel(
             try {
                 val col = collectionProvider()
                 ensureActive() // Check cancellation after getting collection
-                
+
                 // Perform DB operations on IO dispatcher
                 val deckId = withContext(Dispatchers.IO) {
                     val deck = col.decks.allNamesAndIds().find { it.name == deckName }
                     deck?.id
                 }
-                
+
                 // Back on Main dispatcher - update UI state
                 if (deckId != null) {
                     _deckId.value = deckId
@@ -765,7 +768,7 @@ class NoteEditorViewModel(
                     _errorState.value = "Note validation failed: Please check required fields"
                     return saveResult.validationResult
                 }
-                
+
                 is SaveResult.NewNote -> {
                     // Update the current note reference
                     _currentNote.value = saveResult.note
@@ -790,7 +793,7 @@ class NoteEditorViewModel(
                     initialFieldValues = _noteEditorState.value.fields.map { it.value.text }
                     _isFieldEdited.value = false
                 }
-                
+
                 is SaveResult.UpdatedNote -> {
                     if (saveResult.card != null) {
                         // Update the cached card
@@ -1264,7 +1267,7 @@ class NoteEditorViewModel(
     suspend fun getCurrentCardId(): Long? {
         val card = _currentCard.value
         if (card != null) return card.id
-        
+
         // If no cached card, try to find one from the note
         val note = _currentNote.value ?: return null
         return try {
@@ -1277,4 +1280,77 @@ class NoteEditorViewModel(
             null
         }
     }
+    /**
+     * Add a custom toolbar button
+     */
+    fun addCustomToolbarButton(icon: String, before: String, after: String) {
+        val newButton = ToolbarButtonModel(
+            index = _toolbarButtons.value.size,
+            text = icon,
+            prefix = before,
+            suffix = after
+        )
+        _toolbarButtons.update { it + newButton }
+    }
+
+    /**
+     * Get the current note as a multimedia editable note
+     */
+    fun getCurrentMultimediaEditableNote(): IMultimediaEditableNote {
+        val note = _currentNote.value ?: return object : IMultimediaEditableNote {
+            override val numberOfFields: Int = 0
+            override fun getField(index: Int): IField? = null
+            override fun setField(index: Int, field: IField?): Boolean = false
+            override val isModified: Boolean = false
+            override val initialFieldCount: Int = 0
+            override fun getInitialField(index: Int): IField? = null
+        }
+
+        return object : IMultimediaEditableNote {
+            override val numberOfFields: Int = note.fields.size
+            
+            override fun getField(index: Int): IField? {
+                // Simplified: We don't have easy access to IField conversion here without parsing
+                // For now return null or a basic implementation if needed
+                return null 
+            }
+
+            override fun setField(index: Int, field: IField?): Boolean {
+                if (index in note.fields.indices && field != null) {
+                    // We don't update the note directly here as we rely on the result callback
+                    // to update the field via addMediaFileToField
+                    return true
+                }
+                return false
+            }
+
+            override val isModified: Boolean = true // Assume modified if we are editing
+            override val initialFieldCount: Int = note.fields.size
+            override fun getInitialField(index: Int): IField? = null
+        }
+    }
+
+    /**
+     * Add a media file to a field
+     */
+    fun addMediaFileToField(fieldIndex: Int, field: IField) {
+        // This is called when multimedia activity returns a result
+        // We need to append the media tag to the field text
+        _noteEditorState.update { currentState ->
+            val position = currentState.fields.indexOfFirst { it.index == fieldIndex }
+            if (position == -1) return@update currentState
+
+            val currentText = currentState.fields[position].value.text
+            
+            val newContent = currentText + " " + (field.formattedValue ?: "")
+            
+            val updatedFields = currentState.fields.toMutableList()
+            updatedFields[position] = updatedFields[position].copy(
+                value = updatedFields[position].value.copy(text = newContent)
+            )
+            currentState.copy(fields = updatedFields)
+        }
+        updateFieldEditedFlag()
+    }
+
 }

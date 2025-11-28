@@ -226,9 +226,7 @@ private fun ToolbarIconButton(
             // For buttons with long click, wrap IconButton behavior with combinedClickable
             val interactionSource = remember { MutableInteractionSource() }
             Surface(
-                onClick = onClick,
                 modifier = modifier,
-                interactionSource = interactionSource,
                 shape = IconButtonDefaults.shapes().shape,
                 color = Color.Transparent,
             ) {
@@ -306,9 +304,7 @@ private fun ToolbarTextButton(
         state = tooltipState
     ) {
         Surface(
-            onClick = onClick,
             modifier = modifier,
-            interactionSource = interactionSource,
             shape = IconButtonDefaults.shapes().shape,
             color = Color.Transparent,
         ) {

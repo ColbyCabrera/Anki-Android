@@ -127,21 +127,10 @@ fun NoteEditorScreenRoute(
             }, onPreviewClick = {
                 scope.launch {
                     val cardId = viewModel.getCurrentCardId()
-                    if (cardId != null) {
-                        onNavigateToPreview(cardId)
-                    } else {
-                        // TODO: Show toast or snackbar that note must be saved first?
-                        // Or maybe preview the note content without a card ID (if supported)
-                    }
+                    onNavigateToPreview(cardId ?: 0L)
                 }
-            }, overflowItems = buildList {
-                add(
-                    NoteEditorSimpleOverflowItem(
-                        id = "cards",
-                        title = noteEditorState.cardsInfo,
-                        onClick = { viewModel.onCardsClick() }
-                    )
-                )
+            },
+            overflowItems = buildList {
 
                 if (!isAdding) {
                     add(
