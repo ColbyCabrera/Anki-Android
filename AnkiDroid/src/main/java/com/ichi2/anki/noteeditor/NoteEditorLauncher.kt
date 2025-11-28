@@ -214,7 +214,12 @@ sealed interface NoteEditorLauncher : Destination {
                 NoteEditorConstants.EXTRA_DID to deckId,
                 NoteEditorConstants.EXTRA_CONTENTS to fieldsText,
             ).also { bundle ->
-                tags?.let { tags -> bundle.putStringArray(NoteEditorConstants.EXTRA_TAGS, tags.toTypedArray()) }
+                tags?.let { tags ->
+                    bundle.putStringArray(
+                        NoteEditorConstants.EXTRA_TAGS,
+                        tags.toTypedArray()
+                    )
+                }
             }
     }
 }

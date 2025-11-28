@@ -85,10 +85,16 @@ fun NoteEditorScreenRoute(
 
         if (intent != null) {
             // Extract from Bundle or Intent directly
-            val cardId = bundleArgs?.getLong(NoteEditorConstants.EXTRA_CARD_ID, -1L)?.takeIf { it != -1L }
-                ?: intent.getLongExtra(NoteEditorConstants.EXTRA_CARD_ID, -1L).takeIf { it != -1L }
+            val cardId =
+                bundleArgs?.getLong(NoteEditorConstants.EXTRA_CARD_ID, -1L)?.takeIf { it != -1L }
+                    ?: intent.getLongExtra(NoteEditorConstants.EXTRA_CARD_ID, -1L)
+                        .takeIf { it != -1L }
 
-            val deckId = bundleArgs?.getLong(NoteEditorConstants.EXTRA_DID, 0L) ?: intent.getLongExtra(NoteEditorConstants.EXTRA_DID, 0L)
+            val deckId =
+                bundleArgs?.getLong(NoteEditorConstants.EXTRA_DID, 0L) ?: intent.getLongExtra(
+                    NoteEditorConstants.EXTRA_DID,
+                    0L
+                )
 
             // Determine if adding or editing based on cardId presence
             isAdding = cardId == null
@@ -136,16 +142,18 @@ fun NoteEditorScreenRoute(
                 if (!isAdding) {
                     add(
                         NoteEditorSimpleOverflowItem(
-                        id = "add", title = stringResource(R.string.add), onClick = {
-                            // TODO: Save and switch to add mode
-                        }))
+                            id = "add", title = stringResource(R.string.add), onClick = {
+                                // TODO: Save and switch to add mode
+                            })
+                    )
                     add(
                         NoteEditorSimpleOverflowItem(
-                        id = "copy_note",
-                        title = stringResource(R.string.copy_note),
-                        onClick = {
-                            // TODO: Copy note logic
-                        }))
+                            id = "copy_note",
+                            title = stringResource(R.string.copy_note),
+                            onClick = {
+                                // TODO: Copy note logic
+                            })
+                    )
                 }
 
                 add(
@@ -158,30 +166,33 @@ fun NoteEditorScreenRoute(
 
                 add(
                     NoteEditorToggleOverflowItem(
-                    id = "capitalize",
-                    title = stringResource(R.string.note_editor_capitalize),
-                    checked = capitalizeChecked,
-                    onCheckedChange = {
-                        capitalizeChecked = it
-                        // TODO: Save to prefs
-                    }))
+                        id = "capitalize",
+                        title = stringResource(R.string.note_editor_capitalize),
+                        checked = capitalizeChecked,
+                        onCheckedChange = {
+                            capitalizeChecked = it
+                            // TODO: Save to prefs
+                        })
+                )
 
                 add(
                     NoteEditorToggleOverflowItem(
-                    id = "scroll_toolbar",
-                    title = stringResource(R.string.menu_scroll_toolbar),
-                    checked = scrollToolbarChecked,
-                    onCheckedChange = {
-                        scrollToolbarChecked = it
-                        // TODO: Save to prefs
-                    }))
+                        id = "scroll_toolbar",
+                        title = stringResource(R.string.menu_scroll_toolbar),
+                        checked = scrollToolbarChecked,
+                        onCheckedChange = {
+                            scrollToolbarChecked = it
+                            // TODO: Save to prefs
+                        })
+                )
 
                 add(
                     NoteEditorToggleOverflowItem(
-                    id = "show_toolbar",
-                    title = stringResource(R.string.show_toolbar),
-                    checked = showToolbar,
-                    onCheckedChange = { viewModel.toggleToolbarVisibility() }))
+                        id = "show_toolbar",
+                        title = stringResource(R.string.show_toolbar),
+                        checked = showToolbar,
+                        onCheckedChange = { viewModel.toggleToolbarVisibility() })
+                )
             })
     }
 

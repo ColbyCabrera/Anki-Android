@@ -18,7 +18,6 @@ package com.ichi2.anki.noteeditor
 import com.ichi2.anki.libanki.Consts
 import com.ichi2.utils.HashUtil.hashSetInit
 import timber.log.Timber
-import java.util.ArrayList
 
 typealias ButtonText = String
 
@@ -29,7 +28,8 @@ class CustomToolbarButton(
     val suffix: String,
 ) {
     @Suppress("unused")
-    fun toToolbarButtonModel(): ToolbarButtonModel = ToolbarButtonModel(index, buttonText, prefix, suffix)
+    fun toToolbarButtonModel(): ToolbarButtonModel =
+        ToolbarButtonModel(index, buttonText, prefix, suffix)
 
     companion object {
         const val KEEP_EMPTY_ENTRIES = -1
@@ -38,7 +38,9 @@ class CustomToolbarButton(
             if (s.isNullOrEmpty()) {
                 return null
             }
-            val fields = s.split(Consts.FIELD_SEPARATOR.toRegex(), KEEP_EMPTY_ENTRIES.coerceAtLeast(0)).toTypedArray()
+            val fields =
+                s.split(Consts.FIELD_SEPARATOR.toRegex(), KEEP_EMPTY_ENTRIES.coerceAtLeast(0))
+                    .toTypedArray()
             if (fields.size != 4) {
                 return null
             }
@@ -60,7 +62,11 @@ class CustomToolbarButton(
                     buttons.add(customToolbarButton)
                 }
             }
-            buttons.sortWith { o1: CustomToolbarButton, o2: CustomToolbarButton -> o1.index.compareTo(o2.index) }
+            buttons.sortWith { o1: CustomToolbarButton, o2: CustomToolbarButton ->
+                o1.index.compareTo(
+                    o2.index
+                )
+            }
             for (i in buttons.indices) {
                 buttons[i].index = i
             }
