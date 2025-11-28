@@ -28,6 +28,7 @@ class CustomToolbarButton(
     val prefix: String,
     val suffix: String,
 ) {
+    @Suppress("unused")
     fun toToolbarButtonModel(): ToolbarButtonModel = ToolbarButtonModel(index, buttonText, prefix, suffix)
 
     companion object {
