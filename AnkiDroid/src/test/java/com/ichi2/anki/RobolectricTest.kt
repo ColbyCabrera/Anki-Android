@@ -66,6 +66,7 @@ import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
 import net.ankiweb.rsdroid.BackendException
 import net.ankiweb.rsdroid.testing.RustBackendLoader
 import org.hamcrest.MatcherAssert
@@ -88,9 +89,7 @@ import org.robolectric.shadows.ShadowMediaPlayer
 import timber.log.Timber
 import kotlin.test.assertNotNull
 
-open class RobolectricTest :
-    AnkiTest,
-    AndroidTest {
+open class RobolectricTest : AnkiTest, AndroidTest {
     @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
     private fun Any.wait(timeMs: Long) = (this as Object).wait(timeMs)
 
@@ -128,35 +127,29 @@ open class RobolectricTest :
     protected open fun getCollectionStorageMode(): CollectionStorageMode = IN_MEMORY_NO_FOLDERS
 
     protected enum class CollectionStorageMode {
-        IN_MEMORY_NO_FOLDERS,
-        IN_MEMORY_WITH_MEDIA,
-        ON_DISK,
+        IN_MEMORY_NO_FOLDERS, IN_MEMORY_WITH_MEDIA, ON_DISK,
     }
 
     @Before
     @CallSuper
     open fun setUp() {
+        Dispatchers.setMain(UnconfinedTestDispatcher())
         println("""-- executing test "${testName.methodName}"""")
         TimeManager.resetWith(MockTime(2020, 7, 7, 7, 0, 0, 0, 10))
         throwOnShowError = true
 
         // See the Android logging (from Timber)
-        ShadowLog.stream =
-            System.out
-                // Filters for non-Timber sources. Prefer filtering in RobolectricDebugTree if possible
-                // LifecycleMonitor: not needed as we already use registerActivityLifecycleCallbacks for logs
-                // W/ShadowLegacyPath: android.graphics.Path#op() not supported yet.
-                .filter("^(?!(W/ShadowLegacyPath|D/LifecycleMonitor)).*$")
+        ShadowLog.stream = System.out
+            // Filters for non-Timber sources. Prefer filtering in RobolectricDebugTree if possible
+            // LifecycleMonitor: not needed as we already use registerActivityLifecycleCallbacks for logs
+            // W/ShadowLegacyPath: android.graphics.Path#op() not supported yet.
+            .filter("^(?!(W/ShadowLegacyPath|D/LifecycleMonitor)).*$")
 
         ChangeManager.clearSubscribers()
 
         validateRunWithAnnotationPresent()
 
-        val config =
-            Configuration
-                .Builder()
-                .setExecutor(SynchronousExecutor())
-                .build()
+        val config = Configuration.Builder().setExecutor(SynchronousExecutor()).build()
 
         WorkManagerTestInitHelper.initializeTestWorkManager(targetContext, config)
 
@@ -293,13 +286,7 @@ open class RobolectricTest :
                     ShadowMediaPlayer.MediaInfo(1, 0)
                 }
             }
-            val controller =
-                Robolectric
-                    .buildActivity(clazz, i)
-                    .create()
-                    .start()
-                    .resume()
-                    .visible()
+            val controller = Robolectric.buildActivity(clazz, i).create().start().resume().visible()
             advanceRobolectricLooper()
             testClass.saveControllerForCleanup(controller)
             return controller.get()
@@ -328,12 +315,11 @@ open class RobolectricTest :
      * we don't get two equal time. */
 
     override val col: Collection
-        get() =
-            try {
-                collectionManager.getColUnsafe()
-            } catch (e: UnsatisfiedLinkError) {
-                throw RuntimeException("Failed to load collection. Did you call super.setUp()?", e)
-            }
+        get() = try {
+            collectionManager.getColUnsafe()
+        } catch (e: UnsatisfiedLinkError) {
+            throw RuntimeException("Failed to load collection. Did you call super.setUp()?", e)
+        }
 
     protected val collectionTime: MockTime
         get() = TimeManager.time as MockTime
@@ -361,7 +347,8 @@ open class RobolectricTest :
         i: Intent?,
     ): T = startActivityNormallyOpenCollectionWithIntent(this, clazz, i)
 
-    internal inline fun <reified T : AnkiActivity?> startRegularActivity(): T = startRegularActivity(null)
+    internal inline fun <reified T : AnkiActivity?> startRegularActivity(): T =
+        startRegularActivity(null)
 
     internal inline fun <reified T : AnkiActivity?> startRegularActivity(i: Intent? = null): T =
         startActivityNormallyOpenCollectionWithIntent(T::class.java, i)
@@ -370,7 +357,10 @@ open class RobolectricTest :
         expected: Card,
         obtained: Card,
     ) {
-        MatcherAssert.assertThat(obtained.note().fields[0], Matchers.equalTo(expected.note().fields[0]))
+        MatcherAssert.assertThat(
+            obtained.note().fields[0],
+            Matchers.equalTo(expected.note().fields[0])
+        )
     }
 
     /**
@@ -381,7 +371,8 @@ open class RobolectricTest :
      * ```
      */
     @Suppress("MemberVisibilityCanBePrivate")
-    fun editPreferences(action: SharedPreferences.Editor.() -> Unit) = getPreferences().edit(action = action)
+    fun editPreferences(action: SharedPreferences.Editor.() -> Unit) =
+        getPreferences().edit(action = action)
 
     protected fun grantRecordAudioPermission() {
         val application = ApplicationProvider.getApplicationContext<Application>()
@@ -404,11 +395,10 @@ open class RobolectricTest :
     /** Helper method to update a note */
     @SuppressLint("CheckResult")
     @UseContextParameter("TestClass")
-    suspend fun Note.updateOp(block: Note.() -> Unit): Note =
-        this.also { note ->
-            block(note)
-            undoableOp<OpChanges> { col.updateNote(note) }
-        }
+    suspend fun Note.updateOp(block: Note.() -> Unit): Note = this.also { note ->
+        block(note)
+        undoableOp<OpChanges> { col.updateNote(note) }
+    }
 
     private fun maybeSetupBackend() {
         try {
@@ -446,8 +436,9 @@ open class RobolectricTest :
     }
 
     override suspend fun TestScope.runTestInner(testBody: suspend TestScope.() -> Unit) {
-        (collectionManager as? ProductionCollectionManager)
-            ?.setTestDispatcher(UnconfinedTestDispatcher(testScheduler))
+        (collectionManager as? ProductionCollectionManager)?.setTestDispatcher(
+                UnconfinedTestDispatcher(testScheduler)
+            )
         testBody()
     }
 }
