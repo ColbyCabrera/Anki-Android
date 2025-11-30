@@ -68,6 +68,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import net.ankiweb.rsdroid.BackendException
+import org.robolectric.annotation.Config
 import net.ankiweb.rsdroid.testing.RustBackendLoader
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
@@ -89,6 +90,8 @@ import org.robolectric.shadows.ShadowMediaPlayer
 import timber.log.Timber
 import kotlin.test.assertNotNull
 
+// Add this line:
+@Config(sdk = [34])
 open class RobolectricTest : AnkiTest, AndroidTest {
     @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
     private fun Any.wait(timeMs: Long) = (this as Object).wait(timeMs)
