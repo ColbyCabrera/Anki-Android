@@ -19,7 +19,7 @@ class IntroductionI18nTest : RobolectricTest() {
         assertEquals("Before continuing!", title)
 
         val donation = ctx.getStringByLocale(R.string.intro_fork_disclaimer_1, Locale.ENGLISH)
-        assertEquals("This app is a fork of AnkiDroid; please consider donating to the AnkiDroid team to support their work. The creator of Anki has kindly allowed the use of AnkiWeb sync. If you'd like to support him, please consider buying the iPhone version of Anki.", donation)
+        assertEquals("This app is a fork of AnkiDroid. Please consider donating to the AnkiDroid team to support their work. The creator of Anki has also kindly allowed the use of AnkiWeb sync. If you'd like to support him, please consider buying the iPhone version of Anki.", donation)
 
         val contact = ctx.getStringByLocale(R.string.intro_fork_disclaimer_2, Locale.ENGLISH)
         assertEquals("If you have any issues with this version, please contact me and not the AnkiDroid team. Happy memorizing!", contact)
@@ -41,6 +41,6 @@ class IntroductionI18nTest : RobolectricTest() {
         assertEquals("このバージョンに問題がある場合は、AnkiDroidチームではなく私にご連絡ください。学習をお楽しみください！", contactJa)
 
         val donateJa = ctx.getStringByLocale(R.string.donate, Locale.JAPANESE)
-        assertEquals("寄付", donateJa)
+        assertEquals("AnkiDroidに寄付する", donateJa)
     }
 }
