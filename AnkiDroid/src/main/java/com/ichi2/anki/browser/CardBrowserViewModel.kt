@@ -532,6 +532,12 @@ class CardBrowserViewModel(
                     pendingSelectionToRestore = ids
                 }
                 launchSearchForCards()
+                // Note: pendingSelectionToRestore is intentionally not cleared here.
+                // Multiple searches can run during init, and each needs to see the pending
+                // selection to avoid clearing it. The trade-off is that if the user triggers
+                // a search before making any selection changes, the restored selection may
+                // be re-applied. This is considered acceptable as it only affects the edge
+                // case of immediate search after restore, and the selection content is correct.
             }
         }
 
@@ -1304,10 +1310,10 @@ class CardBrowserViewModel(
                     cardsOrNotes,
                     newBrowserRows.map { CardOrNoteId(it.id) })
                 _searchState.emit(SearchState.Completed)
-                // Apply pending selection if any, using the captured value
-                // Use captured value because pendingSelectionToRestore may not have been set yet when this search started
-                // Note: Don't clear pendingSelectionToRestore here - keep it active for all searches during init
-                // It will be naturally overwritten or stay as-is; the init process ensures it's set correctly
+                // Apply pending selection if any, using the captured value.
+                // We use the captured value because another search may have started
+                // before this IO block completes. The pending selection is cleared
+                // in the init block after all init searches complete.
                 val idsToSelect = capturedPendingSelection ?: cardOrNoteIdsToSelect
                 selectUnvalidatedRowIds(idsToSelect)
             }
