@@ -1,4 +1,3 @@
-
 /*
  *  Copyright (c) 2023 David Allison <davidallisongithub@gmail.com>
  *
@@ -124,8 +123,7 @@ class CardBrowserViewModel(
     val isFragmented: Boolean,
     val savedStateHandle: SavedStateHandle,
     private val manualInit: Boolean = false,
-) : ViewModel(),
-    SharedPreferencesProvider by preferences {
+) : ViewModel(), SharedPreferencesProvider by preferences {
     // TODO: abstract so we can use a `Context` and `pref_display_filenames_in_browser_key`
     val showMediaFilenames = sharedPrefs().getBoolean("card_browser_show_media_filenames", false)
 
@@ -151,6 +149,7 @@ class CardBrowserViewModel(
 
     val searchTerms: String
         get() = flowOfSearchTerms.value
+
 
     @VisibleForTesting
     var restrictOnDeck: String = ""
@@ -194,15 +193,14 @@ class CardBrowserViewModel(
      */
     private val flowOfAllColumns = MutableSharedFlow<Map<String, BrowserColumns.Column>>()
 
-    val flowOfActiveColumns =
-        MutableStateFlow(
-            BrowserColumnCollection(
-                listOf(
-                    CardBrowserColumn.QUESTION,
-                    CardBrowserColumn.ANSWER,
-                ),
+    val flowOfActiveColumns = MutableStateFlow(
+        BrowserColumnCollection(
+            listOf(
+                CardBrowserColumn.QUESTION,
+                CardBrowserColumn.ANSWER,
             ),
-        )
+        ),
+    )
 
     @get:VisibleForTesting
     val activeColumns
@@ -221,17 +219,17 @@ class CardBrowserViewModel(
 
     var shouldIgnoreAccents: Boolean = false
 
-    private val _selectedRows: MutableSet<CardOrNoteId> = Collections.synchronizedSet(LinkedHashSet())
+    private val _selectedRows: MutableSet<CardOrNoteId> =
+        Collections.synchronizedSet(LinkedHashSet())
 
     // immutable accessor for _selectedRows
     val selectedRows: Set<CardOrNoteId> get() = _selectedRows
 
-    val flowOfMultiSelectModeChanged =
-        MutableStateFlow<ChangeMultiSelectMode>(
-            ChangeMultiSelectMode.fromState(
-                savedStateHandle[STATE_MULTISELECT] ?: false,
-            ),
-        )
+    val flowOfMultiSelectModeChanged = MutableStateFlow<ChangeMultiSelectMode>(
+        ChangeMultiSelectMode.fromState(
+            savedStateHandle[STATE_MULTISELECT] ?: false,
+        ),
+    )
 
     data class RowSelection(
         val rowId: CardOrNoteId,
@@ -244,17 +242,18 @@ class CardBrowserViewModel(
     private val _flowOfSelectedRows = MutableStateFlow<Set<CardOrNoteId>>(emptySet())
     val flowOfSelectedRows: StateFlow<Set<CardOrNoteId>> = _flowOfSelectedRows
 
-    val flowOfToggleSelectionState: StateFlow<ToggleSelectionState> = combine(flowOfSelectedRows, browserRows) { selected, all ->
-        if (all.isEmpty() || selected.size < all.size) {
-            SELECT_ALL
-        } else {
-            SELECT_NONE
-        }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.Eagerly,
-        initialValue = SELECT_ALL,
-    )
+    val flowOfToggleSelectionState: StateFlow<ToggleSelectionState> =
+        combine(flowOfSelectedRows, browserRows) { selected, all ->
+            if (all.isEmpty() || selected.size < all.size) {
+                SELECT_ALL
+            } else {
+                SELECT_NONE
+            }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = SELECT_ALL,
+        )
 
     val cardSelectionEventFlow = MutableSharedFlow<Unit>()
 
@@ -278,9 +277,11 @@ class CardBrowserViewModel(
             field = value
         }
 
-    suspend fun queryAllSelectedCardIds() = selectedRows.queryCardIds(this.cardsOrNotes)
+    suspend fun queryAllSelectedCardIds() =
+        BrowserRowCollection(this.cardsOrNotes, selectedRows.toMutableList()).queryCardIds()
 
-    suspend fun queryAllSelectedNoteIds() = selectedRows.queryNoteIds(this.cardsOrNotes)
+    suspend fun queryAllSelectedNoteIds() =
+        BrowserRowCollection(this.cardsOrNotes, selectedRows.toMutableList()).queryNoteIds()
 
     @VisibleForTesting
     internal suspend fun queryAllCardIds() = cards.queryCardIds()
@@ -301,29 +302,27 @@ class CardBrowserViewModel(
     private suspend fun setSelectedDeckInternal(deckId: DeckId) {
         Timber.i("setting deck: %d", deckId)
         lastDeckIdRepository.lastDeckId = deckId
-        restrictOnDeck =
-            if (deckId == ALL_DECKS_ID) {
-                ""
-            } else {
-                val deckName = withCol { decks.name(deckId) }
-                // Escape any quotes in the deck name to prevent search syntax errors
-                val escapedDeckName = deckName.replace("\"", "\\\"")
-                "deck:\"$escapedDeckName\""
-            }
+        restrictOnDeck = if (deckId == ALL_DECKS_ID) {
+            ""
+        } else {
+            val deckName = withCol { decks.name(deckId) }
+            // Escape any quotes in the deck name to prevent search syntax errors
+            val escapedDeckName = deckName.replace("\"", "\\\"")
+            "deck:\"$escapedDeckName\""
+        }
         flowOfDeckId.update { deckId }
     }
 
     private val flowOfDeckId = MutableStateFlow(lastDeckId)
     val deckId get() = flowOfDeckId.value
 
-    val flowOfDeckSelection =
-        flowOfDeckId.map { did ->
-            when (did) {
-                ALL_DECKS_ID -> return@map SelectableDeck.AllDecks
-                null -> return@map null
-                else -> return@map SelectableDeck.Deck.fromId(did)
-            }
+    val flowOfDeckSelection = flowOfDeckId.map { did ->
+        when (did) {
+            ALL_DECKS_ID -> return@map SelectableDeck.AllDecks
+            null -> return@map null
+            else -> return@map SelectableDeck.Deck.fromId(did)
         }
+    }
 
     suspend fun queryCardInfoDestination(): CardInfoDestination? {
         val firstSelectedCard = selectedRows.firstOrNull()?.toCardId(cardsOrNotes) ?: return null
@@ -358,12 +357,11 @@ class CardBrowserViewModel(
         }
 
         // If a valid value for last deck exists then use it, otherwise use libanki selected deck
-        val idToUse =
-            if (lastDeckId != null && withCol { decks.getLegacy(lastDeckId) != null }) {
-                lastDeckId
-            } else {
-                withCol { decks.selected() }
-            }
+        val idToUse = if (lastDeckId != null && withCol { decks.getLegacy(lastDeckId) != null }) {
+            lastDeckId
+        } else {
+            withCol { decks.selected() }
+        }
 
         return SelectableDeck.Deck(deckId = idToUse, name = withCol { decks.name(idToUse) })
     }
@@ -374,8 +372,7 @@ class CardBrowserViewModel(
      *      "deck:'hello'" -> "hello"
      *      "deck:\"hello\"" -> "hello"
      */
-    private fun extractDeckNameFromSearch(search: String): String? {
-        /*
+    private fun extractDeckNameFromSearch(search: String): String? {/*
         (?i) makes the match case-insensitive.
         \bdeck: ensures we match the whole word "deck:"
         \s* matches zero or more whitespace characters.
@@ -394,17 +391,20 @@ class CardBrowserViewModel(
 
     val flowOfInitCompleted = MutableStateFlow(false)
 
-    val flowOfColumnHeadings: StateFlow<List<ColumnHeading>> =
-        combine(flowOfActiveColumns, flowOfCardsOrNotes, flowOfAllColumns) { activeColumns, cardsOrNotes, allColumns ->
-            Timber.d("updated headings for %d columns", activeColumns.count)
-            activeColumns.columns.map {
-                ColumnHeading(
-                    label = allColumns[it.ankiColumnKey]!!.getLabel(cardsOrNotes),
-                    ankiColumnKey = it.ankiColumnKey,
-                )
-            }
-            // stateIn is required for tests
-        }.stateIn(viewModelScope, SharingStarted.Eagerly, initialValue = emptyList())
+    val flowOfColumnHeadings: StateFlow<List<ColumnHeading>> = combine(
+        flowOfActiveColumns,
+        flowOfCardsOrNotes,
+        flowOfAllColumns
+    ) { activeColumns, cardsOrNotes, allColumns ->
+        Timber.d("updated headings for %d columns", activeColumns.count)
+        activeColumns.columns.map {
+            ColumnHeading(
+                label = allColumns[it.ankiColumnKey]!!.getLabel(cardsOrNotes),
+                ankiColumnKey = it.ankiColumnKey,
+            )
+        }
+        // stateIn is required for tests
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, initialValue = emptyList())
 
     /**
      * Whether the task launched from CardBrowserViewModel.init has completed.
@@ -417,9 +417,7 @@ class CardBrowserViewModel(
     /**
      * A search should be triggered if these properties change
      */
-    private val searchRequested =
-        flowOf(flowOfCardsOrNotes, flowOfDeckId)
-            .flattenMerge()
+    private val searchRequested = flowOf(flowOfCardsOrNotes, flowOfDeckId).flattenMerge()
 
     /**
      * Emits an item when:
@@ -444,15 +442,15 @@ class CardBrowserViewModel(
 
     private val _selectedTags = MutableStateFlow<Set<String>>(emptySet())
     val selectedTags: StateFlow<Set<String>> = _selectedTags
-    
+
     private val _deckTags = MutableStateFlow<Set<String>>(emptySet())
     val deckTags: StateFlow<Set<String>> = _deckTags
-    
+
     private val _filterTagsByDeck = MutableStateFlow(
         sharedPrefs().getBoolean("card_browser_filter_tags_by_deck", false)
     )
     val filterTagsByDeck: StateFlow<Boolean> = _filterTagsByDeck
-    
+
     private var tagsLoading = false
 
     init {
@@ -463,44 +461,43 @@ class CardBrowserViewModel(
             is CardBrowserLaunchOptions.SystemContextMenu -> {
                 flowOfSearchTerms.value = options.search.toString()
             }
+
             is CardBrowserLaunchOptions.SearchQueryJs -> {
                 flowOfSearchTerms.value = options.search
                 selectAllDecks = options.allDecks
             }
+
             is CardBrowserLaunchOptions.DeepLink -> {
                 flowOfSearchTerms.value = options.search
             }
+
             null -> {}
         }
 
-        performSearchFlow
-            .onEach {
+        performSearchFlow.onEach {
                 launchSearchForCards()
             }.launchIn(viewModelScope)
 
-        reverseDirectionFlow
-            .ignoreValuesFromViewModelLaunch()
+        reverseDirectionFlow.ignoreValuesFromViewModelLaunch()
             .onEach { newValue -> withCol { newValue.updateConfig(config) } }
             .launchIn(viewModelScope)
 
-        _sortTypeFlow
-            .ignoreValuesFromViewModelLaunch()
+        _sortTypeFlow.ignoreValuesFromViewModelLaunch()
             .onEach { sortType -> withCol { sortType.save(config, sharedPrefs()) } }
             .launchIn(viewModelScope)
 
-        flowOfCardsOrNotes
-            .onEach { cardsOrNotes ->
+        flowOfCardsOrNotes.onEach { cardsOrNotes ->
                 Timber.d("loading columns for %s mode", cardsOrNotes)
                 updateActiveColumns(BrowserColumnCollection.load(sharedPrefs(), cardsOrNotes))
             }.launchIn(viewModelScope)
 
-        flowOfMultiSelectModeChanged
-            .onEach {
+        flowOfMultiSelectModeChanged.onEach {
                 savedStateHandle[STATE_MULTISELECT] = it.resultedInMultiSelect
             }.launchIn(viewModelScope)
 
         viewModelScope.launch {
-            shouldIgnoreAccents = withCol { config.getBool(ConfigKey.Bool.IGNORE_ACCENTS_IN_SEARCH) }
+            shouldIgnoreAccents =
+                withCol { config.getBool(ConfigKey.Bool.IGNORE_ACCENTS_IN_SEARCH) }
 
             val initialDeckId = if (selectAllDecks) SelectableDeck.AllDecks else getInitialDeck()
             // PERF: slightly inefficient if the source was lastDeckId
@@ -521,9 +518,14 @@ class CardBrowserViewModel(
                 // restore selection state
                 val idsFile =
                     savedStateHandle.get<Bundle>(STATE_MULTISELECT_VALUES)?.let { bundle ->
-                        BundleCompat.getParcelable(bundle, STATE_MULTISELECT_VALUES, IdsFile::class.java)
+                        BundleCompat.getParcelable(
+                            bundle,
+                            STATE_MULTISELECT_VALUES,
+                            IdsFile::class.java
+                        )
                     }
                 val ids = idsFile?.getIds()?.map { CardOrNoteId(it) } ?: emptyList()
+                Timber.d("Restoring selection: %d ids found", ids.size)
 
                 launchSearchForCards(cardOrNoteIdsToSelect = ids)
             }
@@ -577,10 +579,7 @@ class CardBrowserViewModel(
 
                 // Collect all tags from the notes
                 val tagsSet = withCol {
-                    noteIds.asSequence()
-                        .map { getNote(it).tags }
-                        .flatten()
-                        .toSet()
+                    noteIds.asSequence().map { getNote(it).tags }.flatten().toSet()
                 }
 
                 _deckTags.value = tagsSet
@@ -599,10 +598,13 @@ class CardBrowserViewModel(
     }
 
     @VisibleForTesting // far too complicated to mock setSavedStateProvider
-    fun generateExpensiveSavedState() =
-        bundleOf(
-            STATE_MULTISELECT_VALUES to IdsFile(cacheDir, selectedRows.map { it.cardOrNoteId }, "multiselect-values"),
-        )
+    fun generateExpensiveSavedState() = bundleOf(
+        STATE_MULTISELECT_VALUES to IdsFile(
+            cacheDir,
+            selectedRows.map { it.cardOrNoteId },
+            "multiselect-values"
+        ),
+    )
 
     /**
      * Called if `onCreate` is called again, which may be due to the collection being reopened
@@ -619,8 +621,7 @@ class CardBrowserViewModel(
         // we currently have no way to test whether setActiveBrowserColumns was called
         // so set it again. This needs to be done immediately to ensure that the RecyclerView
         // gets correct values when initialized
-        CollectionManager
-            .getBackend()
+        CollectionManager.getBackend()
             .setActiveBrowserColumns(flowOfActiveColumns.value.backendKeys)
 
         // if the language has changed, the backend column labels may have changed
@@ -648,13 +649,12 @@ class CardBrowserViewModel(
         Timber.d("manualInit")
     }
 
-    fun handleRowLongPress(rowSelection: RowSelection) =
-        viewModelScope.launch {
-            val id = rowSelection.rowId
-            currentCardId = id.toCardId(cardsOrNotes)
-            toggleRowSelection(rowSelection)
-            focusedRow = id
-        }
+    fun handleRowLongPress(rowSelection: RowSelection) = viewModelScope.launch {
+        val id = rowSelection.rowId
+        currentCardId = id.toCardId(cardsOrNotes)
+        toggleRowSelection(rowSelection)
+        focusedRow = id
+    }
 
     /** Whether any rows are selected */
     fun hasSelectedAnyRows(): Boolean = selectedRows.isNotEmpty()
@@ -731,24 +731,21 @@ class CardBrowserViewModel(
         if (focusedRow?.cardOrNoteId in cardIds) {
             focusedRow = null
         }
-        return undoableOp { removeNotes(cardIds = cardIds) }
-            .count
-            .also {
+        return undoableOp { removeNotes(cardIds = cardIds) }.count.also {
                 endMultiSelectMode(SingleSelectCause.Other)
                 refreshSearch()
             }
     }
 
-    fun setCardsOrNotes(newValue: CardsOrNotes) =
-        viewModelScope.launch {
-            Timber.i("setting mode to %s", newValue)
-            withCol {
-                // Change this to only change the preference on a state change
-                newValue.saveToCollection(this)
-            }
-            flowOfCardsOrNotes.update { newValue }
-            launchSearchForCards()
+    fun setCardsOrNotes(newValue: CardsOrNotes) = viewModelScope.launch {
+        Timber.i("setting mode to %s", newValue)
+        withCol {
+            // Change this to only change the preference on a state change
+            newValue.saveToCollection(this)
         }
+        flowOfCardsOrNotes.update { newValue }
+        launchSearchForCards()
+    }
 
     fun setTruncated(value: Boolean) {
         viewModelScope.launch {
@@ -783,10 +780,9 @@ class CardBrowserViewModel(
     fun selectNone(): Job? {
         if (_selectedRows.isEmpty()) return null
         Timber.d("selecting none")
-        val removalReason =
-            SingleSelectCause.Other.apply {
-                this.previouslySelectedRowIds = _selectedRows.toSet()
-            }
+        val removalReason = SingleSelectCause.Other.apply {
+            this.previouslySelectedRowIds = _selectedRows.toSet()
+        }
         _selectedRows.clear()
         return onRemoveSelectedRows(disableMultiSelectIfEmpty = false, reason = removalReason)
     }
@@ -833,7 +829,12 @@ class CardBrowserViewModel(
 
         val validCardOrNoteIds = cards.toSet()
         val ids = unvalidatedIds.filter { validCardOrNoteIds.contains(it) }
-        Timber.d("selecting %d rows", ids.size)
+        Timber.d(
+            "selecting %d rows (from %d unvalidated, %d valid in cards)",
+            ids.size,
+            unvalidatedIds.size,
+            validCardOrNoteIds.size
+        )
         if (_selectedRows.addAll(ids)) {
             onAppendSelectedRows(MultiSelectCause.Other)
         }
@@ -875,14 +876,13 @@ class CardBrowserViewModel(
     }
 
     /** emits a new value in [flowOfSelectedRows] */
-    private fun onAppendSelectedRows(reason: MultiSelectCause) =
-        viewModelScope.launch {
-            if (_selectedRows.any()) {
-                flowOfMultiSelectModeChanged.value = reason
-            }
-            _flowOfSelectedRows.value = _selectedRows.toSet()
-            Timber.d("refreshed selected rows")
+    private fun onAppendSelectedRows(reason: MultiSelectCause) = viewModelScope.launch {
+        if (_selectedRows.any()) {
+            flowOfMultiSelectModeChanged.value = reason
         }
+        _flowOfSelectedRows.value = _selectedRows.toSet()
+        Timber.d("refreshed selected rows")
+    }
 
     private fun onRemoveSelectedRows(
         disableMultiSelectIfEmpty: Boolean = true,
@@ -900,13 +900,12 @@ class CardBrowserViewModel(
     fun hasSelectedAllDecks(): Boolean = lastDeckIdRepository.lastDeckId == ALL_DECKS_ID
 
     fun changeCardOrder(which: SortType) {
-        val changeType =
-            when {
-                which != order -> ChangeCardOrder.OrderChange(which)
-                // if the same element is selected again, reverse the order
-                which != SortType.NO_SORTING -> ChangeCardOrder.DirectionChange
-                else -> null
-            } ?: return
+        val changeType = when {
+            which != order -> ChangeCardOrder.OrderChange(which)
+            // if the same element is selected again, reverse the order
+            which != SortType.NO_SORTING -> ChangeCardOrder.DirectionChange
+            else -> null
+        } ?: return
 
         Timber.i("updating order: %s", changeType)
 
@@ -916,6 +915,7 @@ class CardBrowserViewModel(
                 reverseDirectionFlow.update { ReverseDirection(isSortDescending = false) }
                 launchSearchForCards()
             }
+
             ChangeCardOrder.DirectionChange -> {
                 reverseDirectionFlow.update { ReverseDirection(isSortDescending = !isSortDescendingValue) }
                 cards.reverse()
@@ -976,24 +976,23 @@ class CardBrowserViewModel(
      *
      * Changes are handled by [ChangeManager]
      */
-    fun toggleSuspendCards() =
-        viewModelScope.launch {
-            if (!hasSelectedAnyRows()) {
-                return@launch
-            }
-            Timber.d("toggling selected cards suspend status")
-            val cardIds = queryAllSelectedCardIds()
-
-            undoableOp<OpChanges> {
-                val wantUnsuspend = cardIds.all { getCard(it).queue == QueueType.Suspended }
-                if (wantUnsuspend) {
-                    sched.unsuspendCards(cardIds)
-                } else {
-                    sched.suspendCards(cardIds).changes
-                }
-            }
-            Timber.d("finished 'toggleSuspendCards'")
+    fun toggleSuspendCards() = viewModelScope.launch {
+        if (!hasSelectedAnyRows()) {
+            return@launch
         }
+        Timber.d("toggling selected cards suspend status")
+        val cardIds = queryAllSelectedCardIds()
+
+        undoableOp<OpChanges> {
+            val wantUnsuspend = cardIds.all { getCard(it).queue == QueueType.Suspended }
+            if (wantUnsuspend) {
+                sched.unsuspendCards(cardIds)
+            } else {
+                sched.suspendCards(cardIds).changes
+            }
+        }
+        Timber.d("finished 'toggleSuspendCards'")
+    }
 
     /**
      * if all cards are buried, unbury all
@@ -1058,13 +1057,13 @@ class CardBrowserViewModel(
         // https://github.com/ankitects/anki/blob/1fb1cbbf85c48a54c05cb4442b1b424a529cac60/qt/aqt/operations/scheduling.py#L117
         try {
             return withCol {
-                val (min, max) =
-                    db
-                        .query("select min(due), max(due) from cards where type=? and odid=0", CardType.New.code)
-                        .use {
-                            it.moveToNext()
-                            Pair(max(0, it.getInt(0)), it.getInt(1))
-                        }
+                val (min, max) = db.query(
+                        "select min(due), max(due) from cards where type=? and odid=0",
+                        CardType.New.code
+                    ).use {
+                        it.moveToNext()
+                        Pair(max(0, it.getInt(0)), it.getInt(1))
+                    }
                 val defaults = sched.repositionDefaults()
                 RepositionData(
                     min = min,
@@ -1112,7 +1111,8 @@ class CardBrowserViewModel(
         return filters
     }
 
-    suspend fun savedSearches(): Map<String, String> = withCol { config.get("savedFilters") } ?: hashMapOf()
+    suspend fun savedSearches(): Map<String, String> =
+        withCol { config.get("savedFilters") } ?: hashMapOf()
 
     suspend fun removeSavedSearch(searchName: String): Map<String, String> {
         Timber.d("removing user search")
@@ -1139,7 +1139,8 @@ class CardBrowserViewModel(
     }
 
     /** Ignores any values before [initCompleted] is set */
-    private fun <T> Flow<T>.ignoreValuesFromViewModelLaunch(): Flow<T> = this.filter { initCompleted }
+    private fun <T> Flow<T>.ignoreValuesFromViewModelLaunch(): Flow<T> =
+        this.filter { initCompleted }
 
     private suspend fun setFilterQuery(filterQuery: String) {
         this.flowOfFilterQuery.emit(filterQuery)
@@ -1149,34 +1150,35 @@ class CardBrowserViewModel(
     /**
      * Searches for all marked notes and replaces the current search results with these marked notes.
      */
-    fun searchForMarkedNotes() =
-        viewModelScope.launch {
-            // only intended to be used if the user has no selection
-            if (hasSelectedAnyRows()) return@launch
-            setFilterQuery("tag:marked")
-            expandSearchQuery()
-        }
+    fun searchForMarkedNotes() = viewModelScope.launch {
+        // only intended to be used if the user has no selection
+        if (hasSelectedAnyRows()) return@launch
+        setFilterQuery("tag:marked")
+        expandSearchQuery()
+    }
 
     /**
      * Searches for all suspended cards and replaces the current search results with these suspended cards.
      */
-    fun searchForSuspendedCards() =
-        viewModelScope.launch {
-            // only intended to be used if the user has no selection
-            if (hasSelectedAnyRows()) return@launch
-            setFilterQuery("is:suspended")
-            expandSearchQuery()
-        }
+    fun searchForSuspendedCards() = viewModelScope.launch {
+        // only intended to be used if the user has no selection
+        if (hasSelectedAnyRows()) return@launch
+        setFilterQuery("is:suspended")
+        expandSearchQuery()
+    }
 
     suspend fun setFlagFilter(flag: Flag) {
         Timber.i("filtering to flag: %s", flag)
         val flagSearchTerm = "flag:${flag.code}"
-        val searchTerms =
-            when {
-                searchTerms.contains("flag:") -> searchTerms.replaceFirst("flag:.".toRegex(), flagSearchTerm)
-                searchTerms.isNotEmpty() -> "$flagSearchTerm $searchTerms"
-                else -> flagSearchTerm
-            }
+        val searchTerms = when {
+            searchTerms.contains("flag:") -> searchTerms.replaceFirst(
+                "flag:.".toRegex(),
+                flagSearchTerm
+            )
+
+            searchTerms.isNotEmpty() -> "$flagSearchTerm $searchTerms"
+            else -> flagSearchTerm
+        }
         setFilterQuery(searchTerms)
         expandSearchQuery()
     }
@@ -1230,12 +1232,11 @@ class CardBrowserViewModel(
             Timber.d("skipping duplicate search: forceRefresh is false")
             return
         }
-        flowOfSearchTerms.value =
-            if (shouldIgnoreAccents) {
-                searchQuery.normalizeForSearch()
-            } else {
-                searchQuery
-            }
+        flowOfSearchTerms.value = if (shouldIgnoreAccents) {
+            searchQuery.normalizeForSearch()
+        } else {
+            searchQuery
+        }
 
         viewModelScope.launch {
             launchSearchForCards()
@@ -1252,43 +1253,51 @@ class CardBrowserViewModel(
         if (!initCompleted) return
 
         viewModelScope.launch {
-            // update the UI while we're searching
-            clearCardsList()
+            val query: String = if (searchTerms.contains("deck:")) {
+                "($searchTerms)"
+            } else {
+                if ("" != searchTerms) "$restrictOnDeck($searchTerms)" else restrictOnDeck
+            }
 
-            val query: String =
-                if (searchTerms.contains("deck:")) {
-                    "($searchTerms)"
-                } else {
-                    if ("" != searchTerms) "$restrictOnDeck($searchTerms)" else restrictOnDeck
-                }
+            // update the UI while we're searching
+            // If we're restoring selection (cardOrNoteIdsToSelect is not empty), don't clear the
+            // selected rows as they will be set after the search completes. This prevents
+            // subsequent search calls from clearing the restored selection.
+            if (cardOrNoteIdsToSelect.isEmpty()) {
+                clearCardsList()
+            } else {
+                cards.reset()
+                _browserRows.value = emptyList()
+                flowOfCardsUpdated.emit(Unit)
+            }
 
             searchJob?.cancel()
-            searchJob =
-                launchCatchingIO(
-                    errorMessageHandler = { error -> _searchState.emit(SearchState.Error(error)) },
-                ) {
-                    _searchState.emit(SearchState.Searching)
-                    Timber.d("performing search: '%s'", query)
-                    val newBrowserRows = withCol {
-                        val ids = when (cardsOrNotes) {
-                            CARDS -> findCards(query, order.toSortOrder())
-                            NOTES -> findNotes(query, order.toSortOrder())
-                        }
-                        ids.map { id ->
-                            BrowserRowWithId(
-                                browserRow = backend.browserRowForId(id),
-                                id = id
-                            )
-                        }
+            searchJob = launchCatchingIO(
+                errorMessageHandler = { error -> _searchState.emit(SearchState.Error(error)) },
+            ) {
+                _searchState.emit(SearchState.Searching)
+                Timber.d("performing search: '%s'", query)
+                val newBrowserRows = withCol {
+                    val ids = when (cardsOrNotes) {
+                        CARDS -> findCards(query, order.toSortOrder())
+                        NOTES -> findNotes(query, order.toSortOrder())
                     }
-                    Timber.d("Search returned %d card(s)", newBrowserRows.size)
-
-                    ensureActive()
-                    _browserRows.value = newBrowserRows
-                    this@CardBrowserViewModel.cards.replaceWith(cardsOrNotes, newBrowserRows.map { CardOrNoteId(it.id) })
-                    _searchState.emit(SearchState.Completed)
-                    selectUnvalidatedRowIds(cardOrNoteIdsToSelect)
+                    ids.map { id ->
+                        BrowserRowWithId(
+                            browserRow = backend.browserRowForId(id), id = id
+                        )
+                    }
                 }
+                Timber.d("Search returned %d card(s)", newBrowserRows.size)
+
+                ensureActive()
+                _browserRows.value = newBrowserRows
+                this@CardBrowserViewModel.cards.replaceWith(
+                    cardsOrNotes,
+                    newBrowserRows.map { CardOrNoteId(it.id) })
+                _searchState.emit(SearchState.Completed)
+                selectUnvalidatedRowIds(cardOrNoteIdsToSelect)
+            }
         }
     }
 
@@ -1313,19 +1322,17 @@ class CardBrowserViewModel(
      * (2): A list of columns which are available to display to the user
      */
     suspend fun previewColumnHeadings(cardsOrNotes: CardsOrNotes): Pair<List<ColumnWithSample>, List<ColumnWithSample>> {
-        val currentColumns =
-            when {
-                // if we match, use the loaded the columns
-                cardsOrNotes == this.cardsOrNotes -> activeColumns
-                else -> BrowserColumnCollection.load(sharedPrefs(), cardsOrNotes).columns
-            }
+        val currentColumns = when {
+            // if we match, use the loaded the columns
+            cardsOrNotes == this.cardsOrNotes -> activeColumns
+            else -> BrowserColumnCollection.load(sharedPrefs(), cardsOrNotes).columns
+        }
 
         val columnsWithSample = ColumnWithSample.loadSample(cards.firstOrNull(), cardsOrNotes)
 
         // we return this as two lists as 'currentColumns' uses the collection ordering
         return Pair(
-            columnsWithSample
-                .filter { currentColumns.contains(it.columnType) }
+            columnsWithSample.filter { currentColumns.contains(it.columnType) }
                 .sortedBy { currentColumns.indexOf(it.columnType) },
             columnsWithSample.filter { !currentColumns.contains(it.columnType) },
         )
@@ -1336,10 +1343,9 @@ class CardBrowserViewModel(
         newColumn: ColumnWithSample,
     ) = viewModelScope.launch {
         val replacementKey = selectedColumn.ankiColumnKey
-        val replacements =
-            activeColumns.toMutableList().apply {
-                replaceAll { if (it.ankiColumnKey == replacementKey) newColumn.columnType else it }
-            }
+        val replacements = activeColumns.toMutableList().apply {
+            replaceAll { if (it.ankiColumnKey == replacementKey) newColumn.columnType else it }
+        }
         updateActiveColumns(replacements, cardsOrNotes)
     }
 
@@ -1349,15 +1355,14 @@ class CardBrowserViewModel(
     }
 
     /** Opens the UI to save the current [tempSearchQuery] as a saved search */
-    fun saveCurrentSearch() =
-        viewModelScope.launch {
-            val query = tempSearchQuery
-            if (query.isNullOrEmpty()) {
-                Timber.d("not prompting to saving search: no query")
-                return@launch
-            }
-            flowOfSaveSearchNamePrompt.emit(query)
+    fun saveCurrentSearch() = viewModelScope.launch {
+        val query = tempSearchQuery
+        if (query.isNullOrEmpty()) {
+            Timber.d("not prompting to saving search: no query")
+            return@launch
         }
+        flowOfSaveSearchNamePrompt.emit(query)
+    }
 
     suspend fun getAvailableDecks(): List<SelectableDeck.Deck> =
         SelectableDeck.fromCollection(includeFiltered = false, skipEmptyDefault = true)
@@ -1447,8 +1452,7 @@ class CardBrowserViewModel(
     }
 
     enum class ToggleSelectionState {
-        SELECT_ALL,
-        SELECT_NONE,
+        SELECT_ALL, SELECT_NONE,
     }
 
     /**
@@ -1469,8 +1473,8 @@ class CardBrowserViewModel(
     }
 
     sealed class ChangeMultiSelectMode {
-        val resultedInMultiSelect: Boolean get() =
-            when (this) {
+        val resultedInMultiSelect: Boolean
+            get() = when (this) {
                 is MultiSelectCause -> true
                 is SingleSelectCause -> false
             }
@@ -1488,7 +1492,6 @@ class CardBrowserViewModel(
 
             var previouslySelectedRowIds: Set<CardOrNoteId>? = null
         }
-
 
 
         sealed class MultiSelectCause : ChangeMultiSelectMode() {
@@ -1535,8 +1538,7 @@ class CardBrowserViewModel(
 }
 
 enum class SaveSearchResult {
-    ALREADY_EXISTS,
-    SUCCESS,
+    ALREADY_EXISTS, SUCCESS,
 }
 
 /**
@@ -1546,13 +1548,16 @@ enum class SaveSearchResult {
  */
 class IdsFile(
     path: String,
-) : File(path),
-    Parcelable {
+) : File(path), Parcelable {
     /**
      * @param directory parent directory of the file. Generally it should be the cache directory
      * @param ids ids to store
      */
-    constructor(directory: File, ids: List<Long>, prefix: String = "ids") : this(path = createTempFile(prefix, ".tmp", directory).path) {
+    constructor(
+        directory: File,
+        ids: List<Long>,
+        prefix: String = "ids"
+    ) : this(path = createTempFile(prefix, ".tmp", directory).path) {
         DataOutputStream(FileOutputStream(this)).use { outputStream ->
             outputStream.writeInt(ids.size)
             for (id in ids) {
@@ -1561,11 +1566,10 @@ class IdsFile(
         }
     }
 
-    fun getIds(): List<Long> =
-        DataInputStream(FileInputStream(this)).use { inputStream ->
-            val size = inputStream.readInt()
-            List(size) { inputStream.readLong() }
-        }
+    fun getIds(): List<Long> = DataInputStream(FileInputStream(this)).use { inputStream ->
+        val size = inputStream.readInt()
+        List(size) { inputStream.readLong() }
+    }
 
     override fun describeContents(): Int = 0
 
@@ -1579,12 +1583,12 @@ class IdsFile(
     companion object {
         @JvmField
         @Suppress("unused")
-        val CREATOR =
-            object : Parcelable.Creator<IdsFile> {
-                override fun createFromParcel(source: Parcel?): IdsFile = IdsFile(source!!.readString()!!)
+        val CREATOR = object : Parcelable.Creator<IdsFile> {
+            override fun createFromParcel(source: Parcel?): IdsFile =
+                IdsFile(source!!.readString()!!)
 
-                override fun newArray(size: Int): Array<IdsFile> = arrayOf()
-            }
+            override fun newArray(size: Int): Array<IdsFile> = arrayOf()
+        }
     }
 }
 
@@ -1621,7 +1625,8 @@ sealed class RepositionCardsRequest {
     }
 }
 
-fun BrowserColumns.Column.getLabel(cardsOrNotes: CardsOrNotes): String = if (cardsOrNotes == CARDS) cardsModeLabel else notesModeLabel
+fun BrowserColumns.Column.getLabel(cardsOrNotes: CardsOrNotes): String =
+    if (cardsOrNotes == CARDS) cardsModeLabel else notesModeLabel
 
 @Parcelize
 data class ColumnHeading(
