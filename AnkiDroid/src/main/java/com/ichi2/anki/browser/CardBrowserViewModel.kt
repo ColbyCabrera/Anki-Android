@@ -150,6 +150,8 @@ class CardBrowserViewModel(
     val searchTerms: String
         get() = flowOfSearchTerms.value
 
+    /** Tracks pending selection to restore - prevents subsequent searches from clearing it */
+    private var pendingSelectionToRestore: List<CardOrNoteId>? = null
 
     @VisibleForTesting
     var restrictOnDeck: String = ""
@@ -526,8 +528,10 @@ class CardBrowserViewModel(
                     }
                 val ids = idsFile?.getIds()?.map { CardOrNoteId(it) } ?: emptyList()
                 Timber.d("Restoring selection: %d ids found", ids.size)
-
-                launchSearchForCards(cardOrNoteIdsToSelect = ids)
+                if (ids.isNotEmpty()) {
+                    pendingSelectionToRestore = ids
+                }
+                launchSearchForCards()
             }
         }
 
@@ -1260,15 +1264,19 @@ class CardBrowserViewModel(
             }
 
             // update the UI while we're searching
-            // If we're restoring selection (cardOrNoteIdsToSelect is not empty), don't clear the
-            // selected rows as they will be set after the search completes. This prevents
-            // subsequent search calls from clearing the restored selection.
-            if (cardOrNoteIdsToSelect.isEmpty()) {
-                clearCardsList()
-            } else {
+            // Capture and consume pending selection BEFORE launching IO block
+            // This ensures that even if this search is canceled and another starts,
+            // the selection will still be applied by the completing search
+            val capturedPendingSelection = pendingSelectionToRestore
+            val hasPendingSelection = capturedPendingSelection?.isNotEmpty() == true
+            if (hasPendingSelection) {
+                // Don't clear selection if we're restoring it
                 cards.reset()
                 _browserRows.value = emptyList()
                 flowOfCardsUpdated.emit(Unit)
+                // Don't consume yet - let the completer apply it
+            } else {
+                clearCardsList()
             }
 
             searchJob?.cancel()
@@ -1296,7 +1304,12 @@ class CardBrowserViewModel(
                     cardsOrNotes,
                     newBrowserRows.map { CardOrNoteId(it.id) })
                 _searchState.emit(SearchState.Completed)
-                selectUnvalidatedRowIds(cardOrNoteIdsToSelect)
+                // Apply pending selection if any, using the captured value
+                // Use captured value because pendingSelectionToRestore may not have been set yet when this search started
+                // Note: Don't clear pendingSelectionToRestore here - keep it active for all searches during init
+                // It will be naturally overwritten or stay as-is; the init process ensures it's set correctly
+                val idsToSelect = capturedPendingSelection ?: cardOrNoteIdsToSelect
+                selectUnvalidatedRowIds(idsToSelect)
             }
         }
     }
