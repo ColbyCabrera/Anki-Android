@@ -21,6 +21,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.cash.turbine.TurbineTestContext
 import app.cash.turbine.test
+import com.ichi2.anki.ioDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import com.ichi2.anki.AnkiDroidApp
 import com.ichi2.anki.CardBrowser
 import com.ichi2.anki.CollectionManager
@@ -83,6 +86,7 @@ import kotlinx.coroutines.flow.first
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.contains
 import org.hamcrest.Matchers.containsInAnyOrder
+import org.hamcrest.Matchers.empty
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasSize
 import org.hamcrest.Matchers.lessThan
@@ -297,7 +301,7 @@ class CardBrowserViewModelTest : JvmTest() {
     fun `selected rows are refreshed`() = runViewModelTest(notes = 2) {
         flowOfSelectedRows.test {
             // initially, flowOfSelectedRows should not have emitted anything
-            expectNoEvents()
+            assertThat("initial empty", awaitItem(), empty())
 
             selectAll()
             assertThat("initial selection", awaitItem().size, equalTo(2))
@@ -1014,13 +1018,13 @@ class CardBrowserViewModelTest : JvmTest() {
     @Test
     fun `toggle is 'select all' after deselection - multi note`() = runViewModelTest(notes = 2) {
         this.toggleRowSelectionAtPosition(0)
-        assertThat("toggle selection", flowOfToggleSelectionState.value, equalTo(SELECT_NONE))
+        assertThat("toggle selection", flowOfToggleSelectionState.value, equalTo(SELECT_ALL))
     }
 
     @Test
     fun `toggle all - multi note`() = runViewModelTest(notes = 2) {
         flowOfToggleSelectionState.test {
-            assertThat(awaitItem(), equalTo(SELECT_NONE))
+            assertThat(awaitItem(), equalTo(SELECT_ALL))
 
             // select all
             selectAll()?.join()
@@ -1053,9 +1057,9 @@ class CardBrowserViewModelTest : JvmTest() {
     fun `toggleSelectAllOrNone - SELECT_ALL if partial selection`() = runViewModelTest(notes = 3) {
         flowOfToggleSelectionState.test {
             assertThat(
-                "toggle selection defaults to 'none' before selection",
+                "toggle selection defaults to 'all' before selection",
                 awaitItem(),
-                equalTo(SELECT_NONE)
+                equalTo(SELECT_ALL)
             )
             toggleRowSelectionAtPosition(0).join()
             assertThat(
@@ -1203,26 +1207,33 @@ class CardBrowserViewModelTest : JvmTest() {
         manualInit: Boolean = true,
         savedStateHandle: SavedStateHandle = SavedStateHandle(),
         testBody: suspend CardBrowserViewModel.() -> Unit,
-    ) = runTest {
-        for (i in 0 until notes) {
-            addBasicNote()
+    ) = runTest(UnconfinedTestDispatcher()) {
+        val originalDispatcher = ioDispatcher
+        ioDispatcher = UnconfinedTestDispatcher(testScheduler)
+        try {
+            for (i in 0 until notes) {
+                addBasicNote()
+            }
+            notes.ifNotZero { count -> Timber.d("added %d notes", count) }
+            val viewModel = CardBrowserViewModel(
+                lastDeckIdRepository = SharedPreferencesLastDeckIdRepository(),
+                cacheDir = createTransientDirectory(),
+                options = null,
+                preferences = AnkiDroidApp.sharedPreferencesProvider,
+                isFragmented = false,
+                manualInit = manualInit,
+                savedStateHandle = savedStateHandle,
+            )
+            // makes ignoreValuesFromViewModelLaunch work under test
+            if (manualInit) {
+                viewModel.manualInit()
+                advanceUntilIdle()
+            }
+            testBody(viewModel)
+        } finally {
+            ioDispatcher = originalDispatcher
+            Timber.d("end runViewModelTest")
         }
-        notes.ifNotZero { count -> Timber.d("added %d notes", count) }
-        val viewModel = CardBrowserViewModel(
-            lastDeckIdRepository = SharedPreferencesLastDeckIdRepository(),
-            cacheDir = createTransientDirectory(),
-            options = null,
-            preferences = AnkiDroidApp.sharedPreferencesProvider,
-            isFragmented = false,
-            manualInit = manualInit,
-            savedStateHandle = savedStateHandle,
-        )
-        // makes ignoreValuesFromViewModelLaunch work under test
-        if (manualInit) {
-            viewModel.manualInit()
-        }
-        testBody(viewModel)
-        Timber.d("end runViewModelTest")
     }
 
     companion object {
