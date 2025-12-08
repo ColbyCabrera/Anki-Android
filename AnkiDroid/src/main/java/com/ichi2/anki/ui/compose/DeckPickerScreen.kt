@@ -25,7 +25,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.Image
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -79,9 +79,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.painter.Painter
+
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.ContentScale
+
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -194,7 +194,6 @@ fun DeckPickerContent(
     decks: List<DisplayDeckNode>,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
-    backgroundImage: Painter?,
     listState: LazyListState,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
@@ -237,14 +236,7 @@ fun DeckPickerContent(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
     ) {
-        if (backgroundImage != null) {
-            Image(
-                painter = backgroundImage,
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-            )
-        }
+
         PullToRefreshBox(
             isRefreshing = isRefreshing,
             onRefresh = onRefresh,
@@ -303,7 +295,6 @@ fun DeckPickerScreen(
     onRefresh: () -> Unit,
     searchQuery: String,
     onSearchQueryChanged: (String) -> Unit,
-    backgroundImage: Painter?,
     modifier: Modifier = Modifier,
     onDeckClick: (DisplayDeckNode) -> Unit,
     onExpandClick: (DisplayDeckNode) -> Unit,
@@ -485,7 +476,7 @@ fun DeckPickerScreen(
                 decks = decks,
                 isRefreshing = isRefreshing,
                 onRefresh = onRefresh,
-                backgroundImage = backgroundImage,
+
                 onDeckClick = onDeckClick,
                 onExpandClick = onExpandClick,
                 onDeckOptions = onDeckOptions,
@@ -522,7 +513,7 @@ fun DeckPickerContentPreview() {
         decks = emptyList(),
         isRefreshing = false,
         onRefresh = {},
-        backgroundImage = null,
+
         onDeckClick = {},
         onExpandClick = {},
         onDeckOptions = {},
@@ -544,7 +535,7 @@ fun DeckPickerScreenPreview() {
         onRefresh = {},
         searchQuery = "",
         onSearchQueryChanged = {},
-        backgroundImage = null,
+
         onDeckClick = {},
         onExpandClick = {},
         onAddNote = {},

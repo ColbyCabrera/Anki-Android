@@ -16,7 +16,6 @@
     <string name="new_deck">Create deck</string>
     <string name="new_dynamic_deck">Create filtered deck</string>
     <string name="add" comment="Generic add action. Duplicated in import_message_add for import context">Add</string>
-    <string name="background_image_disabled_too_large">Custom background image disabled as it was too large.</string>
     <string name="fab_menu_expanded">Expanded</string>
     <string name="fab_menu_collapsed">Collapsed</string>
     <string name="fab_menu_toggle">Toggle menu</string>
