@@ -265,7 +265,6 @@ import com.ichi2.utils.dp as viewDp
  *   * General handler for error/global dialogs (search for 'as DeckPicker')
  *   * Such as import: [ImportDialogListener]
  * * A Floating Action Button allowing the user to quickly add notes/cards.
- * * A custom image as a background can be added.
  */
 @KotlinCleanup("lots to do")
 @NeedsTest("If the collection has been created, the app intro is not displayed")
