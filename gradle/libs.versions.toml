@@ -136,6 +136,7 @@ acra-limiter = { module = "ch.acra:acra-limiter", version.ref = "acra" }
 acra-toast = { module = "ch.acra:acra-toast", version.ref = "acra" }
 acra-dialog = { module = "ch.acra:acra-dialog", version.ref = "acra" }
 acra-http = { module = "ch.acra:acra-http", version.ref = "acra" }
+acra-mail = { module = "ch.acra:acra-mail", version.ref = "acra" }
 android-image-cropper = { module = "com.vanniktech:android-image-cropper", version.ref = "imageCropper" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
 androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }

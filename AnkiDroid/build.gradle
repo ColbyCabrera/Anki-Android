@@ -59,7 +59,7 @@ android {
     defaultConfig {
         applicationId = "com.ichi2.anki"
         buildConfigField "Boolean", "CI", (System.getenv("CI") == "true").toString()
-        buildConfigField "String", "ACRA_URL", '"https://ankidroid.org/acra/report"'
+        buildConfigField "String", "ACRA_URL", '""'
         buildConfigField "String", "BACKEND_VERSION", "\"${libs.versions.ankiBackend.get()}\""
         buildConfigField "Boolean", "ENABLE_LEAK_CANARY", "false"
         buildConfigField "String", "GIT_COMMIT_HASH", "\"${gitCommitHash()}\""
@@ -441,6 +441,7 @@ dependencies {
     implementation libs.acra.toast
     implementation libs.acra.dialog
     implementation libs.acra.http
+    implementation libs.acra.mail
 
     implementation libs.commons.compress
     implementation libs.commons.collections4 // SetUniqueList
