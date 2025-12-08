@@ -15,63 +15,28 @@
  */
 package com.ichi2.anki.preferences
 
-import android.content.ActivityNotFoundException
 import android.os.Build
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.SwitchPreferenceCompat
 import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.R
-import com.ichi2.anki.deckpicker.BackgroundImage
-import com.ichi2.anki.deckpicker.BackgroundImage.FileSizeResult
 import com.ichi2.anki.launchCatchingTask
 import com.ichi2.anki.settings.Prefs
-import com.ichi2.anki.showThemedToast
-import com.ichi2.anki.snackbar.showSnackbar
 import com.ichi2.anki.utils.CollectionPreferences
 import com.ichi2.themes.Theme
 import com.ichi2.themes.Themes
 import com.ichi2.themes.Themes.systemIsInNightMode
 import com.ichi2.themes.Themes.updateCurrentTheme
-import com.ichi2.utils.negativeButton
-import com.ichi2.utils.positiveButton
-import com.ichi2.utils.show
-import com.ichi2.utils.title
-import timber.log.Timber
 
 class AppearanceSettingsFragment : SettingsFragment() {
-    private var backgroundImage: Preference? = null
-    private var removeBackgroundPref: Preference? = null
     override val preferenceResource: Int
         get() = R.xml.preferences_appearance
     override val analyticsScreenNameConstant: String
         get() = "prefs.appearance"
 
     override fun initSubscreen() {
-        // Configure background
-        backgroundImage = requirePreference<Preference>("deckPickerBackground")
-        removeBackgroundPref = requirePreference<Preference>("removeWallPaper")
-        backgroundImage!!.onPreferenceClickListener =
-            Preference.OnPreferenceClickListener {
-                try {
-                    backgroundImageResultLauncher.launch("image/*")
-                } catch (ex: ActivityNotFoundException) {
-                    Timber.w("No app found to handle background preference change request")
-                    activity?.showSnackbar(R.string.activity_start_failed)
-                }
-                true
-            }
-        removeBackgroundPref?.setOnPreferenceClickListener {
-            showRemoveBackgroundImageDialog()
-            true
-        }
-
-        // Initially update visibility based on whether a background exists
-        updateRemoveBackgroundVisibility()
-
         val appThemePref = requirePreference<ListPreference>(R.string.app_theme_key)
         val dayThemePref = requirePreference<ListPreference>(R.string.day_theme_key)
         val nightThemePref = requirePreference<ListPreference>(R.string.night_theme_key)
@@ -153,62 +118,6 @@ class AppearanceSettingsFragment : SettingsFragment() {
 
         setupNewStudyScreenSettings()
     }
-
-    private fun updateRemoveBackgroundVisibility() {
-        removeBackgroundPref?.isVisible = BackgroundImage.shouldBeShown(requireContext())
-    }
-
-    private fun showRemoveBackgroundImageDialog() {
-        AlertDialog.Builder(requireContext()).show {
-            title(R.string.remove_background_image)
-            positiveButton(R.string.dialog_remove) {
-                if (BackgroundImage.remove(requireContext())) {
-                    showSnackbar(R.string.background_image_removed)
-                    updateRemoveBackgroundVisibility()
-                } else {
-                    showSnackbar(R.string.error_deleting_image)
-                }
-            }
-            negativeButton(R.string.dialog_keep)
-        }
-    }
-
-    private val backgroundImageResultLauncher =
-        registerForActivityResult(ActivityResultContracts.GetContent()) { selectedImage ->
-            if (selectedImage == null) {
-                if (BackgroundImage.shouldBeShown(requireContext())) {
-                    showRemoveBackgroundImageDialog()
-                } else {
-                    showSnackbar(R.string.no_image_selected)
-                }
-                return@registerForActivityResult
-            }
-            // handling file may result in exception
-            try {
-                when (val sizeResult = BackgroundImage.validateBackgroundImageFileSize(this, selectedImage)) {
-                    is FileSizeResult.FileTooLarge -> {
-                        showThemedToast(requireContext(), getString(R.string.image_max_size_allowed, sizeResult.maxMB), false)
-                    }
-                    is FileSizeResult.UncompressedBitmapTooLarge -> {
-                        showThemedToast(
-                            requireContext(),
-                            getString(R.string.image_dimensions_too_large, sizeResult.width, sizeResult.height),
-                            false,
-                        )
-                    }
-                    is FileSizeResult.OK -> {
-                        BackgroundImage.import(this, selectedImage)
-                        updateRemoveBackgroundVisibility()
-                    }
-                }
-            } catch (e: OutOfMemoryError) {
-                Timber.w(e)
-                showSnackbar(getString(R.string.error_selecting_image, e.localizedMessage))
-            } catch (e: Exception) {
-                Timber.w(e)
-                showSnackbar(getString(R.string.error_selecting_image, e.localizedMessage))
-            }
-        }
 
     private fun setupNewStudyScreenSettings() {
         if (!Prefs.isNewStudyScreenEnabled) return

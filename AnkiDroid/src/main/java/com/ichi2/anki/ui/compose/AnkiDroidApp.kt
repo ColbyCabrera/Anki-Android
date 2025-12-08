@@ -65,7 +65,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.painter.Painter
+
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -84,7 +84,6 @@ fun AnkiDroidApp(
     onRefresh: () -> Unit,
     searchQuery: String,
     onSearchQueryChanged: (String) -> Unit,
-    backgroundImage: Painter?,
     onDeckClick: (DisplayDeckNode) -> Unit,
     onExpandClick: (DisplayDeckNode) -> Unit,
     onAddNote: () -> Unit,
@@ -380,7 +379,7 @@ fun AnkiDroidApp(
                             decks = decks,
                             isRefreshing = isRefreshing,
                             onRefresh = onRefresh,
-                            backgroundImage = backgroundImage,
+
                             onDeckClick = onDeckClick,
                             onExpandClick = onExpandClick,
                             onDeckOptions = onDeckOptions,
@@ -412,7 +411,7 @@ fun AnkiDroidApp(
             onRefresh = onRefresh,
             searchQuery = searchQuery,
             onSearchQueryChanged = onSearchQueryChanged,
-            backgroundImage = backgroundImage,
+
             onDeckClick = onDeckClick,
             onExpandClick = onExpandClick,
             onAddNote = onAddNote,

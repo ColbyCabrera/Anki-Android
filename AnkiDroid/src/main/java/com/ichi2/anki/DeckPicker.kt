@@ -103,7 +103,7 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import anki.collection.OpChanges
 import anki.sync.SyncStatusResponse
-import coil.compose.rememberAsyncImagePainter
+
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.ichi2.anki.CollectionManager.TR
 import com.ichi2.anki.CollectionManager.withCol
@@ -132,7 +132,7 @@ import com.ichi2.anki.browser.compose.CardBrowserLayout
 import com.ichi2.anki.browser.compose.FilterByTagsDialog
 import com.ichi2.anki.common.time.TimeManager
 import com.ichi2.anki.common.utils.annotation.KotlinCleanup
-import com.ichi2.anki.deckpicker.BackgroundImage
+
 import com.ichi2.anki.deckpicker.DeckPickerViewModel
 import com.ichi2.anki.deckpicker.DeckPickerViewModel.AnkiDroidEnvironment
 import com.ichi2.anki.deckpicker.DeckPickerViewModel.FlattenedDeckList
@@ -240,23 +240,7 @@ import timber.log.Timber
 import java.io.File
 import com.ichi2.utils.dp as viewDp
 
-@Composable
-private fun DeckPicker.deckPickerPainter(): Painter? {
-    // Allow the user to clear data and get back to a good state if they provide an invalid background.
-    if (!this.sharedPrefs().getBoolean("deckPickerBackground", false)) {
-        Timber.d("No DeckPicker background preference")
-        return null
-    }
-    val currentAnkiDroidDirectory = CollectionHelper.getCurrentAnkiDroidDirectory(this)
-    val imgFile = File(currentAnkiDroidDirectory, "DeckPickerBackground.png")
-    if (!imgFile.exists()) {
-        Timber.d("No DeckPicker background image")
-        return null
-    }
 
-    Timber.i("Applying background")
-    return rememberAsyncImagePainter(model = imgFile)
-}
 
 /**
  * The current entry point for AnkiDroid. Displays decks, allowing users to study. Many other functions.
@@ -281,7 +265,6 @@ private fun DeckPicker.deckPickerPainter(): Painter? {
  *   * General handler for error/global dialogs (search for 'as DeckPicker')
  *   * Such as import: [ImportDialogListener]
  * * A Floating Action Button allowing the user to quickly add notes/cards.
- * * A custom image as a background can be added.
  */
 @KotlinCleanup("lots to do")
 @NeedsTest("If the collection has been created, the app intro is not displayed")
@@ -761,7 +744,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                     searchQuery = it
                                     viewModel.updateDeckFilter(it)
                                 },
-                                backgroundImage = deckPickerPainter(),
+
                                 onDeckClick = { deck ->
                                     viewModel.onDeckSelected(
                                         deck.did,
@@ -858,7 +841,6 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                 searchQuery = it
                                 viewModel.updateDeckFilter(it)
                             },
-                            backgroundImage = deckPickerPainter(),
                             onDeckClick = { deck ->
                                 viewModel.onDeckSelected(
                                     deck.did,
@@ -1877,11 +1859,6 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
             if (previous < 20301208) {
                 Timber.i("Recommend the user to do a full-sync")
                 recommendOneWaySync = true
-            }
-
-            if (previous < 21700000 && BackgroundImage.isTooLarge(this)) {
-                BackgroundImage.enabled = false
-                postSnackbar(getString(R.string.background_image_disabled_too_large))
             }
 
             // Fix "font-family" definition in templates created by AnkiDroid before 2.6alpha23
