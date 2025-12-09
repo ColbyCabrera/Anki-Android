@@ -4,6 +4,8 @@
     android:initialLayout="@layout/glance_default_loading_layout"
     android:minWidth="200dp"
     android:minHeight="100dp"
+    android:maxResizeHeight="170dp"
+    android:maxResizeWidth="600.dp"
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="3600000"
     android:widgetCategory="home_screen" />
