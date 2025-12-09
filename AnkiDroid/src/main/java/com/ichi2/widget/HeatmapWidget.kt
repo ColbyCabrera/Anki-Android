@@ -43,6 +43,7 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.ichi2.anki.CollectionManager
+import com.ichi2.anki.IntentHandler
 import com.ichi2.anki.NoteEditorActivity
 import com.ichi2.anki.NoteEditorFragment
 import com.ichi2.anki.R
@@ -101,7 +102,7 @@ class HeatmapWidget : GlanceAppWidget() {
 
         Row(
             modifier = GlanceModifier.fillMaxSize().background(GlanceTheme.colors.background)
-                .padding(16.dp),
+                .padding(16.dp).clickable(actionStartActivity<IntentHandler>()),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // --- Left Section: Heatmap ---
