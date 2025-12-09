@@ -1,7 +1,8 @@
 package com.ichi2.widget
 
 import android.database.Cursor
-import androidx.compose.ui.graphics.Color
+import androidx.glance.color.ColorProviders
+import androidx.glance.unit.ColorProvider
 import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.libanki.Collection
 import com.ichi2.anki.libanki.DB
@@ -22,14 +23,52 @@ class HeatmapWidgetTest {
 
     @Test
     fun testGetColorForCount() {
-        assertEquals(Color(0xFFE0E0E0), HeatmapWidget.getColorForCount(0))
-        assertEquals(Color(0xFF9BE9A8), HeatmapWidget.getColorForCount(1))
-        assertEquals(Color(0xFF9BE9A8), HeatmapWidget.getColorForCount(5))
-        assertEquals(Color(0xFF40C463), HeatmapWidget.getColorForCount(6))
-        assertEquals(Color(0xFF40C463), HeatmapWidget.getColorForCount(10))
-        assertEquals(Color(0xFF30A14E), HeatmapWidget.getColorForCount(11))
-        assertEquals(Color(0xFF30A14E), HeatmapWidget.getColorForCount(20))
-        assertEquals(Color(0xFF216E39), HeatmapWidget.getColorForCount(21))
+        val colors = mock<ColorProviders>()
+        val surfaceVariant = mock<ColorProvider>()
+        val primary = mock<ColorProvider>()
+
+        whenever(colors.surfaceVariant).thenReturn(surfaceVariant)
+        whenever(colors.primary).thenReturn(primary)
+
+        // 0 -> surfaceVariant, 0.5f
+        var result = HeatmapWidget.getColorForCount(0, colors)
+        assertEquals(surfaceVariant, result.first)
+        assertEquals(0.5f, result.second, 0.01f)
+
+        // 1 -> primary, 0.25f
+        result = HeatmapWidget.getColorForCount(1, colors)
+        assertEquals(primary, result.first)
+        assertEquals(0.25f, result.second, 0.01f)
+
+        // 5 -> primary, 0.25f
+        result = HeatmapWidget.getColorForCount(5, colors)
+        assertEquals(primary, result.first)
+        assertEquals(0.25f, result.second, 0.01f)
+
+        // 6 -> primary, 0.5f
+        result = HeatmapWidget.getColorForCount(6, colors)
+        assertEquals(primary, result.first)
+        assertEquals(0.5f, result.second, 0.01f)
+
+        // 20 -> primary, 0.5f
+        result = HeatmapWidget.getColorForCount(20, colors)
+        assertEquals(primary, result.first)
+        assertEquals(0.5f, result.second, 0.01f)
+
+        // 21 -> primary, 0.8f
+        result = HeatmapWidget.getColorForCount(21, colors)
+        assertEquals(primary, result.first)
+        assertEquals(0.8f, result.second, 0.01f)
+
+        // 40 -> primary, 0.8f
+        result = HeatmapWidget.getColorForCount(40, colors)
+        assertEquals(primary, result.first)
+        assertEquals(0.8f, result.second, 0.01f)
+
+        // 41 -> primary, 1f
+        result = HeatmapWidget.getColorForCount(41, colors)
+        assertEquals(primary, result.first)
+        assertEquals(1f, result.second, 0.01f)
     }
 
     @Test
