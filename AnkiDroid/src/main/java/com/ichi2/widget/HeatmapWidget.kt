@@ -111,7 +111,7 @@ class HeatmapWidget : GlanceAppWidget() {
                 verticalAlignment = Alignment.Top,
             ) {
                 Text(
-                    text = "History",
+                    text = context.getString(R.string.history),
                     style = TextStyle(
                         color = GlanceTheme.colors.onBackground,
                         fontSize = 16.sp,
