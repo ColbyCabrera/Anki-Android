@@ -83,13 +83,13 @@ class HeatmapWidget : GlanceAppWidget() {
                         color = GlanceTheme.colors.onBackground,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily(context.resources.getResourceEntryName(R.font.google_sans_rounded_regular))
+                        fontFamily = FontFamily(context.resources.getResourceEntryName(R.font.roboto_mono))
                     )
                 )
                 Spacer(GlanceModifier.defaultWeight())
                 // Add Button
                 Box(
-                    modifier = GlanceModifier.size(36.dp).background(GlanceTheme.colors.primary)
+                    modifier = GlanceModifier.size(42.dp).background(GlanceTheme.colors.primary)
                         .clickable(actionStartActivity<NoteEditorActivity>()).cornerRadius(200.dp),
                     contentAlignment = Alignment.Center
                 ) {
