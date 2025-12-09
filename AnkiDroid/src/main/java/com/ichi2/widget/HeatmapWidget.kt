@@ -1,6 +1,7 @@
 package com.ichi2.widget
 
 import android.content.Context
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,6 +37,7 @@ import androidx.glance.layout.size
 import androidx.glance.layout.width
 import androidx.glance.preview.ExperimentalGlancePreviewApi
 import androidx.glance.preview.Preview
+import androidx.glance.text.FontFamily
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
@@ -103,7 +105,8 @@ class HeatmapWidget : GlanceAppWidget() {
         ) {
             // --- Left Section: Heatmap ---
             Column(
-                verticalAlignment = Alignment.Top
+                modifier = GlanceModifier.fillMaxHeight(),
+                verticalAlignment = Alignment.Top,
             ) {
                 Text(
                     text = "Anki",
@@ -189,7 +192,7 @@ class HeatmapWidget : GlanceAppWidget() {
                 horizontalAlignment = Alignment.End,
                 modifier = GlanceModifier.fillMaxHeight(),
             ) {
-                // Material Shape (Small)
+                /*// Material Shape (Small)
                 Row {
                     Box(
                         modifier = GlanceModifier.size(40.dp)
@@ -212,7 +215,22 @@ class HeatmapWidget : GlanceAppWidget() {
                                 .background(GlanceTheme.colors.onSurfaceVariant).cornerRadius(8.dp),
                         ) {}
                     }
+                }*/
+
+
+
+                Column {
+                    Text(
+                        text = "$todayCount reviewed",
+                        style = TextStyle(
+                            color = GlanceTheme.colors.onSurfaceVariant,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    )
                 }
+
 
                 Spacer(GlanceModifier.defaultWeight())
 
