@@ -97,75 +97,84 @@ class HeatmapWidget : GlanceAppWidget() {
         val todayCount = data[currentDayIndex] ?: 0
 
         Row(
-            modifier =
-                GlanceModifier
-                    .fillMaxSize()
-                    .background(GlanceTheme.colors.background)
-                    .padding(16.dp),
+            modifier = GlanceModifier.fillMaxSize().background(GlanceTheme.colors.background)
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // --- Left Section: Heatmap ---
-            // Removed Alignment.CenterVertically to prevent vertical clipping if content is tall
-            Row(
-                modifier = GlanceModifier.defaultWeight(),
-                verticalAlignment = Alignment.CenterVertically,
+            Column(
+                verticalAlignment = Alignment.Top
             ) {
-                // Day Labels
-                // Note: Using wrapper Boxes instead of Spacers to reduce child count.
-                // Glance/RemoteViews has a per-container child limit (~10), so we embed
-                // spacing in the Box height (12.dp = 10.dp content + 2.dp gap).
-                Column(
-                    modifier = GlanceModifier.padding(end = 8.dp),
+                Text(
+                    text = "Anki",
+                    style =
+                        TextStyle(
+                            color = GlanceTheme.colors.onBackground,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                        ),
+                )
+
+                Spacer(GlanceModifier.height(8.dp))
+
+
+                Row(
+                    modifier = GlanceModifier.defaultWeight(),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    val days = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-                    days.forEachIndexed { _, day ->
-                        Box(
-                            modifier = GlanceModifier.height(16.dp),
-                            contentAlignment = Alignment.CenterStart,
-                        ) {
-                            Text(
-                                text = day,
-                                style =
-                                    TextStyle(
+                    // Day Labels
+                    // Note: Using wrapper Boxes instead of Spacers to reduce child count.
+                    // Glance/RemoteViews has a per-container child limit (~10), so we embed
+                    // spacing in the Box height (12.dp = 10.dp content + 2.dp gap).
+                    Column(
+                        modifier = GlanceModifier.padding(end = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        val days = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+                        days.forEachIndexed { _, day ->
+                            Box(
+                                modifier = GlanceModifier.height(16.dp),
+                                contentAlignment = Alignment.CenterStart,
+                            ) {
+                                Text(
+                                    text = day,
+                                    style = TextStyle(
                                         color = GlanceTheme.colors.onSurfaceVariant,
                                         fontSize = 10.sp,
                                     ),
-                            )
+                                )
+                            }
                         }
                     }
-                }
 
-                // Grid
-                // Note: Same wrapper Box approach as day labels to reduce child count
-                Row {
-                    for (w in (numWeeks - 1) downTo 0) {
-                        Column(
-                            modifier = GlanceModifier.padding(end = 2.dp),
-                        ) {
-                            for (d in 0..6) {
-                                val dayOffset = (w * 7) + (todayDoW - d)
-                                val checkDayIndex = currentDayIndex - dayOffset
-                                val count = data[checkDayIndex] ?: 0
-                                val (colorProvider, alpha) =
-                                    getColorForCount(
+                    // Grid
+                    // Note: Same wrapper Box approach as day labels to reduce child count
+                    Row {
+                        for (w in (numWeeks - 1) downTo 0) {
+                            Column(
+                                modifier = GlanceModifier.padding(end = 2.dp),
+                            ) {
+                                for (d in 0..6) {
+                                    val dayOffset = (w * 7) + (todayDoW - d)
+                                    val checkDayIndex = currentDayIndex - dayOffset
+                                    val count = data[checkDayIndex] ?: 0
+                                    val (colorProvider, alpha) = getColorForCount(
                                         count,
                                         GlanceTheme.colors,
                                     )
 
-                                // Wrapper Box with built-in spacing (12.dp = 10.dp cell + 2.dp gap)
-                                Box(
-                                    modifier = GlanceModifier.height(if (d < 6) 16.dp else 14.dp),
-                                    contentAlignment = Alignment.TopCenter,
-                                ) {
+                                    // Wrapper Box with built-in spacing (12.dp = 10.dp cell + 2.dp gap)
                                     Box(
-                                        modifier =
-                                            GlanceModifier
-                                                .size(14.dp)
-                                                .background(
-                                                    colorProvider.getColor(context).copy(alpha = alpha),
+                                        modifier = GlanceModifier.height(if (d < 6) 16.dp else 14.dp),
+                                        contentAlignment = Alignment.TopCenter,
+                                    ) {
+                                        Box(
+                                            modifier = GlanceModifier.size(14.dp).background(
+                                                    colorProvider.getColor(context)
+                                                        .copy(alpha = alpha),
                                                 ).cornerRadius(2.dp),
-                                    ) {}
+                                        ) {}
+                                    }
                                 }
                             }
                         }
@@ -173,59 +182,45 @@ class HeatmapWidget : GlanceAppWidget() {
                 }
             }
 
+            Spacer(GlanceModifier.defaultWeight())
+
             // --- Right Section: Info & Action ---
             Column(
                 horizontalAlignment = Alignment.End,
                 modifier = GlanceModifier.fillMaxHeight(),
             ) {
-                // Star Icon in Circle
-                Box(
-                    modifier =
-                        GlanceModifier
-                            .size(40.dp)
-                            .background(GlanceTheme.colors.surfaceVariant)
-                            .cornerRadius(20.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Image(
-                        provider = ImageProvider(R.drawable.ic_star_white),
-                        contentDescription = "Star",
-                        modifier = GlanceModifier.size(24.dp),
-                        colorFilter = ColorFilter.tint(GlanceTheme.colors.onSurfaceVariant),
-                    )
+                // Material Shape (Small)
+                Row {
+                    Box(
+                        modifier = GlanceModifier.size(40.dp)
+                            .background(GlanceTheme.colors.surfaceVariant).cornerRadius(20.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Box(
+                            modifier = GlanceModifier.size(24.dp)
+                                .background(GlanceTheme.colors.onSurfaceVariant).cornerRadius(8.dp),
+                        ) {}
+                    }
+                    Spacer(modifier = GlanceModifier.width(8.dp))
+                    Box(
+                        modifier = GlanceModifier.size(40.dp)
+                            .background(GlanceTheme.colors.surfaceVariant).cornerRadius(20.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Box(
+                            modifier = GlanceModifier.size(24.dp)
+                                .background(GlanceTheme.colors.onSurfaceVariant).cornerRadius(8.dp),
+                        ) {}
+                    }
                 }
-
-                Spacer(GlanceModifier.height(8.dp))
-
-                Text(
-                    text = "Anki",
-                    style =
-                        TextStyle(
-                            color = GlanceTheme.colors.onBackground,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                        ),
-                )
-
-                Text(
-                    text = "$todayCount cards reviewed",
-                    style =
-                        TextStyle(
-                            color = GlanceTheme.colors.onSurfaceVariant,
-                            fontSize = 12.sp,
-                        ),
-                )
 
                 Spacer(GlanceModifier.defaultWeight())
 
                 // Add Card Button
                 Box(
-                    modifier =
-                        GlanceModifier
-                            .background(GlanceTheme.colors.surfaceVariant)
-                            .cornerRadius(20.dp)
-                            .clickable(actionStartActivity<NoteEditorActivity>())
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                    modifier = GlanceModifier.background(GlanceTheme.colors.surfaceVariant)
+                        .cornerRadius(20.dp).clickable(actionStartActivity<NoteEditorActivity>())
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -238,12 +233,11 @@ class HeatmapWidget : GlanceAppWidget() {
                         Spacer(GlanceModifier.width(4.dp))
                         Text(
                             text = "ADD CARD",
-                            style =
-                                TextStyle(
-                                    color = GlanceTheme.colors.onSurfaceVariant,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                ),
+                            style = TextStyle(
+                                color = GlanceTheme.colors.onSurfaceVariant,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                            ),
                         )
                     }
                 }
@@ -258,37 +252,35 @@ class HeatmapWidget : GlanceAppWidget() {
         fun getColorForCount(
             count: Int,
             colors: ColorProviders,
-        ): Pair<ColorProvider, Float> =
-            when {
-                count == 0 -> colors.surfaceVariant to 0.5f
-                count <= 5 -> colors.primary to 0.25f
-                count <= 20 -> colors.primary to 0.5f
-                count <= 40 -> colors.primary to 0.8f
-                else -> colors.primary to 1f
-            }
+        ): Pair<ColorProvider, Float> = when {
+            count == 0 -> colors.surfaceVariant to 0.5f
+            count <= 5 -> colors.primary to 0.25f
+            count <= 20 -> colors.primary to 0.5f
+            count <= 40 -> colors.primary to 0.8f
+            else -> colors.primary to 1f
+        }
 
-        suspend fun fetchHeatmapData(): Map<Long, Int> =
-            try {
-                CollectionManager.withCol {
-                    val data = mutableMapOf<Long, Int>()
-                    // revlog id is in milliseconds
-                    val query =
-                        "SELECT CAST(id/86400000 AS INTEGER) as day, count() FROM revlog GROUP BY day"
+        suspend fun fetchHeatmapData(): Map<Long, Int> = try {
+            CollectionManager.withCol {
+                val data = mutableMapOf<Long, Int>()
+                // revlog id is in milliseconds
+                val query =
+                    "SELECT CAST(id/86400000 AS INTEGER) as day, count() FROM revlog GROUP BY day"
 
-                    val cursor = this.db.query(query)
-                    cursor.use { c ->
-                        while (c.moveToNext()) {
-                            val day = c.getLong(0)
-                            val count = c.getInt(1)
-                            data[day] = count
-                        }
+                val cursor = this.db.query(query)
+                cursor.use { c ->
+                    while (c.moveToNext()) {
+                        val day = c.getLong(0)
+                        val count = c.getInt(1)
+                        data[day] = count
                     }
-                    data
                 }
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to fetch heatmap data")
-                emptyMap()
+                data
             }
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to fetch heatmap data")
+            emptyMap()
+        }
     }
 }
 
@@ -321,9 +313,7 @@ fun HeatmapWidgetPreview() {
     dummyData[today] = 294
 
     androidx.compose.runtime.CompositionLocalProvider(
-        LocalSize provides
-            androidx.compose.ui.unit
-                .DpSize(300.dp, 400.dp),
+        LocalSize provides androidx.compose.ui.unit.DpSize(300.dp, 400.dp),
     ) {
         HeatmapWidget().HeatmapContent(dummyData, context)
     }
