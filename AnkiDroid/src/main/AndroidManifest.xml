@@ -534,38 +534,6 @@
         <!-- Service to perform web API queries -->
         <service android:name="com.ichi2.widget.AnkiDroidWidgetSmall$UpdateService" />
 
-
-        <!-- small widget -->
-        <receiver
-            android:name="com.ichi2.widget.AnkiDroidWidgetSmall"
-            android:label="@string/widget_small"
-            android:exported="true"
-            >
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/widget_provider_small"
-                />
-        </receiver>
-
-        <!-- "Add Note" widget -->
-        <receiver
-            android:name="com.ichi2.widget.AddNoteWidget"
-            android:label="@string/menu_add_note"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/widget_provider_add_note"
-                />
-        </receiver>
-
         <receiver
             android:name="com.ichi2.widget.HeatmapWidgetReceiver"
             android:label="@string/heatmap_widget_label"
