@@ -39,8 +39,11 @@
     <string name="widget_add_note_button">Add new AnkiDroid note</string>
     <string name="deck_picker_widget_description" comment="Title of the Deck Picker Widget. Displayed to the user in Android's Widget Selection menu">Deck Picker</string>
     <string name="card_analysis_extra_widget_description">Card Analysis</string>
-
-    <!-- Strings to explain usage in Deck Picker and Card Analysis Widget Configuration screen -->
+    <plurals name="heatmap_widget_reviewed_count">
+        <item quantity="zero">%d cards reviewed</item>
+        <item quantity="one">%d card reviewed</item>
+        <item quantity="other">%d cards reviewed</item>
+    </plurals>
     <string name="select_decks_title" comment="Title for Deck Selection Dialog">Select decks</string>
     <string name="select_deck_title" comment="Title for Deck Selection Dialog">Select a deck</string>
     <string name="no_selected_deck_placeholder_title" comment="Placeholder title when no decks are selected">Select decks to display in the widget. Select decks with the + icon.</string>

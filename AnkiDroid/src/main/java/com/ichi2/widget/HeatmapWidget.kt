@@ -194,7 +194,11 @@ class HeatmapWidget : GlanceAppWidget() {
             ) {
                 Column {
                     Text(
-                        text = "$todayCount reviewed",
+                        text = context.resources.getQuantityString(
+                            R.plurals.heatmap_widget_reviewed_count,
+                            todayCount,
+                            todayCount
+                        ),
                         style = TextStyle(
                             color = GlanceTheme.colors.onSurfaceVariant,
                             fontSize = 12.sp,
