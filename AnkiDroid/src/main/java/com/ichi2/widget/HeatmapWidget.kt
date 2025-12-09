@@ -81,13 +81,13 @@ class HeatmapWidget : GlanceAppWidget() {
         // Padding: 16dp (8 start + 8 end)
         // Gap between sections: 16dp
         // Total reserved width: 25 + 120 + 16 + 16 = ~177dp
-        val availableWidth = size.width - 180.dp
+        val availableWidth = size.width - RESERVED_WIDTH_FOR_LABELS_AND_PANEL
 
         // Cell width 10.dp + 2.dp gap = 12.dp
-        val numWeeks = (availableWidth.value / 16).toInt().coerceAtLeast(8)
+        val numWeeks = (availableWidth.value / WEEK_COLUMN_WIDTH).toInt().coerceAtLeast(8)
 
         val today = System.currentTimeMillis()
-        val dayMillis = 86400000L
+        val dayMillis = DAY_IN_MILLIS
         val currentDayIndex = today / dayMillis
 
         // Calculate ISO Day of Week (0 = Mon, 6 = Sun)
@@ -133,7 +133,19 @@ class HeatmapWidget : GlanceAppWidget() {
                         modifier = GlanceModifier.padding(end = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        val days = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+                        // Get localized short weekday names in Mon-Sun order
+                        // DateFormatSymbols.shortWeekdays is 1-indexed: [0]="", [1]=Sun, [2]=Mon, ..., [7]=Sat
+                        val dateSymbols = java.text.DateFormatSymbols.getInstance()
+                        val shortWeekdays = dateSymbols.shortWeekdays
+                        val days = listOf(
+                            shortWeekdays[Calendar.MONDAY],
+                            shortWeekdays[Calendar.TUESDAY],
+                            shortWeekdays[Calendar.WEDNESDAY],
+                            shortWeekdays[Calendar.THURSDAY],
+                            shortWeekdays[Calendar.FRIDAY],
+                            shortWeekdays[Calendar.SATURDAY],
+                            shortWeekdays[Calendar.SUNDAY]
+                        )
                         days.forEachIndexed { _, day ->
                             Box(
                                 modifier = GlanceModifier.height(16.dp),
@@ -234,6 +246,10 @@ class HeatmapWidget : GlanceAppWidget() {
     }
 
     companion object HeatmapLogic {
+        private val RESERVED_WIDTH_FOR_LABELS_AND_PANEL = 180.dp
+        private const val WEEK_COLUMN_WIDTH = 16
+        private const val DAY_IN_MILLIS = 86400000L
+
         /**
          * Returns the base color and alpha for the heatmap cell.
          */
@@ -253,7 +269,7 @@ class HeatmapWidget : GlanceAppWidget() {
                 val data = mutableMapOf<Long, Int>()
                 // revlog id is in milliseconds
                 val query =
-                    "SELECT CAST(id/86400000 AS INTEGER) as day, count() FROM revlog GROUP BY day"
+                    "SELECT CAST(id/$DAY_IN_MILLIS AS INTEGER) as day, count() FROM revlog GROUP BY day"
 
                 val cursor = this.db.query(query)
                 cursor.use { c ->
@@ -289,7 +305,7 @@ fun HeatmapWidgetPreview() {
         if (i % 2 == 0) {
             dummyData[today - i] = 1
         }
-        if (i % 3 == 0) {
+        if (i % 13 == 0) {
             dummyData[today - i] = 6
         }
         if (i % 5 == 0) {
