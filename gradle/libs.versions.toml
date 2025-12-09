@@ -130,7 +130,8 @@ animation = "1.9.5"
 uiUnit = "1.9.2"
 material3WindowSizeClass = "1.4.0"
 uiTestJunit4 = "1.9.5"
-glanceAppwidget = "1.1.1"
+glanceAppWidget = "1.2.0-rc01"
+glancePreview = "1.2.0-rc01"
 
 [libraries]
 acra-limiter = { module = "ch.acra:acra-limiter", version.ref = "acra" }
@@ -240,8 +241,10 @@ androidx-compose-animation = { group = "androidx.compose.animation", name = "ani
 androidx-compose-ui-unit = { group = "androidx.compose.ui", name = "ui-unit", version.ref = "uiUnit" }
 androidx-compose-material3-window-size-class1 = { group = "androidx.compose.material3", name = "material3-window-size-class", version.ref = "material3WindowSizeClass" }
 androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4", version.ref = "uiTestJunit4" }
-androidx-glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glanceAppwidget" }
-androidx-glance-material3 = { group = "androidx.glance", name = "glance-material3", version.ref = "glanceAppwidget" }
+androidx-glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glanceAppWidget" }
+androidx-glance-appwidget-preview = { group = "androidx.glance", name = "glance-appwidget-preview", version.ref = "glanceAppWidget" }
+androidx-glance-material3 = { group = "androidx.glance", name = "glance-material3", version.ref = "glanceAppWidget" }
+androidx-glance-preview = { group = "androidx.glance", name = "glance-preview", version.ref = "glancePreview" }
 
 [plugins]
 

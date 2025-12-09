@@ -31,6 +31,8 @@ import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
+import androidx.glance.preview.ExperimentalGlancePreviewApi
+import androidx.glance.preview.Preview
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
@@ -57,7 +59,7 @@ class HeatmapWidget : GlanceAppWidget() {
     }
 
     @Composable
-    private fun HeatmapContent(data: Map<Long, Int>, context: Context) {
+    internal fun HeatmapContent(data: Map<Long, Int>, context: Context) {
         val size = LocalSize.current
         // Estimate number of weeks that can fit.
         // Assume each cell is around 12.dp with 2.dp gap -> 14.dp total width per column
@@ -177,3 +179,26 @@ class HeatmapWidget : GlanceAppWidget() {
         }
     }
 }
+
+@Preview
+@OptIn(ExperimentalGlancePreviewApi::class)
+@Composable
+fun HeatmapWidgetPreview() {
+    val context = androidx.glance.LocalContext.current
+    // Generate dummy data
+    val today = System.currentTimeMillis() / 86400000L
+    val dummyData = mutableMapOf<Long, Int>()
+    // Fill some days
+    for (i in 0..100) {
+        if (i % 3 == 0) {
+             dummyData[today - i] = (1..25).random()
+        }
+    }
+    
+    androidx.compose.runtime.CompositionLocalProvider(
+        LocalSize provides androidx.compose.ui.unit.DpSize(300.dp, 200.dp)
+    ) {
+        HeatmapWidget().HeatmapContent(dummyData, context)
+    }
+}
+
