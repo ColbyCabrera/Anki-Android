@@ -66,9 +66,7 @@ class HeatmapWidget : GlanceAppWidget() {
         val numWeeks = (availableWidth.value / 14).toInt().coerceAtLeast(1)
 
         Column(
-            modifier = GlanceModifier
-                .fillMaxSize()
-                .background(GlanceTheme.colors.background)
+            modifier = GlanceModifier.fillMaxSize().background(GlanceTheme.colors.background)
                 .padding(16.dp)
         ) {
             // Header
@@ -77,8 +75,7 @@ class HeatmapWidget : GlanceAppWidget() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = context.getString(R.string.app_name),
-                    style = TextStyle(
+                    text = context.getString(R.string.app_name), style = TextStyle(
                         color = GlanceTheme.colors.onBackground,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
@@ -87,58 +84,56 @@ class HeatmapWidget : GlanceAppWidget() {
                 Spacer(GlanceModifier.defaultWeight())
                 // Add Button
                 Box(
-                    modifier = GlanceModifier
-                        .size(32.dp)
-                        .background(GlanceTheme.colors.primary)
+                    modifier = GlanceModifier.size(32.dp).background(GlanceTheme.colors.primary)
                         .clickable(actionStartActivity<NoteEditorActivity>()),
                     contentAlignment = Alignment.Center
                 ) {
-                   Image(
-                       provider = ImageProvider(R.drawable.ic_add),
-                       contentDescription = "Add Card",
-                       modifier = GlanceModifier.size(20.dp),
-                       colorFilter = androidx.glance.ColorFilter.tint(GlanceTheme.colors.onPrimary)
-                   )
+                    Image(
+                        provider = ImageProvider(R.drawable.ic_add),
+                        contentDescription = "Add Card",
+                        modifier = GlanceModifier.size(20.dp),
+                        colorFilter = androidx.glance.ColorFilter.tint(GlanceTheme.colors.onPrimary)
+                    )
                 }
             }
-            
+
             Spacer(GlanceModifier.height(16.dp))
 
             // Heatmap Grid
             // We want last 'numWeeks' weeks.
             // Rows: 7 (Sun-Sat)
             // Cols: numWeeks
-            
+
             val today = System.currentTimeMillis()
             // Normalize to day index
             val dayMillis = 86400000L
             val currentDayIdx = today / dayMillis
-            
+
             Row(modifier = GlanceModifier.fillMaxWidth()) {
-               for (w in (numWeeks - 1) downTo 0) {
-                   Column(modifier = GlanceModifier.padding(end = 2.dp)) {
-                       for (d in 0..6) {
-                           // d=0 is Sunday? 
-                           // We need to calculate the day index for this cell.
-                           val calendar = Calendar.getInstance()
-                           val todayDow = calendar.get(Calendar.DAY_OF_WEEK) - 1 // 0 (Sun) - 6 (Sat)
-                           
-                           val weeksFromEnd = (numWeeks - 1) - w
-                           val dayOffset = (weeksFromEnd * 7) + (todayDow - d)
-                           val targetDayIdx = currentDayIdx - dayOffset
-                           
-                           val count = data[targetDayIdx] ?: 0
-                           val color = getColorForCount(count)
-                           
-                           Box(
-                               modifier = GlanceModifier
-                                   .size(10.dp) // Cell size
-                                   .background(color)
-                           ) {}
-                           Spacer(GlanceModifier.height(2.dp))
-                       }
-                   }
-               } 
+                for (w in (numWeeks - 1) downTo 0) {
+                    Column(modifier = GlanceModifier.padding(end = 2.dp)) {
+                        for (d in 0..6) {
+                            // d=0 is Sunday?
+                            // We need to calculate the day index for this cell.
+                            val calendar = Calendar.getInstance()
+                            val todayDow =
+                                calendar.get(Calendar.DAY_OF_WEEK) - 1 // 0 (Sun) - 6 (Sat)
+
+                            val weeksFromEnd = (numWeeks - 1) - w
+                            val dayOffset = (weeksFromEnd * 7) + (todayDow - d)
+                            val targetDayIdx = currentDayIdx - dayOffset
+
+                            val count = data[targetDayIdx] ?: 0
+                            val color = getColorForCount(count)
+
+                            Box(
+                                modifier = GlanceModifier.size(10.dp) // Cell size
+                                    .background(color)
+                            ) {}
+                            Spacer(GlanceModifier.height(2.dp))
+                        }
+                    }
+                }
             }
         }
     }
@@ -160,8 +155,9 @@ class HeatmapWidget : GlanceAppWidget() {
                 CollectionManager.withCol {
                     val data = mutableMapOf<Long, Int>()
                     // revlog id is in milliseconds
-                    val query = "SELECT CAST(id/86400000 AS INTEGER) as day, count() FROM revlog GROUP BY day"
-                    
+                    val query =
+                        "SELECT CAST(id/86400000 AS INTEGER) as day, count() FROM revlog GROUP BY day"
+
                     // We use useCursor from DB object if available or raw access
                     // Collection has db property.
                     val cursor = this.db.query(query)
