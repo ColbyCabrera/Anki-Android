@@ -76,8 +76,7 @@ class CompatHelper private constructor() {
                     "chromium".equals(Build.MANUFACTURER, ignoreCase = true) ||
                     "novato_cheets".equals(Build.DEVICE, ignoreCase = true)
             )
-        val isKindle: Boolean
-            get() = "amazon".equals(Build.BRAND, ignoreCase = true) || "amazon".equals(Build.MANUFACTURER, ignoreCase = true)
+
 
         fun hasScrollKeys(): Boolean = deviceHasKey(KEYCODE_PAGE_UP) || deviceHasKey(KEYCODE_PAGE_DOWN)
 

@@ -435,8 +435,7 @@ open class AnkiDroidApp :
             get() = Environment.MEDIA_MOUNTED == Environment.getExternalStorageState()
 
         fun getMarketIntent(context: Context): Intent {
-            val uri =
-                context.getString(if (CompatHelper.isKindle) R.string.link_market_kindle else R.string.link_market)
+            val uri = context.getString(R.string.link_market)
             val parsed = uri.toUri()
             return Intent(Intent.ACTION_VIEW, parsed)
         } // TODO actually this can be done by translating "link_help" string for each language when the App is
