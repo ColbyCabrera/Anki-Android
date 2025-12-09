@@ -118,7 +118,7 @@ git push
 git push --tags
 
 # Build the full set of release APKs for all flavors, with universals
-UCFLAVORS='Full Amazon Play'
+UCFLAVORS='Full Play'
 for UCFLAVOR in $UCFLAVORS; do
   ./gradlew --stop
   echo Running assemble"$UCFLAVOR"Release target with universal APK flag
@@ -144,7 +144,7 @@ for ABI in $ABIS; do
 done
 
 # Copy universal APKs for all flavors to cwd
-FLAVORS='full amazon play'
+FLAVORS='full play'
 for FLAVOR in $FLAVORS; do
   if [ "$FLAVOR" = "full" ]; then
     PREFIX=""
@@ -221,17 +221,7 @@ gh release upload v"$VERSION" "$PREFIX"AnkiDroid-"$VERSION"-full-universal-nomin
 echo "Adding proguard mappings file to Github release"
 gh release upload v"$VERSION" "$PREFIX"proguard-mappings.tar.gz
 
-# Not publishing to amazon pending: https://github.com/ankidroid/Anki-Android/issues/14161
-#if [ "$PUBLIC" = "public" ]; then
-#  ./gradlew --stop
-#  echo "Running 'publishToAmazonAppStore' gradle target"
-#  if ! ./gradlew publishToAmazonAppStore
-#  then
-#    echo "Unable to publish to amazon app store"
-#    exit 1
-#  fi
-#  echo "Remember to add release notes and submit on Amazon: https://developer.amazon.com/apps-and-games/console/app/list"
-#fi
+
 
 # Now that Git is clean and the main release is done, run the parallel release script and upload them
 echo "Running parallel package build"
