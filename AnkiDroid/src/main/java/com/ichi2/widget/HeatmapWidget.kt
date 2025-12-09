@@ -22,6 +22,7 @@ import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
+import androidx.glance.color.ColorProviders
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
@@ -38,6 +39,7 @@ import androidx.glance.text.FontFamily
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
+import androidx.glance.unit.ColorProvider
 import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.NoteEditorActivity
 import com.ichi2.anki.R
@@ -132,19 +134,13 @@ class HeatmapWidget : GlanceAppWidget() {
                             val dayOffset = (w * 7) + (todayDoW - d)
                             val checkDayIndex = currentDayIndex - dayOffset
                             val count = data[checkDayIndex] ?: 0
-                            val overlayAlpha = getHeatmapStyle(count)
+                            val (colorProvider, alpha) = getColorForCount(count, GlanceTheme.colors)
 
                             Box(
                                 modifier = GlanceModifier.size(16.dp)
-                                    .background(GlanceTheme.colors.primary).cornerRadius(4.dp)
-                            ) {
-                                Box(
-                                    modifier = GlanceModifier.fillMaxSize().background(
-                                        GlanceTheme.colors.surfaceVariant.getColor(context)
-                                            .copy(alpha = overlayAlpha)
-                                    ).cornerRadius(4.dp)
-                                ) {}
-                            }
+                                    .background(colorProvider.getColor(context).copy(alpha = alpha))
+                                    .cornerRadius(4.dp)
+                            ) {}
 
                             // Vertical Gap between days
                             if (d < 6) Spacer(GlanceModifier.height(4.dp))
@@ -158,20 +154,16 @@ class HeatmapWidget : GlanceAppWidget() {
 
     companion object HeatmapLogic {
         /**
-         * Returns the base color and overlay alpha for the heatmap cell.
+         * Returns the base color and alpha for the heatmap cell.
          */
-        fun getHeatmapStyle(count: Int): Float {
-            val overlayAlpha = when {
-                count == 0 -> 1f
-                count <= 5 -> 0.8f
-                count <= 10 -> 0.7f
-                count <= 20 -> 0.5f
-                count <= 40 -> 0.2f
-                count <= 60 -> 0.1f
-                else -> 0f
+        fun getColorForCount(count: Int, colors: ColorProviders): Pair<ColorProvider, Float> {
+            return when {
+                count == 0 -> colors.surfaceVariant to 0.5f
+                count <= 5 -> colors.primary to 0.25f
+                count <= 20 -> colors.primary to 0.5f
+                count <= 40 -> colors.primary to 0.8f
+                else -> colors.primary to 1f
             }
-
-            return overlayAlpha
         }
 
         suspend fun fetchHeatmapData(): Map<Long, Int> {
@@ -213,7 +205,19 @@ fun HeatmapWidgetPreview() {
     // Fill some days
     for (i in 0..100) {
         if (i % 3 == 0) {
-            dummyData[today - i] = (1..25).random()
+            dummyData[today - i] = 0
+        }
+        if (i % 2 == 0) {
+            dummyData[today - i] = 1
+        }
+        if (i % 3 == 0) {
+            dummyData[today - i] = 6
+        }
+        if (i % 5 == 0) {
+            dummyData[today - i] = 11
+        }
+        if (i % 11 == 0) {
+            dummyData[today - i] = 21
         }
     }
 
