@@ -19,6 +19,7 @@ import androidx.glance.LocalSize
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.layout.Alignment
@@ -79,21 +80,22 @@ class HeatmapWidget : GlanceAppWidget() {
                 Text(
                     text = context.getString(R.string.app_name), style = TextStyle(
                         color = GlanceTheme.colors.onBackground,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+
                     )
                 )
                 Spacer(GlanceModifier.defaultWeight())
                 // Add Button
                 Box(
-                    modifier = GlanceModifier.size(32.dp).background(GlanceTheme.colors.primary)
-                        .clickable(actionStartActivity<NoteEditorActivity>()),
+                    modifier = GlanceModifier.size(36.dp).background(GlanceTheme.colors.primary)
+                        .clickable(actionStartActivity<NoteEditorActivity>()).cornerRadius(200.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
-                        provider = ImageProvider(R.drawable.ic_add),
+                        provider = ImageProvider(R.drawable.add_24px),
                         contentDescription = "Add Card",
-                        modifier = GlanceModifier.size(20.dp),
+                        modifier = GlanceModifier.size(26.dp),
                         colorFilter = androidx.glance.ColorFilter.tint(GlanceTheme.colors.onPrimary)
                     )
                 }
@@ -109,33 +111,39 @@ class HeatmapWidget : GlanceAppWidget() {
             val today = System.currentTimeMillis()
             // Normalize to day index
             val dayMillis = 86400000L
-            val currentDayIdx = today / dayMillis
+            val currentDayIndex = today / dayMillis
 
-            Row(modifier = GlanceModifier.fillMaxWidth()) {
+            val calendar = Calendar.getInstance()
+            calendar.timeInMillis = today
+            val todayDoW = calendar.get(Calendar.DAY_OF_WEEK) - 1
+
+            // Inside HeatmapContent
+            Row(
+                modifier = GlanceModifier.fillMaxSize()
+                    // Align the grid to the right or left as preferred
+                    .padding(top = 16.dp)
+            ) {
                 for (w in (numWeeks - 1) downTo 0) {
-                    Column(modifier = GlanceModifier.padding(end = 2.dp)) {
+                    Column(
+                        modifier = GlanceModifier.padding(end = 4.dp) // Gap between weeks
+                    ) {
                         for (d in 0..6) {
-                            // d=0 is Sunday?
-                            // We need to calculate the day index for this cell.
-                            val calendar = Calendar.getInstance()
-                            val todayDow =
-                                calendar.get(Calendar.DAY_OF_WEEK) - 1 // 0 (Sun) - 6 (Sat)
-
-                            val weeksFromEnd = (numWeeks - 1) - w
-                            val dayOffset = (weeksFromEnd * 7) + (todayDow - d)
-                            val targetDayIdx = currentDayIdx - dayOffset
-
-                            val count = data[targetDayIdx] ?: 0
+                            val dayOffset = (w * 7) + (todayDoW - d)
+                            val checkDayIndex = currentDayIndex - dayOffset
+                            val count = data[checkDayIndex] ?: 0
                             val color = getColorForCount(count)
 
                             Box(
-                                modifier = GlanceModifier.size(10.dp) // Cell size
-                                    .background(color)
+                                modifier = GlanceModifier.size(12.dp).background(color)
+                                    .cornerRadius(2.dp)
                             ) {}
-                            Spacer(GlanceModifier.height(2.dp))
+
+                            // Vertical Gap between days
+                            if (d < 6) Spacer(GlanceModifier.height(4.dp))
                         }
                     }
                 }
+
             }
         }
     }
@@ -180,7 +188,7 @@ class HeatmapWidget : GlanceAppWidget() {
     }
 }
 
-@Preview
+@Preview(widthDp = 300, heightDp = 200)
 @OptIn(ExperimentalGlancePreviewApi::class)
 @Composable
 fun HeatmapWidgetPreview() {
@@ -191,14 +199,13 @@ fun HeatmapWidgetPreview() {
     // Fill some days
     for (i in 0..100) {
         if (i % 3 == 0) {
-             dummyData[today - i] = (1..25).random()
+            dummyData[today - i] = (1..25).random()
         }
     }
-    
+
     androidx.compose.runtime.CompositionLocalProvider(
         LocalSize provides androidx.compose.ui.unit.DpSize(300.dp, 200.dp)
     ) {
         HeatmapWidget().HeatmapContent(dummyData, context)
     }
 }
-
