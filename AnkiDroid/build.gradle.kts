@@ -123,6 +123,8 @@ dependencies {
     implementation(libs.compose.runtime)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.ui.tooling)
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
     implementation("io.coil-kt:coil-compose:2.5.0")
     implementation(libs.google.android.material)
     implementation(libs.google.code.gson)
