@@ -16,6 +16,8 @@ import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.LocalSize
+import androidx.glance.action.ActionParameters
+import androidx.glance.action.actionParametersOf
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
@@ -42,6 +44,7 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.NoteEditorActivity
+import com.ichi2.anki.NoteEditorFragment
 import com.ichi2.anki.R
 import timber.log.Timber
 import java.util.Calendar
@@ -97,11 +100,8 @@ class HeatmapWidget : GlanceAppWidget() {
         val todayCount = data[currentDayIndex] ?: 0
 
         Row(
-            modifier =
-                GlanceModifier
-                    .fillMaxSize()
-                    .background(GlanceTheme.colors.background)
-                    .padding(16.dp),
+            modifier = GlanceModifier.fillMaxSize().background(GlanceTheme.colors.background)
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // --- Left Section: Heatmap ---
@@ -111,12 +111,11 @@ class HeatmapWidget : GlanceAppWidget() {
             ) {
                 Text(
                     text = "History",
-                    style =
-                        TextStyle(
-                            color = GlanceTheme.colors.onBackground,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                        ),
+                    style = TextStyle(
+                        color = GlanceTheme.colors.onBackground,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                    ),
                 )
 
                 Spacer(GlanceModifier.height(8.dp))
@@ -141,11 +140,10 @@ class HeatmapWidget : GlanceAppWidget() {
                             ) {
                                 Text(
                                     text = day,
-                                    style =
-                                        TextStyle(
-                                            color = GlanceTheme.colors.onSurfaceVariant,
-                                            fontSize = 10.sp,
-                                        ),
+                                    style = TextStyle(
+                                        color = GlanceTheme.colors.onSurfaceVariant,
+                                        fontSize = 10.sp,
+                                    ),
                                 )
                             }
                         }
@@ -162,11 +160,10 @@ class HeatmapWidget : GlanceAppWidget() {
                                     val dayOffset = (w * 7) + (todayDoW - d)
                                     val checkDayIndex = currentDayIndex - dayOffset
                                     val count = data[checkDayIndex] ?: 0
-                                    val (colorProvider, alpha) =
-                                        getColorForCount(
-                                            count,
-                                            GlanceTheme.colors,
-                                        )
+                                    val (colorProvider, alpha) = getColorForCount(
+                                        count,
+                                        GlanceTheme.colors,
+                                    )
 
                                     // Wrapper Box with built-in spacing (12.dp = 10.dp cell + 2.dp gap)
                                     Box(
@@ -174,12 +171,10 @@ class HeatmapWidget : GlanceAppWidget() {
                                         contentAlignment = Alignment.TopCenter,
                                     ) {
                                         Box(
-                                            modifier =
-                                                GlanceModifier
-                                                    .size(14.dp)
-                                                    .background(
-                                                        colorProvider.getColor(context).copy(alpha = alpha),
-                                                    ).cornerRadius(2.dp),
+                                            modifier = GlanceModifier.size(14.dp).background(
+                                                    colorProvider.getColor(context)
+                                                        .copy(alpha = alpha),
+                                                ).cornerRadius(2.dp),
                                         ) {}
                                     }
                                 }
@@ -199,13 +194,12 @@ class HeatmapWidget : GlanceAppWidget() {
                 Column {
                     Text(
                         text = "$todayCount reviewed",
-                        style =
-                            TextStyle(
-                                color = GlanceTheme.colors.onSurfaceVariant,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.Monospace,
-                            ),
+                        style = TextStyle(
+                            color = GlanceTheme.colors.onSurfaceVariant,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace,
+                        ),
                     )
                 }
 
@@ -213,12 +207,14 @@ class HeatmapWidget : GlanceAppWidget() {
 
                 // Add Card Button
                 Box(
-                    modifier =
-                        GlanceModifier
-                            .size(56.dp)
-                            .background(GlanceTheme.colors.tertiary)
-                            .cornerRadius(200.dp)
-                            .clickable(actionStartActivity<NoteEditorActivity>()),
+                    modifier = GlanceModifier.size(56.dp).background(GlanceTheme.colors.tertiary)
+                        .cornerRadius(200.dp).clickable(
+                            actionStartActivity(
+                                NoteEditorActivity::class.java, actionParametersOf(
+                                    ActionParameters.Key<Int>(NoteEditorFragment.EXTRA_CALLER) to NoteEditorFragment.Companion.NoteEditorCaller.DECKPICKER.value
+                                )
+                            )
+                        ),
                     contentAlignment = Alignment.Center,
                 ) {
                     Image(
@@ -239,37 +235,35 @@ class HeatmapWidget : GlanceAppWidget() {
         fun getColorForCount(
             count: Int,
             colors: ColorProviders,
-        ): Pair<ColorProvider, Float> =
-            when {
-                count == 0 -> colors.surfaceVariant to 0.5f
-                count <= 5 -> colors.primary to 0.25f
-                count <= 20 -> colors.primary to 0.5f
-                count <= 40 -> colors.primary to 0.8f
-                else -> colors.primary to 1f
-            }
+        ): Pair<ColorProvider, Float> = when {
+            count == 0 -> colors.surfaceVariant to 0.5f
+            count <= 5 -> colors.primary to 0.25f
+            count <= 20 -> colors.primary to 0.5f
+            count <= 40 -> colors.primary to 0.8f
+            else -> colors.primary to 1f
+        }
 
-        suspend fun fetchHeatmapData(): Map<Long, Int> =
-            try {
-                CollectionManager.withCol {
-                    val data = mutableMapOf<Long, Int>()
-                    // revlog id is in milliseconds
-                    val query =
-                        "SELECT CAST(id/86400000 AS INTEGER) as day, count() FROM revlog GROUP BY day"
+        suspend fun fetchHeatmapData(): Map<Long, Int> = try {
+            CollectionManager.withCol {
+                val data = mutableMapOf<Long, Int>()
+                // revlog id is in milliseconds
+                val query =
+                    "SELECT CAST(id/86400000 AS INTEGER) as day, count() FROM revlog GROUP BY day"
 
-                    val cursor = this.db.query(query)
-                    cursor.use { c ->
-                        while (c.moveToNext()) {
-                            val day = c.getLong(0)
-                            val count = c.getInt(1)
-                            data[day] = count
-                        }
+                val cursor = this.db.query(query)
+                cursor.use { c ->
+                    while (c.moveToNext()) {
+                        val day = c.getLong(0)
+                        val count = c.getInt(1)
+                        data[day] = count
                     }
-                    data
                 }
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to fetch heatmap data")
-                emptyMap()
+                data
             }
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to fetch heatmap data")
+            emptyMap()
+        }
     }
 }
 
@@ -303,9 +297,7 @@ fun HeatmapWidgetPreview() {
     dummyData[today] = 294
 
     androidx.compose.runtime.CompositionLocalProvider(
-        LocalSize provides
-            androidx.compose.ui.unit
-                .DpSize(300.dp, 400.dp),
+        LocalSize provides androidx.compose.ui.unit.DpSize(300.dp, 400.dp),
     ) {
         HeatmapWidget().HeatmapContent(dummyData, context)
     }
