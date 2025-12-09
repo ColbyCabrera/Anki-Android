@@ -75,7 +75,7 @@ class HeatmapWidget : GlanceAppWidget() {
         val availableWidth = size.width - 180.dp
 
         // Cell width 10.dp + 2.dp gap = 12.dp
-        val numWeeks = (availableWidth.value / 12).toInt().coerceAtLeast(1)
+        val numWeeks = (availableWidth.value / 14).toInt().coerceAtLeast(7)
 
         val today = System.currentTimeMillis()
         val dayMillis = 86400000L
@@ -93,7 +93,7 @@ class HeatmapWidget : GlanceAppWidget() {
 
         Row(
             modifier = GlanceModifier.fillMaxSize().background(GlanceTheme.colors.background)
-                .padding(8.dp), verticalAlignment = Alignment.CenterVertically
+                .padding(16.dp), verticalAlignment = Alignment.CenterVertically
         ) {
             // --- Left Section: Heatmap ---
             // Removed Alignment.CenterVertically to prevent vertical clipping if content is tall
@@ -112,8 +112,9 @@ class HeatmapWidget : GlanceAppWidget() {
                     val days = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
                     days.forEachIndexed { index, day ->
                         Box(
-                            modifier = GlanceModifier.height(if (index < 6) 12.dp else 10.dp),
+                            modifier = GlanceModifier.height(15.dp),
                             contentAlignment = Alignment.CenterStart
+
                         ) {
                             Text(
                                 text = day, style = TextStyle(
@@ -136,19 +137,18 @@ class HeatmapWidget : GlanceAppWidget() {
                                 val checkDayIndex = currentDayIndex - dayOffset
                                 val count = data[checkDayIndex] ?: 0
                                 val (colorProvider, alpha) = getColorForCount(
-                                    count,
-                                    GlanceTheme.colors
+                                    count, GlanceTheme.colors
                                 )
 
                                 // Wrapper Box with built-in spacing (12.dp = 10.dp cell + 2.dp gap)
                                 Box(
-                                    modifier = GlanceModifier.height(if (d < 6) 12.dp else 10.dp),
+                                    modifier = GlanceModifier.height(if (d < 6) 15.dp else 13.dp),
                                     contentAlignment = Alignment.TopCenter
                                 ) {
                                     Box(
-                                        modifier = GlanceModifier.size(10.dp).background(
-                                                colorProvider.getColor(context).copy(alpha = alpha)
-                                            ).cornerRadius(2.dp)
+                                        modifier = GlanceModifier.size(13.dp).background(
+                                            colorProvider.getColor(context).copy(alpha = alpha)
+                                        ).cornerRadius(2.dp)
                                     ) {}
                                 }
                             }
