@@ -1,7 +1,6 @@
 package com.ichi2.widget
 
 import android.content.Context
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,7 +33,6 @@ import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
-import androidx.glance.layout.width
 import androidx.glance.preview.ExperimentalGlancePreviewApi
 import androidx.glance.preview.Preview
 import androidx.glance.text.FontFamily
@@ -109,13 +107,12 @@ class HeatmapWidget : GlanceAppWidget() {
                 verticalAlignment = Alignment.Top,
             ) {
                 Text(
-                    text = "Anki",
-                    style =
-                        TextStyle(
-                            color = GlanceTheme.colors.onBackground,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                        ),
+                    text = "History",
+                    style = TextStyle(
+                        color = GlanceTheme.colors.onBackground,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                    ),
                 )
 
                 Spacer(GlanceModifier.height(8.dp))
@@ -173,9 +170,8 @@ class HeatmapWidget : GlanceAppWidget() {
                                     ) {
                                         Box(
                                             modifier = GlanceModifier.size(14.dp).background(
-                                                    colorProvider.getColor(context)
-                                                        .copy(alpha = alpha),
-                                                ).cornerRadius(2.dp),
+                                                colorProvider.getColor(context).copy(alpha = alpha),
+                                            ).cornerRadius(2.dp),
                                         ) {}
                                     }
                                 }
@@ -192,37 +188,9 @@ class HeatmapWidget : GlanceAppWidget() {
                 horizontalAlignment = Alignment.End,
                 modifier = GlanceModifier.fillMaxHeight(),
             ) {
-                /*// Material Shape (Small)
-                Row {
-                    Box(
-                        modifier = GlanceModifier.size(40.dp)
-                            .background(GlanceTheme.colors.surfaceVariant).cornerRadius(20.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Box(
-                            modifier = GlanceModifier.size(24.dp)
-                                .background(GlanceTheme.colors.onSurfaceVariant).cornerRadius(8.dp),
-                        ) {}
-                    }
-                    Spacer(modifier = GlanceModifier.width(8.dp))
-                    Box(
-                        modifier = GlanceModifier.size(40.dp)
-                            .background(GlanceTheme.colors.surfaceVariant).cornerRadius(20.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Box(
-                            modifier = GlanceModifier.size(24.dp)
-                                .background(GlanceTheme.colors.onSurfaceVariant).cornerRadius(8.dp),
-                        ) {}
-                    }
-                }*/
-
-
-
                 Column {
                     Text(
-                        text = "$todayCount reviewed",
-                        style = TextStyle(
+                        text = "$todayCount reviewed", style = TextStyle(
                             color = GlanceTheme.colors.onSurfaceVariant,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
@@ -231,33 +199,20 @@ class HeatmapWidget : GlanceAppWidget() {
                     )
                 }
 
-
                 Spacer(GlanceModifier.defaultWeight())
 
                 // Add Card Button
                 Box(
-                    modifier = GlanceModifier.background(GlanceTheme.colors.surfaceVariant)
-                        .cornerRadius(20.dp).clickable(actionStartActivity<NoteEditorActivity>())
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    modifier = GlanceModifier.size(56.dp).background(GlanceTheme.colors.tertiary)
+                        .cornerRadius(200.dp).clickable(actionStartActivity<NoteEditorActivity>()),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Image(
-                            provider = ImageProvider(R.drawable.add_24px),
-                            contentDescription = null,
-                            modifier = GlanceModifier.size(16.dp),
-                            colorFilter = ColorFilter.tint(GlanceTheme.colors.onSurfaceVariant),
-                        )
-                        Spacer(GlanceModifier.width(4.dp))
-                        Text(
-                            text = "ADD CARD",
-                            style = TextStyle(
-                                color = GlanceTheme.colors.onSurfaceVariant,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                            ),
-                        )
-                    }
+                    Image(
+                        provider = ImageProvider(R.drawable.add_24px),
+                        contentDescription = null,
+                        modifier = GlanceModifier.size(24.dp),
+                        colorFilter = ColorFilter.tint(GlanceTheme.colors.onTertiary),
+                    )
                 }
             }
         }
