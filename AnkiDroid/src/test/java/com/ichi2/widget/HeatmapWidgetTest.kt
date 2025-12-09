@@ -5,7 +5,9 @@ import androidx.compose.ui.graphics.Color
 import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.libanki.Collection
 import com.ichi2.anki.libanki.DB
+import com.ichi2.anki.libanki.LibAnki
 import kotlinx.coroutines.test.runTest
+import net.ankiweb.rsdroid.Backend
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -31,6 +33,7 @@ class HeatmapWidgetTest {
     }
 
     @Test
+    @Suppress("DEPRECATION")
     fun testFetchHeatmapData() = runTest {
         // Mock Cursor
         val mockCursor = mock<Cursor>()
@@ -53,6 +56,10 @@ class HeatmapWidgetTest {
             on { db } doReturn mockDb
         }
 
+        // Mock Backend to prevent loading native libraries
+        val mockBackend = mock<Backend>()
+        setBackend(mockBackend)
+
         // Inject mock collection
         CollectionManager.setColForTests(mockCol)
 
@@ -67,6 +74,14 @@ class HeatmapWidgetTest {
         } finally {
             // Cleanup
             CollectionManager.setColForTests(null)
+            setBackend(null)
+        }
+    }
+
+    companion object {
+        @Suppress("DEPRECATION")
+        fun setBackend(backend: Backend?) {
+            LibAnki.backend = backend
         }
     }
 }
