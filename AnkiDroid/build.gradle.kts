@@ -10,13 +10,13 @@ plugins {
 }
 
 android {
-    compileSdk = 35
+    compileSdk = 36
     namespace = "com.ichi2.anki"
 
     defaultConfig {
         applicationId = "com.ichi2.anki"
-        minSdk = 21
-        targetSdk = 34
+        minSdk = 31
+        targetSdk = 36
         versionCode = 20190101
         versionName = "2.19alpha1"
         testInstrumentationRunner = "com.ichi2.test.utils.AnkiDroidTestRunner"
