@@ -34,6 +34,7 @@ import androidx.glance.layout.padding
 import androidx.glance.layout.size
 import androidx.glance.preview.ExperimentalGlancePreviewApi
 import androidx.glance.preview.Preview
+import androidx.glance.text.FontFamily
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
@@ -82,7 +83,7 @@ class HeatmapWidget : GlanceAppWidget() {
                         color = GlanceTheme.colors.onBackground,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
-
+                        fontFamily = FontFamily(context.resources.getResourceEntryName(R.font.google_sans_rounded_regular))
                     )
                 )
                 Spacer(GlanceModifier.defaultWeight())
