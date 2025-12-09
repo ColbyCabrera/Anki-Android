@@ -80,7 +80,7 @@ class HeatmapWidget : GlanceAppWidget() {
         val availableWidth = size.width - 180.dp
 
         // Cell width 10.dp + 2.dp gap = 12.dp
-        val numWeeks = (availableWidth.value / 16).toInt().coerceAtLeast(6)
+        val numWeeks = (availableWidth.value / 16).toInt().coerceAtLeast(8)
 
         val today = System.currentTimeMillis()
         val dayMillis = 86400000L
