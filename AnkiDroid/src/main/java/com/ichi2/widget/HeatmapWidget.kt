@@ -245,10 +245,14 @@ class HeatmapWidget : GlanceAppWidget() {
         }
     }
 
-    companion object HeatmapLogic {
+    companion object {
         private val RESERVED_WIDTH_FOR_LABELS_AND_PANEL = 180.dp
         private const val WEEK_COLUMN_WIDTH = 16
-        private const val DAY_IN_MILLIS = 86400000L
+        const val DAY_IN_MILLIS = 86400000L
+
+        private const val HEATMAP_LEVEL_1_MAX_COUNT = 5
+        private const val HEATMAP_LEVEL_2_MAX_COUNT = 20
+        private const val HEATMAP_LEVEL_3_MAX_COUNT = 40
 
         /**
          * Returns the base color and alpha for the heatmap cell.
@@ -258,9 +262,9 @@ class HeatmapWidget : GlanceAppWidget() {
             colors: ColorProviders,
         ): Pair<ColorProvider, Float> = when {
             count == 0 -> colors.surfaceVariant to 0.5f
-            count <= 5 -> colors.primary to 0.25f
-            count <= 20 -> colors.primary to 0.5f
-            count <= 40 -> colors.primary to 0.8f
+            count <= HEATMAP_LEVEL_1_MAX_COUNT -> colors.primary to 0.25f
+            count <= HEATMAP_LEVEL_2_MAX_COUNT -> colors.primary to 0.5f
+            count <= HEATMAP_LEVEL_3_MAX_COUNT -> colors.primary to 0.8f
             else -> colors.primary to 1f
         }
 
@@ -295,7 +299,7 @@ class HeatmapWidget : GlanceAppWidget() {
 fun HeatmapWidgetPreview() {
     val context = androidx.glance.LocalContext.current
     // Generate dummy data
-    val today = System.currentTimeMillis() / 86400000L
+    val today = System.currentTimeMillis() / HeatmapWidget.DAY_IN_MILLIS
     val dummyData = mutableMapOf<Long, Int>()
     // Fill some days
     for (i in 0..100) {
