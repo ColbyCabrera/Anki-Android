@@ -7,9 +7,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.glance.ColorFilter
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
@@ -97,12 +97,12 @@ class HeatmapWidget : GlanceAppWidget() {
                         provider = ImageProvider(R.drawable.add_24px),
                         contentDescription = "Add Card",
                         modifier = GlanceModifier.size(26.dp),
-                        colorFilter = androidx.glance.ColorFilter.tint(GlanceTheme.colors.onPrimary)
+                        colorFilter = ColorFilter.tint(GlanceTheme.colors.onPrimary)
                     )
                 }
             }
 
-            Spacer(GlanceModifier.height(16.dp))
+            Spacer(GlanceModifier.height(8.dp))
 
             // Heatmap Grid
             // We want last 'numWeeks' weeks.
@@ -120,9 +120,9 @@ class HeatmapWidget : GlanceAppWidget() {
 
             // Inside HeatmapContent
             Row(
-                modifier = GlanceModifier.fillMaxSize()
-                    // Align the grid to the right or left as preferred
-                    .padding(top = 16.dp)
+                modifier = GlanceModifier.fillMaxSize().padding(top = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+
             ) {
                 for (w in (numWeeks - 1) downTo 0) {
                     Column(
@@ -132,12 +132,19 @@ class HeatmapWidget : GlanceAppWidget() {
                             val dayOffset = (w * 7) + (todayDoW - d)
                             val checkDayIndex = currentDayIndex - dayOffset
                             val count = data[checkDayIndex] ?: 0
-                            val color = getColorForCount(count)
+                            val overlayAlpha = getHeatmapStyle(count)
 
                             Box(
-                                modifier = GlanceModifier.size(12.dp).background(color)
-                                    .cornerRadius(2.dp)
-                            ) {}
+                                modifier = GlanceModifier.size(16.dp)
+                                    .background(GlanceTheme.colors.primary).cornerRadius(4.dp)
+                            ) {
+                                Box(
+                                    modifier = GlanceModifier.fillMaxSize().background(
+                                        GlanceTheme.colors.surfaceVariant.getColor(context)
+                                            .copy(alpha = overlayAlpha)
+                                    ).cornerRadius(4.dp)
+                                ) {}
+                            }
 
                             // Vertical Gap between days
                             if (d < 6) Spacer(GlanceModifier.height(4.dp))
@@ -150,15 +157,21 @@ class HeatmapWidget : GlanceAppWidget() {
     }
 
     companion object HeatmapLogic {
-        fun getColorForCount(count: Int): Color {
-            // Simple thresholding
-            return when {
-                count == 0 -> Color(0xFFE0E0E0) // Light grey for empty
-                count <= 5 -> Color(0xFF9BE9A8)
-                count <= 10 -> Color(0xFF40C463)
-                count <= 20 -> Color(0xFF30A14E)
-                else -> Color(0xFF216E39)
+        /**
+         * Returns the base color and overlay alpha for the heatmap cell.
+         */
+        fun getHeatmapStyle(count: Int): Float {
+            val overlayAlpha = when {
+                count == 0 -> 1f
+                count <= 5 -> 0.8f
+                count <= 10 -> 0.7f
+                count <= 20 -> 0.5f
+                count <= 40 -> 0.2f
+                count <= 60 -> 0.1f
+                else -> 0f
             }
+
+            return overlayAlpha
         }
 
         suspend fun fetchHeatmapData(): Map<Long, Int> {
