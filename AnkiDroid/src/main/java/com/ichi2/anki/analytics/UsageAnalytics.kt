@@ -234,7 +234,7 @@ object UsageAnalytics {
         if (!optIn) {
             return
         }
-        sAnalytics!!.event().eventCategory(category).eventAction(action)
+        val event  = sAnalytics!!.event().eventCategory(category).eventAction(action)
         if (label != null) {
             event.eventLabel(label)
         }
@@ -322,7 +322,7 @@ object UsageAnalytics {
 
     /**
      * An Android-specific device config generator. Without this it's "Desktop" and unknown for all hardware.
-     * It is interesting to us what devices people use though (for instance: is Amazon Kindle support worth it?
+     * It is interesting to us what devices people use though (for instance:
      * Is anyone still using e-ink devices? How many people are on tablets? ChromeOS?)
      */
     private class AndroidDefaultRequest : DefaultRequest() {

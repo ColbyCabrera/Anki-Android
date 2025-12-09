@@ -24,9 +24,7 @@ android {
         create("play") {
             dimension = "appStore"
         }
-        create("amazon") {
-            dimension = "appStore"
-        }
+
         // A 'full' build has no restrictions on storage/camera. Distributed on GitHub/F-Droid
         create("full") {
             dimension = "appStore"
