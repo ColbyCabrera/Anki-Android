@@ -67,7 +67,6 @@ class HeatmapWidget : GlanceAppWidget() {
         context: Context,
         id: GlanceId,
     ) {
-
         // Fetch data before providing content to ensure it's fresh on every update
         val heatmapData = fetchHeatmapData()
         provideContent {
@@ -153,7 +152,7 @@ class HeatmapWidget : GlanceAppWidget() {
                             shortWeekdays[Calendar.THURSDAY],
                             shortWeekdays[Calendar.FRIDAY],
                             shortWeekdays[Calendar.SATURDAY],
-                            shortWeekdays[Calendar.SUNDAY]
+                            shortWeekdays[Calendar.SUNDAY],
                         )
                         days.forEachIndexed { _, day ->
                             Box(
@@ -194,8 +193,9 @@ class HeatmapWidget : GlanceAppWidget() {
                                     ) {
                                         Box(
                                             modifier = GlanceModifier.size(14.dp).background(
-                                                colorProvider.getColor(context).copy(alpha = alpha),
-                                            ).cornerRadius(2.dp),
+                                                    colorProvider.getColor(context)
+                                                        .copy(alpha = alpha),
+                                                ).cornerRadius(2.dp),
                                         ) {}
                                     }
                                 }
@@ -215,7 +215,9 @@ class HeatmapWidget : GlanceAppWidget() {
                 Column {
                     Text(
                         text = context.resources.getQuantityString(
-                            R.plurals.heatmap_widget_reviewed_count, todayCount, todayCount
+                            R.plurals.heatmap_widget_reviewed_count,
+                            todayCount,
+                            todayCount,
                         ),
                         style = TextStyle(
                             color = GlanceTheme.colors.onSurfaceVariant,
@@ -233,10 +235,11 @@ class HeatmapWidget : GlanceAppWidget() {
                     modifier = GlanceModifier.size(56.dp).background(GlanceTheme.colors.tertiary)
                         .cornerRadius(200.dp).clickable(
                             actionStartActivity(
-                                NoteEditorActivity::class.java, actionParametersOf(
-                                    ActionParameters.Key<Int>(NoteEditorFragment.EXTRA_CALLER) to NoteEditorFragment.Companion.NoteEditorCaller.DECKPICKER.value
-                                )
-                            )
+                                NoteEditorActivity::class.java,
+                                actionParametersOf(
+                                    ActionParameters.Key<Int>(NoteEditorFragment.EXTRA_CALLER) to NoteEditorFragment.Companion.NoteEditorCaller.DECKPICKER.value,
+                                ),
+                            ),
                         ),
                     contentAlignment = Alignment.Center,
                 ) {
