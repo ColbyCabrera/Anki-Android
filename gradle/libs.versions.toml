@@ -60,7 +60,7 @@ androidxWork = "2.10.3"
 ankiBackend = '0.1.61-anki25.09'
 autoService = "1.1.1"
 autoServiceAnnotations = "1.1.1"
-coil = "2.4.0"
+coil = "2.5.0"
 colorpicker = "1.2.0"
 # https://commons.apache.org/proper/commons-collections/changes.html
 commonsCollections4 = "4.5.0"
@@ -125,7 +125,7 @@ uiText = "1.9.2"
 animation = "1.9.5"
 uiUnit = "1.9.2"
 material3WindowSizeClass = "1.4.0"
-uiTestJunit4 = "1.9.5"
+uiTestJunit4 = "1.7.6"
 glanceAppWidget = "1.2.0-rc01"
 glancePreview = "1.2.0-rc01"
 
