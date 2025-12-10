@@ -22,7 +22,6 @@ import timber.log.Timber
  *
  *  * The languages associated with questions and answers.
  *  * The state of the whiteboard.
- *  * The cached state of the widget.
  *
  */
 @KotlinCleanup("see about lateinit")
