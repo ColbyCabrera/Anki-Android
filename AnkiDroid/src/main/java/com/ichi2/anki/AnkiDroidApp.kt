@@ -210,7 +210,13 @@ open class AnkiDroidApp :
         } else {
             // Register for notifications
             Timber.i("AnkiDroidApp: Starting Services")
-            notifications.observeForever { NotificationService.triggerNotificationFor(this) }
+            notifications.observeForever {
+                applicationScope.launch {
+                    NotificationService.triggerNotificationFor(
+                        this@AnkiDroidApp
+                    )
+                }
+            }
         }
 
         // listen for day rollover: time + timezone changes

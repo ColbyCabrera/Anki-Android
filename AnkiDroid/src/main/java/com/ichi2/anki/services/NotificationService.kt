@@ -28,7 +28,11 @@ import com.ichi2.anki.R
 import com.ichi2.anki.preferences.PENDING_NOTIFICATIONS_ONLY
 import com.ichi2.anki.preferences.sharedPrefs
 
+import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.utils.ext.allDecksCounts
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class NotificationService : BroadcastReceiver() {
@@ -36,21 +40,7 @@ class NotificationService : BroadcastReceiver() {
         /** The id of the notification for due cards.  */
         private const val WIDGET_NOTIFY_ID = 1
 
-        private fun fetchDue(): Int {
-            return try {
-                kotlinx.coroutines.runBlocking {
-                    com.ichi2.anki.CollectionManager.withCol {
-                        val counts = sched.allDecksCounts()
-                        counts.new + counts.lrn + counts.rev
-                    }
-                }
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to fetch due counts")
-                0
-            }
-        }
-
-        fun triggerNotificationFor(context: Context) {
+        suspend fun triggerNotificationFor(context: Context) {
             Timber.i("NotificationService: OnStartCommand")
             val manager =
                 context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -62,7 +52,15 @@ class NotificationService : BroadcastReceiver() {
                         PENDING_NOTIFICATIONS_ONLY.toString(),
                     )!!
                     .toInt()
-            val dueCardsCount = fetchDue()
+            val dueCardsCount = try {
+                CollectionManager.withCol {
+                    val counts = sched.allDecksCounts()
+                    counts.new + counts.lrn + counts.rev
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to fetch due counts")
+                0
+            }
             if (dueCardsCount >= minCardsDue) {
                 // Build basic notification
                 val cardsDueText =
@@ -117,6 +115,13 @@ class NotificationService : BroadcastReceiver() {
         context: Context,
         intent: Intent,
     ) {
-        triggerNotificationFor(context)
+        val pendingResult = goAsync()
+        CoroutineScope(Dispatchers.Default).launch {
+            try {
+                triggerNotificationFor(context)
+            } finally {
+                pendingResult.finish()
+            }
+        }
     }
 }
