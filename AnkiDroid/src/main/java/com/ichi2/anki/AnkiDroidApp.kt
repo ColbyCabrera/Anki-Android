@@ -61,8 +61,6 @@ import com.ichi2.utils.AdaptionUtil
 import com.ichi2.utils.ExceptionUtil
 import com.ichi2.utils.LanguageUtil
 import com.ichi2.utils.Permissions
-import com.ichi2.widget.cardanalysis.CardAnalysisWidget
-import com.ichi2.widget.deckpicker.DeckPickerWidget
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -317,8 +315,9 @@ open class AnkiDroidApp :
     ) {
         Timber.d("ChangeSubscriber - opExecuted called with changes: %s", changes)
         if (changes.studyQueues) {
-            DeckPickerWidget.updateDeckPickerWidgets(this)
-            CardAnalysisWidget.updateCardAnalysisWidgets(this)
+            // DeckPickerWidget.updateDeckPickerWidgets(this)
+            // CardAnalysisWidget.updateCardAnalysisWidgets(this)
+            // Heatmap widget update is handled via specific triggers or periodic updates
         } else {
             Timber.d("No relevant changes to update the widget")
         }
