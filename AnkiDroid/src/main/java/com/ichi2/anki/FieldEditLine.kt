@@ -65,7 +65,9 @@ class FieldEditLine : FrameLayout {
         label = findViewById(R.id.id_label)
         toggleSticky =
             findViewById<ImageButton>(R.id.id_toggle_sticky_button).apply {
-                setTooltipTextCompat(CollectionManager.TR.editingToggleSticky())
+                val description = CollectionManager.TR.editingToggleSticky()
+                setTooltipTextCompat(description)
+                contentDescription = description
             }
         mediaButton = findViewById(R.id.id_media_button)
         val constraintLayout: ConstraintLayout = findViewById(R.id.constraint_layout)
@@ -108,10 +110,19 @@ class FieldEditLine : FrameLayout {
     }
 
     private fun setExpanderBackgroundImage() {
+        val description: String
         when (expansionState) {
-            ExpansionState.COLLAPSED -> expandButton.background = getBackgroundImage(R.drawable.ic_expand_more_black_24dp)
-            ExpansionState.EXPANDED -> expandButton.background = getBackgroundImage(R.drawable.ic_expand_less_black_24dp)
+            ExpansionState.COLLAPSED -> {
+                expandButton.background = getBackgroundImage(R.drawable.ic_expand_more_black_24dp)
+                description = context.getString(R.string.expand)
+            }
+            ExpansionState.EXPANDED -> {
+                expandButton.background = getBackgroundImage(R.drawable.ic_expand_less_black_24dp)
+                description = context.getString(R.string.collapse)
+            }
         }
+        expandButton.contentDescription = description
+        expandButton.setTooltipTextCompat(description)
     }
 
     private fun getBackgroundImage(
