@@ -42,9 +42,6 @@ object WidgetStatus {
         // Create the new job
         val newJob = launchUpdateJob(context)
 
-        // Clear reference on completion so we don't hold onto old jobs
-        newJob.invokeOnCompletion { updateJobRef.compareAndSet(newJob, null) }
-
         // Atomically try to install it; only succeeds if still null/completed
         if (updateJobRef.compareAndSet(currentJob, newJob)) {
             Timber.d("WidgetStatus.update(): updating")
