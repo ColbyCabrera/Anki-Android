@@ -37,8 +37,13 @@ import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.CollectionManager.withCol
 import com.ichi2.anki.DeckSpinnerSelection
 import com.ichi2.anki.R
+import com.ichi2.anki.dialogs.compose.ExportDialog
 import com.ichi2.anki.common.time.TimeManager
 import com.ichi2.anki.common.time.getTimestamp
+import com.ichi2.anki.dialogs.compose.ApkgExportState
+import com.ichi2.anki.dialogs.compose.CardsExportState
+import com.ichi2.anki.dialogs.compose.CollectionExportState
+import com.ichi2.anki.dialogs.compose.NotesExportState
 import com.ichi2.anki.exportApkgPackage
 import com.ichi2.anki.exportCollectionPackage
 import com.ichi2.anki.exportSelectedCards

@@ -14,7 +14,7 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.                           *
  ****************************************************************************************/
 
-package com.ichi2.anki.ui.compose
+package com.ichi2.anki.deckpicker.compose
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement

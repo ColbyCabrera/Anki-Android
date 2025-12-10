@@ -30,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import com.ichi2.anki.R
+import com.ichi2.anki.dialogs.compose.BrowserOptions
 import com.ichi2.anki.model.CardsOrNotes
 
 @Composable

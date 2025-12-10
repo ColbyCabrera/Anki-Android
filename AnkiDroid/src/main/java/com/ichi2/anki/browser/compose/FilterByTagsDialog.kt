@@ -24,8 +24,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.ichi2.anki.R
 import com.ichi2.anki.browser.CardBrowserViewModel
-import com.ichi2.anki.compose.TagsDialog
-import com.ichi2.anki.compose.TagsState
+import com.ichi2.anki.dialogs.compose.TagsDialog
+import com.ichi2.anki.dialogs.compose.TagsState
 
 @Composable
 fun FilterByTagsDialog(

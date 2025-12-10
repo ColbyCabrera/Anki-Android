@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License along with         *
  * this program.  If not, see <http://www.gnu.org/licenses/>.                           *
  ****************************************************************************************/
-package com.ichi2.anki.ui.compose
+package com.ichi2.anki.deckpicker.compose
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -90,7 +90,12 @@ import androidx.graphics.shapes.Morph
 import com.ichi2.anki.R
 import com.ichi2.anki.SyncIconState
 import com.ichi2.anki.deckpicker.DisplayDeckNode
+import com.ichi2.anki.ui.compose.SnackbarPaddingBottom
 import com.ichi2.utils.MorphShape
+import com.ichi2.anki.ui.compose.components.SyncIcon
+import com.ichi2.anki.ui.compose.components.Scrim
+import com.ichi2.anki.ui.compose.components.ExpandableFab
+import com.ichi2.anki.ui.compose.components.ExpandableFabContainer
 
 private val expandedDeckCardRadius = 24.dp
 private val collapsedDeckCardRadius = 70.dp
