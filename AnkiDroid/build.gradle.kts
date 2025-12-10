@@ -22,9 +22,6 @@ android {
         testInstrumentationRunner = "com.ichi2.test.utils.AnkiDroidTestRunner"
         vectorDrawables.useSupportLibrary = true
 
-        // TODO: remove this once the minSdk is 26
-        multiDexEnabled = true
-
         ndk {
             abiFilters.addAll(listOf("x86", "x86_64", "armeabi-v7a", "arm64-v8a"))
         }
