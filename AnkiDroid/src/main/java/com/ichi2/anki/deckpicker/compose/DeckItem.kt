@@ -84,6 +84,12 @@ internal class RoundedPolygonShape(private val polygon: RoundedPolygon) : Shape 
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+private val CloverShape = RoundedPolygonShape(MaterialShapes.Clover4Leaf)
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+private val GhostishShape = RoundedPolygonShape(MaterialShapes.Ghostish)
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun DeckItem(
@@ -145,13 +151,13 @@ fun DeckItem(
             ) {
                 CardCountsContainer(
                     cardCount = deck.newCount,
-                    shape = RoundedPolygonShape(MaterialShapes.Clover4Leaf),
+                    shape = CloverShape,
                     containerColor = MaterialTheme.colorScheme.secondaryFixedDim,
                 )
 
                 CardCountsContainer(
                     cardCount = deck.revCount,
-                    shape = RoundedPolygonShape(MaterialShapes.Ghostish),
+                    shape = GhostishShape,
                     containerColor = MaterialTheme.colorScheme.secondary,
                 )
             }
@@ -299,6 +305,6 @@ fun CardCountsContainer(
 @Composable
 fun CardCountsContainerPreview() {
     CardCountsContainer(
-        cardCount = 10, shape = RoundedPolygonShape(MaterialShapes.Clover4Leaf)
+        cardCount = 10, shape = CloverShape
     )
 }
