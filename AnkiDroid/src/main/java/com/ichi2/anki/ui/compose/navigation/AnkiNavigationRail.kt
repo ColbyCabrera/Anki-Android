@@ -14,7 +14,7 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.ichi2.anki.ui.compose
+package com.ichi2.anki.ui.compose.navigation
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes

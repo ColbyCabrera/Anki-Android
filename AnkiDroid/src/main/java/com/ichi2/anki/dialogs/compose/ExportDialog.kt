@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU General Public License along with         *
  * this program.  If not, see <http://www.gnu.org/licenses/>.                           *
  ****************************************************************************************/
-package com.ichi2.anki.export
+package com.ichi2.anki.dialogs.compose
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState

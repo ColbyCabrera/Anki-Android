@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU General Public License along with         *
  * this program.  If not, see <http://www.gnu.org/licenses/>.                           *
  ****************************************************************************************/
-package com.ichi2.anki.ui.compose
+package com.ichi2.anki.deckpicker.compose
 
 import android.text.style.URLSpan
 import androidx.compose.foundation.background

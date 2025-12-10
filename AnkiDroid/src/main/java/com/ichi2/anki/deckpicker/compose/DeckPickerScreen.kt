@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License along with         *
  * this program.  If not, see <http://www.gnu.org/licenses/>.                           *
  ****************************************************************************************/
-package com.ichi2.anki.ui.compose
+package com.ichi2.anki.deckpicker.compose
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -25,7 +25,6 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -73,15 +72,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.graphicsLayer
-
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -90,6 +87,11 @@ import androidx.graphics.shapes.Morph
 import com.ichi2.anki.R
 import com.ichi2.anki.SyncIconState
 import com.ichi2.anki.deckpicker.DisplayDeckNode
+import com.ichi2.anki.ui.compose.SnackbarPaddingBottom
+import com.ichi2.anki.ui.compose.components.ExpandableFab
+import com.ichi2.anki.ui.compose.components.ExpandableFabContainer
+import com.ichi2.anki.ui.compose.components.Scrim
+import com.ichi2.anki.ui.compose.components.SyncIcon
 import com.ichi2.utils.MorphShape
 
 private val expandedDeckCardRadius = 24.dp

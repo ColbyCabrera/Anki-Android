@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU General Public License along with         *
  * this program.  If not, see <http://www.gnu.org/licenses/>.                           *
  ****************************************************************************************/
-package com.ichi2.anki.notetype
+package com.ichi2.anki.notetype.compose
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.ichi2.anki.R
+import com.ichi2.anki.notetype.ManageNoteTypeUiModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
