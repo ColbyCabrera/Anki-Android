@@ -51,7 +51,7 @@ object WidgetStatus {
             }
 
             Timber.v("launchUpdateJob completed")
-        } catch (exc: java.lang.Exception) {
+        } catch (exc: Exception) {
             Timber.w(exc, "failure in widget update")
         }
     }
