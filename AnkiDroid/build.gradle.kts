@@ -102,7 +102,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
-    implementation(libs.androidx.multidex)
     implementation(libs.androidx.preference.ktx)
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.room.runtime)
