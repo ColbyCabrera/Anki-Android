@@ -211,7 +211,7 @@ open class AnkiDroidApp :
             // Register for notifications
             Timber.i("AnkiDroidApp: Starting Services")
             notifications.observeForever {
-                applicationScope.launch {
+                applicationScope.launch(Dispatchers.Default) {
                     NotificationService.triggerNotificationFor(
                         this@AnkiDroidApp
                     )
@@ -309,8 +309,6 @@ open class AnkiDroidApp :
 
     /**
      * Callback method invoked when operations that affect the app state are executed.
-     * If relevant changes related to the study queues are detected, the Deck Picker Widgets
-     * are updated accordingly.
      *
      * @param changes The set of changes that occurred.
      * @param handler An optional handler that can be used for custom processing (unused here).
