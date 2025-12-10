@@ -19,11 +19,6 @@ package com.ichi2.widget
 
 import android.content.Context
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.ColorFilter
@@ -72,14 +67,11 @@ class HeatmapWidget : GlanceAppWidget() {
         context: Context,
         id: GlanceId,
     ) {
+
+        // Fetch data before providing content to ensure it's fresh on every update
+        val heatmapData = fetchHeatmapData()
         provideContent {
             GlanceTheme {
-                var heatmapData by remember { mutableStateOf<Map<Long, Int>>(emptyMap()) }
-
-                LaunchedEffect(Unit) {
-                    heatmapData = fetchHeatmapData()
-                }
-
                 HeatmapContent(heatmapData, context)
             }
         }
@@ -202,9 +194,8 @@ class HeatmapWidget : GlanceAppWidget() {
                                     ) {
                                         Box(
                                             modifier = GlanceModifier.size(14.dp).background(
-                                                    colorProvider.getColor(context)
-                                                        .copy(alpha = alpha),
-                                                ).cornerRadius(2.dp),
+                                                colorProvider.getColor(context).copy(alpha = alpha),
+                                            ).cornerRadius(2.dp),
                                         ) {}
                                     }
                                 }
@@ -224,9 +215,7 @@ class HeatmapWidget : GlanceAppWidget() {
                 Column {
                     Text(
                         text = context.resources.getQuantityString(
-                            R.plurals.heatmap_widget_reviewed_count,
-                            todayCount,
-                            todayCount
+                            R.plurals.heatmap_widget_reviewed_count, todayCount, todayCount
                         ),
                         style = TextStyle(
                             color = GlanceTheme.colors.onSurfaceVariant,
