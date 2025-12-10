@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License along with         *
  * this program.  If not, see <http://www.gnu.org/licenses/>.                           *
  ****************************************************************************************/
-package com.ichi2.anki.ui.compose.components
+package com.ichi2.anki.ui.compose
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,8 +23,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.ichi2.anki.ui.compose.FabPaddingBottom
-import com.ichi2.anki.ui.compose.FabPaddingEnd
 
 @Composable
 fun ExpandableFabContainer(

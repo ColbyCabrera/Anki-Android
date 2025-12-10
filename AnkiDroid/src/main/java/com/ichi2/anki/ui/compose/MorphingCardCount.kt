@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License along with
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.ichi2.anki.ui.compose.components
+package com.ichi2.anki.ui.compose
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
@@ -93,7 +93,7 @@ fun MorphingCardCount(
     modifier: Modifier = Modifier,
 ) {
     // State for managing the morph animation.
-    var currentShapeIndex by remember { mutableIntStateOf(Random.nextInt(MORPHING_SHAPES.size)) }
+    var currentShapeIndex by remember { mutableIntStateOf(Random.Default.nextInt(MORPHING_SHAPES.size)) }
     var startShape by remember { mutableStateOf(MORPHING_SHAPES[currentShapeIndex]) }
     var endShape by remember { mutableStateOf(MORPHING_SHAPES[currentShapeIndex]) }
     val morphProgress = remember { Animatable(0f) }

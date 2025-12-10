@@ -81,8 +81,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ichi2.anki.R
-import com.ichi2.anki.dialogs.compose.TagsDialog
-import com.ichi2.anki.dialogs.compose.TagsState
+import com.ichi2.anki.compose.TagsDialog
+import com.ichi2.anki.compose.TagsState
 import com.ichi2.anki.noteeditor.ToolbarButtonModel
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 

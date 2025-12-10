@@ -25,8 +25,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.*
 import com.ichi2.anki.CollectionManager.withCol
 import com.ichi2.anki.dialogs.customstudy.CustomStudyDialog
-import com.ichi2.anki.deckpicker.compose.StudyOptionsData
-import com.ichi2.anki.deckpicker.compose.StudyOptionsScreen
+import com.ichi2.anki.ui.compose.StudyOptionsData
+import com.ichi2.anki.ui.compose.StudyOptionsScreen
 import com.ichi2.anki.utils.ext.showDialogFragment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

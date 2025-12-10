@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2025 Colby Cabrera <gdthyispro@gmail.com>
+ Copyright (c) 2011 Colby Cabrera <gdthyispro@gmail.com>
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
@@ -18,7 +18,6 @@ package com.ichi2.anki.ui.compose
 import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
 import com.ichi2.anki.AnkiActivity
-import com.ichi2.anki.ui.compose.components.LoadingIndicator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

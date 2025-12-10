@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU General Public License along with         *
  * this program.  If not, see <http://www.gnu.org/licenses/>.                           *
  ****************************************************************************************/
-package com.ichi2.anki.ui.compose.components
+package com.ichi2.anki.ui.compose
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring

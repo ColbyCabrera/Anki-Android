@@ -46,7 +46,6 @@ import com.ichi2.anki.libanki.getNotetypeNameIdUseCount
 import com.ichi2.anki.libanki.getNotetypeNames
 import com.ichi2.anki.libanki.removeNotetype
 import com.ichi2.anki.libanki.updateNotetype
-import com.ichi2.anki.notetype.compose.ManageNoteTypesScreen
 import com.ichi2.anki.snackbar.showSnackbar
 import com.ichi2.anki.userAcceptsSchemaChange
 import com.ichi2.anki.utils.Destination

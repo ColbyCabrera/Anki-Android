@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
@@ -64,6 +65,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.graphicsLayer
+
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -72,14 +74,6 @@ import androidx.compose.ui.unit.dp
 import com.ichi2.anki.R
 import com.ichi2.anki.SyncIconState
 import com.ichi2.anki.deckpicker.DisplayDeckNode
-import com.ichi2.anki.deckpicker.compose.DeckPickerContent
-import com.ichi2.anki.deckpicker.compose.DeckPickerScreen
-import com.ichi2.anki.deckpicker.compose.StudyOptionsData
-import com.ichi2.anki.deckpicker.compose.StudyOptionsScreen
-import com.ichi2.anki.ui.compose.components.ExpandableFab
-import com.ichi2.anki.ui.compose.components.ExpandableFabContainer
-import com.ichi2.anki.ui.compose.components.Scrim
-import com.ichi2.anki.ui.compose.components.SyncIcon
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable

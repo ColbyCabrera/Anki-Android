@@ -91,8 +91,8 @@ import com.ichi2.anki.browser.CardBrowserViewModel
 import com.ichi2.anki.model.SelectableDeck
 import com.ichi2.anki.pages.Statistics
 import com.ichi2.anki.preferences.PreferencesActivity
-import com.ichi2.anki.ui.compose.navigation.AnkiNavigationRail
-import com.ichi2.anki.ui.compose.navigation.AppNavigationItem
+import com.ichi2.anki.ui.compose.AnkiNavigationRail
+import com.ichi2.anki.ui.compose.AppNavigationItem
 import kotlinx.coroutines.launch
 
 private val transparentTextFieldColors: @Composable () -> TextFieldColors = {
