@@ -45,7 +45,6 @@ import com.ichi2.anki.ui.dialogs.tools.awaitDialog
 import com.ichi2.anki.utils.getUserFriendlyErrorText
 import com.ichi2.anki.withProgress
 import com.ichi2.async.clearMediaAndTrash
-import com.ichi2.preferences.TextWidgetPreference
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -216,10 +215,10 @@ class ManageSpaceFragment : SettingsFragment() {
     private val viewModel: ManageSpaceViewModel by viewModels()
 
     override fun initSubscreen() {
-        val deleteUnusedMediaPreference = requirePreference<TextWidgetPreference>(R.string.pref_delete_media_key)
-        val deleteBackupsPreference = requirePreference<TextWidgetPreference>(R.string.pref_delete_backups_key)
-        val deleteCollectionPreference = requirePreference<TextWidgetPreference>(R.string.pref_delete_collection_key)
-        val deleteEverythingPreference = requirePreference<TextWidgetPreference>(R.string.pref_delete_everything_key)
+        val deleteUnusedMediaPreference = requirePreference<Preference>(R.string.pref_delete_media_key)
+        val deleteBackupsPreference = requirePreference<Preference>(R.string.pref_delete_backups_key)
+        val deleteCollectionPreference = requirePreference<Preference>(R.string.pref_delete_collection_key)
+        val deleteEverythingPreference = requirePreference<Preference>(R.string.pref_delete_everything_key)
 
         deleteUnusedMediaPreference.launchOnPreferenceClick { onDeleteUnusedMediaClick() }
         deleteBackupsPreference.launchOnPreferenceClick { onDeleteBackupsClick() }
@@ -234,7 +233,7 @@ class ManageSpaceFragment : SettingsFragment() {
             viewModel.flowOfDeleteEverythingSize to deleteEverythingPreference,
             viewModel.flowOfDeleteBackupsSize to deleteBackupsPreference,
         ).forEach { (flowOfSize, preference) ->
-            lifecycleScope.launch { flowOfSize.collect { size -> preference.setWidgetTextBy(size) } }
+            lifecycleScope.launch { flowOfSize.collect { size -> preference.setSummaryBy(size) } }
         }
     }
 
@@ -381,10 +380,10 @@ class ManageSpaceFragment : SettingsFragment() {
 
     // TODO Android N and earlier, formatFileSize & formatShortFileSize use powers of 1024.
     //   Perhaps correct input so that powers of 1000 are used on every API level?
-    private fun TextWidgetPreference.setWidgetTextBy(size: Size) {
+    private fun Preference.setSummaryBy(size: Size) {
         fun Long.toHumanReadableSize() = Formatter.formatShortFileSize(requireContext(), this)
 
-        widgetText =
+        val sizeText =
             when (size) {
                 is Size.Calculating -> getString(R.string.pref__widget_text__calculating)
                 is Size.Error -> getString(size.widgetTextId)
@@ -397,6 +396,18 @@ class ManageSpaceFragment : SettingsFragment() {
                         size.totalSize.toHumanReadableSize(),
                     )
             }
+
+        if (key == getString(R.string.pref_delete_everything_key)) {
+            val baseSummary =
+                if (viewModel.collectionDirectory.isInsideDirectoriesRemovedWithTheApp(requireContext())) {
+                    getString(R.string.pref__delete_everything__summary)
+                } else {
+                    getString(R.string.pref__delete_app_data__summary)
+                }
+            summary = "$baseSummary\n\n$sizeText"
+        } else {
+            summary = sizeText
+        }
 
         isEnabled =
             !(
