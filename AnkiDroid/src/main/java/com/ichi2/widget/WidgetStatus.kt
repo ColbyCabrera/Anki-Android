@@ -22,21 +22,31 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * The status of the widget.
  */
 object WidgetStatus {
-    private var updateJob: Job? = null
+    private val updateJobRef = AtomicReference<Job?>(null)
 
     fun updateInBackground(context: Context) {
-        val canExecuteTask = updateJob == null || updateJob?.isActive == false
-
-        if (canExecuteTask) {
-            Timber.d("WidgetStatus.update(): updating")
-            updateJob = launchUpdateJob(context)
-        } else {
+        val currentJob = updateJobRef.get()
+        if (currentJob != null && currentJob.isActive) {
             Timber.d("WidgetStatus.update(): already running")
+            return
+        }
+
+        // Create the new job
+        val newJob = launchUpdateJob(context)
+
+        // Atomically try to install it; only succeeds if still null/completed
+        if (updateJobRef.compareAndSet(currentJob, newJob)) {
+            Timber.d("WidgetStatus.update(): updating")
+        } else {
+            // Another thread won the race; cancel our job and log
+            newJob.cancel()
+            Timber.d("WidgetStatus.update(): lost race, cancelled duplicate job")
         }
     }
 
