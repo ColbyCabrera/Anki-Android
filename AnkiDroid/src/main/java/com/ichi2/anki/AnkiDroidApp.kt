@@ -314,13 +314,7 @@ open class AnkiDroidApp :
         handler: Any?,
     ) {
         Timber.d("ChangeSubscriber - opExecuted called with changes: %s", changes)
-        if (changes.studyQueues) {
-            // DeckPickerWidget.updateDeckPickerWidgets(this)
-            // CardAnalysisWidget.updateCardAnalysisWidgets(this)
-            // Heatmap widget update is handled via specific triggers or periodic updates
-        } else {
-            Timber.d("No relevant changes to update the widget")
-        }
+        Timber.d("No relevant changes to update the widget")
     }
 
     companion object {
