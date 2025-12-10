@@ -283,6 +283,14 @@ class HeatmapWidget : GlanceAppWidget() {
         private const val HEATMAP_LEVEL_3_MAX_COUNT = 40
 
         /**
+         * Maximum days of history to query for the heatmap.
+         * This limits the revlog scan to a reasonable window for performance.
+         * The widget typically displays ~20 weeks max, so 365 days provides
+         * ample buffer while avoiding full table scans on large collections.
+         */
+        private const val MAX_HEATMAP_DAYS = 365
+
+        /**
          * Returns the base color and alpha for the heatmap cell.
          */
         fun getColorForCount(
@@ -301,9 +309,13 @@ class HeatmapWidget : GlanceAppWidget() {
             try {
                 CollectionManager.withCol {
                     val data = mutableMapOf<Long, Int>()
-                    // revlog id is in milliseconds
+                    // Limit query to recent history for performance.
+                    // revlog.id is the primary key (timestamp in ms), so the WHERE clause
+                    // enables an efficient index range scan instead of a full table scan.
+                    val cutoffMillis = System.currentTimeMillis() - (MAX_HEATMAP_DAYS * DAY_IN_MILLIS)
                     val query =
-                        "SELECT CAST(id/$DAY_IN_MILLIS AS INTEGER) as day, count() FROM revlog GROUP BY day"
+                        "SELECT CAST(id/$DAY_IN_MILLIS AS INTEGER) as day, count() FROM revlog " +
+                            "WHERE id >= $cutoffMillis GROUP BY day"
 
                     val cursor = this.db.query(query)
                     cursor.use { c ->
