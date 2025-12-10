@@ -17,9 +17,10 @@ package com.ichi2.widget
 import android.content.Context
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.updateAll
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.concurrent.atomic.AtomicReference
@@ -28,6 +29,7 @@ import java.util.concurrent.atomic.AtomicReference
  * The status of the widget.
  */
 object WidgetStatus {
+    private val widgetScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val updateJobRef = AtomicReference<Job?>(null)
 
     fun updateInBackground(context: Context) {
@@ -40,6 +42,9 @@ object WidgetStatus {
         // Create the new job
         val newJob = launchUpdateJob(context)
 
+        // Clear reference on completion so we don't hold onto old jobs
+        newJob.invokeOnCompletion { updateJobRef.compareAndSet(newJob, null) }
+
         // Atomically try to install it; only succeeds if still null/completed
         if (updateJobRef.compareAndSet(currentJob, newJob)) {
             Timber.d("WidgetStatus.update(): updating")
@@ -50,8 +55,7 @@ object WidgetStatus {
         }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
-    private fun launchUpdateJob(context: Context): Job = GlobalScope.launch {
+    private fun launchUpdateJob(context: Context): Job = widgetScope.launch {
         try {
             // Update Heatmap Widget
             if (GlanceAppWidgetManager(context).getGlanceIds(HeatmapWidget::class.java)
