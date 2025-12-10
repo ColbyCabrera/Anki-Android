@@ -10,20 +10,17 @@ plugins {
 }
 
 android {
-    compileSdk = 35
+    compileSdk = 36
     namespace = "com.ichi2.anki"
 
     defaultConfig {
         applicationId = "com.ichi2.anki"
-        minSdk = 21
-        targetSdk = 34
+        minSdk = 31
+        targetSdk = 36
         versionCode = 20190101
         versionName = "2.19alpha1"
         testInstrumentationRunner = "com.ichi2.test.utils.AnkiDroidTestRunner"
         vectorDrawables.useSupportLibrary = true
-
-        // TODO: remove this once the minSdk is 26
-        multiDexEnabled = true
 
         ndk {
             abiFilters.addAll(listOf("x86", "x86_64", "armeabi-v7a", "arm64-v8a"))
@@ -89,7 +86,7 @@ dependencies {
     implementation(project(":AnkiDroidApi"))
     implementation(project(":libanki"))
     implementation(project(":lint-rules"))
-    implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
+    implementation(libs.androidx.constraintlayout.compose)
     implementation(libs.acra.mail)
     implementation(libs.acra.dialog)
     implementation(libs.acra.toast)
@@ -105,7 +102,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
-    implementation(libs.androidx.multidex)
     implementation(libs.androidx.preference.ktx)
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.room.runtime)
@@ -123,7 +119,10 @@ dependencies {
     implementation(libs.compose.runtime)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.ui.tooling)
-    implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
+    debugImplementation(libs.androidx.glance.appwidget.preview)
+    implementation(libs.coil.compose)
     implementation(libs.google.android.material)
     implementation(libs.google.code.gson)
     implementation(libs.google.dagger)
@@ -158,7 +157,7 @@ dependencies {
     testImplementation(libs.robolectric)
     testImplementation(libs.strikt.core)
     testImplementation(libs.turbine)
-    testImplementation("androidx.compose.ui:ui-test-junit4:1.7.6")
+    testImplementation(libs.androidx.compose.ui.test.junit4)
     annotationProcessor(libs.google.dagger.compiler)
     ksp(libs.androidx.room.compiler)
     debugImplementation(libs.acra.limiter)

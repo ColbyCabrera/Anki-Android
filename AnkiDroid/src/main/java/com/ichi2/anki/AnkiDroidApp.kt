@@ -61,8 +61,6 @@ import com.ichi2.utils.AdaptionUtil
 import com.ichi2.utils.ExceptionUtil
 import com.ichi2.utils.LanguageUtil
 import com.ichi2.utils.Permissions
-import com.ichi2.widget.cardanalysis.CardAnalysisWidget
-import com.ichi2.widget.deckpicker.DeckPickerWidget
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -212,7 +210,13 @@ open class AnkiDroidApp :
         } else {
             // Register for notifications
             Timber.i("AnkiDroidApp: Starting Services")
-            notifications.observeForever { NotificationService.triggerNotificationFor(this) }
+            notifications.observeForever {
+                applicationScope.launch(Dispatchers.Default) {
+                    NotificationService.triggerNotificationFor(
+                        this@AnkiDroidApp
+                    )
+                }
+            }
         }
 
         // listen for day rollover: time + timezone changes
@@ -305,8 +309,6 @@ open class AnkiDroidApp :
 
     /**
      * Callback method invoked when operations that affect the app state are executed.
-     * If relevant changes related to the study queues are detected, the Deck Picker Widgets
-     * are updated accordingly.
      *
      * @param changes The set of changes that occurred.
      * @param handler An optional handler that can be used for custom processing (unused here).
@@ -316,12 +318,7 @@ open class AnkiDroidApp :
         handler: Any?,
     ) {
         Timber.d("ChangeSubscriber - opExecuted called with changes: %s", changes)
-        if (changes.studyQueues) {
-            DeckPickerWidget.updateDeckPickerWidgets(this)
-            CardAnalysisWidget.updateCardAnalysisWidgets(this)
-        } else {
-            Timber.d("No relevant changes to update the widget")
-        }
+        Timber.d("No relevant changes to update the widget")
     }
 
     companion object {

@@ -12,7 +12,6 @@ import com.ichi2.anki.libanki.DeckId
 import com.ichi2.anki.model.WhiteboardPenColor
 import com.ichi2.anki.model.WhiteboardPenColor.Companion.default
 import com.ichi2.anki.reviewer.CardSide
-import com.ichi2.widget.SmallWidgetStatus
 import timber.log.Timber
 
 /**
@@ -23,7 +22,6 @@ import timber.log.Timber
  *
  *  * The languages associated with questions and answers.
  *  * The state of the whiteboard.
- *  * The cached state of the widget.
  *
  */
 @KotlinCleanup("see about lateinit")
@@ -80,13 +78,6 @@ object MetaDB {
             )""",
         )
         metaDb.execSQL(
-            """CREATE TABLE IF NOT EXISTS smallWidgetStatus (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            due INTEGER NOT NULL,
-            eta INTEGER NOT NULL
-            )""",
-        )
-        metaDb.execSQL(
             """CREATE TABLE IF NOT EXISTS micToolbarState (
             _id INTEGER PRIMARY KEY AUTOINCREMENT,
             did INTEGER NOT NULL,
@@ -94,7 +85,6 @@ object MetaDB {
             )""",
         )
 
-        updateWidgetStatus(metaDb)
         updateWhiteboardState(metaDb)
         metaDb.version = databaseVersion
         Timber.i("MetaDB:: Upgrading Internal Database finished. New version: %d", databaseVersion)
@@ -133,27 +123,7 @@ object MetaDB {
         }
     }
 
-    private fun updateWidgetStatus(metaDb: SQLiteDatabase) {
-        val columnCount = DatabaseUtil.getTableColumnCount(metaDb, "widgetStatus")
-        if (columnCount > 0) {
-            if (columnCount < 7) {
-                metaDb.execSQL("ALTER TABLE widgetStatus ADD COLUMN eta INTEGER NOT NULL DEFAULT '0'")
-                metaDb.execSQL("ALTER TABLE widgetStatus ADD COLUMN time INTEGER NOT NULL DEFAULT '0'")
-            }
-        } else {
-            metaDb.execSQL(
-                """CREATE TABLE IF NOT EXISTS widgetStatus (
-                deckId INTEGER NOT NULL PRIMARY KEY,
-                deckName TEXT NOT NULL,
-                newCards INTEGER NOT NULL,
-                lrnCards INTEGER NOT NULL,
-                dueCards INTEGER NOT NULL,
-                progress INTEGER NOT NULL,
-                eta INTEGER NOT NULL
-                )""",
-            )
-        }
-    }
+
 
     /** Open the meta-db but only if it currently closed.  */
     private fun openDBIfClosed(context: Context) {
@@ -213,22 +183,7 @@ object MetaDB {
         return false
     }
 
-    /** Reset the widget status.  */
-    private fun resetWidget(context: Context): Boolean {
-        openDBIfClosed(context)
-        try {
-            Timber.i("MetaDB:: Resetting widget status")
-            metaDb!!.run {
-                execSQL("DROP TABLE IF EXISTS widgetStatus;")
-                execSQL("DROP TABLE IF EXISTS smallWidgetStatus;")
-                upgradeDB(this, DATABASE_VERSION)
-            }
-            return true
-        } catch (e: Exception) {
-            Timber.e(e, "Error resetting widgetStatus and smallWidgetStatus")
-        }
-        return false
-    }
+
 
     /**
      * Associates a language to a deck, model, and card model for a given type.
@@ -617,76 +572,7 @@ object MetaDB {
         }
     }
 
-    /**
-     * Return the current status of the widget.
-     *
-     * @return [due, eta] ([SmallWidgetStatus])
-     */
-    fun getWidgetSmallStatus(context: Context): SmallWidgetStatus {
-        openDBIfClosed(context)
-        try {
-            metaDb!!
-                .query(
-                    "smallWidgetStatus",
-                    arrayOf("due", "eta"),
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                ).use { cursor ->
-                    if (cursor.moveToNext()) {
-                        return SmallWidgetStatus(
-                            dueCardsCount = cursor.getInt(0),
-                            eta = cursor.getInt(1),
-                        )
-                    }
-                }
-        } catch (e: SQLiteException) {
-            Timber.e(e, "Error while querying widgetStatus")
-        }
-        return SmallWidgetStatus(dueCardsCount = 0, eta = 0)
-    }
 
-    fun getNotificationStatus(context: Context): Int {
-        openDBIfClosed(context)
-        val due = 0
-        try {
-            metaDb!!.query("smallWidgetStatus", arrayOf("due"), null, null, null, null, null).use { cursor ->
-                if (cursor.moveToFirst()) {
-                    return cursor.getInt(0)
-                }
-            }
-        } catch (e: SQLiteException) {
-            Timber.e(e, "Error while querying widgetStatus")
-        }
-        return due
-    }
-
-    fun storeSmallWidgetStatus(
-        context: Context,
-        status: SmallWidgetStatus,
-    ) {
-        openDBIfClosed(context)
-        try {
-            val metaDb = metaDb!!
-            metaDb.transaction {
-                // First clear all the existing content.
-                metaDb.execSQL("DELETE FROM smallWidgetStatus")
-                metaDb.execSQL(
-                    "INSERT INTO smallWidgetStatus(due, eta) VALUES (?, ?)",
-                    arrayOf<Any>(status.dueCardsCount, status.eta),
-                )
-            }
-            Timber.d("MetaDB:: Cached small widget status")
-        } catch (e: IllegalStateException) {
-            Timber.e(e, "MetaDB.storeSmallWidgetStatus: failed")
-        } catch (e: SQLiteException) {
-            Timber.e(e, "MetaDB.storeSmallWidgetStatus: failed")
-            closeDB()
-            Timber.i("MetaDB:: Trying to reset Widget: %b", resetWidget(context))
-        }
-    }
 
     fun close() {
         metaDb?.run {

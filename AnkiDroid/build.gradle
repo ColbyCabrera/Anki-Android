@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     // Gradle plugin portal
     alias(libs.plugins.tripletPlay)
@@ -87,8 +89,8 @@ android {
         //
         // This ensures the correct ordering between the various types of releases (dev < alpha < beta < release) which is
         // needed for upgrades to be offered correctly.
-        versionCode=22300104
-        versionName="2.23.0alpha4"
+        versionCode = 22300104
+        versionName = "2.23.0alpha4"
         minSdk = libs.versions.minSdk.get().toInteger()
 
         // After #13695: change .tests_emulator.yml
@@ -150,7 +152,8 @@ android {
             minifyEnabled System.getenv("MINIFY_ENABLED") ? System.getenv("MINIFY_ENABLED") != "false" : true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             testProguardFile 'proguard-test-rules.pro'
-            splits.abi.universalApk = universalApkEnabled // Build universal APK for release with `-Duniversal-apk=true`
+            splits.abi.universalApk = universalApkEnabled
+            // Build universal APK for release with `-Duniversal-apk=true`
             signingConfig = signingConfigs.release
 
             // syntax: assembleRelease -PcustomSuffix="suffix" -PcustomName="New name"
@@ -175,8 +178,7 @@ android {
     /**
      * Product Flavors are used for Google Play Store.
      *
-     * This flavor block must stay in sync with the same block in testlib/build.gradle.kts
-     */
+     * This flavor block must stay in sync with the same block in testlib/build.gradle.kts*/
     flavorDimensions += "appStore"
     productFlavors {
         create('play') {
@@ -197,8 +199,7 @@ android {
      *   - a universal APK that works on all devices
      * The advantage is the size of most APKs is reduced by about 2.5MB.
      * Upload all the APKs to the Play Store and people will download
-     * the correct one based on the CPU architecture of their device.
-     */
+     * the correct one based on the CPU architecture of their device.*/
     def enableSeparateBuildPerCPUArchitecture = true
 
     splits {
@@ -250,8 +251,10 @@ android {
         targetCompatibility JavaVersion.VERSION_11
         coreLibraryDesugaringEnabled = true
     }
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_11)
+        }
     }
 
     composeOptions {
@@ -269,28 +272,6 @@ play {
     serviceAccountCredentials.set(file("${homePath}/src/AnkiDroid-GCP-Publish-Credentials.json"))
     track.set('alpha')
 
-    // any time we bump minSdk we want Play Store to retain the old artifacts by version code,
-    // so that they remain available for older devices
-    retain {
-        artifacts.set([
-                20700300L, // (2.7, minSdk 10, universal APK)
-                20804300L, // (2.8.4, minSdk 10, universal APK)
-                21004300L, // (2.10.4, minSdk 15, universal APK)
-                // release-2.14 minSdk 16: missing and not re-publishable, see issue 17791
-                121603300L, // (2.16.3, minSdk 21, ABI armeabi-v7a)
-                221603300L, // (2.16.3, minSdk 21, ABI x86)
-                321603300L, // (2.16.3, minSdk 21, ABI arm64-v8a)
-                421603300L, // (2.16.3, minSdk 21, ABI x86_64)
-                121905300L, // (2.19.5, minSdk 23, ABI armeabi-v7a)
-                221905300L, // (2.19.5, minSdk 23, ABI x86)
-                321905300L, // (2.19.5, minSdk 23, ABI arm64-v8a)
-                421905300L, // (2.19.5, minSdk 23, ABI x86_64)
-        ])
-    }
-
-    // If you retain APKs in a release with different names as we do above,
-    // the plugin + Play Store has no idea how to name the release except by date.
-    // release name is developer only, but sane names really help, so set one
     releaseName.set(android.defaultConfig.versionName)
 }
 
@@ -310,7 +291,7 @@ tasks.named('preBuild').configure { dependsOn('installGitHook') }
 tasks.register('copyTestLibIntoAndroidTest', Copy) {
     into new File(rootProject.rootDir, 'AnkiDroid/src/androidTest/java/com/ichi2/testutils')
     from new File(rootProject.rootDir, 'testlib/src/main/java/com/ichi2/testutils')
-    into ('common') {
+    into('common') {
         from 'common'
     }
 }
@@ -364,6 +345,10 @@ dependencies {
     implementation libs.androidx.compose.ui.unit
     implementation libs.androidx.compose.material3.window.size.class1
     implementation libs.androidx.compose.ui.test.junit4
+    implementation libs.androidx.glance.appwidget
+    implementation libs.androidx.glance.material3
+    implementation libs.androidx.glance.preview
+    debugImplementation libs.androidx.glance.appwidget.preview
     lintChecks project(":lint-rules")
     coreLibraryDesugaring libs.desugar.jdk.libs.nio
 

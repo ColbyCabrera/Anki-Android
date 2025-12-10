@@ -464,4 +464,7 @@ opening the system text to speech settings fails">Failed to open text to speech 
     <!-- Themes -->
     <string name="day_theme_light_dynamic">Light (dynamic)</string>
     <string name="night_theme_dark_dynamic">Dark (dynamic)</string>
+    <string name="history">History</string>
+    <string name="heatmap_widget_description">A widget displaying your review heatmap.</string>
+    <string name="heatmap_widget_label">Review Heatmap</string>
 </resources>
