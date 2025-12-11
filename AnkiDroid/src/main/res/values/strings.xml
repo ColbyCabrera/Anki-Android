@@ -53,4 +53,5 @@
     <string name="review">Review</string>
     <string name="buried_cards_are_not_included_in_counts_above">Buried cards are not included in counts above.</string>
     <string name="tag_indeterminate_state">Tag present on some selected notes</string>
+    <string name="changes_will_not_be_saved">Changes will not be saved.</string>
 </resources>

@@ -49,8 +49,8 @@ fun DiscardChangesDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = title?.let { { Text(text = it) } },
-        text = { Text(text = message) },
+        title = { Text(text = message) },
+        text = { Text(text = stringResource(R.string.changes_will_not_be_saved)) },
         confirmButton = {
             TextButton(onClick = onConfirm) {
                 Text(text = confirmButtonText)
@@ -60,7 +60,7 @@ fun DiscardChangesDialog(
             TextButton(onClick = onKeepEditing) {
                 Text(text = dismissButtonText)
             }
-        }
+        },
     )
 }
 
@@ -71,7 +71,7 @@ private fun DiscardChangesDialogPreview() {
         DiscardChangesDialog(
             onDismissRequest = {},
             onConfirm = {},
-            onKeepEditing = {}
+            onKeepEditing = {},
         )
     }
 }
