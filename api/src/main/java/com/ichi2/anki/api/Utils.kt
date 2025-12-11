@@ -20,6 +20,8 @@ import android.text.Html
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.util.regex.Pattern
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 
 /**
  * Utilities class for the API
@@ -33,8 +35,14 @@ internal object Utils {
     private val htmlEntitiesPattern = Pattern.compile("&#?\\w+;")
     private const val FIELD_SEPARATOR = '\u001f'.toString()
 
-    // TODO: Add contract for null -> null and non-null to non-null when kotlin contracts become stable/out of experimental phase
-    fun joinFields(list: Array<String>?): String? = list?.joinToString(FIELD_SEPARATOR)
+    @OptIn(ExperimentalContracts::class)
+    fun joinFields(list: Array<String>?): String? {
+        contract {
+            returns(null) implies (list == null)
+            returnsNotNull() implies (list != null)
+        }
+        return list?.joinToString(FIELD_SEPARATOR)
+    }
 
     fun splitFields(fields: String): Array<String> =
         fields
