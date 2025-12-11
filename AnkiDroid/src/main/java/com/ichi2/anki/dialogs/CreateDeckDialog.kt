@@ -142,7 +142,6 @@ class CreateDeckDialog(
                     dialog.positiveButton.isEnabled = true
 
                     // Users expect the ordering [1, 2, 10], but get [1, 10, 2]
-                    // To fix: they need [01, 02, 10]. Show a hint to help them
                     dialog.getInputTextLayout().helperText =
                         if (text.containsNumberLargerThanNine()) {
                             context.getString(R.string.create_deck_numeric_hint)
