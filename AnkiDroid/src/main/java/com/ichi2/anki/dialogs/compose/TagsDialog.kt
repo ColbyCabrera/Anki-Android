@@ -38,10 +38,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -329,8 +325,8 @@ private fun TagFilterChip(
                 )
             } else if (isIndeterminate) {
                 Icon(
-                    imageVector = Icons.Default.Remove, // Minus icon for indeterminate
-                    contentDescription = "Indeterminate", // TODO: String resource
+                    painter = painterResource(R.drawable.remove_24px),
+                    contentDescription = stringResource(R.string.indeterminate),
                     modifier = Modifier.size(FilterChipDefaults.IconSize)
                 )
             } else {
@@ -380,7 +376,7 @@ private fun SearchBarRow(
                 placeholder = { Text(text = stringResource(id = R.string.card_browser_search_tags_hint)) },
                 leadingIcon = {
                     Icon(
-                        Icons.Default.Search,
+                        painter = painterResource(R.drawable.search_24px),
                         contentDescription = stringResource(R.string.card_browser_search_hint)
                     )
                 },
@@ -388,7 +384,7 @@ private fun SearchBarRow(
                     if (searchQuery.isNotEmpty()) {
                         IconButton(onClick = { onSearchQueryChange("") }) {
                             Icon(
-                                Icons.Default.Close,
+                                painter = painterResource(R.drawable.close_24px),
                                 contentDescription = stringResource(R.string.close)
                             )
                         }
