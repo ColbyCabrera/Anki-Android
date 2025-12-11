@@ -127,6 +127,7 @@ import com.ichi2.anki.common.utils.annotation.KotlinCleanup
 import com.ichi2.anki.deckpicker.DeckPickerViewModel
 import com.ichi2.anki.deckpicker.DeckPickerViewModel.AnkiDroidEnvironment
 import com.ichi2.anki.deckpicker.DeckPickerViewModel.FlattenedDeckList
+import com.ichi2.anki.deckpicker.ImmutableDeckList
 import com.ichi2.anki.deckpicker.DeckPickerViewModel.StartupResponse
 import com.ichi2.anki.deckpicker.DeckSelectionResult
 import com.ichi2.anki.deckpicker.DeckSelectionType
@@ -511,7 +512,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                 val snackbarHostState = remember { SnackbarHostState() }
                 val coroutineScope = rememberCoroutineScope()
                 val deckList by viewModel.flowOfDeckList.collectAsState(
-                    initial = FlattenedDeckList(emptyList(), false),
+                    initial = FlattenedDeckList(ImmutableDeckList(emptyList()), false),
                 )
                 val isRefreshing by viewModel.isSyncing.collectAsState(initial = false)
                 val syncState by viewModel.syncState.collectAsState()

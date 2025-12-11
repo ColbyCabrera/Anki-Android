@@ -90,6 +90,7 @@ import com.ichi2.anki.ui.compose.components.ExpandableFab
 import com.ichi2.anki.ui.compose.components.ExpandableFabContainer
 import com.ichi2.anki.ui.compose.components.Scrim
 import com.ichi2.anki.ui.compose.components.SyncIcon
+import com.ichi2.anki.deckpicker.ImmutableDeckList
 import com.ichi2.utils.MorphShape
 
 private val expandedDeckCardRadius = 24.dp
@@ -191,7 +192,7 @@ private fun RenderDeck(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun DeckPickerContent(
-    decks: List<DisplayDeckNode>,
+    decks: ImmutableDeckList,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
     listState: LazyListState,
@@ -290,7 +291,7 @@ fun DeckPickerContent(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun DeckPickerScreen(
-    decks: List<DisplayDeckNode>,
+    decks: ImmutableDeckList,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
     searchQuery: String,
@@ -501,7 +502,7 @@ fun DeckPickerScreen(
 @Composable
 fun DeckPickerContentPreview() {
     DeckPickerContent(
-        decks = emptyList(),
+        decks = ImmutableDeckList(emptyList()),
         isRefreshing = false,
         onRefresh = {},
 
@@ -521,7 +522,7 @@ fun DeckPickerContentPreview() {
 @Composable
 fun DeckPickerScreenPreview() {
     DeckPickerScreen(
-        decks = emptyList(),
+        decks = ImmutableDeckList(emptyList()),
         isRefreshing = false,
         onRefresh = {},
         searchQuery = "",

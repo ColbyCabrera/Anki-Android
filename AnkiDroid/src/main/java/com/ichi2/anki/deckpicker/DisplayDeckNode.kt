@@ -19,6 +19,7 @@ package com.ichi2.anki.deckpicker
 
 import android.annotation.SuppressLint
 import androidx.annotation.VisibleForTesting
+import androidx.compose.runtime.Immutable
 import com.ichi2.anki.libanki.DeckId
 import com.ichi2.anki.libanki.sched.DeckNode
 import com.ichi2.anki.libanki.utils.append
@@ -31,6 +32,7 @@ import java.util.Locale
  * needed to display it on the screen, hence no data of a node's children and parent.
  */
 @ConsistentCopyVisibility
+@Immutable
 data class DisplayDeckNode private constructor(
     val did: DeckId,
     val fullDeckName: String,
@@ -160,3 +162,6 @@ private fun DeckNode.nameMatchesFilter(filter: CharSequence?): Boolean {
         return node.name.lowercase(Locale.getDefault()).contains(filter) || node.name.lowercase(Locale.ROOT).contains(filter)
     }
 }
+
+@Immutable
+data class ImmutableDeckList(val items: List<DisplayDeckNode>) : List<DisplayDeckNode> by items
