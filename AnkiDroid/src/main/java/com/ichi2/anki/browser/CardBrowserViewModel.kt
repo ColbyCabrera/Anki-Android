@@ -1495,11 +1495,13 @@ class CardBrowserViewModel(
         val noteIds = queryAllSelectedNoteIds()
         if (noteIds.isEmpty()) return@launch
 
-        undoableOp {
-            if (added.isNotEmpty()) {
+        if (added.isNotEmpty()) {
+            undoableOp {
                 this.tags.bulkAdd(noteIds, added.joinToString(" "))
             }
-            if (removed.isNotEmpty()) {
+        }
+        if (removed.isNotEmpty()) {
+            undoableOp {
                 this.tags.bulkRemove(noteIds, removed.joinToString(" "))
             }
         }
