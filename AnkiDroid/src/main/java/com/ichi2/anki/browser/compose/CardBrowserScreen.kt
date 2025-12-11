@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -100,7 +99,6 @@ import com.ichi2.anki.model.CardsOrNotes
 import com.ichi2.anki.model.SelectableDeck
 import com.ichi2.anki.model.SortType
 import com.ichi2.anki.dialogs.compose.TagsDialog
-import com.ichi2.anki.dialogs.compose.TagsState
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -155,6 +153,8 @@ fun CardBrowserScreen(
         var tagsLoadState by remember { mutableStateOf<Map<String, CardBrowserViewModel.TagStatus>?>(null) }
         
         LaunchedEffect(Unit) {
+            viewModel.loadAllTags()
+            viewModel.loadDeckTags()
             tagsLoadState = viewModel.loadTagsForSelection()
         }
 
