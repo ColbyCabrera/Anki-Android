@@ -88,6 +88,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 import net.ankiweb.rsdroid.BackendException
+import net.ankiweb.rsdroid.exceptions.BackendNotFoundException
 import org.jetbrains.annotations.VisibleForTesting
 import timber.log.Timber
 import java.io.DataInputStream
@@ -1474,8 +1475,8 @@ class CardBrowserViewModel(
                         allTags.add(tag)
                         tagCounts[tag] = (tagCounts[tag] ?: 0) + 1
                     }
-                } catch (e: Exception) {
-                    // Ignore missing notes
+                } catch (e: BackendNotFoundException) {
+                    // Note was deleted between search and tag loading - safe to skip
                 }
             }
 
