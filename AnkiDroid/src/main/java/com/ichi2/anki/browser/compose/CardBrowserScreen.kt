@@ -27,8 +27,6 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -158,46 +156,37 @@ fun CardBrowserScreen(
             tagsLoadState = viewModel.loadTagsForSelection()
         }
 
-        if (tagsLoadState != null) {
-            val loadedTags = tagsLoadState!!
-            val initialChecked = loadedTags.filterValues { it == CardBrowserViewModel.TagStatus.CHECKED }.keys
-            val initialIndeterminate = loadedTags.filterValues { it == CardBrowserViewModel.TagStatus.INDETERMINATE }.keys
-            
-            val allTags by viewModel.allTags.collectAsStateWithLifecycle()
-            val deckTags by viewModel.deckTags.collectAsStateWithLifecycle(initialValue = emptySet())
+        val initialChecked =
+            tagsLoadState?.filterValues { it == CardBrowserViewModel.TagStatus.CHECKED }?.keys
+                ?: emptySet()
+        val initialIndeterminate =
+            tagsLoadState?.filterValues { it == CardBrowserViewModel.TagStatus.INDETERMINATE }?.keys
+                ?: emptySet()
 
-            TagsDialog(
-                onDismissRequest = { showEditTagsDialog = false },
-                onConfirm = { checked, indeterminate ->
-                    val initialPresent = initialChecked + initialIndeterminate
-                    val finalPresent = checked + indeterminate
-                    
-                    val added = checked - initialChecked
-                    val removed = initialPresent - finalPresent
-                    
-                    viewModel.saveTagsForSelection(added, removed)
-                    showEditTagsDialog = false
-                },
-                allTags = allTags,
-                initialSelection = initialChecked,
-                initialIndeterminate = initialIndeterminate,
-                deckTags = deckTags,
-                title = stringResource(R.string.menu_edit_tags),
-                confirmButtonText = stringResource(R.string.dialog_ok),
-                showFilterByDeckToggle = true,
-                onAddTag = { /* Handled by dialog state internally for immediate display, not persisted until confirm */ }
-            )
-        } else {
-             AlertDialog(
-                onDismissRequest = { showEditTagsDialog = false },
-                text = { 
-                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                         CircularProgressIndicator()
-                    }
-                },
-                confirmButton = {}
-            )
-        }
+        val allTags by viewModel.allTags.collectAsStateWithLifecycle()
+        val deckTags by viewModel.deckTags.collectAsStateWithLifecycle(initialValue = emptySet())
+
+        TagsDialog(
+            onDismissRequest = { showEditTagsDialog = false },
+            onConfirm = { checked, indeterminate ->
+                val initialPresent = initialChecked + initialIndeterminate
+                val finalPresent = checked + indeterminate
+
+                val added = checked - initialChecked
+                val removed = initialPresent - finalPresent
+
+                viewModel.saveTagsForSelection(added, removed)
+                showEditTagsDialog = false
+            },
+            allTags = allTags,
+            initialSelection = initialChecked,
+            initialIndeterminate = initialIndeterminate,
+            deckTags = deckTags,
+            title = stringResource(R.string.menu_edit_tags),
+            confirmButtonText = stringResource(R.string.dialog_ok),
+            showFilterByDeckToggle = true,
+            onAddTag = { /* Handled by dialog state internally for immediate display, not persisted until confirm */ }
+        )
     }
 
     Box(modifier = modifier) {
