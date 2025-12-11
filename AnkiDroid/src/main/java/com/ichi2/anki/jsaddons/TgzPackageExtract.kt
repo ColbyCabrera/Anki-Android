@@ -356,7 +356,9 @@ class TgzPackageExtract(
         val destDirCanonicalPath = destDirectory.canonicalPath
         val outputFileCanonicalPath = outputFile.canonicalPath
 
-        if (!outputFileCanonicalPath.startsWith(destDirCanonicalPath)) {
+        // Fix for Zip Slip Vulnerability: Ensure we match the directory boundary
+        // See https://snyk.io/research/zip-slip-vulnerability#solution
+        if (!outputFileCanonicalPath.startsWith(destDirCanonicalPath + File.separator) && outputFileCanonicalPath != destDirCanonicalPath) {
             throw ArchiveException(context.getString(R.string.malicious_archive_entry_outside, outputFileCanonicalPath))
         }
     }
