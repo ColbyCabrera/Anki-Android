@@ -27,6 +27,9 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -96,6 +99,8 @@ import com.ichi2.anki.browser.ColumnHeading
 import com.ichi2.anki.model.CardsOrNotes
 import com.ichi2.anki.model.SelectableDeck
 import com.ichi2.anki.model.SortType
+import com.ichi2.anki.dialogs.compose.TagsDialog
+import com.ichi2.anki.dialogs.compose.TagsState
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -141,6 +146,57 @@ fun CardBrowserScreen(
     LaunchedEffect(viewModel.flowOfSnackbarMessage) {
         viewModel.flowOfSnackbarMessage.collect { messageRes ->
             snackbarHostState.showSnackbar(context.getString(messageRes))
+        }
+    }
+
+    var showEditTagsDialog by remember { mutableStateOf(false) }
+
+    if (showEditTagsDialog) {
+        var tagsLoadState by remember { mutableStateOf<Map<String, CardBrowserViewModel.TagStatus>?>(null) }
+        
+        LaunchedEffect(Unit) {
+            tagsLoadState = viewModel.loadTagsForSelection()
+        }
+
+        if (tagsLoadState != null) {
+            val loadedTags = tagsLoadState!!
+            val initialChecked = loadedTags.filterValues { it == CardBrowserViewModel.TagStatus.CHECKED }.keys
+            val initialIndeterminate = loadedTags.filterValues { it == CardBrowserViewModel.TagStatus.INDETERMINATE }.keys
+            
+            val allTags by viewModel.allTags.collectAsStateWithLifecycle()
+            val deckTags by viewModel.deckTags.collectAsStateWithLifecycle(initialValue = emptySet())
+
+            TagsDialog(
+                onDismissRequest = { showEditTagsDialog = false },
+                onConfirm = { checked, indeterminate ->
+                    val initialPresent = initialChecked + initialIndeterminate
+                    val finalPresent = checked + indeterminate
+                    
+                    val added = checked - initialChecked
+                    val removed = initialPresent - finalPresent
+                    
+                    viewModel.saveTagsForSelection(added, removed)
+                    showEditTagsDialog = false
+                },
+                allTags = allTags,
+                initialSelection = initialChecked,
+                initialIndeterminate = initialIndeterminate,
+                deckTags = deckTags,
+                title = stringResource(R.string.menu_edit_tags),
+                confirmButtonText = stringResource(R.string.dialog_ok),
+                showFilterByDeckToggle = true,
+                onAddTag = { /* Handled by dialog state internally for immediate display, not persisted until confirm */ }
+            )
+        } else {
+             AlertDialog(
+                onDismissRequest = { showEditTagsDialog = false },
+                text = { 
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                         CircularProgressIndicator()
+                    }
+                },
+                confirmButton = {}
+            )
         }
     }
 
@@ -291,7 +347,7 @@ fun CardBrowserScreen(
                     showMoreOptionsMenu = false
                 },
                 onEditTags = {
-                    onEditTags()
+                    showEditTagsDialog = true
                     showMoreOptionsMenu = false
                 },
                 onGradeNow = {

@@ -1385,4 +1385,5 @@ private fun AnkiTest.flagCardForNote(note: Note, flag: Flag) {
 private suspend fun CardBrowserViewModel.setFlagFilterSync(flag: Flag) {
     search("flag:${flag.code}")
     waitForSearchResults()
+
 }

@@ -31,22 +31,18 @@ import com.ichi2.anki.dialogs.compose.TagsState
 fun FilterByTagsDialog(
     onDismissRequest: () -> Unit,
     onConfirm: (Set<String>) -> Unit,
-    allTags: CardBrowserViewModel.TagsState,
+    allTags: TagsState,
     initialSelection: Set<String>,
     deckTags: Set<String> = emptySet(),
     initialFilterByDeck: Boolean = false,
     onFilterByDeckChanged: (Boolean) -> Unit = {}
 ) {
-    val tagsState = when (allTags) {
-        is CardBrowserViewModel.TagsState.Loading -> TagsState.Loading
-        is CardBrowserViewModel.TagsState.Loaded -> TagsState.Loaded(allTags.tags)
-    }
-
     TagsDialog(
         onDismissRequest = onDismissRequest,
-        onConfirm = onConfirm,
-        allTags = tagsState,
+        onConfirm = { checked, _ -> onConfirm(checked) },
+        allTags = allTags,
         initialSelection = initialSelection,
+        initialIndeterminate = emptySet(),
         deckTags = deckTags,
         initialFilterByDeck = initialFilterByDeck,
         onFilterByDeckChanged = onFilterByDeckChanged,
