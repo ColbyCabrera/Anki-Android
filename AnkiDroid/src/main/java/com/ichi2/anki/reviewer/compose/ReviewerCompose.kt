@@ -226,8 +226,12 @@ fun ReviewerContent(viewModel: ReviewerViewModel, whiteboard: WhiteboardView?) {
                 isAnswerShown = state.isAnswerShown
             ) { viewModel.onEvent(ReviewerEvent.UnanswerCard) }
         }) { paddingValues ->
+            val layoutDirection = LocalLayoutDirection.current
             Box(
-                modifier = Modifier.padding(paddingValues),
+                modifier = Modifier.padding(
+                    top = paddingValues.calculateTopPadding(),
+                    bottom = paddingValues.calculateBottomPadding()
+                ),
             ) {
                 Surface(
                     modifier = Modifier
@@ -247,7 +251,9 @@ fun ReviewerContent(viewModel: ReviewerViewModel, whiteboard: WhiteboardView?) {
                     },
                     mediaDirectory = state.mediaDirectory,
                     isAnswerShown = state.isAnswerShown,
-                    toolbarHeight = (toolbarHeightDp + 48.dp).value.toInt()
+                    toolbarHeight = (toolbarHeightDp + 48.dp).value.toInt(),
+                    leftPadding = paddingValues.calculateLeftPadding(layoutDirection).value,
+                    rightPadding = paddingValues.calculateRightPadding(layoutDirection).value
                 )
 
                 Whiteboard(

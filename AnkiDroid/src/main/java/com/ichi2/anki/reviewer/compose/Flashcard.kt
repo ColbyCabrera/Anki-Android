@@ -43,7 +43,9 @@ fun Flashcard(
     modifier: Modifier = Modifier,
     mediaDirectory: File?,
     isAnswerShown: Boolean,
-    toolbarHeight: Int = 0
+    toolbarHeight: Int = 0,
+    leftPadding: Float = 0f,
+    rightPadding: Float = 0f
 ) {
     val onSurfaceColor = MaterialTheme.colorScheme.onSurface
     val onSurfaceColorHex = String.format("#%06X", (0xFFFFFF and onSurfaceColor.toArgb()))
@@ -101,6 +103,8 @@ fun Flashcard(
                         letter-spacing: ${currentStyle.letterSpacing.value}px;
                         padding-top: ${currentPadding}px;
                         padding-bottom: ${toolbarHeight}px;
+                        padding-left: ${leftPadding}px;
+                        padding-right: ${rightPadding}px;
                     }
                     hr {
                         opacity: 0.1;
