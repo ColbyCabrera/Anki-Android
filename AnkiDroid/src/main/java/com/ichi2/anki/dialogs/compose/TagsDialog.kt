@@ -326,7 +326,7 @@ private fun TagFilterChip(
             } else if (isIndeterminate) {
                 Icon(
                     painter = painterResource(R.drawable.remove_24px),
-                    contentDescription = stringResource(R.string.indeterminate),
+                    contentDescription = stringResource(R.string.tag_indeterminate_state),
                     modifier = Modifier.size(FilterChipDefaults.IconSize)
                 )
             } else {

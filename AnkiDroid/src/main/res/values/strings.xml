@@ -52,5 +52,5 @@
     <string name="learning">Learning</string>
     <string name="review">Review</string>
     <string name="buried_cards_are_not_included_in_counts_above">Buried cards are not included in counts above.</string>
-    <string name="indeterminate">Indeterminate</string>
+    <string name="tag_indeterminate_state">Tag present on some selected notes</string>
 </resources>
