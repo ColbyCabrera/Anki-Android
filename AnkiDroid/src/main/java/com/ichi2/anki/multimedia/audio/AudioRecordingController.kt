@@ -254,7 +254,6 @@ class AudioRecordingController(
                         return
                     }
                     lastOrientation = currentOrientation
-                    // BUG: Executes on trivial orientation changes, not just portrait <-> landscape
                     when (currentOrientation) {
                         Configuration.ORIENTATION_LANDSCAPE -> {
                             audioFileView.visibility = View.GONE
