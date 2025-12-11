@@ -109,6 +109,7 @@ class AudioRecordingController(
 
     // wave layout takes up a lot of screen in HORIZONTAL layout so we need to hide it
     private var orientationEventListener: OrientationEventListener? = null
+    private var lastOrientation = Configuration.ORIENTATION_UNDEFINED
 
     init {
         Timber.d("Initializing the audio recorder UI")
@@ -248,8 +249,12 @@ class AudioRecordingController(
         orientationEventListener =
             object : OrientationEventListener(context) {
                 override fun onOrientationChanged(orientation: Int) {
-                    // BUG: Executes on trivial orientation changes, not just portrait <-> landscape
-                    when (context.resources.configuration.orientation) {
+                    val currentOrientation = context.resources.configuration.orientation
+                    if (currentOrientation == lastOrientation) {
+                        return
+                    }
+                    lastOrientation = currentOrientation
+                    when (currentOrientation) {
                         Configuration.ORIENTATION_LANDSCAPE -> {
                             audioFileView.visibility = View.GONE
                             audioWaveform.visibility = View.GONE
