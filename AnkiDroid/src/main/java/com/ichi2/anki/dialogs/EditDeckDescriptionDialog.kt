@@ -112,8 +112,7 @@ class EditDeckDescriptionDialog : DialogFragment() {
                 MaterialAlertDialogBuilder(requireContext()).show {
                     setTitle(formatAsMarkdownInput.text)
                     setIcon(R.drawable.ic_help_black_24dp)
-                    // FIXME: the upstream string unexpectedly contains newlines
-                    setMessage(TR.deckConfigDescriptionNewHandlingHint().replace("\n", " ").replace("  ", " "))
+                    setMessage(TR.deckConfigDescriptionNewHandlingHint().replace(Regex("\\s+"), " "))
                 }
             }
         }
