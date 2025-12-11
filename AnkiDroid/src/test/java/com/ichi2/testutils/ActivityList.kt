@@ -39,7 +39,6 @@ import com.ichi2.anki.NoteTypeFieldEditor
 import com.ichi2.anki.Reviewer
 import com.ichi2.anki.SharedDecksActivity
 import com.ichi2.anki.SingleFragmentActivity
-// import com.ichi2.anki.StudyOptionsActivity
 import com.ichi2.anki.instantnoteeditor.InstantNoteEditorActivity
 import com.ichi2.anki.multimedia.MultimediaActivity
 import com.ichi2.anki.notetype.ManageNotetypes
@@ -49,8 +48,6 @@ import com.ichi2.anki.ui.windows.managespace.ManageSpaceActivity
 import com.ichi2.anki.ui.windows.permissions.AllPermissionsExplanationActivity
 import com.ichi2.anki.ui.windows.permissions.PermissionsActivity
 import com.ichi2.testutils.ActivityList.ActivityLaunchParam.Companion.get
-import com.ichi2.widget.cardanalysis.CardAnalysisWidgetConfig
-import com.ichi2.widget.deckpicker.DeckPickerWidgetConfig
 import org.robolectric.Robolectric
 import org.robolectric.android.controller.ActivityController
 import java.util.function.Function
@@ -95,8 +92,6 @@ object ActivityList {
             get(CardViewerActivity::class.java),
             get(InstantNoteEditorActivity::class.java),
             get(MultimediaActivity::class.java),
-            get(DeckPickerWidgetConfig::class.java),
-            get(CardAnalysisWidgetConfig::class.java),
         )
 
     private fun intentForCardTemplateBrowserAppearanceEditor(): Intent {

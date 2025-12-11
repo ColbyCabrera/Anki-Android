@@ -169,12 +169,13 @@ fun NoteEditorScreen(
     if (showTagsDialog) {
         TagsDialog(
             onDismissRequest = { showTagsDialog = false },
-            onConfirm = {
-                onUpdateTags(it)
+            onConfirm = { checked, _ ->
+                onUpdateTags(checked)
                 showTagsDialog = false
             },
             allTags = allTags,
             initialSelection = state.tags.toSet(),
+            initialIndeterminate = emptySet(),
             initialFilterByDeck = filterByDeck,
             deckTags = deckTags,
             showFilterByDeckToggle = true,

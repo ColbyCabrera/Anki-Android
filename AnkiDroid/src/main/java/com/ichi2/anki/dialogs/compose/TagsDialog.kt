@@ -38,9 +38,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -78,7 +75,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ichi2.anki.R
-import com.ichi2.anki.libanki.Tags
 import java.util.Locale
 
 sealed interface TagsState {
@@ -116,9 +112,10 @@ private fun isDuplicateTag(
 @Composable
 fun TagsDialog(
     onDismissRequest: () -> Unit,
-    onConfirm: (Set<String>) -> Unit,
+    onConfirm: (checked: Set<String>, indeterminate: Set<String>) -> Unit,
     allTags: TagsState,
     initialSelection: Set<String>,
+    initialIndeterminate: Set<String> = emptySet(),
     deckTags: Set<String> = emptySet(),
     initialFilterByDeck: Boolean = false,
     onFilterByDeckChanged: (Boolean) -> Unit = {},
@@ -127,7 +124,8 @@ fun TagsDialog(
     showFilterByDeckToggle: Boolean = false,
     onAddTag: (String) -> Unit
 ) {
-    var selection by remember(initialSelection) { mutableStateOf(initialSelection) }
+    var checkedTags by remember(initialSelection) { mutableStateOf(initialSelection) }
+    var indeterminateTags by remember(initialIndeterminate) { mutableStateOf(initialIndeterminate) }
     var searchQuery by remember { mutableStateOf("") }
     var isToggleChecked by remember(initialFilterByDeck) { mutableStateOf(initialFilterByDeck) }
 
@@ -139,9 +137,11 @@ fun TagsDialog(
                 else -> emptyList()
             }
             // Check if the normalized tag is not already present in existing tags or current selection
-            if (!isDuplicateTag(newTag, existingTagsList, selection)) {
+            if (!isDuplicateTag(newTag, existingTagsList, checkedTags + indeterminateTags)) {
                 onAddTag(newTag)
-                selection = selection + newTag
+                checkedTags = checkedTags + newTag
+                // If it was indeterminate (unlikely for new tag), remove it
+                indeterminateTags = indeterminateTags - newTag
             }
             searchQuery = ""
         }
@@ -190,7 +190,7 @@ fun TagsDialog(
                                     }
                                 }
                             }
-                            val potentialNewTag by remember(searchQuery, allTags, filteredTags, selection) {
+                            val potentialNewTag by remember(searchQuery, allTags, filteredTags, checkedTags, indeterminateTags) {
                                 derivedStateOf {
                                     val trimmedQuery = searchQuery.trim()
                                     if (trimmedQuery.isEmpty()) {
@@ -199,7 +199,7 @@ fun TagsDialog(
                                         val existingTagsList = allTags.tags
                                         // Show potential new tag only if it doesn't exist in all tags or selection
                                         trimmedQuery.takeIf {
-                                            !isDuplicateTag(trimmedQuery, existingTagsList, selection)
+                                            !isDuplicateTag(trimmedQuery, existingTagsList, checkedTags + indeterminateTags)
                                         }
                                     }
                                 }
@@ -251,12 +251,23 @@ fun TagsDialog(
                                             filteredTags.forEach { tag ->
                                                 TagFilterChip(
                                                     tag = tag,
-                                                    isSelected = tag in selection,
+                                                    isSelected = tag in checkedTags,
+                                                    isIndeterminate = tag in indeterminateTags,
                                                     onClick = {
-                                                        selection = if (tag in selection) {
-                                                            selection - tag
-                                                        } else {
-                                                            selection + tag
+                                                        when (tag) {
+                                                            in indeterminateTags -> {
+                                                                // Indeterminate -> Checked
+                                                                indeterminateTags = indeterminateTags - tag
+                                                                checkedTags = checkedTags + tag
+                                                            }
+                                                            in checkedTags -> {
+                                                                // Checked -> Unchecked
+                                                                checkedTags = checkedTags - tag
+                                                            }
+                                                            else -> {
+                                                                // Unchecked -> Checked
+                                                                checkedTags = checkedTags + tag
+                                                            }
                                                         }
                                                     }
                                                 )
@@ -271,7 +282,7 @@ fun TagsDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(selection) }) {
+            TextButton(onClick = { onConfirm(checkedTags, indeterminateTags) }) {
                 Text(text = confirmButtonText)
             }
         },
@@ -287,11 +298,12 @@ fun TagsDialog(
 private fun TagFilterChip(
     tag: String,
     isSelected: Boolean,
+    isIndeterminate: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val animatedCornerRadius by animateDpAsState(
-        targetValue = if (isSelected) 24.dp else 8.dp,
+        targetValue = if (isSelected || isIndeterminate) 24.dp else 8.dp,
         label = "corner radius",
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
@@ -301,7 +313,7 @@ private fun TagFilterChip(
 
     FilterChip(
         modifier = modifier.height(FilterChipDefaults.Height),
-        selected = isSelected,
+        selected = isSelected || isIndeterminate,
         onClick = onClick,
         label = { Text(text = tag) },
         leadingIcon = {
@@ -311,13 +323,19 @@ private fun TagFilterChip(
                     contentDescription = stringResource(R.string.done_icon),
                     modifier = Modifier.size(FilterChipDefaults.IconSize)
                 )
+            } else if (isIndeterminate) {
+                Icon(
+                    painter = painterResource(R.drawable.remove_24px),
+                    contentDescription = stringResource(R.string.tag_indeterminate_state),
+                    modifier = Modifier.size(FilterChipDefaults.IconSize)
+                )
             } else {
                 Spacer(Modifier.size(FilterChipDefaults.IconSize / 2))
             }
         },
         shape = RoundedCornerShape(animatedCornerRadius),
         trailingIcon = {
-            if (!isSelected) {
+            if (!isSelected && !isIndeterminate) {
                 Spacer(Modifier.size(FilterChipDefaults.IconSize / 2))
             }
         },
@@ -358,7 +376,7 @@ private fun SearchBarRow(
                 placeholder = { Text(text = stringResource(id = R.string.card_browser_search_tags_hint)) },
                 leadingIcon = {
                     Icon(
-                        Icons.Default.Search,
+                        painter = painterResource(R.drawable.search_24px),
                         contentDescription = stringResource(R.string.card_browser_search_hint)
                     )
                 },
@@ -366,7 +384,7 @@ private fun SearchBarRow(
                     if (searchQuery.isNotEmpty()) {
                         IconButton(onClick = { onSearchQueryChange("") }) {
                             Icon(
-                                Icons.Default.Close,
+                                painter = painterResource(R.drawable.close_24px),
                                 contentDescription = stringResource(R.string.close)
                             )
                         }
@@ -426,9 +444,61 @@ private fun TagsDialogPreview() {
     MaterialTheme {
         TagsDialog(
             onDismissRequest = {},
-            onConfirm = {},
-            allTags = TagsState.Loaded(listOf("tag1", "tag2", "longertag", "another")),
+            onConfirm = { _, _ -> },
+            allTags = TagsState.Loaded(listOf("tag1", "tag2", "very long tag", "another")),
             initialSelection = setOf("tag1"),
+            title = "Filter by Tags",
+            confirmButtonText = "OK",
+            showFilterByDeckToggle = true,
+            onAddTag = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Indeterminate")
+@Composable
+private fun TagsDialogIndeterminatePreview() {
+    MaterialTheme {
+        TagsDialog(
+            onDismissRequest = {},
+            onConfirm = { _, _ -> },
+            allTags = TagsState.Loaded(listOf("tag1", "tag2", "tag3", "tag4")),
+            initialSelection = setOf("tag1"),
+            initialIndeterminate = setOf("tag3"),
+            title = "Filter by Tags",
+            confirmButtonText = "OK",
+            showFilterByDeckToggle = true,
+            onAddTag = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Loading")
+@Composable
+private fun TagsDialogLoadingPreview() {
+    MaterialTheme {
+        TagsDialog(
+            onDismissRequest = {},
+            onConfirm = { _, _ -> },
+            allTags = TagsState.Loading,
+            initialSelection = emptySet(),
+            title = "Filter by Tags",
+            confirmButtonText = "OK",
+            showFilterByDeckToggle = true,
+            onAddTag = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Empty")
+@Composable
+private fun TagsDialogEmptyPreview() {
+    MaterialTheme {
+        TagsDialog(
+            onDismissRequest = {},
+            onConfirm = { _, _ -> },
+            allTags = TagsState.Loaded(emptyList()),
+            initialSelection = emptySet(),
             title = "Filter by Tags",
             confirmButtonText = "OK",
             showFilterByDeckToggle = true,

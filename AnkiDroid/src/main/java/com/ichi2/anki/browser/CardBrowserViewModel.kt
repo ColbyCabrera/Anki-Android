@@ -88,6 +88,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 import net.ankiweb.rsdroid.BackendException
+import net.ankiweb.rsdroid.exceptions.BackendNotFoundException
 import org.jetbrains.annotations.VisibleForTesting
 import timber.log.Timber
 import java.io.DataInputStream
@@ -96,6 +97,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.util.Collections
+import com.ichi2.anki.dialogs.compose.TagsState
 import kotlin.math.max
 import kotlin.math.min
 
@@ -434,10 +436,12 @@ class CardBrowserViewModel(
             emit(Unit)
         }
 
+    /*
     sealed class TagsState {
         data object Loading : TagsState()
         data class Loaded(val tags: List<String>) : TagsState()
     }
+    */
 
     private val _allTags = MutableStateFlow<TagsState>(TagsState.Loading)
     val allTags: StateFlow<TagsState> = _allTags
@@ -1437,6 +1441,70 @@ class CardBrowserViewModel(
                 noteIds = noteIds,
                 tags = tags.joinToString(" "),
             )
+        }
+        refreshSearch()
+    }
+
+    enum class TagStatus {
+        CHECKED,
+        UNCHECKED,
+        INDETERMINATE
+    }
+
+    suspend fun loadTagsForSelection(): Map<String, TagStatus> {
+        val noteIds = queryAllSelectedNoteIds()
+        if (noteIds.isEmpty()) return emptyMap()
+
+        return withCol {
+            val allTags = HashSet<String>()
+            val tagCounts = HashMap<String, Int>()
+
+            // Bulk fetch all tags for performance
+            // We can't easily bulk fetch tags for arbitrary note IDs without a custom query,
+            // so we'll iterate. For very large selections this might be slow,
+            // but getting note objects is relatively fast.
+            // A safer approach for massive selections would be a direct DB query,
+            // but let's stick to the API for now.
+            // Optimization: Use `findNotes` returns IDs, we have IDs.
+            // We need tags.
+            
+            for (noteId in noteIds) {
+                try {
+                    val note = getNote(noteId)
+                    for (tag in note.tags) {
+                        allTags.add(tag)
+                        tagCounts[tag] = (tagCounts[tag] ?: 0) + 1
+                    }
+                } catch (e: BackendNotFoundException) {
+                    // Note was deleted between search and tag loading - safe to skip
+                }
+            }
+
+            val count = noteIds.size
+            allTags.associateWith { tag ->
+                val tagCount = tagCounts[tag] ?: 0
+                if (tagCount == count) {
+                    TagStatus.CHECKED
+                } else {
+                    TagStatus.INDETERMINATE
+                }
+            }
+        }
+    }
+
+    fun saveTagsForSelection(added: Set<String>, removed: Set<String>) = viewModelScope.launch {
+        val noteIds = queryAllSelectedNoteIds()
+        if (noteIds.isEmpty()) return@launch
+
+        if (added.isNotEmpty()) {
+            undoableOp {
+                this.tags.bulkAdd(noteIds, added.joinToString(" "))
+            }
+        }
+        if (removed.isNotEmpty()) {
+            undoableOp {
+                this.tags.bulkRemove(noteIds, removed.joinToString(" "))
+            }
         }
         refreshSearch()
     }

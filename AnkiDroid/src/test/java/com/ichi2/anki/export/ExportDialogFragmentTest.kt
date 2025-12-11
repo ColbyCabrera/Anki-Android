@@ -9,6 +9,11 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.ichi2.anki.R
 import com.ichi2.anki.RobolectricTest
+import com.ichi2.anki.dialogs.compose.ApkgExportState
+import com.ichi2.anki.dialogs.compose.CardsExportState
+import com.ichi2.anki.dialogs.compose.CollectionExportState
+import com.ichi2.anki.dialogs.compose.ExportDialog
+import com.ichi2.anki.dialogs.compose.NotesExportState
 import com.ichi2.anki.libanki.DeckNameId
 import org.junit.Rule
 import org.junit.Test

@@ -96,6 +96,7 @@ import com.ichi2.anki.browser.ColumnHeading
 import com.ichi2.anki.model.CardsOrNotes
 import com.ichi2.anki.model.SelectableDeck
 import com.ichi2.anki.model.SortType
+import com.ichi2.anki.dialogs.compose.TagsDialog
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -142,6 +143,50 @@ fun CardBrowserScreen(
         viewModel.flowOfSnackbarMessage.collect { messageRes ->
             snackbarHostState.showSnackbar(context.getString(messageRes))
         }
+    }
+
+    var showEditTagsDialog by remember { mutableStateOf(false) }
+
+    if (showEditTagsDialog) {
+        var tagsLoadState by remember { mutableStateOf<Map<String, CardBrowserViewModel.TagStatus>?>(null) }
+        
+        LaunchedEffect(Unit) {
+            viewModel.loadAllTags()
+            viewModel.loadDeckTags()
+            tagsLoadState = viewModel.loadTagsForSelection()
+        }
+
+        val initialChecked =
+            tagsLoadState?.filterValues { it == CardBrowserViewModel.TagStatus.CHECKED }?.keys
+                ?: emptySet()
+        val initialIndeterminate =
+            tagsLoadState?.filterValues { it == CardBrowserViewModel.TagStatus.INDETERMINATE }?.keys
+                ?: emptySet()
+
+        val allTags by viewModel.allTags.collectAsStateWithLifecycle()
+        val deckTags by viewModel.deckTags.collectAsStateWithLifecycle(initialValue = emptySet())
+
+        TagsDialog(
+            onDismissRequest = { showEditTagsDialog = false },
+            onConfirm = { checked, indeterminate ->
+                val initialPresent = initialChecked + initialIndeterminate
+                val finalPresent = checked + indeterminate
+
+                val added = checked - initialChecked
+                val removed = initialPresent - finalPresent
+
+                viewModel.saveTagsForSelection(added, removed)
+                showEditTagsDialog = false
+            },
+            allTags = allTags,
+            initialSelection = initialChecked,
+            initialIndeterminate = initialIndeterminate,
+            deckTags = deckTags,
+            title = stringResource(R.string.menu_edit_tags),
+            confirmButtonText = stringResource(R.string.dialog_ok),
+            showFilterByDeckToggle = true,
+            onAddTag = { /* Handled by dialog state internally for immediate display, not persisted until confirm */ }
+        )
     }
 
     Box(modifier = modifier) {
@@ -291,7 +336,7 @@ fun CardBrowserScreen(
                     showMoreOptionsMenu = false
                 },
                 onEditTags = {
-                    onEditTags()
+                    showEditTagsDialog = true
                     showMoreOptionsMenu = false
                 },
                 onGradeNow = {

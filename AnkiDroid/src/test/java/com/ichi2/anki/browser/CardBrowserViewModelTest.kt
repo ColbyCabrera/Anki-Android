@@ -24,9 +24,7 @@ import app.cash.turbine.TurbineTestContext
 import app.cash.turbine.test
 import com.ichi2.anki.ioDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
 import com.ichi2.anki.AnkiDroidApp
-import com.ichi2.anki.CardBrowser
 import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.Flag
 import com.ichi2.anki.NoteEditorActivity
@@ -60,7 +58,6 @@ import com.ichi2.anki.browser.CardBrowserViewModel.ToggleSelectionState.SELECT_N
 import com.ichi2.anki.browser.RepositionCardsRequest.ContainsNonNewCardsError
 import com.ichi2.anki.browser.RepositionCardsRequest.RepositionData
 import com.ichi2.anki.export.ExportDialogFragment
-
 import com.ichi2.anki.libanki.CardId
 import com.ichi2.anki.libanki.DeckId
 import com.ichi2.anki.libanki.Note
@@ -74,7 +71,6 @@ import com.ichi2.anki.model.SortType
 import com.ichi2.anki.model.SortType.NO_SORTING
 import com.ichi2.anki.model.SortType.SORT_FIELD
 import com.ichi2.anki.servicelayer.NoteService
-
 import com.ichi2.anki.utils.ext.ifNotZero
 import com.ichi2.testutils.IntentAssert
 import com.ichi2.testutils.JvmTest
@@ -1385,4 +1381,5 @@ private fun AnkiTest.flagCardForNote(note: Note, flag: Flag) {
 private suspend fun CardBrowserViewModel.setFlagFilterSync(flag: Flag) {
     search("flag:${flag.code}")
     waitForSearchResults()
+
 }
