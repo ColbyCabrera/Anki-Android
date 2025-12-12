@@ -459,6 +459,7 @@ fun DeckPickerScreen(
                             ) {
                                 SyncIcon(
                                     isSyncing = isRefreshing,
+                                    syncState = syncState,
                                     onRefresh = onRefresh
                                 )
                             }

@@ -35,12 +35,25 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.ichi2.anki.R
+import com.ichi2.anki.SyncIconState
 import kotlinx.coroutines.launch
 
 @Composable
-fun SyncIcon(isSyncing: Boolean, onRefresh: () -> Unit) {
+fun SyncIcon(isSyncing: Boolean, syncState: SyncIconState, onRefresh: () -> Unit) {
     val rotation = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
+
+    val description = if (isSyncing) {
+        stringResource(R.string.syncing)
+    } else {
+        stringResource(
+            when (syncState) {
+                SyncIconState.OneWay -> R.string.sync_menu_title_one_way_sync
+                SyncIconState.NotLoggedIn -> R.string.sync_menu_title_no_account
+                else -> R.string.sync_now
+            }
+        )
+    }
 
     FilledIconButton(
         onClick = {
@@ -63,7 +76,7 @@ fun SyncIcon(isSyncing: Boolean, onRefresh: () -> Unit) {
     ) {
         Icon(
             painter = painterResource(R.drawable.sync_24px),
-            contentDescription = stringResource(R.string.sync_now),
+            contentDescription = description,
             modifier = Modifier.rotate(rotation.value)
         )
     }

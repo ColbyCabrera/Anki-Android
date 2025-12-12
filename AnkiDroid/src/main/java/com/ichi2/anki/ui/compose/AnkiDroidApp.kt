@@ -273,6 +273,7 @@ fun AnkiDroidApp(
                                 ) {
                                     SyncIcon(
                                         isSyncing = isRefreshing,
+                                        syncState = syncState,
                                         onRefresh = onRefresh
                                     )
                                 }
