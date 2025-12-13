@@ -33,8 +33,6 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -250,32 +248,17 @@ fun AnkiDroidApp(
                                         contentDescription = stringResource(R.string.search_decks),
                                     )
                                 }
-                                BadgedBox(
+                                SyncIcon(
+                                    isSyncing = isRefreshing,
+                                    syncState = syncState,
+                                    onRefresh = onRefresh,
                                     modifier = Modifier
                                         .height(40.dp)
                                         .width(48.dp)
-
                                         .graphicsLayer {
                                             alpha = 1f - searchAnim
-                                        },
-                                    badge = {
-                                        when (syncState) {
-                                            SyncIconState.PendingChanges -> Badge()
-                                            SyncIconState.OneWay, SyncIconState.NotLoggedIn -> Badge {
-                                                Text(
-                                                    "!"
-                                                )
-                                            }
-
-                                            else -> { /* No badge for Normal state */ }
                                         }
-                                    }
-                                ) {
-                                    SyncIcon(
-                                        isSyncing = isRefreshing,
-                                        onRefresh = onRefresh
-                                    )
-                                }
+                                )
                             }
                             if (studyOptionsData != null) {
                                 FilledIconButton(

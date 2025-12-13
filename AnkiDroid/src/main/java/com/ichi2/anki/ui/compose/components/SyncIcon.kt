@@ -23,10 +23,14 @@ package com.ichi2.anki.ui.compose.components
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -35,36 +39,62 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.ichi2.anki.R
+import com.ichi2.anki.SyncIconState
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SyncIcon(isSyncing: Boolean, onRefresh: () -> Unit) {
+fun SyncIcon(
+    isSyncing: Boolean,
+    syncState: SyncIconState,
+    onRefresh: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val rotation = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
 
-    FilledIconButton(
-        onClick = {
-            onRefresh()
-            scope.launch {
-                rotation.animateTo(
-                    targetValue = rotation.value + 360f,
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessLow
-                    )
-                )
+    BadgedBox(
+        modifier = modifier,
+        badge = {
+            when (syncState) {
+                SyncIconState.PendingChanges -> Badge()
+                SyncIconState.OneWay, SyncIconState.NotLoggedIn -> Badge {
+                    Text("!")
+                }
+                else -> { /* No badge for Normal state */ }
             }
         },
-        enabled = !isSyncing,
-        colors = IconButtonDefaults.filledIconButtonColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-        ),
     ) {
-        Icon(
-            painter = painterResource(R.drawable.sync_24px),
-            contentDescription = stringResource(R.string.sync_now),
-            modifier = Modifier.rotate(rotation.value)
-        )
+        val contentDescription = when (syncState) {
+            SyncIconState.OneWay -> stringResource(R.string.sync_menu_title_one_way_sync)
+            SyncIconState.NotLoggedIn -> stringResource(R.string.sync_menu_title_no_account)
+            else -> stringResource(R.string.sync_now)
+        }
+
+        FilledIconButton(
+            onClick = {
+                onRefresh()
+                scope.launch {
+                    rotation.animateTo(
+                        targetValue = rotation.value + 360f,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessLow,
+                        ),
+                    )
+                }
+            },
+            enabled = !isSyncing,
+            colors = IconButtonDefaults.filledIconButtonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            ),
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.sync_24px),
+                contentDescription = contentDescription,
+                modifier = Modifier.rotate(rotation.value),
+            )
+        }
     }
 }
