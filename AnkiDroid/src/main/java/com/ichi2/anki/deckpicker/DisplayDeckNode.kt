@@ -19,20 +19,20 @@ package com.ichi2.anki.deckpicker
 
 import android.annotation.SuppressLint
 import androidx.annotation.VisibleForTesting
-import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import com.ichi2.anki.libanki.DeckId
 import com.ichi2.anki.libanki.sched.DeckNode
 import com.ichi2.anki.libanki.utils.append
 import java.util.Locale
 
 /**
- * An immutable variant of a [DeckNode]. Instantiated right before
- * we want to display it. The list being submitted to the [ListViewAdapter]
- * is a list of [DisplayDeckNode]s. This class only contains the information
- * needed to display it on the screen, hence no data of a node's children and parent.
+ * A stable, display-oriented view of a [DeckNode]. Created when building
+ * the deck list for display. Contains properties needed for rendering
+ * (counts, selection state, etc.) plus a reference to the source [DeckNode]
+ * for actions that need the full tree context.
  */
 @ConsistentCopyVisibility
-@Immutable
+@Stable
 data class DisplayDeckNode private constructor(
     val did: DeckId,
     val fullDeckName: String,
@@ -46,13 +46,12 @@ data class DisplayDeckNode private constructor(
     val revCount: Int,
     val isSelected: Boolean,
 ) {
-    // DeckNode is mutable, so use a lateinit var so '==' doesn't include it in the comparison
+    /** Reference to the original [DeckNode]. Excluded from equals/hashCode by being outside the constructor. */
     lateinit var deckNode: DeckNode
+        private set
 
     fun withUpdatedDeckId(deckId: DeckId): DisplayDeckNode =
-        this.copy(isSelected = this.did == deckId).also { updated ->
-            updated.deckNode = this.deckNode
-        }
+        this.copy(isSelected = this.did == deckId).also { it.deckNode = this.deckNode }
 
     companion object {
         fun from(
@@ -72,9 +71,7 @@ data class DisplayDeckNode private constructor(
                 lrnCount = node.lrnCount,
                 revCount = node.revCount,
                 isSelected = node.did == selectedDeckId,
-            ).apply {
-                this.deckNode = node
-            }
+            ).apply { deckNode = node }
     }
 }
 
@@ -163,5 +160,4 @@ private fun DeckNode.nameMatchesFilter(filter: CharSequence?): Boolean {
     }
 }
 
-@Immutable
 data class ImmutableDeckList(val items: List<DisplayDeckNode>) : List<DisplayDeckNode> by items
