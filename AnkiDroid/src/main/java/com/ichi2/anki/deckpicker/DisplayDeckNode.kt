@@ -159,5 +159,3 @@ private fun DeckNode.nameMatchesFilter(filter: CharSequence?): Boolean {
         return node.name.lowercase(Locale.getDefault()).contains(filter) || node.name.lowercase(Locale.ROOT).contains(filter)
     }
 }
-
-data class ImmutableDeckList(val items: List<DisplayDeckNode>) : List<DisplayDeckNode> by items

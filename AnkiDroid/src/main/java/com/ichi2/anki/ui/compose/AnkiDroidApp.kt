@@ -79,13 +79,12 @@ import com.ichi2.anki.ui.compose.components.ExpandableFabContainer
 import com.ichi2.anki.ui.compose.components.Scrim
 import com.ichi2.anki.ui.compose.components.SyncIcon
 
-import com.ichi2.anki.deckpicker.ImmutableDeckList
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AnkiDroidApp(
     fragmented: Boolean,
-    decks: ImmutableDeckList,
+    decks: List<DisplayDeckNode>,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
     searchQuery: String,
@@ -402,7 +401,6 @@ fun AnkiDroidApp(
             onRefresh = onRefresh,
             searchQuery = searchQuery,
             onSearchQueryChanged = onSearchQueryChanged,
-
             onDeckClick = onDeckClick,
             onExpandClick = onExpandClick,
             onAddNote = onAddNote,

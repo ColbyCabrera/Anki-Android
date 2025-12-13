@@ -138,7 +138,7 @@ class DeckPickerViewModel :
             Timber.i("currentDeckId: %d", currentDeckId)
 
             FlattenedDeckList(
-                data = ImmutableDeckList(tree.filterAndFlattenDisplay(filter, currentDeckId)),
+                data = tree.filterAndFlattenDisplay(filter, currentDeckId),
                 hasSubDecks = tree.children.any { it.children.any() },
             )
         }
@@ -513,11 +513,11 @@ class DeckPickerViewModel :
 
     /** Represents [dueTree] as a list */
     data class FlattenedDeckList(
-        val data: ImmutableDeckList,
+        val data: List<DisplayDeckNode>,
         val hasSubDecks: Boolean,
     ) {
         companion object {
-            val empty = FlattenedDeckList(ImmutableDeckList(emptyList()), hasSubDecks = false)
+            val empty = FlattenedDeckList(emptyList(), hasSubDecks = false)
         }
     }
 
