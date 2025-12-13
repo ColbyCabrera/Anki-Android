@@ -356,7 +356,7 @@ class TgzPackageExtract(
         val destDirCanonicalPath = destDirectory.canonicalPath
         val outputFileCanonicalPath = outputFile.canonicalPath
 
-        if (!outputFileCanonicalPath.startsWith(destDirCanonicalPath + File.separator)) {
+        if (!outputFileCanonicalPath.startsWith(destDirCanonicalPath)) {
             throw ArchiveException(context.getString(R.string.malicious_archive_entry_outside, outputFileCanonicalPath))
         }
     }

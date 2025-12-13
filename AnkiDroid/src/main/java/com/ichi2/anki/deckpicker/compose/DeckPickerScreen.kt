@@ -41,6 +41,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -439,18 +441,27 @@ fun DeckPickerScreen(
                                     contentDescription = stringResource(R.string.search_decks)
                                 )
                             }
-                            SyncIcon(
-                                isSyncing = isRefreshing,
-                                syncState = syncState,
-                                onRefresh = onRefresh,
+                            BadgedBox(
                                 modifier = Modifier
                                     .height(40.dp)
                                     .width(48.dp)
                                     .padding(end = 8.dp)
                                     .graphicsLayer {
                                         alpha = 1f - searchAnim
+                                    },
+                                badge = {
+                                    when (syncState) {
+                                        SyncIconState.PendingChanges -> Badge()
+                                        SyncIconState.OneWay, SyncIconState.NotLoggedIn -> Badge { Text("!") }
+                                        else -> { /* No badge for Normal state */ }
                                     }
-                            )
+                                }
+                            ) {
+                                SyncIcon(
+                                    isSyncing = isRefreshing,
+                                    onRefresh = onRefresh
+                                )
+                            }
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(

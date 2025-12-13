@@ -156,6 +156,19 @@ class InvertedTopCornersShape(private val cornerRadius: Dp) : Shape {
         }
         return Outline.Generic(path)
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is InvertedTopCornersShape) return false
+
+        if (cornerRadius != other.cornerRadius) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return cornerRadius.hashCode()
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -237,13 +250,14 @@ fun ReviewerContent(viewModel: ReviewerViewModel, whiteboard: WhiteboardView?) {
                 Box(
                     modifier = Modifier.background(MaterialTheme.colorScheme.background)
                 ) {
+                    val invertedTopCornersShape = remember { InvertedTopCornersShape(cornerRadius = 32.dp) }
                     Surface(
                         modifier = Modifier
                             .align(Alignment.TopStart)
                             .zIndex(1F)
                             .height(100.dp)
                             .fillMaxWidth(),
-                        shape = InvertedTopCornersShape(cornerRadius = 32.dp),
+                        shape = invertedTopCornersShape,
                         color = MaterialTheme.colorScheme.surfaceContainer
                     ) {}
 

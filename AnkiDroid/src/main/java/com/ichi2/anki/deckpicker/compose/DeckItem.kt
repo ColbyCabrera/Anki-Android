@@ -73,26 +73,14 @@ private val collapsedDeckCardRadius = 70.dp
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 internal class RoundedPolygonShape(private val polygon: RoundedPolygon) : Shape {
-    private var lastSize: Size? = null
-    private var lastOutline: Outline? = null
-
     override fun createOutline(
         size: Size, layoutDirection: LayoutDirection, density: Density
     ): Outline {
-        val cachedOutline = lastOutline
-        if (size == lastSize && cachedOutline != null) {
-            return cachedOutline
-        }
-
         val matrix = Matrix()
         matrix.setScale(size.width, size.height)
         val path = polygon.toPath()
         path.transform(matrix)
-        val newOutline = Outline.Generic(path.asComposePath())
-
-        lastSize = size
-        lastOutline = newOutline
-        return newOutline
+        return Outline.Generic(path.asComposePath())
     }
 }
 
