@@ -237,13 +237,16 @@ fun ReviewerContent(viewModel: ReviewerViewModel, whiteboard: WhiteboardView?) {
                 Box(
                     modifier = Modifier.background(MaterialTheme.colorScheme.background)
                 ) {
+                    val invertedTopCornersShape =
+                        remember { InvertedTopCornersShape(cornerRadius = 32.dp) }
+
                     Surface(
                         modifier = Modifier
                             .align(Alignment.TopStart)
                             .zIndex(1F)
                             .height(100.dp)
                             .fillMaxWidth(),
-                        shape = InvertedTopCornersShape(cornerRadius = 32.dp),
+                        shape = invertedTopCornersShape,
                         color = MaterialTheme.colorScheme.surfaceContainer
                     ) {}
 
