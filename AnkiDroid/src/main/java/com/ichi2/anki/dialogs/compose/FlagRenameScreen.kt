@@ -61,19 +61,14 @@ fun FlagRenameScreen(
     LazyColumn {
         items(items = flags, key = { it.first.code }) { (flag, name) ->
             FlagRow(
-                flag = flag,
-                name = name,
-                onRename = { newName -> onRename(flag, newName) }
-            )
+                flag = flag, name = name, onRename = { newName -> onRename(flag, newName) })
         }
     }
 }
 
 @Composable
 private fun FlagRow(
-    flag: Flag,
-    name: String,
-    onRename: (String) -> Unit
+    flag: Flag, name: String, onRename: (String) -> Unit
 ) {
     var isEditing by remember { mutableStateOf(false) }
 
@@ -92,27 +87,20 @@ private fun FlagRow(
         )
 
         if (isEditing) {
-            EditFlagName(
-                initialName = name,
-                onSave = { newName ->
-                    onRename(newName.ifBlank { name })
-                    isEditing = false
-                },
-                onCancel = { isEditing = false }
-            )
+            EditFlagName(initialName = name, onSave = { newName ->
+                onRename(newName.ifBlank { name })
+                isEditing = false
+            }, onCancel = { isEditing = false })
         } else {
             DisplayFlagName(
-                name = name,
-                onEdit = { isEditing = true }
-            )
+                name = name, onEdit = { isEditing = true })
         }
     }
 }
 
 @Composable
 private fun DisplayFlagName(
-    name: String,
-    onEdit: () -> Unit
+    name: String, onEdit: () -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -138,13 +126,12 @@ private fun DisplayFlagName(
 
 @Composable
 private fun EditFlagName(
-    initialName: String,
-    onSave: (String) -> Unit,
-    onCancel: () -> Unit
+    initialName: String, onSave: (String) -> Unit, onCancel: () -> Unit
 ) {
     // using TextFieldValue to handle selection
     var textState by remember { mutableStateOf(TextFieldValue(initialName)) }
     val focusRequester = remember { FocusRequester() }
+    val isValid = textState.text.trim().isNotEmpty()
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
@@ -152,8 +139,7 @@ private fun EditFlagName(
     }
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
     ) {
         TextField(
             value = textState,
@@ -169,7 +155,9 @@ private fun EditFlagName(
                 unfocusedIndicatorColor = MaterialTheme.colorScheme.outline
             ),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { onSave(textState.text) })
+            keyboardActions = KeyboardActions(onDone = {
+                if (isValid) onSave(textState.text.trim())
+            })
         )
         IconButton(onClick = onCancel) {
             Icon(
@@ -177,7 +165,9 @@ private fun EditFlagName(
                 contentDescription = stringResource(id = R.string.dialog_cancel)
             )
         }
-        IconButton(onClick = { onSave(textState.text) }) {
+        IconButton(
+            onClick = { onSave(textState.text.trim()) }, enabled = isValid
+        ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_done),
                 contentDescription = stringResource(id = R.string.save)
@@ -199,5 +189,20 @@ private fun FlagRowPreview() {
 private fun FlagRowEditPreview() {
     MaterialTheme {
         FlagRow(flag = Flag.BLUE, name = "Blue Flag", onRename = {})
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun FlagRenameScreenPreview() {
+    MaterialTheme {
+        FlagRenameScreen(
+            flags = listOf(
+                Flag.RED to "Red",
+                Flag.ORANGE to "Orange",
+                Flag.GREEN to "Green"
+            ),
+            onRename = { _, _ -> }
+        )
     }
 }

@@ -22,6 +22,7 @@ import android.content.DialogInterface
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.appcompat.app.AlertDialog
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +37,7 @@ import com.ichi2.anki.dialogs.compose.FlagRenameScreen
 import com.ichi2.utils.customView
 import com.ichi2.utils.title
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 /**
  * A DialogFragment for renaming flags.
@@ -49,26 +51,39 @@ class FlagRenameDialog : DialogFragment() {
                 var flags by remember { mutableStateOf<List<Pair<Flag, String>>>(emptyList()) }
 
                 // Initial load
-                androidx.compose.runtime.LaunchedEffect(Unit) {
-                    flags = loadFlags()
+                LaunchedEffect(Unit) {
+                    try {
+                        flags = loadFlags()
+                    } catch (e: Exception) {
+                        Timber.e(e, "Failed to load flags")
+                    }
                 }
 
                 FlagRenameScreen(
-                    flags = flags,
-                    onRename = { flag, newName ->
-                        lifecycleScope.launch {
-                            // Optimistic update
-                            val updatedFlags = flags.map {
-                                if (it.first == flag) flag to newName else it
-                            }
-                            flags = updatedFlags
+                    flags = flags, onRename = { flag, newName ->
+                        val trimmedName = newName.trim()
+                        if (trimmedName.isEmpty()) return@FlagRenameScreen
 
-                            flag.rename(newName)
-                            // Reload to ensure consistency (optional, but good)
-                            flags = loadFlags()
+                        lifecycleScope.launch {
+                            try {
+                                // Optimistic update
+                                val updatedFlags = flags.map {
+                                    if (it.first == flag) flag to trimmedName else it
+                                }
+                                flags = updatedFlags
+
+                                flag.rename(trimmedName)
+                            } catch (e: Exception) {
+                                Timber.e(e, "Failed to rename flag")
+                                // Revert optimistic update on failure
+                                try {
+                                    flags = loadFlags()
+                                } catch (e: Exception) {
+                                    Timber.e(e, "Failed to reload flags after rename failure")
+                                }
+                            }
                         }
-                    }
-                )
+                    })
             }
         }
 
@@ -86,14 +101,12 @@ class FlagRenameDialog : DialogFragment() {
     override fun onStart() {
         super.onStart()
         dialog?.window?.clearFlags(
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                or WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM,
         )
     }
 
     private suspend fun loadFlags(): List<Pair<Flag, String>> {
-        return Flag.queryDisplayNames()
-            .filter { it.key != Flag.NONE }
+        return Flag.queryDisplayNames().filter { it.key != Flag.NONE }
             .map { (flag, displayName) -> flag to displayName }
     }
 }
