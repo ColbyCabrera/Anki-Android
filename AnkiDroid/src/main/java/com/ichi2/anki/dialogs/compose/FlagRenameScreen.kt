@@ -95,7 +95,7 @@ private fun FlagRow(
             EditFlagName(
                 initialName = name,
                 onSave = { newName ->
-                    onRename(newName)
+                    onRename(newName.ifBlank { name })
                     isEditing = false
                 },
                 onCancel = { isEditing = false }
