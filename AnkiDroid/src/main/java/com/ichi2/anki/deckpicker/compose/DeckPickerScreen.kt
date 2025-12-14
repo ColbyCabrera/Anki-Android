@@ -217,18 +217,23 @@ fun DeckPickerContent(
     }
 
     // Build the deck tree
-    val deckToChildrenMap = mutableMapOf<DisplayDeckNode, MutableList<DisplayDeckNode>>()
-    val rootDecks = mutableListOf<DisplayDeckNode>()
-    val deckMap = decks.associateBy { it.did }
+    // We remember the result to avoid rebuilding the tree on every recomposition
+    // if the deck list hasn't changed.
+    val (deckToChildrenMap, rootDecks) = remember(decks) {
+        val deckToChildrenMap = mutableMapOf<DisplayDeckNode, MutableList<DisplayDeckNode>>()
+        val rootDecks = mutableListOf<DisplayDeckNode>()
+        val deckMap = decks.associateBy { it.did }
 
-    for (deck in decks) {
-        val parentId = deck.deckNode.parent?.get()?.did
-        if (parentId != null && deckMap.containsKey(parentId)) {
-            val parent = deckMap[parentId]!!
-            deckToChildrenMap.getOrPut(parent) { mutableListOf() }.add(deck)
-        } else {
-            rootDecks.add(deck)
+        for (deck in decks) {
+            val parentId = deck.deckNode.parent?.get()?.did
+            if (parentId != null && deckMap.containsKey(parentId)) {
+                val parent = deckMap[parentId]!!
+                deckToChildrenMap.getOrPut(parent) { mutableListOf() }.add(deck)
+            } else {
+                rootDecks.add(deck)
+            }
         }
+        deckToChildrenMap to rootDecks
     }
 
     Box(
