@@ -22,36 +22,60 @@ import android.content.DialogInterface
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.appcompat.app.AlertDialog
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.ichi2.anki.Flag
 import com.ichi2.anki.R
+import com.ichi2.anki.dialogs.compose.FlagRenameScreen
 import com.ichi2.utils.customView
 import com.ichi2.utils.title
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 /**
- * A DialogFragment for renaming flags through a RecyclerView.
+ * A DialogFragment for renaming flags.
  */
 class FlagRenameDialog : DialogFragment() {
-    private lateinit var recyclerView: RecyclerView
-    private lateinit var flagAdapter: FlagAdapter
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val dialogView = requireActivity().layoutInflater.inflate(R.layout.rename_flag_layout, null)
-        val builder =
-            AlertDialog.Builder(requireContext()).apply {
-                customView(view = dialogView, 4, 4, 4, 4)
-                title(R.string.rename_flag)
-            }
-        val dialog = builder.create()
+        val composeView = ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                var flags by remember { mutableStateOf<List<Pair<Flag, String>>>(emptyList()) }
 
-        recyclerView = dialogView.findViewById(R.id.recyclerview_flags)
-        setupRecyclerView()
-        return dialog
+                // Initial load
+                androidx.compose.runtime.LaunchedEffect(Unit) {
+                    flags = loadFlags()
+                }
+
+                FlagRenameScreen(
+                    flags = flags,
+                    onRename = { flag, newName ->
+                        lifecycleScope.launch {
+                            // Optimistic update
+                            val updatedFlags = flags.map {
+                                if (it.first == flag) flag to newName else it
+                            }
+                            flags = updatedFlags
+
+                            flag.rename(newName)
+                            // Reload to ensure consistency (optional, but good)
+                            flags = loadFlags()
+                        }
+                    }
+                )
+            }
+        }
+
+        return AlertDialog.Builder(requireContext()).apply {
+            customView(view = composeView, 4, 4, 4, 4)
+            title(R.string.rename_flag)
+        }.create()
     }
 
     override fun onDismiss(dialog: DialogInterface) {
@@ -67,26 +91,9 @@ class FlagRenameDialog : DialogFragment() {
         )
     }
 
-    private fun setupRecyclerView() =
-        requireActivity().lifecycleScope.launch {
-            val flagItems = createFlagList()
-            flagAdapter = FlagAdapter(lifecycleScope = lifecycleScope)
-            recyclerView.adapter = flagAdapter
-            flagAdapter.submitList(flagItems)
-            recyclerView.layoutManager = LinearLayoutManager(requireContext())
-        }
-
-    private suspend fun createFlagList(): List<FlagItem> {
-        Timber.d("Creating flag list")
-        return Flag
-            .queryDisplayNames()
+    private suspend fun loadFlags(): List<Pair<Flag, String>> {
+        return Flag.queryDisplayNames()
             .filter { it.key != Flag.NONE }
-            .map { (flag, displayName) ->
-                FlagItem(
-                    flag = flag,
-                    title = displayName,
-                    icon = flag.drawableRes,
-                )
-            }
+            .map { (flag, displayName) -> flag to displayName }
     }
 }
