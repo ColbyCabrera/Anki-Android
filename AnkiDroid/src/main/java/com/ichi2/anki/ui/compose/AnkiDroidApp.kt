@@ -79,6 +79,7 @@ import com.ichi2.anki.ui.compose.components.ExpandableFabContainer
 import com.ichi2.anki.ui.compose.components.Scrim
 import com.ichi2.anki.ui.compose.components.SyncIcon
 
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AnkiDroidApp(
@@ -400,7 +401,6 @@ fun AnkiDroidApp(
             onRefresh = onRefresh,
             searchQuery = searchQuery,
             onSearchQueryChanged = onSearchQueryChanged,
-
             onDeckClick = onDeckClick,
             onExpandClick = onExpandClick,
             onAddNote = onAddNote,

@@ -504,7 +504,6 @@ fun DeckPickerContentPreview() {
         decks = emptyList(),
         isRefreshing = false,
         onRefresh = {},
-
         onDeckClick = {},
         onExpandClick = {},
         onDeckOptions = {},
@@ -526,7 +525,6 @@ fun DeckPickerScreenPreview() {
         onRefresh = {},
         searchQuery = "",
         onSearchQueryChanged = {},
-
         onDeckClick = {},
         onExpandClick = {},
         onAddNote = {},
