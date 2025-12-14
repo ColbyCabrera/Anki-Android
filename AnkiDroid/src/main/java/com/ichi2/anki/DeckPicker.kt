@@ -145,7 +145,6 @@ import com.ichi2.anki.dialogs.DeckPickerConfirmDeleteDeckDialog
 import com.ichi2.anki.dialogs.DeckPickerNoSpaceLeftDialog
 import com.ichi2.anki.dialogs.DeckSelectionDialog
 import com.ichi2.anki.dialogs.EmptyCardsDialogFragment
-import com.ichi2.anki.dialogs.FlagRenameDialog
 import com.ichi2.anki.dialogs.ImportDialog.ImportDialogListener
 import com.ichi2.anki.dialogs.ImportFileSelectionFragment.ApkgImportResultLauncherProvider
 import com.ichi2.anki.dialogs.ImportFileSelectionFragment.CsvImportResultLauncherProvider
@@ -153,6 +152,7 @@ import com.ichi2.anki.dialogs.SchedulerUpgradeDialog
 import com.ichi2.anki.dialogs.SyncErrorDialog
 import com.ichi2.anki.dialogs.SyncErrorDialog.Companion.newInstance
 import com.ichi2.anki.dialogs.SyncErrorDialog.SyncErrorDialogListener
+import com.ichi2.anki.dialogs.compose.FlagRenameDialog
 import com.ichi2.anki.dialogs.customstudy.CustomStudyDialog
 import com.ichi2.anki.dialogs.customstudy.CustomStudyDialog.CustomStudyAction
 import com.ichi2.anki.dialogs.customstudy.CustomStudyDialog.CustomStudyAction.Companion.REQUEST_KEY
@@ -629,6 +629,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                             val filterTagsByDeck by cardBrowserViewModel.filterTagsByDeck.collectAsState()
                             var showBrowserOptionsDialog by remember { mutableStateOf(false) }
                             var showFilterByTagsDialog by remember { mutableStateOf(false) }
+                            var showFlagRenameDialog by remember { mutableStateOf(false) }
 
                             if (showBrowserOptionsDialog) {
                                 BrowserOptionsDialog(
@@ -646,8 +647,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                         dialog.show(supportFragmentManager, null)
                                     },
                                     onRenameFlagClicked = {
-                                        val flagRenameDialog = FlagRenameDialog()
-                                        flagRenameDialog.show(supportFragmentManager, "FlagRenameDialog")
+                                        showFlagRenameDialog = true
                                     }
                                 )
                             }
@@ -663,6 +663,14 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                     deckTags = deckTags,
                                     initialFilterByDeck = filterTagsByDeck,
                                     onFilterByDeckChanged = cardBrowserViewModel::setFilterTagsByDeck
+                                )
+                            }
+                            if (showFlagRenameDialog) {
+                                FlagRenameDialog(
+                                    onDismissRequest = {
+                                        showFlagRenameDialog = false
+                                        invalidateOptionsMenu()
+                                    }
                                 )
                             }
 

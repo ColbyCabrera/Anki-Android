@@ -47,7 +47,7 @@ import com.ichi2.anki.browser.compose.FilterByTagsDialog
 import com.ichi2.anki.browser.toCardBrowserLaunchOptions
 import com.ichi2.anki.dialogs.BrowserOptionsDialog
 import com.ichi2.anki.dialogs.DeckSelectionDialog
-import com.ichi2.anki.dialogs.FlagRenameDialog
+import com.ichi2.anki.dialogs.compose.FlagRenameDialog
 import com.ichi2.anki.dialogs.tags.TagsDialogListener
 import com.ichi2.anki.libanki.Collection
 import com.ichi2.anki.model.CardStateFilter
@@ -157,6 +157,7 @@ open class CardBrowser :
                 Box(modifier = Modifier.fillMaxSize()) {
                     var showBrowserOptionsDialog by rememberSaveable { mutableStateOf(false) }
                     var showFilterByTagsDialog by rememberSaveable { mutableStateOf(false) }
+                    var showFlagRenameDialog by rememberSaveable { mutableStateOf(false) }
                     val selectedTags by viewModel.selectedTags.collectAsState()
                     val allTagsState by viewModel.allTags.collectAsState()
                     val deckTags by viewModel.deckTags.collectAsState()
@@ -181,8 +182,7 @@ open class CardBrowser :
                                 dialog.show(supportFragmentManager, null)
                             },
                             onRenameFlagClicked = {
-                                val flagRenameDialog = FlagRenameDialog()
-                                flagRenameDialog.show(supportFragmentManager, "FlagRenameDialog")
+                                showFlagRenameDialog = true
                             }
                         )
                     }
@@ -198,6 +198,14 @@ open class CardBrowser :
                             deckTags = deckTags,
                             initialFilterByDeck = filterTagsByDeck,
                             onFilterByDeckChanged = viewModel::setFilterTagsByDeck
+                        )
+                    }
+                    if (showFlagRenameDialog) {
+                        FlagRenameDialog(
+                            onDismissRequest = {
+                                showFlagRenameDialog = false
+                                invalidateOptionsMenu()
+                            }
                         )
                     }
                     CardBrowserLayout(
