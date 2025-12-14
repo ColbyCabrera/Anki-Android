@@ -61,6 +61,12 @@ class ViewerResourceHandler(
             }
 
             val file = File(mediaDir, path)
+            // Fix: Check for path traversal
+            if (!file.canonicalPath.startsWith(mediaDir.canonicalPath + File.separator)) {
+                Timber.w("Blocked path traversal attempt: %s", path)
+                return null
+            }
+
             if (!file.exists()) {
                 return null
             }
