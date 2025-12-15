@@ -182,6 +182,7 @@ open class CardBrowser :
                                 dialog.show(supportFragmentManager, null)
                             },
                             onRenameFlagClicked = {
+                                showBrowserOptionsDialog = false
                                 showFlagRenameDialog = true
                             }
                         )

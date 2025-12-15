@@ -647,6 +647,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                         dialog.show(supportFragmentManager, null)
                                     },
                                     onRenameFlagClicked = {
+                                        showBrowserOptionsDialog = false
                                         showFlagRenameDialog = true
                                     }
                                 )
