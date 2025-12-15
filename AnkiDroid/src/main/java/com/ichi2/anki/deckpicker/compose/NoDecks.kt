@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -41,16 +42,19 @@ fun NoDecks() {
     ) {
         Image(
             painter = painterResource(id = R.drawable.anki_box),
-            contentDescription = stringResource(id = R.string.no_cards_placeholder_title),
+            contentDescription = null,
         )
         Text(
             text = stringResource(id = R.string.no_cards_placeholder_title),
             modifier = Modifier.padding(top = 24.dp, bottom = 8.dp),
             textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.titleLarge,
         )
         Text(
             text = stringResource(id = R.string.no_cards_placeholder_description),
             textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
