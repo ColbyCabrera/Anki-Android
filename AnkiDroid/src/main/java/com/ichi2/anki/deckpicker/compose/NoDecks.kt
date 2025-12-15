@@ -41,16 +41,19 @@ fun NoDecks() {
     ) {
         Image(
             painter = painterResource(id = R.drawable.anki_box),
-            contentDescription = stringResource(id = R.string.no_cards_placeholder_title),
+            contentDescription = null,
         )
         Text(
             text = stringResource(id = R.string.no_cards_placeholder_title),
             modifier = Modifier.padding(top = 24.dp, bottom = 8.dp),
             textAlign = TextAlign.Center,
+            style = androidx.compose.material3.MaterialTheme.typography.titleLarge,
         )
         Text(
             text = stringResource(id = R.string.no_cards_placeholder_description),
             textAlign = TextAlign.Center,
+            style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
