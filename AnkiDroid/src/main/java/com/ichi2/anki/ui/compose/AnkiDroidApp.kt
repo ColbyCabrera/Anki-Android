@@ -78,6 +78,7 @@ import com.ichi2.anki.ui.compose.components.ExpandableFab
 import com.ichi2.anki.ui.compose.components.ExpandableFabContainer
 import com.ichi2.anki.ui.compose.components.Scrim
 import com.ichi2.anki.ui.compose.components.SyncIcon
+import com.ichi2.anki.deckpicker.compose.ImmutableDeckList
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -126,6 +127,8 @@ fun AnkiDroidApp(
             onSearchFocusRequested()
         }
     }
+
+    val immutableDecks = remember(decks) { ImmutableDeckList(decks) }
 
     if (fragmented) {
         var isSearchOpen by remember { mutableStateOf(false) }
@@ -366,7 +369,7 @@ fun AnkiDroidApp(
                 ) {
                     Box(modifier = Modifier.weight(1f)) {
                         DeckPickerContent(
-                            decks = decks,
+                            decks = immutableDecks,
                             isRefreshing = isRefreshing,
                             onRefresh = onRefresh,
 
@@ -394,7 +397,7 @@ fun AnkiDroidApp(
     } else {
         // Phone layout
         DeckPickerScreen(
-            decks = decks,
+            decks = immutableDecks,
             isRefreshing = isRefreshing,
             searchFocusRequester = searchFocusRequester,
             snackbarHostState = snackbarHostState,
