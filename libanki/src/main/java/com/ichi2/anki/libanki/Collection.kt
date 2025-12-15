@@ -1402,6 +1402,11 @@ fun EmptyCardsReport.emptyCids(): List<CardId> = notesList.flatMap { it.cardIdsL
 fun Collection.notesOfCards(cids: Iterable<CardId>): List<NoteId> =
     db.queryLongList("select distinct nid from cards where id in ${ids2str(cids)}")
 
+@CheckResult
+@NotInLibAnki
+fun Collection.cardIdsOfNotes(nids: Iterable<NoteId>): List<CardId> =
+    db.queryLongList("select id from cards where nid in ${ids2str(nids)}")
+
 /**
  * returns the list of cloze ordinals in a note
  *
