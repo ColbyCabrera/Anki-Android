@@ -158,6 +158,7 @@ dependencies {
     testImplementation(libs.strikt.core)
     testImplementation(libs.turbine)
     testImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
     annotationProcessor(libs.google.dagger.compiler)
     ksp(libs.androidx.room.compiler)
     debugImplementation(libs.acra.limiter)
