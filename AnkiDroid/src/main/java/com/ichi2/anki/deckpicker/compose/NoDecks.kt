@@ -19,9 +19,13 @@ package com.ichi2.anki.deckpicker.compose
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -34,7 +38,10 @@ import androidx.compose.ui.unit.dp
 import com.ichi2.anki.R
 
 @Composable
-fun NoDecks() {
+fun NoDecks(
+    onAddDeck: () -> Unit,
+    onAddSharedDeck: () -> Unit,
+) {
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -55,12 +62,28 @@ fun NoDecks() {
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 32.dp)
         )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Button(onClick = onAddDeck) {
+            Text(text = stringResource(id = R.string.new_deck))
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedButton(onClick = onAddSharedDeck) {
+            Text(text = stringResource(id = R.string.get_shared))
+        }
     }
 }
 
 @Preview
 @Composable
 fun NoDecksPreview() {
-    NoDecks()
+    NoDecks(
+        onAddDeck = {},
+        onAddSharedDeck = {}
+    )
 }

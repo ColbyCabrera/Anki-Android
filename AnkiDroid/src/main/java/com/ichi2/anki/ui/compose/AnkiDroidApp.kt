@@ -378,6 +378,8 @@ fun AnkiDroidApp(
                             onDelete = onDelete,
                             onRebuild = onRebuild,
                             onEmpty = onEmpty,
+                            onAddDeck = onAddDeck,
+                            onAddSharedDeck = onAddSharedDeck,
                             listState = listState
                         )
                     }
