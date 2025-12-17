@@ -19,8 +19,14 @@ package com.ichi2.anki.deckpicker.compose
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,9 +40,14 @@ import androidx.compose.ui.unit.dp
 import com.ichi2.anki.R
 
 @Composable
-fun NoDecks() {
+fun NoDecks(
+    onCreateDeck: () -> Unit,
+    onGetSharedDecks: () -> Unit,
+) {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -55,12 +66,29 @@ fun NoDecks() {
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 24.dp)
         )
+
+        Button(onClick = onCreateDeck) {
+            Text(stringResource(id = R.string.new_deck))
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(
+            onClick = onGetSharedDecks,
+            colors = ButtonDefaults.tonalButtonColors()
+        ) {
+            Text(stringResource(id = R.string.get_shared))
+        }
     }
 }
 
 @Preview
 @Composable
 fun NoDecksPreview() {
-    NoDecks()
+    NoDecks(
+        onCreateDeck = {},
+        onGetSharedDecks = {}
+    )
 }

@@ -205,6 +205,8 @@ fun DeckPickerContent(
     onDelete: (DisplayDeckNode) -> Unit,
     onRebuild: (DisplayDeckNode) -> Unit,
     onEmpty: (DisplayDeckNode) -> Unit,
+    onAddDeck: () -> Unit,
+    onAddSharedDeck: () -> Unit,
 ) {
     val state = rememberPullToRefreshState()
     val morphingShape = remember(state.distanceFraction) {
@@ -264,28 +266,35 @@ fun DeckPickerContent(
                     Box(modifier = Modifier.padding(16.dp))
                 }
             }) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 8.dp),
-                contentPadding = contentPadding,
-                state = listState
-            ) {
-                items(rootDecks, key = { it.did }) { rootDeck ->
-                    val children = deckToChildrenMap[rootDeck] ?: emptyList()
-                    RenderDeck(
-                        deck = rootDeck,
-                        children = children,
-                        deckToChildrenMap = deckToChildrenMap,
-                        onDeckClick = onDeckClick,
-                        onExpandClick = onExpandClick,
-                        onDeckOptions = onDeckOptions,
-                        onRename = onRename,
-                        onExport = onExport,
-                        onDelete = onDelete,
-                        onRebuild = onRebuild,
-                        onEmpty = onEmpty,
-                    )
+            if (decks.isEmpty()) {
+                NoDecks(
+                    onCreateDeck = onAddDeck,
+                    onGetSharedDecks = onAddSharedDeck
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 8.dp),
+                    contentPadding = contentPadding,
+                    state = listState
+                ) {
+                    items(rootDecks, key = { it.did }) { rootDeck ->
+                        val children = deckToChildrenMap[rootDeck] ?: emptyList()
+                        RenderDeck(
+                            deck = rootDeck,
+                            children = children,
+                            deckToChildrenMap = deckToChildrenMap,
+                            onDeckClick = onDeckClick,
+                            onExpandClick = onExpandClick,
+                            onDeckOptions = onDeckOptions,
+                            onRename = onRename,
+                            onExport = onExport,
+                            onDelete = onDelete,
+                            onRebuild = onRebuild,
+                            onEmpty = onEmpty,
+                        )
+                    }
                 }
             }
         }
@@ -483,6 +492,8 @@ fun DeckPickerScreen(
                 onEmpty = onEmpty,
                 listState = listState,
                 contentPadding = paddingValues,
+                onAddDeck = onAddDeck,
+                onAddSharedDeck = onAddSharedDeck,
             )
         }
         Scrim(
@@ -517,7 +528,9 @@ fun DeckPickerContentPreview() {
         onDelete = {},
         onRebuild = {},
         onEmpty = {},
-        listState = rememberLazyListState()
+        listState = rememberLazyListState(),
+        onAddDeck = {},
+        onAddSharedDeck = {},
     )
 }
 
