@@ -30,6 +30,7 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.os.bundleOf
@@ -215,6 +216,8 @@ class SharedDecksActivity : AnkiActivity() {
         if (showedActivityFailedScreen(savedInstanceState)) {
             return
         }
+
+        enableEdgeToEdge()
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_shared_decks)
