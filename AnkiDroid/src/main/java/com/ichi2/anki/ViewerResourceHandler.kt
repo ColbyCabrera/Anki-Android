@@ -60,9 +60,20 @@ class ViewerResourceHandler(
                 return WebResourceResponse(guessMimeType(path), null, inputStream)
             }
 
-            val file = File(mediaDir, path)
+            val file = if (url.scheme == "file") {
+                if (path.startsWith("/android_asset/") || path.startsWith("/android_res/")) {
+                    return null
+                }
+                File(path)
+            } else {
+                File(mediaDir, path)
+            }
+
             if (!file.canonicalPath.startsWith(mediaDir.canonicalPath + File.separator)) {
                 Timber.w("Path traversal detected: %s", path)
+                if (url.scheme == "file") {
+                    return WebResourceResponse("text/plain", "UTF-8", 403, "Forbidden", null, null)
+                }
                 return null
             }
             if (!file.exists()) {
