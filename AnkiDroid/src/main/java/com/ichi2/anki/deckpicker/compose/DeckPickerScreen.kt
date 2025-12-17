@@ -207,12 +207,16 @@ fun DeckPickerContent(
     onEmpty: (DisplayDeckNode) -> Unit,
 ) {
     val state = rememberPullToRefreshState()
+    val morph = remember {
+        Morph(
+            start = MaterialShapes.Pentagon,
+            end = MaterialShapes.Cookie12Sided,
+        )
+    }
     val morphingShape = remember(state.distanceFraction) {
         MorphShape(
-            morph = Morph(
-                start = MaterialShapes.Pentagon,
-                end = MaterialShapes.Cookie12Sided,
-            ), percentage = state.distanceFraction
+            morph = morph,
+            percentage = state.distanceFraction
         )
     }
 
