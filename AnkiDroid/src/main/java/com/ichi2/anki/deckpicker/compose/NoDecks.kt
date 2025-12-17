@@ -18,8 +18,14 @@ package com.ichi2.anki.deckpicker.compose
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInVertically
@@ -58,6 +64,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -87,6 +95,15 @@ fun NoDecks(
         )
     }
 
+    // Slow left rotation animation
+    val infiniteTransition = rememberInfiniteTransition(label = "rotation")
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f, targetValue = -360f, animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 30000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ), label = "rotation"
+    )
+
     val morphShape = remember(animatableShift.value) {
         MorphShape(
             morph = Morph(
@@ -109,6 +126,7 @@ fun NoDecks(
                 this.shadowElevation = 0f
                 this.shape = morphShape
                 this.clip = true
+                this.rotationZ = rotation
             }
                 .background(MaterialTheme.colorScheme.tertiaryContainer))
 
@@ -167,10 +185,14 @@ fun NoDecks(
                     Text(
                         text = stringResource(id = R.string.no_cards_placeholder_description),
                         textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.headlineSmall, // Larger than body
+                        style = TextStyle(
+                            style = MaterialTheme.typography.headlineSmall, // Larger than body
+                            lineBreak = LineBreak.Paragraph
+                        ),
                         color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(bottom = 48.dp)
-                    )
+                        modifier = Modifier.padding(bottom = 48.dp),
+
+                        )
                 }
             }
 
