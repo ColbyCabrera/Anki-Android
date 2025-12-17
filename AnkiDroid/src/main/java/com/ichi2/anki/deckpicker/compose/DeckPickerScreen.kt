@@ -213,7 +213,7 @@ fun DeckPickerContent(
             end = MaterialShapes.Cookie12Sided,
         )
     }
-    val morphingShape = remember(state.distanceFraction, morph) {
+    val morphingShape = remember(state.distanceFraction) {
         MorphShape(
             morph = morph,
             percentage = state.distanceFraction
