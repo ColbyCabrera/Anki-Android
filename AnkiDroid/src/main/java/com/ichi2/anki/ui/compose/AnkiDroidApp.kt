@@ -113,6 +113,7 @@ fun AnkiDroidApp(
     requestSearchFocus: Boolean,
     onSearchFocusRequested: () -> Unit,
     syncState: SyncIconState,
+    isInInitialState: Boolean,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     val searchFocusRequester = remember {
@@ -369,7 +370,7 @@ fun AnkiDroidApp(
                             decks = decks,
                             isRefreshing = isRefreshing,
                             onRefresh = onRefresh,
-
+                            isInInitialState = isInInitialState,
                             onDeckClick = onDeckClick,
                             onExpandClick = onExpandClick,
                             onDeckOptions = onDeckOptions,
@@ -378,6 +379,8 @@ fun AnkiDroidApp(
                             onDelete = onDelete,
                             onRebuild = onRebuild,
                             onEmpty = onEmpty,
+                            onAddDeck = onAddDeck,
+                            onAddSharedDeck = onAddSharedDeck,
                             listState = listState
                         )
                     }
@@ -417,6 +420,8 @@ fun AnkiDroidApp(
             onNavigationIconClick = onNavigationIconClick,
             fabMenuExpanded = fabMenuExpanded,
             onFabMenuExpandedChange = { fabMenuExpanded = it },
-            syncState = syncState)
+            syncState = syncState,
+            isInInitialState = isInInitialState,
+        )
     }
 }

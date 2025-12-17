@@ -16,27 +16,30 @@
 
 package com.ichi2.anki.deckpicker.compose
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.SentimentVeryDissatisfied
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ichi2.anki.R
 
 @Composable
@@ -47,37 +50,40 @@ fun NoDecks(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.anki_box),
+        Icon(
+            imageVector = Icons.Filled.SentimentVeryDissatisfied,
             contentDescription = null,
+            modifier = Modifier.size(120.dp),
+            tint = MaterialTheme.colorScheme.primary
         )
         Text(
             text = stringResource(id = R.string.no_cards_placeholder_title),
             modifier = Modifier.padding(top = 24.dp, bottom = 8.dp),
             textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.headlineMedium,
+            lineHeight = 36.sp
         )
         Text(
             text = stringResource(id = R.string.no_cards_placeholder_description),
             textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(bottom = 24.dp)
+            modifier = Modifier.padding(bottom = 32.dp)
         )
 
-        Button(onClick = onCreateDeck) {
+        FilledTonalButton(onClick = onCreateDeck) {
             Text(stringResource(id = R.string.new_deck))
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Button(
+        OutlinedButton(
             onClick = onGetSharedDecks,
-            colors = ButtonDefaults.tonalButtonColors()
         ) {
             Text(stringResource(id = R.string.get_shared))
         }
@@ -87,8 +93,5 @@ fun NoDecks(
 @Preview
 @Composable
 fun NoDecksPreview() {
-    NoDecks(
-        onCreateDeck = {},
-        onGetSharedDecks = {}
-    )
+    NoDecks(onCreateDeck = {}, onGetSharedDecks = {})
 }

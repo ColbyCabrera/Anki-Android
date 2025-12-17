@@ -207,6 +207,7 @@ fun DeckPickerContent(
     onEmpty: (DisplayDeckNode) -> Unit,
     onAddDeck: () -> Unit,
     onAddSharedDeck: () -> Unit,
+    isInInitialState: Boolean,
 ) {
     val state = rememberPullToRefreshState()
     val morphingShape = remember(state.distanceFraction) {
@@ -266,7 +267,7 @@ fun DeckPickerContent(
                     Box(modifier = Modifier.padding(16.dp))
                 }
             }) {
-            if (decks.isEmpty()) {
+            if (decks.isEmpty() || isInInitialState) {
                 NoDecks(
                     onCreateDeck = onAddDeck,
                     onGetSharedDecks = onAddSharedDeck
@@ -325,6 +326,7 @@ fun DeckPickerScreen(
     onEmpty: (DisplayDeckNode) -> Unit,
     onNavigationIconClick: () -> Unit,
     syncState: SyncIconState,
+    isInInitialState: Boolean,
     searchFocusRequester: FocusRequester = FocusRequester(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     fabMenuExpanded: Boolean,
@@ -494,6 +496,7 @@ fun DeckPickerScreen(
                 contentPadding = paddingValues,
                 onAddDeck = onAddDeck,
                 onAddSharedDeck = onAddSharedDeck,
+                isInInitialState = isInInitialState,
             )
         }
         Scrim(
@@ -531,6 +534,7 @@ fun DeckPickerContentPreview() {
         listState = rememberLazyListState(),
         onAddDeck = {},
         onAddSharedDeck = {},
+        isInInitialState = false,
     )
 }
 
@@ -558,6 +562,7 @@ fun DeckPickerScreenPreview() {
         onEmpty = {},
         onNavigationIconClick = {},
         syncState = SyncIconState.Normal,
+        isInInitialState = false,
         fabMenuExpanded = false,
         onFabMenuExpandedChange = {})
 }

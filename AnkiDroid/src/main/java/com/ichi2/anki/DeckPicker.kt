@@ -513,6 +513,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                 val deckList by viewModel.flowOfDeckList.collectAsState(
                     initial = FlattenedDeckList(emptyList(), false),
                 )
+                val isInInitialState by viewModel.flowOfDeckListInInitialState.collectAsState()
                 val isRefreshing by viewModel.isSyncing.collectAsState(initial = false)
                 val syncState by viewModel.syncState.collectAsState()
                 val syncDialogState by viewModel.syncDialogState.collectAsState()
@@ -764,6 +765,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                 onSearchFocusRequested = { requestSearchFocus = false },
                                 snackbarHostState = snackbarHostState,
                                 syncState = syncState,
+                                isInInitialState = isInInitialState ?: false,
                             )
                         }
                     }
@@ -864,6 +866,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                             onSearchFocusRequested = { requestSearchFocus = false },
                             snackbarHostState = snackbarHostState,
                             syncState = syncState,
+                            isInInitialState = isInInitialState ?: false,
                         )
                     }
                 }
