@@ -42,8 +42,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.SentimentVeryDissatisfied
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -63,8 +61,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -156,7 +154,7 @@ fun NoDecks(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.SentimentVeryDissatisfied, // Or a better "Empty" icon if available
+                        painterResource(R.drawable.folder_open_24px),
                         contentDescription = null,
                         modifier = Modifier.size(64.dp),
                         tint = MaterialTheme.colorScheme.onPrimaryContainer
@@ -185,14 +183,12 @@ fun NoDecks(
                     Text(
                         text = stringResource(id = R.string.no_cards_placeholder_description),
                         textAlign = TextAlign.Center,
-                        style = TextStyle(
-                            style = MaterialTheme.typography.headlineSmall, // Larger than body
+                        style = MaterialTheme.typography.headlineSmall.copy(
                             lineBreak = LineBreak.Paragraph
                         ),
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.padding(bottom = 48.dp),
-
-                        )
+                    )
                 }
             }
 
