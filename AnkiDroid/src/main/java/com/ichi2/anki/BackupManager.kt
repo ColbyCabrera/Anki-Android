@@ -81,13 +81,21 @@ open class BackupManager {
             Timber.i("BackupManager - RepairCollection - Closing Collection")
             col.close()
 
-            // repair file
-            Timber.i("repairCollection - Execute: sqlite3 %s .dump | sqlite3 %s.tmp", colPath, colPath)
+            Timber.i("repairCollection - dumping %s and restoring to %s.tmp", colPath, colPath)
             try {
-                // Use separate processes to avoid shell injection vulnerabilities and handle paths with spaces
-                val dumpProcess = ProcessBuilder("sqlite3", colPath, ".dump").start()
-                val restoreProcess = ProcessBuilder("sqlite3", "$colPath.tmp").start()
+                // Use ProcessBuilder to execute sqlite3 directly, avoiding shell interpretation
+                // This prevents command injection vulnerabilities from malicious file paths
+                val dumpProcess = ProcessBuilder("sqlite3", colPath, ".dump")
+                    .redirectErrorStream(false)
+                    .start()
+                val restoreProcess = ProcessBuilder("sqlite3", "$colPath.tmp")
+                    .redirectErrorStream(false)
+                    .start()
 
+                // Track pipe errors to propagate to main thread
+                val pipeError = java.util.concurrent.atomic.AtomicReference<Exception?>(null)
+
+                // Manually pipe dump output to restore input since ProcessBuilder doesn't support shell pipes
                 val pipeThread = Thread {
                     try {
                         dumpProcess.inputStream.use { input ->
@@ -97,13 +105,51 @@ open class BackupManager {
                         }
                     } catch (e: Exception) {
                         Timber.w(e, "repairCollection - pipe error")
+                        pipeError.set(e)
                     }
                 }
                 pipeThread.start()
 
-                dumpProcess.waitFor()
-                restoreProcess.waitFor()
+                // Consume error streams to prevent process blocking when stderr buffer fills
+                val dumpErrorReader = Thread {
+                    dumpProcess.errorStream.bufferedReader().use { reader ->
+                        reader.lineSequence().forEach { line ->
+                            Timber.w("repairCollection - dump stderr: %s", line)
+                        }
+                    }
+                }
+                val restoreErrorReader = Thread {
+                    restoreProcess.errorStream.bufferedReader().use { reader ->
+                        reader.lineSequence().forEach { line ->
+                            Timber.w("repairCollection - restore stderr: %s", line)
+                        }
+                    }
+                }
+                dumpErrorReader.start()
+                restoreErrorReader.start()
+
+                // Wait for all processes and threads to complete
+                val dumpExitCode = dumpProcess.waitFor()
+                val restoreExitCode = restoreProcess.waitFor()
                 pipeThread.join()
+                dumpErrorReader.join()
+                restoreErrorReader.join()
+
+                // Check for pipe errors
+                if (pipeError.get() != null) {
+                    Timber.e(pipeError.get(), "repairCollection - piping failed")
+                    return false
+                }
+
+                // Check process exit codes
+                if (dumpExitCode != 0) {
+                    Timber.e("repairCollection - dump process failed with exit code %d", dumpExitCode)
+                    return false
+                }
+                if (restoreExitCode != 0) {
+                    Timber.e("repairCollection - restore process failed with exit code %d", restoreExitCode)
+                    return false
+                }
 
                 if (!File("$colPath.tmp").exists()) {
                     Timber.e("repairCollection - dump to %s.tmp failed", colPath)
@@ -120,6 +166,7 @@ open class BackupManager {
                 Timber.e(e, "repairCollection - error")
             } catch (e: InterruptedException) {
                 Timber.e(e, "repairCollection - error")
+                Thread.currentThread().interrupt()
             }
             return false
         }
