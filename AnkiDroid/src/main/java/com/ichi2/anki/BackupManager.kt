@@ -82,58 +82,65 @@ open class BackupManager {
             col.close()
 
             Timber.i("repairCollection - dumping %s and restoring to %s.tmp", colPath, colPath)
+            var dumpProcess: Process? = null
+            var restoreProcess: Process? = null
             try {
                 // Use ProcessBuilder to execute sqlite3 directly, avoiding shell interpretation
                 // This prevents command injection vulnerabilities from malicious file paths
-                val dumpProcess = ProcessBuilder("sqlite3", colPath, ".dump")
-                    .redirectErrorStream(false)
-                    .start()
-                val restoreProcess = ProcessBuilder("sqlite3", "$colPath.tmp")
-                    .redirectErrorStream(false)
-                    .start()
+                dumpProcess =
+                    ProcessBuilder("sqlite3", colPath, ".dump").redirectErrorStream(false).start()
+                restoreProcess =
+                    ProcessBuilder("sqlite3", "$colPath.tmp").redirectErrorStream(false).start()
 
                 // Track pipe errors to propagate to main thread
-                val pipeError = java.util.concurrent.atomic.AtomicReference<Exception?>(null)
+                val pipeError =
+                    java.util.concurrent.atomic
+                        .AtomicReference<IOException?>(null)
 
                 // Manually pipe dump output to restore input since ProcessBuilder doesn't support shell pipes
-                val pipeThread = Thread {
-                    try {
-                        dumpProcess.inputStream.use { input ->
-                            restoreProcess.outputStream.use { output ->
-                                input.copyTo(output)
+                val pipeThread =
+                    Thread({
+                        try {
+                            dumpProcess.inputStream.use { input ->
+                                restoreProcess.outputStream.use { output ->
+                                    input.copyTo(output)
+                                }
                             }
+                        } catch (e: IOException) {
+                            Timber.w(e, "repairCollection - pipe error")
+                            pipeError.set(e)
                         }
-                    } catch (e: Exception) {
-                        Timber.w(e, "repairCollection - pipe error")
-                        pipeError.set(e)
-                    }
-                }
+                    }, "repair-collection-pipe")
                 pipeThread.start()
 
                 // Consume error streams to prevent process blocking when stderr buffer fills
-                val dumpErrorReader = Thread {
-                    dumpProcess.errorStream.bufferedReader().use { reader ->
-                        reader.lineSequence().forEach { line ->
-                            Timber.w("repairCollection - dump stderr: %s", line)
+                val dumpErrorReader =
+                    Thread({
+                        dumpProcess.errorStream.bufferedReader().use { reader ->
+                            reader.lineSequence().forEach { line ->
+                                Timber.w("repairCollection - dump stderr: %s", line)
+                            }
                         }
-                    }
-                }
-                val restoreErrorReader = Thread {
-                    restoreProcess.errorStream.bufferedReader().use { reader ->
-                        reader.lineSequence().forEach { line ->
-                            Timber.w("repairCollection - restore stderr: %s", line)
+                    }, "repair-collection-dump-stderr")
+                val restoreErrorReader =
+                    Thread({
+                        restoreProcess.errorStream.bufferedReader().use { reader ->
+                            reader.lineSequence().forEach { line ->
+                                Timber.w("repairCollection - restore stderr: %s", line)
+                            }
                         }
-                    }
-                }
+                    }, "repair-collection-restore-stderr")
                 dumpErrorReader.start()
                 restoreErrorReader.start()
 
-                // Wait for all processes and threads to complete
-                val dumpExitCode = dumpProcess.waitFor()
-                val restoreExitCode = restoreProcess.waitFor()
+                // Wait for pipe thread first to avoid deadlock: if dump output exceeds OS pipe
+                // buffer size (~64KB), dumpProcess will block waiting for stdout to be consumed.
+                // Calling waitFor() before pipe thread finishes would cause deadlock.
                 pipeThread.join()
                 dumpErrorReader.join()
                 restoreErrorReader.join()
+                val dumpExitCode = dumpProcess.waitFor()
+                val restoreExitCode = restoreProcess.waitFor()
 
                 // Check for pipe errors
                 if (pipeError.get() != null) {
@@ -143,11 +150,17 @@ open class BackupManager {
 
                 // Check process exit codes
                 if (dumpExitCode != 0) {
-                    Timber.e("repairCollection - dump process failed with exit code %d", dumpExitCode)
+                    Timber.e(
+                        "repairCollection - dump process failed with exit code %d",
+                        dumpExitCode,
+                    )
                     return false
                 }
                 if (restoreExitCode != 0) {
-                    Timber.e("repairCollection - restore process failed with exit code %d", restoreExitCode)
+                    Timber.e(
+                        "repairCollection - restore process failed with exit code %d",
+                        restoreExitCode,
+                    )
                     return false
                 }
 
@@ -167,6 +180,10 @@ open class BackupManager {
             } catch (e: InterruptedException) {
                 Timber.e(e, "repairCollection - error")
                 Thread.currentThread().interrupt()
+            } finally {
+                // Ensure processes are destroyed if an exception occurred between creation and waitFor
+                dumpProcess?.destroy()
+                restoreProcess?.destroy()
             }
             return false
         }
@@ -181,8 +198,7 @@ open class BackupManager {
             var movedFilename =
                 String.format(
                     Utils.ENGLISH_LOCALE,
-                    colFile.name.replace(".anki2", "") +
-                        "-corrupt-%tF.anki2",
+                    colFile.name.replace(".anki2", "") + "-corrupt-%tF.anki2",
                     value,
                 )
             var movedFile = File(getBrokenDirectory(colFile.parentFile!!), movedFilename)
@@ -208,7 +224,12 @@ open class BackupManager {
                 val directory = File(colFile.parent!!)
                 for (f in directory.listFiles()!!) {
                     if (f.name.startsWith(colName) &&
-                        !f.renameTo(File(getBrokenDirectory(colFile.parentFile!!), f.name.replace(colName, movedFilename)))
+                        !f.renameTo(
+                            File(
+                                getBrokenDirectory(colFile.parentFile!!),
+                                f.name.replace(colName, movedFilename),
+                            ),
+                        )
                     ) {
                         return false
                     }
