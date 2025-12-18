@@ -203,14 +203,14 @@ private fun ToolbarIconButton(
     onLongClick: (() -> Unit)? = null,
 ) {
     val tooltipState = rememberTooltipState()
-    
+
     // Ensure tooltip is dismissed when the composable is disposed
     DisposableEffect(Unit) {
         onDispose {
             tooltipState.dismiss()
         }
     }
-    
+
     TooltipBox(
         positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
             positioning = TooltipAnchorPosition.Above
@@ -285,14 +285,14 @@ private fun ToolbarTextButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val tooltipState = rememberTooltipState()
-    
+
     // Ensure tooltip is dismissed when the composable is disposed
     DisposableEffect(Unit) {
         onDispose {
             tooltipState.dismiss()
         }
     }
-    
+
     TooltipBox(
         positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
             positioning = TooltipAnchorPosition.Above

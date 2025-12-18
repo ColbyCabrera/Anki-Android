@@ -28,10 +28,10 @@ import androidx.core.view.WindowInsetsCompat
 /**
  * Remembers the IME (Input Method Editor/Keyboard) state.
  * Returns a [State] that is true when the keyboard is visible, false otherwise.
- * 
+ *
  * This composable observes window insets changes to detect when the soft keyboard
  * appears or disappears, which is useful for adjusting UI layout accordingly.
- * 
+ *
  * @return State<Boolean> representing whether the keyboard is currently visible
  */
 @Composable

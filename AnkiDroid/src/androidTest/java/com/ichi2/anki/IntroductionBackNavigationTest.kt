@@ -29,7 +29,7 @@ class IntroductionBackNavigationTest : InstrumentedTest() {
     @Test
     fun backFromDeckPickerReshowsFirstThingsFirst() {
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        
+
         // Wait for and click the "OK" button using its content description
         val okButton = device.wait(Until.findObject(By.desc("ok_button")), 5000)
         assertNotNull("OK button should be visible", okButton)

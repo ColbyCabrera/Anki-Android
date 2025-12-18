@@ -58,6 +58,8 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
@@ -163,12 +165,14 @@ fun DeckItem(
             ) {
                 CardCountsContainer(
                     cardCount = deck.newCount,
+                    contentDescription = "${stringResource(R.string.total_new)}: ${deck.newCount}",
                     shape = CloverShape,
                     containerColor = MaterialTheme.colorScheme.secondaryFixedDim,
                 )
 
                 CardCountsContainer(
                     cardCount = deck.revCount,
+                    contentDescription = "${stringResource(R.string.review)}: ${deck.revCount}",
                     shape = GhostishShape,
                     containerColor = MaterialTheme.colorScheme.secondary,
                 )
@@ -290,6 +294,7 @@ fun DeckItem(
 @Composable
 fun CardCountsContainer(
     cardCount: Int,
+    contentDescription: String,
     shape: Shape,
     containerColor: Color = MaterialTheme.colorScheme.secondary,
 ) {
@@ -297,7 +302,10 @@ fun CardCountsContainer(
         modifier = Modifier
             .size(32.dp)
             .clip(shape)
-            .background(containerColor),
+            .background(containerColor)
+            .semantics(mergeDescendants = true) {
+                this.contentDescription = contentDescription
+            },
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -317,6 +325,8 @@ fun CardCountsContainer(
 @Composable
 fun CardCountsContainerPreview() {
     CardCountsContainer(
-        cardCount = 10, shape = CloverShape
+        cardCount = 10,
+        contentDescription = "New: 10",
+        shape = CloverShape
     )
 }

@@ -149,7 +149,7 @@ fun CardBrowserScreen(
 
     if (showEditTagsDialog) {
         var tagsLoadState by remember { mutableStateOf<Map<String, CardBrowserViewModel.TagStatus>?>(null) }
-        
+
         LaunchedEffect(Unit) {
             viewModel.loadAllTags()
             viewModel.loadDeckTags()

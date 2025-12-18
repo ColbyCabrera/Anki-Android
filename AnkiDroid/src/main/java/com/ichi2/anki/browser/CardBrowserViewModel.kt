@@ -1467,7 +1467,7 @@ class CardBrowserViewModel(
             // but let's stick to the API for now.
             // Optimization: Use `findNotes` returns IDs, we have IDs.
             // We need tags.
-            
+
             for (noteId in noteIds) {
                 try {
                     val note = getNote(noteId)
