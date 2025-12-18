@@ -63,112 +63,121 @@ class ExportDialogFragment : DialogFragment() {
         val extraDid = arguments?.getLong(ARG_DECK_ID, -1)
         val extraType: ExportType? = arguments?.getSerializableCompat(ARG_TYPE)
 
-        val exportFormats = listOf(
-            "${CollectionManager.TR.exportingAnkiCollectionPackage()} (.colpkg)",
-            "${CollectionManager.TR.exportingAnkiDeckPackage()} (.apkg)",
-            "${CollectionManager.TR.exportingNotesInPlainText()} (.txt)",
-            "${CollectionManager.TR.exportingCardsInPlainText()} (.txt)",
-        )
+        val exportFormats =
+            listOf(
+                "${CollectionManager.TR.exportingAnkiCollectionPackage()} (.colpkg)",
+                "${CollectionManager.TR.exportingAnkiDeckPackage()} (.apkg)",
+                "${CollectionManager.TR.exportingNotesInPlainText()} (.txt)",
+                "${CollectionManager.TR.exportingCardsInPlainText()} (.txt)",
+            )
 
-        return AlertDialog.Builder(activity).setView(
-            ComposeView(activity).apply {
-                setContent {
-                    val selectedFormatIndex = remember {
-                        mutableIntStateOf(if ((extraDid != null && extraDid != -1L) || extraType != null) 1 else 0)
-                    }
-                    val decks = remember { mutableStateOf<List<DeckNameId>>(emptyList()) }
-                    val selectedDeck = remember { mutableStateOf<DeckNameId?>(null) }
-                    val decksLoading = remember { mutableStateOf(true) }
-
-                    val collectionState = remember { mutableStateOf(CollectionExportState()) }
-                    val apkgState = remember { mutableStateOf(ApkgExportState()) }
-                    val notesState = remember { mutableStateOf(NotesExportState()) }
-                    val cardsState = remember { mutableStateOf(CardsExportState()) }
-
-                    val showDeckSelector = selectedFormatIndex.intValue != 0 && extraType == null
-                    val showSelectedNotesLabel = selectedFormatIndex.intValue != 0 && extraType != null
-
-                    LaunchedEffect(Unit) {
-                        decksLoading.value = true
-                        val allDecks = mutableListOf(
-                            DeckNameId(
-                                requireActivity().getString(R.string.card_browser_all_decks),
-                                DeckSpinnerSelection.ALL_DECKS_ID,
-                            ),
-                        )
-                        allDecks.addAll(withCol { this.decks.allNamesAndIds(false) })
-                        decks.value = allDecks
-
-                        val preselectedDeck = if (extraDid != null) {
-                            allDecks.find { it.id == extraDid } ?: allDecks.first()
-                        } else {
-                            allDecks.first()
-                        }
-                        selectedDeck.value = preselectedDeck
-                        decksLoading.value = false
-                    }
-
-                    ExportDialog(
-                        exportFormats = exportFormats,
-                        selectedFormat = exportFormats[selectedFormatIndex.intValue],
-                        onFormatSelected = { format ->
-                            val index = exportFormats.indexOf(format)
-                            selectedFormatIndex.intValue = index
-                        },
-                        decks = decks.value,
-                        selectedDeck = selectedDeck.value,
-                        onDeckSelected = { deck -> selectedDeck.value = deck },
-                        decksLoading = decksLoading.value,
-                        showDeckSelector = showDeckSelector,
-                        showSelectedNotesLabel = showSelectedNotesLabel,
-                        collectionState = collectionState.value,
-                        onCollectionStateChanged = { collectionState.value = it },
-                        apkgState = apkgState.value,
-                        onApkgStateChanged = { apkgState.value = it },
-                        notesState = notesState.value,
-                        onNotesStateChanged = { notesState.value = it },
-                        cardsState = cardsState.value,
-                        onCardsStateChanged = { cardsState.value = it },
-                    )
-
-                    // Set positive button action here, capturing the state
-                    val d = dialog as? AlertDialog
-                    LaunchedEffect(d) {
-                        d?.getButton(AlertDialog.BUTTON_POSITIVE)?.setOnClickListener {
-                            if (selectedFormatIndex.intValue != 0 && decksLoading.value) return@setOnClickListener
-
-                            when (selectedFormatIndex.intValue) {
-                                0 -> handleCollectionExport(collectionState.value)
-                                1 -> handleAnkiPackageExport(apkgState.value, selectedDeck.value)
-                                2 -> handleNotesInPlainTextExport(
-                                    notesState.value,
-                                    selectedDeck.value
-                                )
-
-                                3 -> handleCardsInPlainTextExport(
-                                    cardsState.value,
-                                    selectedDeck.value
-                                )
+        return AlertDialog
+            .Builder(activity)
+            .setView(
+                ComposeView(activity).apply {
+                    setContent {
+                        val selectedFormatIndex =
+                            remember {
+                                mutableIntStateOf(if ((extraDid != null && extraDid != -1L) || extraType != null) 1 else 0)
                             }
-                            d.dismiss()
+                        val decks = remember { mutableStateOf<List<DeckNameId>>(emptyList()) }
+                        val selectedDeck = remember { mutableStateOf<DeckNameId?>(null) }
+                        val decksLoading = remember { mutableStateOf(true) }
+
+                        val collectionState = remember { mutableStateOf(CollectionExportState()) }
+                        val apkgState = remember { mutableStateOf(ApkgExportState()) }
+                        val notesState = remember { mutableStateOf(NotesExportState()) }
+                        val cardsState = remember { mutableStateOf(CardsExportState()) }
+
+                        val showDeckSelector = selectedFormatIndex.intValue != 0 && extraType == null
+                        val showSelectedNotesLabel = selectedFormatIndex.intValue != 0 && extraType != null
+
+                        LaunchedEffect(Unit) {
+                            decksLoading.value = true
+                            val allDecks =
+                                mutableListOf(
+                                    DeckNameId(
+                                        requireActivity().getString(R.string.card_browser_all_decks),
+                                        DeckSpinnerSelection.ALL_DECKS_ID,
+                                    ),
+                                )
+                            allDecks.addAll(withCol { this.decks.allNamesAndIds(false) })
+                            decks.value = allDecks
+
+                            val preselectedDeck =
+                                if (extraDid != null) {
+                                    allDecks.find { it.id == extraDid } ?: allDecks.first()
+                                } else {
+                                    allDecks.first()
+                                }
+                            selectedDeck.value = preselectedDeck
+                            decksLoading.value = false
+                        }
+
+                        ExportDialog(
+                            exportFormats = exportFormats,
+                            selectedFormat = exportFormats[selectedFormatIndex.intValue],
+                            onFormatSelected = { format ->
+                                val index = exportFormats.indexOf(format)
+                                selectedFormatIndex.intValue = index
+                            },
+                            decks = decks.value,
+                            selectedDeck = selectedDeck.value,
+                            onDeckSelected = { deck -> selectedDeck.value = deck },
+                            decksLoading = decksLoading.value,
+                            showDeckSelector = showDeckSelector,
+                            showSelectedNotesLabel = showSelectedNotesLabel,
+                            collectionState = collectionState.value,
+                            onCollectionStateChanged = { collectionState.value = it },
+                            apkgState = apkgState.value,
+                            onApkgStateChanged = { apkgState.value = it },
+                            notesState = notesState.value,
+                            onNotesStateChanged = { notesState.value = it },
+                            cardsState = cardsState.value,
+                            onCardsStateChanged = { cardsState.value = it },
+                        )
+
+                        // Set positive button action here, capturing the state
+                        val d = dialog as? AlertDialog
+                        LaunchedEffect(d) {
+                            d?.getButton(AlertDialog.BUTTON_POSITIVE)?.setOnClickListener {
+                                if (selectedFormatIndex.intValue != 0 && decksLoading.value) return@setOnClickListener
+
+                                when (selectedFormatIndex.intValue) {
+                                    0 -> handleCollectionExport(collectionState.value)
+                                    1 -> handleAnkiPackageExport(apkgState.value, selectedDeck.value)
+                                    2 ->
+                                        handleNotesInPlainTextExport(
+                                            notesState.value,
+                                            selectedDeck.value,
+                                        )
+
+                                    3 ->
+                                        handleCardsInPlainTextExport(
+                                            cardsState.value,
+                                            selectedDeck.value,
+                                        )
+                                }
+                                d.dismiss()
+                            }
                         }
                     }
-                }
-            },
-        ).setNegativeButton(R.string.dialog_cancel, null)
+                },
+            ).setNegativeButton(R.string.dialog_cancel, null)
             .setPositiveButton(R.string.dialog_ok, null) // Listener is set in Compose content
             .create()
     }
 
     private fun handleCollectionExport(state: CollectionExportState) {
-        val exportPath = File(
-            getExportRootFile(),
-            "${CollectionManager.TR.exportingCollection()}-${getTimestamp(TimeManager.time)}.colpkg",
-        ).path
+        val exportPath =
+            File(
+                getExportRootFile(),
+                "${CollectionManager.TR.exportingCollection()}-${getTimestamp(TimeManager.time)}.colpkg",
+            ).path
         requireAnkiActivity().exportCollectionPackage(
             exportPath,
             state.includeMedia,
-            state.supportOlderVersions
+            state.supportOlderVersions,
         )
     }
 
@@ -179,10 +188,11 @@ class ExportDialogFragment : DialogFragment() {
         val limits = buildExportLimit(selectedDeck)
         var packagePrefix = getNonCollectionNamePrefix(selectedDeck)
         packagePrefix = packagePrefix.replace("/", "_")
-        val exportPath = File(
-            getExportRootFile(),
-            "$packagePrefix-${getTimestamp(TimeManager.time)}.apkg",
-        ).path
+        val exportPath =
+            File(
+                getExportRootFile(),
+                "$packagePrefix-${getTimestamp(TimeManager.time)}.apkg",
+            ).path
         requireAnkiActivity().exportApkgPackage(
             exportPath = exportPath,
             withScheduling = state.includeScheduling,
@@ -196,8 +206,9 @@ class ExportDialogFragment : DialogFragment() {
     private fun getNonCollectionNamePrefix(selectedDeck: DeckNameId?): String =
         when (arguments?.getSerializableCompat<ExportType>(ARG_TYPE)) {
             ExportType.Notes, ExportType.Cards -> CollectionManager.TR.exportingSelectedNotes()
-            else -> selectedDeck?.name
-                ?: requireActivity().getString(R.string.card_browser_all_decks)
+            else ->
+                selectedDeck?.name
+                    ?: requireActivity().getString(R.string.card_browser_all_decks)
         }
 
     private fun handleNotesInPlainTextExport(
@@ -205,10 +216,11 @@ class ExportDialogFragment : DialogFragment() {
         selectedDeck: DeckNameId?,
     ) {
         val exportLimit = buildExportLimit(selectedDeck)
-        val exportPath = File(
-            getExportRootFile(),
-            "${getNonCollectionNamePrefix(selectedDeck)}-${getTimestamp(TimeManager.time)}.txt",
-        ).path
+        val exportPath =
+            File(
+                getExportRootFile(),
+                "${getNonCollectionNamePrefix(selectedDeck)}-${getTimestamp(TimeManager.time)}.txt",
+            ).path
         requireAnkiActivity().exportSelectedNotes(
             exportPath = exportPath,
             withHtml = state.includeHtml,
@@ -225,10 +237,11 @@ class ExportDialogFragment : DialogFragment() {
         selectedDeck: DeckNameId?,
     ) {
         val exportLimit = buildExportLimit(selectedDeck)
-        val exportPath = File(
-            getExportRootFile(),
-            "${getNonCollectionNamePrefix(selectedDeck)}-${getTimestamp(TimeManager.time)}.txt",
-        ).path
+        val exportPath =
+            File(
+                getExportRootFile(),
+                "${getNonCollectionNamePrefix(selectedDeck)}-${getTimestamp(TimeManager.time)}.txt",
+            ).path
         requireAnkiActivity().exportSelectedCards(
             exportPath = exportPath,
             withHtml = state.includeHtml,
@@ -239,16 +252,18 @@ class ExportDialogFragment : DialogFragment() {
     private fun buildExportLimit(selectedDeck: DeckNameId?): ExportLimit =
         when (arguments?.getSerializableCompat<ExportType>(ARG_TYPE)) {
             ExportType.Notes -> {
-                val selectedNotesIds = arguments?.let {
-                    BundleCompat.getParcelableArrayList(it, ARG_EXPORTED_IDS, Long::class.java)
-                } ?: error("Requested export for selected notes but no notes ids were passed in!")
+                val selectedNotesIds =
+                    arguments?.let {
+                        BundleCompat.getParcelableArrayList(it, ARG_EXPORTED_IDS, Long::class.java)
+                    } ?: error("Requested export for selected notes but no notes ids were passed in!")
                 exportLimit { noteIds = noteIds { this.noteIds.addAll(selectedNotesIds.toList()) } }
             }
 
             ExportType.Cards -> {
-                val selectedCardIds = arguments?.let {
-                    BundleCompat.getParcelableArrayList(it, ARG_EXPORTED_IDS, Long::class.java)
-                } ?: error("Requested export for selected cards but no cards ids were passed in!")
+                val selectedCardIds =
+                    arguments?.let {
+                        BundleCompat.getParcelableArrayList(it, ARG_EXPORTED_IDS, Long::class.java)
+                    } ?: error("Requested export for selected cards but no cards ids were passed in!")
                 exportLimit { cardIds = cardIds { this.cids.addAll(selectedCardIds) } }
             }
 
@@ -261,12 +276,14 @@ class ExportDialogFragment : DialogFragment() {
             }
         }
 
-    private fun getExportRootFile() = File(requireActivity().externalCacheDir, "export").also {
-        it.mkdirs()
-    }
+    private fun getExportRootFile() =
+        File(requireActivity().externalCacheDir, "export").also {
+            it.mkdirs()
+        }
 
     enum class ExportType {
-        Notes, Cards,
+        Notes,
+        Cards,
     }
 
     companion object {
@@ -276,18 +293,20 @@ class ExportDialogFragment : DialogFragment() {
 
         fun newInstance(): ExportDialogFragment = ExportDialogFragment()
 
-        fun newInstance(did: DeckId) = ExportDialogFragment().apply {
-            arguments = bundleOf(ARG_DECK_ID to did)
-        }
+        fun newInstance(did: DeckId) =
+            ExportDialogFragment().apply {
+                arguments = bundleOf(ARG_DECK_ID to did)
+            }
 
         fun newInstance(
             type: ExportType,
             ids: List<Long>,
         ) = ExportDialogFragment().apply {
-            arguments = bundleOf(
-                ARG_TYPE to type,
-                ARG_EXPORTED_IDS to ids,
-            )
+            arguments =
+                bundleOf(
+                    ARG_TYPE to type,
+                    ARG_EXPORTED_IDS to ids,
+                )
         }
     }
 }

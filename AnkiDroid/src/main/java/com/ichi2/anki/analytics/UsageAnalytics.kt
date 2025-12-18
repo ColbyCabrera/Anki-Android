@@ -234,7 +234,7 @@ object UsageAnalytics {
         if (!optIn) {
             return
         }
-        val event  = sAnalytics!!.event().eventCategory(category).eventAction(action)
+        val event = sAnalytics!!.event().eventCategory(category).eventAction(action)
         if (label != null) {
             event.eventLabel(label)
         }

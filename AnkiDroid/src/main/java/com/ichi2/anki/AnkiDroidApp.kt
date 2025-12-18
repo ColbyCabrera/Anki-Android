@@ -56,7 +56,6 @@ import com.ichi2.anki.servicelayer.ThrowableFilterService
 import com.ichi2.anki.services.NotificationService
 import com.ichi2.anki.settings.Prefs
 import com.ichi2.anki.ui.dialogs.ActivityAgnosticDialogs
-import com.ichi2.compat.CompatHelper
 import com.ichi2.utils.AdaptionUtil
 import com.ichi2.utils.ExceptionUtil
 import com.ichi2.utils.LanguageUtil
@@ -213,7 +212,7 @@ open class AnkiDroidApp :
             notifications.observeForever {
                 applicationScope.launch(Dispatchers.Default) {
                     NotificationService.triggerNotificationFor(
-                        this@AnkiDroidApp
+                        this@AnkiDroidApp,
                     )
                 }
             }

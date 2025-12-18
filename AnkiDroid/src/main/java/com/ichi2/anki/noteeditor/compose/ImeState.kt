@@ -28,25 +28,29 @@ import androidx.core.view.WindowInsetsCompat
 /**
  * Remembers the IME (Input Method Editor/Keyboard) state.
  * Returns a [State] that is true when the keyboard is visible, false otherwise.
- * 
+ *
  * This composable observes window insets changes to detect when the soft keyboard
  * appears or disappears, which is useful for adjusting UI layout accordingly.
- * 
+ *
  * @return State<Boolean> representing whether the keyboard is currently visible
  */
 @Composable
 fun rememberImeState(): State<Boolean> {
-    val imeState = remember {
-        mutableStateOf(false)
-    }
+    val imeState =
+        remember {
+            mutableStateOf(false)
+        }
 
     val view = LocalView.current
     DisposableEffect(view) {
-        val listener = ViewTreeObserver.OnGlobalLayoutListener {
-            val isKeyboardOpen = ViewCompat.getRootWindowInsets(view)
-                ?.isVisible(WindowInsetsCompat.Type.ime()) ?: false
-            imeState.value = isKeyboardOpen
-        }
+        val listener =
+            ViewTreeObserver.OnGlobalLayoutListener {
+                val isKeyboardOpen =
+                    ViewCompat
+                        .getRootWindowInsets(view)
+                        ?.isVisible(WindowInsetsCompat.Type.ime()) ?: false
+                imeState.value = isKeyboardOpen
+            }
 
         view.viewTreeObserver.addOnGlobalLayoutListener(listener)
         onDispose {

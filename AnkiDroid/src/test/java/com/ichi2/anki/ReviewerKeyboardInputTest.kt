@@ -237,7 +237,9 @@ class ReviewerKeyboardInputTest : RobolectricTest() {
         assertThat(underTest.processedAnswer(), equalTo(rating))
     }
 
-    internal class KeyboardInputTestReviewer : Reviewer(), BindingProcessor<ReviewerBinding, ViewerCommand> {
+    internal class KeyboardInputTestReviewer :
+        Reviewer(),
+        BindingProcessor<ReviewerBinding, ViewerCommand> {
         private var focusTextField = false
         private var answered: Rating? = null
         private var answerButtonCount = 4
@@ -261,7 +263,10 @@ class ReviewerKeyboardInputTest : RobolectricTest() {
         var processor: BindingMap<ReviewerBinding, ViewerCommand> =
             BindingMap(sharedPrefs(), ViewerCommand.entries, this)
 
-        override fun processAction(action: ViewerCommand, binding: ReviewerBinding): Boolean {
+        override fun processAction(
+            action: ViewerCommand,
+            binding: ReviewerBinding,
+        ): Boolean {
             executeCommand(action)
             return true
         }
