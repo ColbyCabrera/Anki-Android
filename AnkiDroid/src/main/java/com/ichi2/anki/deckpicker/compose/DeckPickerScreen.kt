@@ -219,8 +219,7 @@ fun DeckPickerContent(
     }
     val morphingShape = remember(state.distanceFraction) {
         MorphShape(
-            morph = morph,
-            percentage = state.distanceFraction
+            morph = morph, percentage = state.distanceFraction
         )
     }
 
@@ -272,23 +271,28 @@ fun DeckPickerContent(
                     Box(modifier = Modifier.padding(16.dp))
                 }
             }) {
-            if (isInInitialState == null || (!isInInitialState && decks.isEmpty())) {
-                // Loading state - either tree hasn't loaded, or deck list is still being computed
+            val isLoading = isInInitialState == null || (!isInInitialState && decks.isEmpty())
+            val isEmpty = !isLoading && isInInitialState
+            val hasDecks = !isLoading && !isEmpty
+
+            AnimatedVisibility(visible = isLoading) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(top = contentPadding.calculateTopPadding() + 16.dp),
+                        .padding(top = contentPadding.calculateTopPadding()),
                     contentAlignment = Alignment.TopCenter
                 ) {
                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 }
-            } else if (isInInitialState) {
-                // Collection is truly empty (only default deck with no cards)
+            }
+
+            AnimatedVisibility(visible = isEmpty) {
                 NoDecks(
-                    onCreateDeck = onAddDeck,
-                    onGetSharedDecks = onAddSharedDeck
+                    onCreateDeck = onAddDeck, onGetSharedDecks = onAddSharedDeck
                 )
-            } else {
+            }
+
+            AnimatedVisibility(visible = hasDecks, enter = fadeIn()) {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
