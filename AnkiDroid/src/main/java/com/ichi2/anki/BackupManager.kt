@@ -82,12 +82,29 @@ open class BackupManager {
             col.close()
 
             // repair file
-            val execString = "sqlite3 $colPath .dump | sqlite3 $colPath.tmp"
-            Timber.i("repairCollection - Execute: %s", execString)
+            Timber.i("repairCollection - Execute: sqlite3 %s .dump | sqlite3 %s.tmp", colPath, colPath)
             try {
-                val cmd = arrayOf("/system/bin/sh", "-c", execString)
-                val process = Runtime.getRuntime().exec(cmd)
-                process.waitFor()
+                // Use separate processes to avoid shell injection vulnerabilities and handle paths with spaces
+                val dumpProcess = ProcessBuilder("sqlite3", colPath, ".dump").start()
+                val restoreProcess = ProcessBuilder("sqlite3", "$colPath.tmp").start()
+
+                val pipeThread = Thread {
+                    try {
+                        dumpProcess.inputStream.use { input ->
+                            restoreProcess.outputStream.use { output ->
+                                input.copyTo(output)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Timber.w(e, "repairCollection - pipe error")
+                    }
+                }
+                pipeThread.start()
+
+                dumpProcess.waitFor()
+                restoreProcess.waitFor()
+                pipeThread.join()
+
                 if (!File("$colPath.tmp").exists()) {
                     Timber.e("repairCollection - dump to %s.tmp failed", colPath)
                     return false
