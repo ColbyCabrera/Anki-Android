@@ -60,9 +60,24 @@ class ViewerResourceHandler(
                 return WebResourceResponse(guessMimeType(path), null, inputStream)
             }
 
-            val file = File(mediaDir, path)
+            val file =
+                if (url.scheme == "file") {
+                    // For file:// URLs, allow Android assets and resources to pass through
+                    if (path.startsWith("/android_asset/") || path.startsWith("/android_res/")) {
+                        return null
+                    }
+                    File(path)
+                } else {
+                    File(mediaDir, path)
+                }
+
             if (!file.canonicalPath.startsWith(mediaDir.canonicalPath + File.separator)) {
                 Timber.w("Path traversal detected: %s", path)
+                // Return 403 Forbidden for file:// URLs to prevent the default WebView loader
+                // from handling them when allowFileAccess is enabled
+                if (url.scheme == "file") {
+                    return WebResourceResponse("text/plain", "UTF-8", 403, "Forbidden", null, null)
+                }
                 return null
             }
             if (!file.exists()) {
