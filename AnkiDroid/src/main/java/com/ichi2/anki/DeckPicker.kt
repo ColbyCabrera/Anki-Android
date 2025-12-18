@@ -765,7 +765,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                 onSearchFocusRequested = { requestSearchFocus = false },
                                 snackbarHostState = snackbarHostState,
                                 syncState = syncState,
-                                isInInitialState = isInInitialState ?: false,
+                                isInInitialState = isInInitialState,
                             )
                         }
                     }
@@ -789,7 +789,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                                             bottom = 24.dp,
                                         )
                                     )
-                                    AppNavigationItem.values().forEach { item ->
+                                    AppNavigationItem.entries.forEach { item ->
                                         if (item == AppNavigationItem.Settings) {
                                             HorizontalDivider(
                                                 modifier = Modifier
@@ -866,7 +866,7 @@ open class DeckPicker : AnkiActivity(), SyncErrorDialogListener, ImportDialogLis
                             onSearchFocusRequested = { requestSearchFocus = false },
                             snackbarHostState = snackbarHostState,
                             syncState = syncState,
-                            isInInitialState = isInInitialState ?: false,
+                            isInInitialState = isInInitialState,
                         )
                     }
                 }

@@ -113,7 +113,7 @@ fun AnkiDroidApp(
     requestSearchFocus: Boolean,
     onSearchFocusRequested: () -> Unit,
     syncState: SyncIconState,
-    isInInitialState: Boolean,
+    isInInitialState: Boolean?,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     val searchFocusRequester = remember {

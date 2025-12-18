@@ -50,6 +50,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LargeFlexibleTopAppBar
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.motionScheme
@@ -207,7 +208,7 @@ fun DeckPickerContent(
     onEmpty: (DisplayDeckNode) -> Unit,
     onAddDeck: () -> Unit,
     onAddSharedDeck: () -> Unit,
-    isInInitialState: Boolean,
+    isInInitialState: Boolean?,
 ) {
     val state = rememberPullToRefreshState()
     val morph = remember {
@@ -271,7 +272,18 @@ fun DeckPickerContent(
                     Box(modifier = Modifier.padding(16.dp))
                 }
             }) {
-            if (decks.isEmpty() || isInInitialState) {
+            if (isInInitialState == null || (!isInInitialState && decks.isEmpty())) {
+                // Loading state - either tree hasn't loaded, or deck list is still being computed
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = contentPadding.calculateTopPadding() + 16.dp),
+                    contentAlignment = Alignment.TopCenter
+                ) {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                }
+            } else if (isInInitialState) {
+                // Collection is truly empty (only default deck with no cards)
                 NoDecks(
                     onCreateDeck = onAddDeck,
                     onGetSharedDecks = onAddSharedDeck
@@ -330,7 +342,7 @@ fun DeckPickerScreen(
     onEmpty: (DisplayDeckNode) -> Unit,
     onNavigationIconClick: () -> Unit,
     syncState: SyncIconState,
-    isInInitialState: Boolean,
+    isInInitialState: Boolean?,
     searchFocusRequester: FocusRequester = FocusRequester(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     fabMenuExpanded: Boolean,
