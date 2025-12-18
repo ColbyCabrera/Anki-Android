@@ -239,12 +239,11 @@ fun NoteEditorScreen(
         },
     ) { paddingValues ->
         Column(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .verticalScroll(scrollState)
-                    .padding(horizontal = 16.dp, vertical = 32.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(scrollState)
+                .padding(horizontal = 16.dp, vertical = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Surface(
@@ -320,23 +319,21 @@ fun NoteEditorScreen(
                 // Tags Button
                 Button(
                     onClick = { showTagsDialog = true },
-                    modifier =
-                        Modifier
-                            .height(52.dp)
-                            .weight(1f),
+                    modifier = Modifier
+                        .height(52.dp)
+                        .weight(1f),
                     enabled = state.isTagsButtonEnabled,
                     colors = ButtonDefaults.filledTonalButtonColors(),
                 ) {
                     Text(
-                        text =
-                            if (state.tags.isEmpty()) {
-                                stringResource(R.string.add_tag)
-                            } else {
-                                stringResource(
-                                    R.string.note_editor_tags_list,
-                                    state.tags.joinToString(", "),
-                                )
-                            },
+                        text = if (state.tags.isEmpty()) {
+                            stringResource(R.string.add_tag)
+                        } else {
+                            stringResource(
+                                R.string.note_editor_tags_list,
+                                state.tags.joinToString(", "),
+                            )
+                        },
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -347,10 +344,9 @@ fun NoteEditorScreen(
                 // Cards Button
                 Button(
                     onClick = onCardsClick,
-                    modifier =
-                        Modifier
-                            .height(52.dp)
-                            .widthIn(max = 164.dp),
+                    modifier = Modifier
+                        .height(52.dp)
+                        .widthIn(max = 164.dp),
                     enabled = state.isCardsButtonEnabled,
                     colors = ButtonDefaults.filledTonalButtonColors(),
                 ) {
@@ -398,17 +394,16 @@ fun NoteTypeSelector(
             readOnly = true,
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             shape = MaterialTheme.shapes.small,
-            modifier =
-                Modifier
-                    .menuAnchor(
-                        type = PrimaryNotEditable,
-                        enabled = true,
-                    ).fillMaxWidth(),
-            colors =
-                TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                ),
+            modifier = Modifier
+                .menuAnchor(
+                    type = PrimaryNotEditable,
+                    enabled = true,
+                )
+                .fillMaxWidth(),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            ),
         )
         ExposedDropdownMenu(
             expanded = expanded,
@@ -450,10 +445,9 @@ fun DeckSelector(
     }
 
     // Build deck hierarchy from flat list
-    val deckHierarchy =
-        remember(availableDecks) {
-            buildDeckHierarchy(availableDecks)
-        }
+    val deckHierarchy = remember(availableDecks) {
+        buildDeckHierarchy(availableDecks)
+    }
 
     val expandedDecks = remember { mutableStateMapOf<String, Boolean>() }
 
@@ -469,17 +463,16 @@ fun DeckSelector(
             label = { Text(stringResource(R.string.CardEditorNoteDeck)) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             shape = MaterialTheme.shapes.small,
-            modifier =
-                Modifier
-                    .menuAnchor(
-                        type = PrimaryNotEditable,
-                        enabled = true,
-                    ).fillMaxWidth(),
-            colors =
-                TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                ),
+            modifier = Modifier
+                .menuAnchor(
+                    type = PrimaryNotEditable,
+                    enabled = true,
+                )
+                .fillMaxWidth(),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            ),
         )
         ExposedDropdownMenu(
             expanded = expanded,
@@ -542,18 +535,16 @@ private fun DeckHierarchyMenuItems(
                 if (hasChildren) {
                     IconButton(onClick = { expandedDecks[deckName] = !isExpanded }) {
                         Icon(
-                            painter =
-                                if (isExpanded) {
-                                    painterResource(R.drawable.keyboard_arrow_down_24px)
-                                } else {
-                                    painterResource(R.drawable.keyboard_arrow_right_24px)
-                                },
-                            contentDescription =
-                                if (isExpanded) {
-                                    stringResource(R.string.collapse)
-                                } else {
-                                    stringResource(R.string.expand)
-                                },
+                            painter = if (isExpanded) {
+                                painterResource(R.drawable.keyboard_arrow_down_24px)
+                            } else {
+                                painterResource(R.drawable.keyboard_arrow_right_24px)
+                            },
+                            contentDescription = if (isExpanded) {
+                                stringResource(R.string.collapse)
+                            } else {
+                                stringResource(R.string.expand)
+                            },
                         )
                     }
                 }
@@ -594,12 +585,11 @@ fun NoteFieldEditor(
                 text = field.name,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
-                color =
-                    if (isFocused) {
-                        MaterialTheme.colorScheme.tertiary
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    },
+                color = if (isFocused) {
+                    MaterialTheme.colorScheme.tertiary
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                },
             )
             Row {
                 IconButton(onClick = onMultimediaClick) {
@@ -614,12 +604,11 @@ fun NoteFieldEditor(
                         Icon(
                             imageVector = Icons.Default.PushPin,
                             contentDescription = stringResource(R.string.note_editor_toggle_sticky_field),
-                            tint =
-                                if (field.isSticky) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                                },
+                            tint = if (field.isSticky) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                            },
                         )
                     }
                 }
@@ -629,26 +618,24 @@ fun NoteFieldEditor(
         OutlinedTextField(
             value = field.value,
             onValueChange = onValueChange,
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .onFocusChanged { focusState ->
-                        if (focusState.isFocused) {
-                            onFocus()
-                        }
-                    },
+            modifier = Modifier
+                .fillMaxWidth()
+                .onFocusChanged { focusState ->
+                    if (focusState.isFocused) {
+                        onFocus()
+                    }
+                },
             placeholder = { Text(field.hint) },
             shape = MaterialTheme.shapes.medium,
             minLines = 2,
             maxLines = 10,
-            colors =
-                OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    focusedBorderColor = MaterialTheme.colorScheme.tertiaryContainer,
-                    unfocusedBorderColor = Color.Transparent,
-                    focusedTextColor = MaterialTheme.colorScheme.tertiary,
-                ),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                focusedBorderColor = MaterialTheme.colorScheme.tertiaryContainer,
+                unfocusedBorderColor = Color.Transparent,
+                focusedTextColor = MaterialTheme.colorScheme.tertiary,
+            ),
         )
     }
 }
@@ -700,26 +687,24 @@ fun NoteEditorScreenPreview() {
     val snackbarHostState = remember { SnackbarHostState() }
     AnkiDroidTheme {
         NoteEditorScreen(
-            state =
-                NoteEditorState(
-                    fields =
-                        listOf(
-                            NoteFieldState(
-                                name = "Front",
-                                value = TextFieldValue("Sample front text"),
-                                index = 0,
-                            ),
-                            NoteFieldState(
-                                name = "Back",
-                                value = TextFieldValue("Sample back text"),
-                                index = 1,
-                            ),
-                        ),
-                    tags = listOf("Tag1", "Tag2"),
-                    selectedDeckName = "Default",
-                    selectedNoteTypeName = "Basic",
-                    cardsInfo = "Cards: 1",
+            state = NoteEditorState(
+                fields = listOf(
+                    NoteFieldState(
+                        name = "Front",
+                        value = TextFieldValue("Sample front text"),
+                        index = 0,
+                    ),
+                    NoteFieldState(
+                        name = "Back",
+                        value = TextFieldValue("Sample back text"),
+                        index = 1,
+                    ),
                 ),
+                tags = listOf("Tag1", "Tag2"),
+                selectedDeckName = "Default",
+                selectedNoteTypeName = "Basic",
+                cardsInfo = "Cards: 1",
+            ),
             availableDecks = listOf("Default", "Deck 2", "Deck 3"),
             availableNoteTypes = listOf("Basic", "Basic (and reversed card)", "Cloze"),
             onFieldValueChange = { _, _ -> },
