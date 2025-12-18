@@ -32,6 +32,7 @@ import org.robolectric.annotation.LooperMode
 @RunWith(AndroidJUnit4::class)
 @LooperMode(LooperMode.Mode.PAUSED)
 class DeckPickerFloatingActionMenuTest {
+
     @Test
     fun fabMenuIsDisplayed() {
         ActivityScenario.launch(DeckPicker::class.java).use {

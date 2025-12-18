@@ -63,12 +63,11 @@ open class MyAccount : AnkiActivity() {
     private lateinit var loggedInLogo: ImageView
 
     // if the 'remove account' fragment is open, close it first
-    private val onRemoveAccountBackCallback =
-        object : OnBackPressedCallback(false) {
-            override fun handleOnBackPressed() {
-                closeRemoveAccountScreen()
-            }
+    private val onRemoveAccountBackCallback = object : OnBackPressedCallback(false) {
+        override fun handleOnBackPressed() {
+            closeRemoveAccountScreen()
         }
+    }
 
     open fun switchToState(newState: Int) {
         when (newState) {
@@ -166,10 +165,8 @@ open class MyAccount : AnkiActivity() {
      */
     private fun openRemoveAccountScreen() {
         Timber.i("opening 'remove account'")
-        supportFragmentManager
-            .beginTransaction()
-            .replace(R.id.remove_account_frame, RemoveAccountFragment())
-            .commit()
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.remove_account_frame, RemoveAccountFragment()).commit()
         findViewById<View>(R.id.remove_account_frame).isVisible = true
         findViewById<View>(R.id.logged_in_layout).isVisible = false
         onRemoveAccountBackCallback.isEnabled = true
@@ -238,33 +235,32 @@ open class MyAccount : AnkiActivity() {
             },
         )
 
-        val textWatcher =
-            object : TextWatcher {
-                override fun beforeTextChanged(
-                    s: CharSequence?,
-                    start: Int,
-                    count: Int,
-                    after: Int,
-                ) {
-                    // Not needed here
-                }
-
-                override fun onTextChanged(
-                    s: CharSequence?,
-                    start: Int,
-                    before: Int,
-                    count: Int,
-                ) {
-                    val email = username.text.toString().trim()
-                    val password = password.text.toString()
-                    val isFilled = email.isNotEmpty() && password.isNotEmpty()
-                    loginButton.isEnabled = isFilled
-                }
-
-                override fun afterTextChanged(s: Editable?) {
-                    // Not needed here
-                }
+        val textWatcher = object : TextWatcher {
+            override fun beforeTextChanged(
+                s: CharSequence?,
+                start: Int,
+                count: Int,
+                after: Int,
+            ) {
+                // Not needed here
             }
+
+            override fun onTextChanged(
+                s: CharSequence?,
+                start: Int,
+                before: Int,
+                count: Int,
+            ) {
+                val email = username.text.toString().trim()
+                val password = password.text.toString()
+                val isFilled = email.isNotEmpty() && password.isNotEmpty()
+                loginButton.isEnabled = isFilled
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+                // Not needed here
+            }
+        }
         username.addTextChangedListener(textWatcher)
         password.addTextChangedListener(textWatcher)
         loginButton.setOnClickListener { login() }
@@ -304,10 +300,7 @@ open class MyAccount : AnkiActivity() {
     }
 
     private val isScreenSmall: Boolean
-        get() = (
-            (this.applicationContext.resources.configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK) <
-                Configuration.SCREENLAYOUT_SIZE_LARGE
-        )
+        get() = ((this.applicationContext.resources.configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK) < Configuration.SCREENLAYOUT_SIZE_LARGE)
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
@@ -330,23 +323,22 @@ open class MyAccount : AnkiActivity() {
     ) {
         val endpoint = getEndpoint()
         launchCatchingTask {
-            val auth =
-                try {
-                    withProgress(
-                        extractProgress = {
-                            text = getString(R.string.sign_in)
-                        },
-                        onCancel = ::cancelSync,
-                    ) {
-                        withCol {
-                            syncLogin(username, password, endpoint)
-                        }
+            val auth = try {
+                withProgress(
+                    extractProgress = {
+                        text = getString(R.string.sign_in)
+                    },
+                    onCancel = ::cancelSync,
+                ) {
+                    withCol {
+                        syncLogin(username, password, endpoint)
                     }
-                } catch (exc: BackendSyncException.BackendSyncAuthFailedException) {
-                    // auth failed; clear out login details
-                    updateLogin("", "")
-                    throw exc
                 }
+            } catch (exc: BackendSyncException.BackendSyncAuthFailedException) {
+                // auth failed; clear out login details
+                updateLogin("", "")
+                throw exc
+            }
             updateLogin(username, auth.hkey)
             setResult(RESULT_OK)
             checkNotificationPermission(this@MyAccount, resultLauncher)
@@ -377,8 +369,7 @@ open class MyAccount : AnkiActivity() {
                 return
             }
             val permission = Permissions.postNotification
-            if (permission != null &&
-                ContextCompat.checkSelfPermission(
+            if (permission != null && ContextCompat.checkSelfPermission(
                     context,
                     permission,
                 ) != PackageManager.PERMISSION_GRANTED

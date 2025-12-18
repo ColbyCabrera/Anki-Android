@@ -58,20 +58,18 @@ fun SyncIcon(
         badge = {
             when (syncState) {
                 SyncIconState.PendingChanges -> Badge()
-                SyncIconState.OneWay, SyncIconState.NotLoggedIn ->
-                    Badge {
-                        Text("!")
-                    }
+                SyncIconState.OneWay, SyncIconState.NotLoggedIn -> Badge {
+                    Text("!")
+                }
                 else -> { /* No badge for Normal state */ }
             }
         },
     ) {
-        val contentDescription =
-            when (syncState) {
-                SyncIconState.OneWay -> stringResource(R.string.sync_menu_title_one_way_sync)
-                SyncIconState.NotLoggedIn -> stringResource(R.string.sync_menu_title_no_account)
-                else -> stringResource(R.string.sync_now)
-            }
+        val contentDescription = when (syncState) {
+            SyncIconState.OneWay -> stringResource(R.string.sync_menu_title_one_way_sync)
+            SyncIconState.NotLoggedIn -> stringResource(R.string.sync_menu_title_no_account)
+            else -> stringResource(R.string.sync_now)
+        }
 
         FilledIconButton(
             onClick = {
@@ -79,20 +77,18 @@ fun SyncIcon(
                 scope.launch {
                     rotation.animateTo(
                         targetValue = rotation.value + 360f,
-                        animationSpec =
-                            spring(
-                                dampingRatio = Spring.DampingRatioMediumBouncy,
-                                stiffness = Spring.StiffnessLow,
-                            ),
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessLow,
+                        ),
                     )
                 }
             },
             enabled = !isSyncing,
-            colors =
-                IconButtonDefaults.filledIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                ),
+            colors = IconButtonDefaults.filledIconButtonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            ),
         ) {
             Icon(
                 painter = painterResource(R.drawable.sync_24px),

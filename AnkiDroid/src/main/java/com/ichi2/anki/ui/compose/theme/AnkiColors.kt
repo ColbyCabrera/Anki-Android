@@ -35,10 +35,9 @@ data class AnkiColors(
     val newCount: Color,
     val learnCount: Color,
     val reviewCount: Color,
-    val topBar: Color,
+    val topBar: Color
 )
 
-val LocalAnkiColors =
-    staticCompositionLocalOf<AnkiColors> {
-        error("No AnkiColors provided")
-    }
+val LocalAnkiColors = staticCompositionLocalOf<AnkiColors> {
+    error("No AnkiColors provided")
+}

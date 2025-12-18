@@ -25,8 +25,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.ichi2.anki.AnkiActivity
 import com.ichi2.anki.CollectionManager
-import com.ichi2.anki.common.time.TimeManager
 import com.ichi2.anki.pages.DeckOptions
+import com.ichi2.anki.common.time.TimeManager
 import timber.log.Timber
 
 class CongratsActivity : AnkiActivity() {
@@ -41,13 +41,11 @@ class CongratsActivity : AnkiActivity() {
             setContent {
                 CongratsScreen(
                     onDeckOptions = {
-                        val intent = DeckOptions.getIntent(this, col.decks.current().id)
-                        startActivity(intent)
-                    },
-                    onBack = {
-                        finish()
-                    },
-                    timeUntilNextDay = timeUntilNextDay,
+                    val intent = DeckOptions.getIntent(this, col.decks.current().id)
+                    startActivity(intent)
+                }, onBack = {
+                    finish()
+                }, timeUntilNextDay = timeUntilNextDay
                 )
             }
         } catch (e: Exception) {

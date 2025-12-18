@@ -46,14 +46,13 @@ fun AnswerButtons(
     onGood: () -> Unit,
     onEasy: () -> Unit,
     nextTimes: List<String>,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         if (showTypeInAnswer) {
             TextField(
@@ -61,7 +60,7 @@ fun AnswerButtons(
                 onValueChange = onTypedAnswerChanged,
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text("Type in the answer") },
-                readOnly = isAnswerShown,
+                readOnly = isAnswerShown
             )
         }
 
@@ -71,7 +70,7 @@ fun AnswerButtons(
                 onHard = onHard,
                 onGood = onGood,
                 onEasy = onEasy,
-                nextTimes = nextTimes,
+                nextTimes = nextTimes
             )
         } else {
             ShowAnswerButton(onShowAnswer)
@@ -81,20 +80,17 @@ fun AnswerButtons(
 
 @Composable
 fun ShowAnswerButton(
-    onShowAnswer: () -> Unit,
-    modifier: Modifier = Modifier,
+    onShowAnswer: () -> Unit, modifier: Modifier = Modifier
 ) {
     Button(
         onClick = onShowAnswer,
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .height(48.dp),
-        colors =
-            ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-            ),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(48.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary
+        )
     ) {
         Text("Show Answer")
     }
@@ -107,11 +103,10 @@ fun EaseButtons(
     onGood: () -> Unit,
     onEasy: () -> Unit,
     nextTimes: List<String>,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         EaseButton(
             label = "Again",
@@ -119,7 +114,7 @@ fun EaseButtons(
             onClick = onAgain,
             containerColor = MaterialTheme.colorScheme.errorContainer,
             contentColor = MaterialTheme.colorScheme.onErrorContainer,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f)
         )
         EaseButton(
             label = "Hard",
@@ -127,7 +122,7 @@ fun EaseButtons(
             onClick = onHard,
             containerColor = MaterialTheme.colorScheme.secondaryContainer,
             contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f)
         )
         EaseButton(
             label = "Good",
@@ -135,7 +130,7 @@ fun EaseButtons(
             onClick = onGood,
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f)
         )
         EaseButton(
             label = "Easy",
@@ -143,7 +138,7 @@ fun EaseButtons(
             onClick = onEasy,
             containerColor = MaterialTheme.colorScheme.tertiaryContainer,
             contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f)
         )
     }
 }
@@ -155,16 +150,12 @@ fun EaseButton(
     onClick: () -> Unit,
     containerColor: Color,
     contentColor: Color,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     Button(
-        onClick = onClick,
-        modifier = modifier.height(64.dp),
-        colors =
-            ButtonDefaults.buttonColors(
-                containerColor = containerColor,
-                contentColor = contentColor,
-            ),
+        onClick = onClick, modifier = modifier.height(64.dp), colors = ButtonDefaults.buttonColors(
+            containerColor = containerColor, contentColor = contentColor
+        )
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(text = nextTime)
@@ -187,8 +178,7 @@ fun AnswerButtonsPreview_ShowAnswer() {
             onEasy = {},
             nextTimes = emptyList(),
             typedAnswer = "Some answer",
-            onTypedAnswerChanged = {},
-        )
+            onTypedAnswerChanged = {})
     }
 }
 
@@ -206,7 +196,6 @@ fun AnswerButtonsPreview_EaseButtons() {
             onEasy = {},
             nextTimes = listOf("<10m", "2d", "3d", "4d"),
             typedAnswer = "",
-            onTypedAnswerChanged = {},
-        )
+            onTypedAnswerChanged = {})
     }
 }

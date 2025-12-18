@@ -53,6 +53,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.color.MaterialColors
+import com.google.android.material.snackbar.Snackbar
 import com.ichi2.anim.ActivityTransitionAnimation
 import com.ichi2.anim.ActivityTransitionAnimation.Direction
 import com.ichi2.anim.ActivityTransitionAnimation.Direction.DEFAULT
@@ -919,9 +920,7 @@ open class AnkiActivity :
         return true
     }
 
-    private fun postSnackbar(
-        @StringRes text: Int,
-    ) {
+    private fun postSnackbar(@StringRes text: Int) {
         (this as? DeckPicker)?.viewModel?.snackbarMessage?.tryEmit(getString(text))
     }
 

@@ -40,7 +40,7 @@ class HelpActivity : AppCompatActivity() {
             MaterialTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background,
+                    color = MaterialTheme.colorScheme.background
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(text = "Help Information", style = MaterialTheme.typography.headlineMedium)

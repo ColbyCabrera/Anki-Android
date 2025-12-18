@@ -83,11 +83,7 @@ class DeckPickerViewModel :
     private val _syncDialogState = MutableStateFlow<SyncDialogState?>(null)
     val syncDialogState: StateFlow<SyncDialogState?> = _syncDialogState.asStateFlow()
 
-    fun showSyncDialog(
-        title: String,
-        message: String,
-        onCancel: () -> Unit,
-    ) {
+    fun showSyncDialog(title: String, message: String, onCancel: () -> Unit) {
         _syncDialogState.value = SyncDialogState(title, message, onCancel)
     }
 
@@ -100,7 +96,6 @@ class DeckPickerViewModel :
     fun hideSyncDialog() {
         _syncDialogState.value = null
     }
-
     /** The root of the tree displaying all decks */
     var dueTree: DeckNode?
         get() = flowOfDeckDueTree.value
@@ -200,7 +195,7 @@ class DeckPickerViewModel :
     val flowOfResizingDividerVisible =
         combine(
             flowOfDeckListInInitialState,
-            flowOfCollectionHasNoCards,
+            flowOfCollectionHasNoCards
         ) { isInInitialState, hasNoCards ->
             !(isInInitialState == true || hasNoCards)
         }
@@ -214,23 +209,22 @@ class DeckPickerViewModel :
         deckId: DeckId,
         selectionType: DeckSelectionType,
     ) = viewModelScope.launch {
-        val result =
-            withCol {
-                decks.select(deckId)
-                CardBrowser.clearLastDeckId()
-                focusedDeck = deckId
-                val deck = dueTree?.find(deckId)
-                if (deck != null && deck.hasCardsReadyToStudy()) {
-                    DeckSelectionResult.HasCardsToStudy(selectionType)
+        val result = withCol {
+            decks.select(deckId)
+            CardBrowser.clearLastDeckId()
+            focusedDeck = deckId
+            val deck = dueTree?.find(deckId)
+            if (deck != null && deck.hasCardsReadyToStudy()) {
+                DeckSelectionResult.HasCardsToStudy(selectionType)
+            } else {
+                val isEmpty = deck?.all { decks.isEmpty(it.did) } ?: true
+                if (isEmpty) {
+                    DeckSelectionResult.Empty(deckId)
                 } else {
-                    val isEmpty = deck?.all { decks.isEmpty(it.did) } ?: true
-                    if (isEmpty) {
-                        DeckSelectionResult.Empty(deckId)
-                    } else {
-                        DeckSelectionResult.NoCardsToStudy
-                    }
+                    DeckSelectionResult.NoCardsToStudy
                 }
             }
+        }
         deckSelectionResult.emit(result)
     }
 
@@ -323,7 +317,8 @@ class DeckPickerViewModel :
     /**
      * Opens the Manage Note Types screen.
      */
-    fun openManageNoteTypes() = launchCatchingIO { flowOfDestination.emit(ManageNoteTypesDestination()) }
+    fun openManageNoteTypes() =
+        launchCatchingIO { flowOfDestination.emit(ManageNoteTypesDestination()) }
 
     /**
      * Opens study options for the provided deck
@@ -414,10 +409,9 @@ class DeckPickerViewModel :
     }
 
     suspend fun refreshSyncState() {
-        _syncState.value =
-            withContext(Dispatchers.IO) {
-                withCol { fetchSyncIconState() }
-            }
+        _syncState.value = withContext(Dispatchers.IO) {
+            withCol { fetchSyncIconState() }
+        }
     }
 
     private fun Collection.fetchSyncIconState(): SyncIconState {
@@ -529,7 +523,7 @@ class DeckPickerViewModel :
     data class SyncDialogState(
         val title: String,
         val message: String,
-        val onCancel: () -> Unit,
+        val onCancel: () -> Unit
     )
 }
 

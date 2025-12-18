@@ -42,6 +42,7 @@ import com.ichi2.anki.libanki.Card
 import com.ichi2.anki.libanki.Collection
 import com.ichi2.anki.libanki.Decks
 import com.ichi2.anki.libanki.Note
+import com.ichi2.anki.model.CardsOrNotes
 import com.ichi2.anki.servicelayer.rescheduleCards
 import com.ichi2.anki.servicelayer.resetCards
 import com.ichi2.anki.snackbar.setMaxLines

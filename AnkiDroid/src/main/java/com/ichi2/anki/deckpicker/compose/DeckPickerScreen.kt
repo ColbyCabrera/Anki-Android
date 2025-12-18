@@ -114,7 +114,7 @@ private fun RenderDeck(
 ) {
     val cornerRadius by animateDpAsState(
         targetValue = if (!deck.collapsed && deck.canCollapse) expandedDeckCardRadius else collapsedDeckCardRadius,
-        animationSpec = motionScheme.defaultEffectsSpec(),
+        animationSpec = motionScheme.defaultEffectsSpec()
     )
 
     var rememberedChildren by remember { mutableStateOf<List<DisplayDeckNode>?>(null) }
@@ -164,16 +164,14 @@ private fun RenderDeck(
 
     if (deck.depth == 0) {
         Card(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 4.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 4.dp),
             shape = RoundedCornerShape(cornerRadius),
-            colors =
-                CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    contentColor = MaterialTheme.colorScheme.onSurface,
-                ),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                contentColor = MaterialTheme.colorScheme.onSurface
+            )
         ) {
             Column(Modifier.padding(8.dp)) {
                 content()
@@ -181,15 +179,15 @@ private fun RenderDeck(
         }
     } else {
         Column(
-            modifier =
-                Modifier.padding(
-                    start = if (deck.depth == 1) 0.dp else subDeckPadding,
-                ),
+            modifier = Modifier.padding(
+                start = if (deck.depth == 1) 0.dp else subDeckPadding,
+            )
         ) {
             content()
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -213,51 +211,45 @@ fun DeckPickerContent(
     isInInitialState: Boolean?,
 ) {
     val state = rememberPullToRefreshState()
-    val morph =
-        remember {
-            Morph(
-                start = MaterialShapes.Pentagon,
-                end = MaterialShapes.Cookie12Sided,
-            )
-        }
-    val morphingShape =
-        remember(state.distanceFraction) {
-            MorphShape(
-                morph = morph,
-                percentage = state.distanceFraction,
-            )
-        }
+    val morph = remember {
+        Morph(
+            start = MaterialShapes.Pentagon,
+            end = MaterialShapes.Cookie12Sided,
+        )
+    }
+    val morphingShape = remember(state.distanceFraction) {
+        MorphShape(
+            morph = morph,
+            percentage = state.distanceFraction
+        )
+    }
 
     // Build the deck tree
     // We remember the result to avoid rebuilding the tree on every recomposition
     // if the deck list hasn't changed.
-    val (deckToChildrenMap, rootDecks) =
-        remember(decks) {
-            val deckToChildrenMap = mutableMapOf<DisplayDeckNode, MutableList<DisplayDeckNode>>()
-            val rootDecks = mutableListOf<DisplayDeckNode>()
-            val deckMap = decks.associateBy { it.did }
+    val (deckToChildrenMap, rootDecks) = remember(decks) {
+        val deckToChildrenMap = mutableMapOf<DisplayDeckNode, MutableList<DisplayDeckNode>>()
+        val rootDecks = mutableListOf<DisplayDeckNode>()
+        val deckMap = decks.associateBy { it.did }
 
-            for (deck in decks) {
-                val parentId =
-                    deck.deckNode.parent
-                        ?.get()
-                        ?.did
-                if (parentId != null && deckMap.containsKey(parentId)) {
-                    val parent = deckMap[parentId]!!
-                    deckToChildrenMap.getOrPut(parent) { mutableListOf() }.add(deck)
-                } else {
-                    rootDecks.add(deck)
-                }
+        for (deck in decks) {
+            val parentId = deck.deckNode.parent?.get()?.did
+            if (parentId != null && deckMap.containsKey(parentId)) {
+                val parent = deckMap[parentId]!!
+                deckToChildrenMap.getOrPut(parent) { mutableListOf() }.add(deck)
+            } else {
+                rootDecks.add(deck)
             }
-            deckToChildrenMap to rootDecks
         }
+        deckToChildrenMap to rootDecks
+    }
 
     Box(
-        modifier =
-            modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
     ) {
+
         PullToRefreshBox(
             isRefreshing = isRefreshing,
             onRefresh = onRefresh,
@@ -265,31 +257,28 @@ fun DeckPickerContent(
             modifier = Modifier.fillMaxSize(),
             indicator = {
                 Box(
-                    modifier =
-                        Modifier
-                            .padding(top = contentPadding.calculateTopPadding() + 16.dp)
-                            .align(Alignment.TopCenter)
-                            .width(42.dp)
-                            .height(42.dp)
-                            .graphicsLayer {
-                                alpha = state.distanceFraction * 5
-                                rotationZ = state.distanceFraction * 180
-                                translationY = (state.distanceFraction * 140) - 60
-                            }.clip(morphingShape)
-                            .background(MaterialTheme.colorScheme.primary),
-                ) {
+                    modifier = Modifier
+                        .padding(top = contentPadding.calculateTopPadding() + 16.dp)
+                        .align(Alignment.TopCenter)
+                        .width(42.dp)
+                        .height(42.dp)
+                        .graphicsLayer {
+                            alpha = state.distanceFraction * 5
+                            rotationZ = state.distanceFraction * 180
+                            translationY = (state.distanceFraction * 140) - 60
+                        }
+                        .clip(morphingShape)
+                        .background(MaterialTheme.colorScheme.primary)) {
                     Box(modifier = Modifier.padding(16.dp))
                 }
-            },
-        ) {
+            }) {
             if (isInInitialState == null || (!isInInitialState && decks.isEmpty())) {
                 // Loading state - either tree hasn't loaded, or deck list is still being computed
                 Box(
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .padding(top = contentPadding.calculateTopPadding() + 16.dp),
-                    contentAlignment = Alignment.TopCenter,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = contentPadding.calculateTopPadding() + 16.dp),
+                    contentAlignment = Alignment.TopCenter
                 ) {
                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 }
@@ -297,16 +286,15 @@ fun DeckPickerContent(
                 // Collection is truly empty (only default deck with no cards)
                 NoDecks(
                     onCreateDeck = onAddDeck,
-                    onGetSharedDecks = onAddSharedDeck,
+                    onGetSharedDecks = onAddSharedDeck
                 )
             } else {
                 LazyColumn(
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 8.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 8.dp),
                     contentPadding = contentPadding,
-                    state = listState,
+                    state = listState
                 ) {
                     items(rootDecks, key = { it.did }) { rootDeck ->
                         val children = deckToChildrenMap[rootDeck] ?: emptyList()
@@ -358,12 +346,12 @@ fun DeckPickerScreen(
     searchFocusRequester: FocusRequester = FocusRequester(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     fabMenuExpanded: Boolean,
-    onFabMenuExpandedChange: (Boolean) -> Unit,
+    onFabMenuExpandedChange: (Boolean) -> Unit
 ) {
     var isSearchOpen by remember { mutableStateOf(false) }
     val searchAnim by animateFloatAsState(
         targetValue = if (isSearchOpen) 1f else 0f,
-        animationSpec = motionScheme.defaultEffectsSpec(),
+        animationSpec = motionScheme.defaultEffectsSpec()
     )
     val density = LocalDensity.current
     val searchOffsetPx = with(density) { (-8).dp.toPx() }
@@ -376,7 +364,7 @@ fun DeckPickerScreen(
             snackbarHost = {
                 SnackbarHost(
                     hostState = snackbarHostState,
-                    modifier = Modifier.padding(bottom = SnackbarPaddingBottom),
+                    modifier = Modifier.padding(bottom = SnackbarPaddingBottom)
                 ) { data ->
                     Snackbar(
                         snackbarData = data,
@@ -390,31 +378,27 @@ fun DeckPickerScreen(
             topBar = {
                 LargeFlexibleTopAppBar(
                     title = {
-                        if (!isSearchOpen) {
-                            Text(
-                                stringResource(R.string.app_name),
-                                style = MaterialTheme.typography.displayMediumEmphasized,
-                                modifier =
-                                    Modifier.graphicsLayer {
-                                        alpha = 1f - searchAnim
-                                    },
-                            )
-                        }
+                        if (!isSearchOpen) Text(
+                            stringResource(R.string.app_name),
+                            style = MaterialTheme.typography.displayMediumEmphasized,
+                            modifier = Modifier.graphicsLayer {
+                                alpha = 1f - searchAnim
+                            }
+                        )
                     },
                     navigationIcon = {
                         if (!isSearchOpen) {
                             FilledIconButton(
                                 modifier = Modifier.padding(end = 8.dp),
                                 onClick = onNavigationIconClick,
-                                colors =
-                                    IconButtonDefaults.filledIconButtonColors(
-                                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    ),
+                                colors = IconButtonDefaults.filledIconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                ),
                             ) {
                                 Icon(
                                     painter = painterResource(R.drawable.menu_24px),
-                                    contentDescription = stringResource(R.string.navigation_drawer_open),
+                                    contentDescription = stringResource(R.string.navigation_drawer_open)
                                 )
                             }
                         }
@@ -429,21 +413,20 @@ fun DeckPickerScreen(
                                         onSearch = { /* Search is performed as user types */ },
                                         expanded = true,
                                         onExpandedChange = { },
-                                        modifier =
-                                            Modifier
-                                                .weight(1f)
-                                                .focusRequester(searchFocusRequester)
-                                                .graphicsLayer {
-                                                    alpha = searchAnim
-                                                    translationY = searchOffsetPx * (1f - searchAnim)
-                                                    scaleX = 0.98f + 0.02f * searchAnim
-                                                    scaleY = 0.98f + 0.02f * searchAnim
-                                                },
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .focusRequester(searchFocusRequester)
+                                            .graphicsLayer {
+                                                alpha = searchAnim
+                                                translationY = searchOffsetPx * (1f - searchAnim)
+                                                scaleX = 0.98f + 0.02f * searchAnim
+                                                scaleY = 0.98f + 0.02f * searchAnim
+                                            },
                                         placeholder = { Text(stringResource(R.string.search_decks)) },
                                         leadingIcon = {
                                             Icon(
                                                 painter = painterResource(R.drawable.search_24px),
-                                                contentDescription = stringResource(R.string.search_decks),
+                                                contentDescription = stringResource(R.string.search_decks)
                                             )
                                         },
                                         trailingIcon = {
@@ -453,7 +436,7 @@ fun DeckPickerScreen(
                                             }) {
                                                 Icon(
                                                     Icons.Default.Close,
-                                                    contentDescription = stringResource(R.string.close),
+                                                    contentDescription = stringResource(R.string.close)
                                                 )
                                             }
                                         },
@@ -461,57 +444,53 @@ fun DeckPickerScreen(
                                 },
                                 expanded = false,
                                 onExpandedChange = { },
-                                modifier =
-                                    Modifier
-                                        .weight(1f)
-                                        .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-                                        .graphicsLayer {
-                                            alpha = searchAnim
-                                        },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                                    .graphicsLayer {
+                                        alpha = searchAnim
+                                    },
                                 shape = SearchBarDefaults.inputFieldShape,
-                                content = { },
+                                content = { }
                             )
                         } else {
                             FilledIconButton(
                                 onClick = { isSearchOpen = true },
-                                modifier =
-                                    Modifier
-                                        .graphicsLayer {
-                                            alpha = 1f - searchAnim
-                                        }.padding(end = 4.dp),
-                                colors =
-                                    IconButtonDefaults.filledIconButtonColors(
-                                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    ),
+                                modifier = Modifier
+                                    .graphicsLayer {
+                                        alpha = 1f - searchAnim
+                                    }
+                                    .padding(end = 4.dp),
+                                colors = IconButtonDefaults.filledIconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                ),
                             ) {
                                 Icon(
                                     painter = painterResource(R.drawable.search_24px),
-                                    contentDescription = stringResource(R.string.search_decks),
+                                    contentDescription = stringResource(R.string.search_decks)
                                 )
                             }
                             SyncIcon(
                                 isSyncing = isRefreshing,
                                 syncState = syncState,
                                 onRefresh = onRefresh,
-                                modifier =
-                                    Modifier
-                                        .height(40.dp)
-                                        .width(48.dp)
-                                        .padding(end = 8.dp)
-                                        .graphicsLayer {
-                                            alpha = 1f - searchAnim
-                                        },
+                                modifier = Modifier
+                                    .height(40.dp)
+                                    .width(48.dp)
+                                    .padding(end = 8.dp)
+                                    .graphicsLayer {
+                                        alpha = 1f - searchAnim
+                                    }
                             )
                         }
                     },
-                    colors =
-                        TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            scrolledContainerColor = MaterialTheme.colorScheme.surface,
-                            navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        ),
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        scrolledContainerColor = MaterialTheme.colorScheme.surface,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    ),
                     scrollBehavior = scrollBehavior,
                 )
             },
@@ -520,6 +499,7 @@ fun DeckPickerScreen(
                 decks = decks,
                 isRefreshing = isRefreshing,
                 onRefresh = onRefresh,
+
                 onDeckClick = onDeckClick,
                 onExpandClick = onExpandClick,
                 onDeckOptions = onDeckOptions,
@@ -536,9 +516,7 @@ fun DeckPickerScreen(
             )
         }
         Scrim(
-            visible = fabMenuExpanded,
-            onDismiss = { onFabMenuExpandedChange(false) },
-        )
+            visible = fabMenuExpanded, onDismiss = { onFabMenuExpandedChange(false) })
         ExpandableFabContainer {
             ExpandableFab(
                 expanded = fabMenuExpanded,
@@ -547,7 +525,7 @@ fun DeckPickerScreen(
                 onAddDeck = onAddDeck,
                 onAddSharedDeck = onAddSharedDeck,
                 onAddFilteredDeck = onAddFilteredDeck,
-                onCheckDatabase = onCheckDatabase,
+                onCheckDatabase = onCheckDatabase
             )
         }
         BackHandler(fabMenuExpanded) { onFabMenuExpandedChange(false) }
@@ -602,6 +580,5 @@ fun DeckPickerScreenPreview() {
         syncState = SyncIconState.Normal,
         isInInitialState = false,
         fabMenuExpanded = false,
-        onFabMenuExpandedChange = {},
-    )
+        onFabMenuExpandedChange = {})
 }

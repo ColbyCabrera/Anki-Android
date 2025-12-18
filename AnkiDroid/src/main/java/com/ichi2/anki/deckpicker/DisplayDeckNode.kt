@@ -50,7 +50,8 @@ data class DisplayDeckNode private constructor(
     lateinit var deckNode: DeckNode
         private set
 
-    fun withUpdatedDeckId(deckId: DeckId): DisplayDeckNode = this.copy(isSelected = this.did == deckId).also { it.deckNode = this.deckNode }
+    fun withUpdatedDeckId(deckId: DeckId): DisplayDeckNode =
+        this.copy(isSelected = this.did == deckId).also { it.deckNode = this.deckNode }
 
     companion object {
         fun from(

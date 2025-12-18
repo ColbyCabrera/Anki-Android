@@ -79,6 +79,7 @@ import com.ichi2.anki.ui.compose.components.ExpandableFabContainer
 import com.ichi2.anki.ui.compose.components.Scrim
 import com.ichi2.anki.ui.compose.components.SyncIcon
 
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AnkiDroidApp(
@@ -115,11 +116,9 @@ fun AnkiDroidApp(
     isInInitialState: Boolean?,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
-    val searchFocusRequester =
-        remember {
-            androidx.compose.ui.focus
-                .FocusRequester()
-        }
+    val searchFocusRequester = remember {
+        androidx.compose.ui.focus.FocusRequester()
+    }
     var fabMenuExpanded by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(requestSearchFocus) {
@@ -134,7 +133,7 @@ fun AnkiDroidApp(
         var isStudyOptionsMenuOpen by remember { mutableStateOf(false) }
         val searchAnim by animateFloatAsState(
             targetValue = if (isSearchOpen) 1f else 0f,
-            animationSpec = motionScheme.defaultEffectsSpec(),
+            animationSpec = motionScheme.defaultEffectsSpec()
         )
         val density = LocalDensity.current
         val searchOffsetPx = with(density) { (-8).dp.toPx() }
@@ -150,8 +149,7 @@ fun AnkiDroidApp(
                     Scrim(
                         opacity = 0F,
                         visible = fabMenuExpanded,
-                        onDismiss = { fabMenuExpanded = false },
-                    )
+                        onDismiss = { fabMenuExpanded = false })
                     ExpandableFabContainer {
                         ExpandableFab(
                             expanded = fabMenuExpanded,
@@ -160,7 +158,7 @@ fun AnkiDroidApp(
                             onAddDeck = onAddDeck,
                             onAddSharedDeck = onAddSharedDeck,
                             onAddFilteredDeck = onAddFilteredDeck,
-                            onCheckDatabase = onCheckDatabase,
+                            onCheckDatabase = onCheckDatabase
                         )
                     }
                 },
@@ -176,16 +174,13 @@ fun AnkiDroidApp(
                 topBar = {
                     LargeTopAppBar(
                         title = {
-                            if (!isSearchOpen) {
-                                Text(
-                                    stringResource(R.string.app_name),
-                                    style = MaterialTheme.typography.displayMediumEmphasized,
-                                    modifier =
-                                        Modifier.graphicsLayer {
-                                            alpha = 1f - searchAnim
-                                        },
-                                )
-                            }
+                            if (!isSearchOpen) Text(
+                                stringResource(R.string.app_name),
+                                style = MaterialTheme.typography.displayMediumEmphasized,
+                                modifier = Modifier.graphicsLayer {
+                                    alpha = 1f - searchAnim
+                                }
+                            )
                         },
                         actions = {
                             if (isSearchOpen) {
@@ -197,22 +192,21 @@ fun AnkiDroidApp(
                                             onSearch = { /* Search is performed as user types */ },
                                             expanded = true,
                                             onExpandedChange = { },
-                                            modifier =
-                                                Modifier
-                                                    .weight(1f)
-                                                    .focusRequester(searchFocusRequester)
-                                                    .graphicsLayer {
-                                                        alpha = searchAnim
-                                                        translationY =
-                                                            searchOffsetPx * (1f - searchAnim)
-                                                        scaleX = 0.98f + 0.02f * searchAnim
-                                                        scaleY = 0.98f + 0.02f * searchAnim
-                                                    },
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .focusRequester(searchFocusRequester)
+                                                .graphicsLayer {
+                                                    alpha = searchAnim
+                                                    translationY =
+                                                        searchOffsetPx * (1f - searchAnim)
+                                                    scaleX = 0.98f + 0.02f * searchAnim
+                                                    scaleY = 0.98f + 0.02f * searchAnim
+                                                },
                                             placeholder = { Text(stringResource(R.string.search_decks)) },
                                             leadingIcon = {
                                                 Icon(
                                                     painter = painterResource(R.drawable.search_24px),
-                                                    contentDescription = stringResource(R.string.search_decks),
+                                                    contentDescription = stringResource(R.string.search_decks)
                                                 )
                                             },
                                             trailingIcon = {
@@ -230,29 +224,26 @@ fun AnkiDroidApp(
                                     },
                                     expanded = false,
                                     onExpandedChange = { },
-                                    modifier =
-                                        Modifier
-                                            .weight(1f)
-                                            .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
-                                            .graphicsLayer {
-                                                alpha = searchAnim
-                                            },
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
+                                        .graphicsLayer {
+                                            alpha = searchAnim
+                                        },
                                     shape = SearchBarDefaults.inputFieldShape,
-                                    content = { },
+                                    content = { }
                                 )
                             } else {
                                 FilledIconButton(
                                     onClick = { isSearchOpen = true },
-                                    modifier =
-                                        Modifier
-                                            .graphicsLayer {
-                                                alpha = 1f - searchAnim
-                                            },
-                                    colors =
-                                        IconButtonDefaults.filledIconButtonColors(
-                                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        ),
+                                    modifier = Modifier
+                                        .graphicsLayer {
+                                            alpha = 1f - searchAnim
+                                        },
+                                    colors = IconButtonDefaults.filledIconButtonColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    ),
                                 ) {
                                     Icon(
                                         painter = painterResource(R.drawable.search_24px),
@@ -263,23 +254,21 @@ fun AnkiDroidApp(
                                     isSyncing = isRefreshing,
                                     syncState = syncState,
                                     onRefresh = onRefresh,
-                                    modifier =
-                                        Modifier
-                                            .height(40.dp)
-                                            .width(48.dp)
-                                            .graphicsLayer {
-                                                alpha = 1f - searchAnim
-                                            },
+                                    modifier = Modifier
+                                        .height(40.dp)
+                                        .width(48.dp)
+                                        .graphicsLayer {
+                                            alpha = 1f - searchAnim
+                                        }
                                 )
                             }
                             if (studyOptionsData != null) {
                                 FilledIconButton(
                                     onClick = { isStudyOptionsMenuOpen = true },
-                                    colors =
-                                        IconButtonDefaults.filledIconButtonColors(
-                                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        ),
+                                    colors = IconButtonDefaults.filledIconButtonColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    ),
                                 ) {
                                     Icon(
                                         Icons.Default.MoreVert,
@@ -363,11 +352,10 @@ fun AnkiDroidApp(
                                 }
                             }
                         },
-                        colors =
-                            TopAppBarDefaults.topAppBarColors(
-                                containerColor = MaterialTheme.colorScheme.surface,
-                                scrolledContainerColor = MaterialTheme.colorScheme.surface,
-                            ),
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            scrolledContainerColor = MaterialTheme.colorScheme.surface,
+                        ),
                         scrollBehavior = scrollBehavior,
                     )
                 },
@@ -393,7 +381,7 @@ fun AnkiDroidApp(
                             onEmpty = onEmpty,
                             onAddDeck = onAddDeck,
                             onAddSharedDeck = onAddSharedDeck,
-                            listState = listState,
+                            listState = listState
                         )
                     }
                     Box(modifier = Modifier.weight(1f)) {

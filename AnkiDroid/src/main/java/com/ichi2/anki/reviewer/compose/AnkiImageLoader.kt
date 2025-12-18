@@ -19,8 +19,11 @@ package com.ichi2.anki.reviewer.compose
 
 import android.content.Context
 import coil.ImageLoader
+import java.io.File
 
-fun ankiImageLoader(context: Context): ImageLoader =
-    ImageLoader
-        .Builder(context)
+fun ankiImageLoader(
+    context: Context
+): ImageLoader {
+    return ImageLoader.Builder(context)
         .build()
+}

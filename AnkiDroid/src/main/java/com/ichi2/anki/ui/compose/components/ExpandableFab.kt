@@ -52,7 +52,7 @@ fun ExpandableFab(
     onAddDeck: () -> Unit,
     onAddSharedDeck: () -> Unit,
     onAddFilteredDeck: () -> Unit,
-    onCheckDatabase: () -> Unit,
+    onCheckDatabase: () -> Unit
 ) {
     val focusRequester = remember { FocusRequester() }
 
@@ -69,18 +69,16 @@ fun ExpandableFab(
             val fabMenuExpandedStateDescription = stringResource(R.string.fab_menu_expanded)
             val fabMenuCollapsedStateDescription = stringResource(R.string.fab_menu_collapsed)
             val fabMenuToggleContentDescription = stringResource(R.string.fab_menu_toggle)
-            ToggleFloatingActionButton(
-                modifier =
-                    Modifier
-                        .semantics {
-                            traversalIndex = -1f
-                            stateDescription =
-                                if (expanded) fabMenuExpandedStateDescription else fabMenuCollapsedStateDescription
-                            contentDescription = fabMenuToggleContentDescription
-                        }.focusRequester(focusRequester),
+            ToggleFloatingActionButton(modifier = Modifier
+                .semantics {
+                    traversalIndex = -1f
+                    stateDescription =
+                        if (expanded) fabMenuExpandedStateDescription else fabMenuCollapsedStateDescription
+                    contentDescription = fabMenuToggleContentDescription
+                }
+                .focusRequester(focusRequester),
                 checked = expanded,
-                onCheckedChange = { onExpandedChange(it) },
-            ) {
+                onCheckedChange = { onExpandedChange(it) }) {
                 val fabIcon by remember {
                     derivedStateOf {
                         if (checkedProgress > 0.5f) R.drawable.close_24px else R.drawable.add_24px
@@ -108,8 +106,7 @@ fun ExpandableFab(
             onClick = onMenuItemClick(onAddFilteredDeck),
             icon = {
                 Icon(
-                    painterResource(id = R.drawable.ic_add_filtered_deck),
-                    contentDescription = null,
+                    painterResource(id = R.drawable.ic_add_filtered_deck), contentDescription = null
                 )
             },
             text = { Text(text = stringResource(R.string.new_dynamic_deck)) },
@@ -118,8 +115,7 @@ fun ExpandableFab(
             onClick = onMenuItemClick(onAddDeck),
             icon = {
                 Icon(
-                    painterResource(id = R.drawable.ic_add_deck_filled),
-                    contentDescription = null,
+                    painterResource(id = R.drawable.ic_add_deck_filled), contentDescription = null
                 )
             },
             text = { Text(text = stringResource(R.string.new_deck)) },
@@ -128,8 +124,7 @@ fun ExpandableFab(
             onClick = onMenuItemClick(onAddNote),
             icon = {
                 Icon(
-                    painterResource(id = R.drawable.ic_add_note),
-                    contentDescription = null,
+                    painterResource(id = R.drawable.ic_add_note), contentDescription = null
                 )
             },
             text = { Text(text = stringResource(R.string.add_card)) },
