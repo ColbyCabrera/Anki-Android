@@ -24,7 +24,10 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -136,8 +139,14 @@ private fun RenderDeck(
         )
         AnimatedVisibility(
             visible = !deck.collapsed,
-            enter = expandVertically(motionScheme.defaultSpatialSpec()) + fadeIn(motionScheme.defaultEffectsSpec()),
-            exit = shrinkVertically(motionScheme.fastSpatialSpec()) + fadeOut(motionScheme.defaultEffectsSpec()),
+            enter = expandVertically(motionScheme.defaultSpatialSpec()) + fadeIn(motionScheme.defaultEffectsSpec()) + scaleIn(
+                initialScale = 0.3f,
+                animationSpec = motionScheme.defaultSpatialSpec()
+            ),
+            exit = shrinkVertically(motionScheme.fastSpatialSpec()) + fadeOut(motionScheme.defaultEffectsSpec()) + scaleOut(
+                targetScale = 0.92f,
+                animationSpec = motionScheme.fastSpatialSpec()
+            ),
         ) {
             Column {
                 for (child in (rememberedChildren ?: emptyList())) {
@@ -219,8 +228,7 @@ fun DeckPickerContent(
     }
     val morphingShape = remember(state.distanceFraction) {
         MorphShape(
-            morph = morph,
-            percentage = state.distanceFraction
+            morph = morph, percentage = state.distanceFraction
         )
     }
 
@@ -272,23 +280,31 @@ fun DeckPickerContent(
                     Box(modifier = Modifier.padding(16.dp))
                 }
             }) {
-            if (isInInitialState == null || (!isInInitialState && decks.isEmpty())) {
-                // Loading state - either tree hasn't loaded, or deck list is still being computed
+            val isLoading = isInInitialState == null || (!isInInitialState && decks.isEmpty())
+            val isEmpty = !isLoading && isInInitialState
+            val hasDecks = !isLoading && !isEmpty
+
+            AnimatedVisibility(visible = isLoading) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(top = contentPadding.calculateTopPadding() + 16.dp),
+                        .padding(top = contentPadding.calculateTopPadding()),
                     contentAlignment = Alignment.TopCenter
                 ) {
                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 }
-            } else if (isInInitialState) {
-                // Collection is truly empty (only default deck with no cards)
+            }
+
+            AnimatedVisibility(visible = isEmpty) {
                 NoDecks(
-                    onCreateDeck = onAddDeck,
-                    onGetSharedDecks = onAddSharedDeck
+                    onCreateDeck = onAddDeck, onGetSharedDecks = onAddSharedDeck
                 )
-            } else {
+            }
+
+            AnimatedVisibility(
+                visible = hasDecks, enter = fadeIn(motionScheme.slowEffectsSpec()) + scaleIn(
+                    initialScale = 0.85f, animationSpec = motionScheme.slowSpatialSpec()
+                ) + slideInVertically(motionScheme.defaultSpatialSpec()) { it / 4 }) {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
