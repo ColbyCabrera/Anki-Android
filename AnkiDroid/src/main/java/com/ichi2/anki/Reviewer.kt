@@ -939,7 +939,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
                 }
                 // whiteboard editor icon
                 changePenColorIcon.icon = whiteboardColorPaletteIcon
-                if (toggleStylus) {
+                if (whiteboardViewModel.isStylusOnlyMode.value) {
                     toggleStylusIcon.setTitle(R.string.disable_stylus)
                     stylusIcon.alpha = Themes.ALPHA_ICON_ENABLED_LIGHT
                 } else {
