@@ -16,7 +16,6 @@
 package com.ichi2.anki.preferences
 
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.text.format.DateFormat
 import android.view.LayoutInflater
@@ -26,18 +25,14 @@ import androidx.appcompat.app.AlertDialog
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
-import com.ichi2.anki.AnkiDroidApp
 import com.ichi2.anki.BuildConfig
-import com.ichi2.anki.Info
 import com.ichi2.anki.R
 import com.ichi2.anki.launchCatchingTask
-import com.ichi2.anki.requireAnkiActivity
 import com.ichi2.anki.scheduling.Fsrs
 import com.ichi2.anki.servicelayer.DebugInfoService
 import com.ichi2.anki.settings.Prefs
 import com.ichi2.anki.showThemedToast
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
-import com.ichi2.utils.IntentUtil
 import com.ichi2.utils.VersionUtils.pkgVersionName
 import com.ichi2.utils.copyToClipboard
 import kotlinx.coroutines.Dispatchers
@@ -83,9 +78,6 @@ class AboutFragment : Fragment() {
                             getString(R.string.other_licenses, dependencyLicenseLink)
                     )
 
-                    val donateLink = getString(R.string.link_opencollective_donate)
-                    val donateText = getString(R.string.donate_description, donateLink)
-
                     AboutScreen(
                         versionText = pkgVersionName,
                         buildDateText = apkBuildDate,
@@ -93,17 +85,8 @@ class AboutFragment : Fragment() {
                         fsrsText = fsrsText,
                         contributorsText = contributorsText,
                         licenseText = licenseText,
-                        donateText = donateText,
                         onBackClick = { requireActivity().onBackPressedDispatcher.onBackPressed() },
                         onLogoClick = { secretClickListener.onSecretClick() },
-                        onRateClick = { IntentUtil.tryOpenIntent(requireAnkiActivity(), AnkiDroidApp.getMarketIntent(requireContext())) },
-                        onChangelogClick = {
-                            val openChangelogIntent =
-                                Intent(requireContext(), Info::class.java).apply {
-                                    putExtra(Info.TYPE_EXTRA, Info.TYPE_NEW_VERSION)
-                                }
-                            startActivity(openChangelogIntent)
-                        },
                         onCopyDebugClick = { copyDebugInfo() }
                     )
                 }

@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -20,16 +18,15 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
@@ -37,7 +34,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.text.parseAsHtml
 import com.ichi2.anki.R
@@ -52,20 +48,17 @@ fun AboutScreen(
     fsrsText: String,
     contributorsText: String,
     licenseText: String,
-    donateText: String,
     onBackClick: () -> Unit,
     onLogoClick: () -> Unit,
-    onRateClick: () -> Unit,
-    onChangelogClick: () -> Unit,
     onCopyDebugClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
+            LargeTopAppBar(
                 title = { Text(stringResource(R.string.pref_cat_about_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
@@ -83,31 +76,32 @@ fun AboutScreen(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
-
             // Logo
             Image(
-                painter = painterResource(R.drawable.ankidroid_logo),
+                painter = painterResource(R.drawable.ic_dialog_info),
                 contentDescription = null,
                 modifier = Modifier
                     .size(96.dp)
                     .clickable(onClick = onLogoClick)
             )
 
-            // App Name Image
-            Image(
-                painter = painterResource(R.drawable.ankidroid_txt),
-                contentDescription = null,
-                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
-                modifier = Modifier
-                    .width(80.dp)
-                    .wrapContentHeight()
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = stringResource(R.string.about_fork_of, stringResource(R.string.app_name)),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 16.dp)
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+
+            SectionTitle(stringResource(R.string.about_version))
 
             // Versions
             VersionText(versionText)
@@ -116,13 +110,13 @@ fun AboutScreen(
 
             if (fsrsText.isNotEmpty()) {
                 VersionText(fsrsText)
-                Spacer(modifier = Modifier.height(14.dp))
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
 
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp)
             ) {
                 // Contributors
                 SectionTitle(stringResource(R.string.contributors_title))
@@ -137,25 +131,11 @@ fun AboutScreen(
                 HtmlTextView(
                     text = licenseText
                 )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // Donate
-                SectionTitle(stringResource(R.string.help_item_support_opencollective_donate))
-                HtmlTextView(
-                    text = donateText
-                )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
             // Buttons
-            TextButton(onClick = onRateClick) {
-                Text(stringResource(R.string.info_rate))
-            }
-            TextButton(onClick = onChangelogClick) {
-                Text(stringResource(R.string.open_changelog))
-            }
             TextButton(onClick = onCopyDebugClick) {
                 Text(stringResource(R.string.feedback_copy_debug))
             }
@@ -171,7 +151,8 @@ private fun VersionText(text: String) {
         Text(
             text = text,
             style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(vertical = 2.dp)
         )
     }
 }
@@ -180,7 +161,7 @@ private fun VersionText(text: String) {
 private fun SectionTitle(text: String) {
     Text(
         text = text,
-        fontSize = 16.sp,
+        style = MaterialTheme.typography.titleMedium,
         modifier = Modifier.padding(bottom = 8.dp)
     )
 }
@@ -194,6 +175,7 @@ private fun HtmlTextView(text: String) {
             TextView(context).apply {
                 movementMethod = LinkMovementMethod.getInstance()
                 setTextColor(textColor)
+                textSize = 14f
             }
         },
         update = {
@@ -214,11 +196,8 @@ private fun AboutScreenPreview() {
             fsrsText = "(FSRS 0.6.4)",
             contributorsText = "Contributors...",
             licenseText = "License...",
-            donateText = "Donate...",
             onBackClick = {},
             onLogoClick = {},
-            onRateClick = {},
-            onChangelogClick = {},
             onCopyDebugClick = {}
         )
     }
