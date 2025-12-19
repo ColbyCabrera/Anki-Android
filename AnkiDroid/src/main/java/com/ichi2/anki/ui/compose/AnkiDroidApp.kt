@@ -72,6 +72,7 @@ import com.ichi2.anki.SyncIconState
 import com.ichi2.anki.deckpicker.DisplayDeckNode
 import com.ichi2.anki.deckpicker.compose.DeckPickerContent
 import com.ichi2.anki.deckpicker.compose.DeckPickerScreen
+import com.ichi2.anki.ui.compose.ImmutableList
 import com.ichi2.anki.deckpicker.compose.StudyOptionsData
 import com.ichi2.anki.deckpicker.compose.StudyOptionsScreen
 import com.ichi2.anki.ui.compose.components.ExpandableFab
@@ -84,7 +85,7 @@ import com.ichi2.anki.ui.compose.components.SyncIcon
 @Composable
 fun AnkiDroidApp(
     fragmented: Boolean,
-    decks: List<DisplayDeckNode>,
+    decks: ImmutableList<DisplayDeckNode>,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
     searchQuery: String,

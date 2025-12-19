@@ -89,6 +89,8 @@ import androidx.graphics.shapes.Morph
 import com.ichi2.anki.R
 import com.ichi2.anki.SyncIconState
 import com.ichi2.anki.deckpicker.DisplayDeckNode
+import com.ichi2.anki.ui.compose.ImmutableList
+import com.ichi2.anki.ui.compose.ImmutableMap
 import com.ichi2.anki.ui.compose.SnackbarPaddingBottom
 import com.ichi2.anki.ui.compose.components.ExpandableFab
 import com.ichi2.anki.ui.compose.components.ExpandableFabContainer
@@ -104,8 +106,8 @@ private val subDeckPadding = 16.dp
 @Composable
 private fun RenderDeck(
     deck: DisplayDeckNode,
-    children: List<DisplayDeckNode>,
-    deckToChildrenMap: Map<DisplayDeckNode, List<DisplayDeckNode>>,
+    children: ImmutableList<DisplayDeckNode>,
+    deckToChildrenMap: ImmutableMap<DisplayDeckNode, ImmutableList<DisplayDeckNode>>,
     onDeckClick: (DisplayDeckNode) -> Unit,
     onExpandClick: (DisplayDeckNode) -> Unit,
     onDeckOptions: (DisplayDeckNode) -> Unit,
@@ -120,7 +122,7 @@ private fun RenderDeck(
         animationSpec = motionScheme.defaultEffectsSpec()
     )
 
-    var rememberedChildren by remember { mutableStateOf<List<DisplayDeckNode>?>(null) }
+    var rememberedChildren by remember { mutableStateOf<ImmutableList<DisplayDeckNode>?>(null) }
     if (!deck.collapsed) {
         rememberedChildren = children
     }
@@ -201,7 +203,7 @@ private fun RenderDeck(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun DeckPickerContent(
-    decks: List<DisplayDeckNode>,
+    decks: ImmutableList<DisplayDeckNode>,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
     listState: LazyListState,
@@ -249,7 +251,9 @@ fun DeckPickerContent(
                 rootDecks.add(deck)
             }
         }
-        deckToChildrenMap to rootDecks
+        val immutableMap = ImmutableMap(deckToChildrenMap.mapValues { ImmutableList(it.value) })
+        val immutableRoots = ImmutableList(rootDecks)
+        immutableMap to immutableRoots
     }
 
     Box(
@@ -313,7 +317,7 @@ fun DeckPickerContent(
                     state = listState
                 ) {
                     items(rootDecks, key = { it.did }) { rootDeck ->
-                        val children = deckToChildrenMap[rootDeck] ?: emptyList()
+                        val children = deckToChildrenMap[rootDeck] ?: ImmutableList(emptyList())
                         RenderDeck(
                             deck = rootDeck,
                             children = children,
@@ -337,7 +341,7 @@ fun DeckPickerContent(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun DeckPickerScreen(
-    decks: List<DisplayDeckNode>,
+    decks: ImmutableList<DisplayDeckNode>,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
     searchQuery: String,
@@ -552,7 +556,7 @@ fun DeckPickerScreen(
 @Composable
 fun DeckPickerContentPreview() {
     DeckPickerContent(
-        decks = emptyList(),
+        decks = ImmutableList(emptyList()),
         isRefreshing = false,
         onRefresh = {},
         onDeckClick = {},
@@ -574,7 +578,7 @@ fun DeckPickerContentPreview() {
 @Composable
 fun DeckPickerScreenPreview() {
     DeckPickerScreen(
-        decks = emptyList(),
+        decks = ImmutableList(emptyList()),
         isRefreshing = false,
         onRefresh = {},
         searchQuery = "",

@@ -181,6 +181,7 @@ import com.ichi2.anki.servicelayer.ScopedStorageService
 import com.ichi2.anki.settings.Prefs
 import com.ichi2.anki.ui.compose.AnkiDroidApp
 import com.ichi2.anki.ui.compose.CongratsActivity
+import com.ichi2.anki.ui.compose.ImmutableList
 import com.ichi2.anki.ui.compose.navigation.AnkiNavigationRail
 import com.ichi2.anki.ui.compose.navigation.AppNavigationItem
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
@@ -742,7 +743,7 @@ open class DeckPicker :
                         } else {
                             AnkiDroidApp(
                                 fragmented = fragmented,
-                                decks = deckList.data,
+                                decks = ImmutableList(deckList.data),
                                 isRefreshing = isRefreshing,
                                 onRefresh = { sync() },
                                 searchQuery = searchQuery,
@@ -845,7 +846,7 @@ open class DeckPicker :
                     ) {
                         AnkiDroidApp(
                             fragmented = fragmented,
-                            decks = deckList.data,
+                            decks = ImmutableList(deckList.data),
                             isRefreshing = isRefreshing,
                             onRefresh = { sync() },
                             searchQuery = searchQuery,
