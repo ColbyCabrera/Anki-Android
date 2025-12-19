@@ -271,36 +271,7 @@ class WhiteboardFragment :
      * Updates the selection state of the eraser and brush buttons.
      */
     private fun updateToolbarSelection() {
-        // Trigger recomposition by updating the list
-        // Since we are now using Compose, the state collection in onViewCreated -> observeViewModel -> viewModel.brushes/activeBrushIndex/isEraserActive
-        // should trigger updateBrushToolbar again.
-        // However, updateBrushToolbar re-creates the ComposeView which is inefficient but correct for "Interop is King" phase.
-        // Wait, observeViewModel calls updateBrushToolbar ONLY when `brushes` changes.
-        // But `updateToolbarSelection` is called when `activeBrushIndex` or `isEraserActive` changes.
-        // We need to re-render the ComposeView when selection changes.
-        // So I should call updateBrushToolbar in updateToolbarSelection too?
-        // Or better: updateBrushToolbar should rely on the state being passed to it.
-        // But `updateBrushToolbar` takes `brushesInfo`.
-
-        // Let's look at `observeViewModel`:
-        // viewModel.brushes.onEach { updateBrushToolbar(it); updateToolbarSelection() }
-        // viewModel.activeBrushIndex.onEach { updateToolbarSelection() }
-        // viewModel.isEraserActive.onEach { updateToolbarSelection() }
-
-        // In my new implementation, `updateBrushToolbar` sets up the ComposeView.
-        // `updateToolbarSelection` is now Legacy.
-        // I need to ensure that when selection changes, the Compose UI updates.
-        // But I am creating a NEW ComposeView every time `updateBrushToolbar` is called.
-        // And `updateBrushToolbar` is only called when `brushes` list changes.
-
-        // Fix: I should call `updateBrushToolbar(viewModel.brushes.value)` inside `updateToolbarSelection`?
-        // That would be inefficient (recreating View).
-        // Better: Make the ComposeView observe the state!
-        // But I can't change the function signature easily without refactoring ViewModel observation.
-
-        // "Incremental" approach:
-        // Re-calling updateBrushToolbar on selection change is fine for < 10 items.
-        // So I will modify updateToolbarSelection to call updateBrushToolbar.
+        // Recreate brush toolbar when selection or eraser state changes; acceptable for small lists
         updateBrushToolbar(viewModel.brushes.value)
     }
 
