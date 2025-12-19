@@ -16,32 +16,25 @@
 package com.ichi2.anki.preferences
 
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.text.format.DateFormat
-import android.text.method.LinkMovementMethod
+import android.view.LayoutInflater
 import android.view.View
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.TextView
+import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
-import androidx.core.text.parseAsHtml
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
-import com.google.android.material.appbar.MaterialToolbar
-import com.ichi2.anki.AnkiDroidApp
 import com.ichi2.anki.BuildConfig
-import com.ichi2.anki.Info
 import com.ichi2.anki.R
 import com.ichi2.anki.launchCatchingTask
-import com.ichi2.anki.requireAnkiActivity
 import com.ichi2.anki.scheduling.Fsrs
 import com.ichi2.anki.servicelayer.DebugInfoService
 import com.ichi2.anki.settings.Prefs
 import com.ichi2.anki.showThemedToast
-import com.ichi2.utils.IntentUtil
+import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import com.ichi2.utils.VersionUtils.pkgVersionName
 import com.ichi2.utils.copyToClipboard
-import com.ichi2.utils.show
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
@@ -49,85 +42,55 @@ import java.util.Date
 import java.util.Locale
 import net.ankiweb.rsdroid.BuildConfig as BackendBuildConfig
 
-class AboutFragment : Fragment(R.layout.about_layout) {
-    override fun onViewCreated(
-        view: View,
-        savedInstanceState: Bundle?,
-    ) {
-        view.findViewById<MaterialToolbar>(R.id.toolbar).apply {
-            setNavigationOnClickListener { requireActivity().onBackPressedDispatcher.onBackPressed() }
-        }
+class AboutFragment : Fragment() {
 
-        // Version date
-        val apkBuildDate =
-            SimpleDateFormat(DateFormat.getBestDateTimePattern(Locale.getDefault(), "d MMM yyyy"))
-                .format(Date(BuildConfig.BUILD_TIME))
-        view.findViewById<TextView>(R.id.about_build_date).text = apkBuildDate
+    private val secretClickListener by lazy { DevOptionsSecretClickListener(this) }
 
-        // Version text
-        view.findViewById<TextView>(R.id.about_version).text =
-            pkgVersionName
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return ComposeView(requireContext()).apply {
+            // Dispose of the Composition when the view's LifecycleOwner
+            // is destroyed
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                AnkiDroidTheme {
+                    val apkBuildDate =
+                        SimpleDateFormat(DateFormat.getBestDateTimePattern(Locale.getDefault(), "d MMM yyyy"))
+                            .format(Date(BuildConfig.BUILD_TIME))
 
-        // Backend version text
-        view.findViewById<TextView>(R.id.about_backend).text =
-            "(anki " + BackendBuildConfig.ANKI_DESKTOP_VERSION + " / " + BackendBuildConfig.ANKI_COMMIT_HASH.subSequence(0, 8) + ")"
+                    val backendText = "(anki " + BackendBuildConfig.ANKI_DESKTOP_VERSION + " / " + BackendBuildConfig.ANKI_COMMIT_HASH.subSequence(0, 8) + ")"
 
-        // FSRS version text
-        view.findViewById<TextView>(R.id.about_fsrs).text = Fsrs.displayVersion ?.let { version ->
-            "($version)"
-        } ?: ""
+                    val fsrsText = Fsrs.displayVersion?.let { "($it)" } ?: ""
 
-        // Logo secret
-        view
-            .findViewById<ImageView>(R.id.about_app_logo)
-            .setOnClickListener(DevOptionsSecretClickListener(this))
+                    val contributorsLink = getString(R.string.link_contributors)
+                    val contributingGuideLink = getString(R.string.link_contribution)
+                    val contributorsText = getString(R.string.about_contributors_description, contributorsLink, contributingGuideLink)
 
-        // Contributors text
-        val contributorsLink = getString(R.string.link_contributors)
-        val contributingGuideLink = getString(R.string.link_contribution)
-        view.findViewById<TextView>(R.id.about_contributors_description).apply {
-            text = getString(R.string.about_contributors_description, contributorsLink, contributingGuideLink).parseAsHtml()
-            movementMethod = LinkMovementMethod.getInstance()
-        }
+                    val gplLicenseLink = getString(R.string.licence_wiki)
+                    val agplLicenseLink = getString(R.string.link_agpl_wiki)
+                    val sourceCodeLink = getString(R.string.link_source)
+                    val dependencyLicenseLink = getString(R.string.dependency_license_wiki)
+                    val licenseText = (
+                        getString(R.string.license_description, gplLicenseLink, agplLicenseLink, sourceCodeLink) + "<br>" +
+                            getString(R.string.other_licenses, dependencyLicenseLink)
+                    )
 
-        // License text
-        val gplLicenseLink = getString(R.string.licence_wiki)
-        val agplLicenseLink = getString(R.string.link_agpl_wiki)
-        val sourceCodeLink = getString(R.string.link_source)
-        val dependencyLicenseLink = getString(R.string.dependency_license_wiki)
-        view.findViewById<TextView>(R.id.about_license_description).apply {
-            text =
-                (
-                    getString(R.string.license_description, gplLicenseLink, agplLicenseLink, sourceCodeLink) + "<br>" +
-                        getString(R.string.other_licenses, dependencyLicenseLink)
-                ).parseAsHtml()
-            movementMethod = LinkMovementMethod.getInstance()
-        }
-
-        // Donate text
-        val donateLink = getString(R.string.link_opencollective_donate)
-        view.findViewById<TextView>(R.id.about_donate_description).apply {
-            text = getString(R.string.donate_description, donateLink).parseAsHtml()
-            movementMethod = LinkMovementMethod.getInstance()
-        }
-
-        // Rate Ankidroid button
-        view.findViewById<Button>(R.id.about_rate).setOnClickListener {
-            IntentUtil.tryOpenIntent(requireAnkiActivity(), AnkiDroidApp.getMarketIntent(requireContext()))
-        }
-
-        // Open changelog button
-        view.findViewById<Button>(R.id.about_open_changelog).setOnClickListener {
-            val openChangelogIntent =
-                Intent(requireContext(), Info::class.java).apply {
-                    putExtra(Info.TYPE_EXTRA, Info.TYPE_NEW_VERSION)
+                    AboutScreen(
+                        versionText = pkgVersionName,
+                        buildDateText = apkBuildDate,
+                        backendText = backendText,
+                        fsrsText = fsrsText,
+                        contributorsText = contributorsText,
+                        licenseText = licenseText,
+                        onBackClick = { requireActivity().onBackPressedDispatcher.onBackPressed() },
+                        onLogoClick = { secretClickListener.onSecretClick() },
+                        onCopyDebugClick = { copyDebugInfo() }
+                    )
                 }
-            startActivity(openChangelogIntent)
-        }
-
-        // Copy debug info button
-        view.findViewById<Button>(R.id.about_copy_debug).setOnClickListener {
-            copyDebugInfo()
+            }
         }
     }
 
@@ -153,16 +116,16 @@ class AboutFragment : Fragment(R.layout.about_layout) {
      */
     private class DevOptionsSecretClickListener(
         val fragment: Fragment,
-    ) : View.OnClickListener {
+    ) {
         private var clickCount = 0
         private val clickLimit = 6
 
-        override fun onClick(view: View) {
+        fun onSecretClick() {
             if (Prefs.isDevOptionsEnabled) {
                 return
             }
             if (++clickCount == clickLimit) {
-                showEnableDevOptionsDialog(view.context)
+                showEnableDevOptionsDialog(fragment.requireContext())
             }
         }
 
@@ -170,14 +133,14 @@ class AboutFragment : Fragment(R.layout.about_layout) {
          * Shows a dialog to confirm if developer options should be enabled or not
          */
         fun showEnableDevOptionsDialog(context: Context) {
-            AlertDialog.Builder(context).show {
-                setTitle(R.string.dev_options_enabled_pref)
-                setIcon(R.drawable.ic_warning)
-                setMessage(R.string.dev_options_warning)
-                setPositiveButton(R.string.dialog_ok) { _, _ -> enableDevOptions(context) }
-                setNegativeButton(R.string.dialog_cancel) { _, _ -> clickCount = 0 }
-                setCancelable(false)
-            }
+            AlertDialog.Builder(context)
+                .setTitle(R.string.dev_options_enabled_pref)
+                .setIcon(R.drawable.ic_warning)
+                .setMessage(R.string.dev_options_warning)
+                .setPositiveButton(R.string.dialog_ok) { _, _ -> enableDevOptions(context) }
+                .setNegativeButton(R.string.dialog_cancel) { _, _ -> clickCount = 0 }
+                .setCancelable(false)
+                .show()
         }
 
         fun enableDevOptions(context: Context) {
