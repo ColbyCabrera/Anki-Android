@@ -513,9 +513,23 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
             R.id.action_save_whiteboard -> {
                 Timber.i("Reviewer:: Save whiteboard button pressed")
-                // TODO: Implement save whiteboard with new WhiteboardViewModel architecture
-                // The paths are in whiteboardViewModel.paths and need to be rendered to a bitmap
-                showSnackbar("Save whiteboard: not yet implemented", Snackbar.LENGTH_SHORT)
+                val displayMetrics = resources.displayMetrics
+                val savedFile = whiteboardViewModel.saveToFile(
+                    this,
+                    displayMetrics.widthPixels,
+                    displayMetrics.heightPixels
+                )
+                if (savedFile != null) {
+                    showSnackbar(
+                        getString(R.string.white_board_image_saved, savedFile.path),
+                        Snackbar.LENGTH_SHORT
+                    )
+                } else {
+                    showSnackbar(
+                        getString(R.string.white_board_image_save_failed, "No content to save"),
+                        Snackbar.LENGTH_SHORT
+                    )
+                }
             }
 
             R.id.action_clear_whiteboard -> {

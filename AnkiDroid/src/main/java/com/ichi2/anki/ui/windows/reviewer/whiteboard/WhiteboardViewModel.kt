@@ -435,6 +435,67 @@ class WhiteboardViewModel(
     }
 
     /**
+     * Saves the current whiteboard drawing to a PNG file.
+     * @param context Context for accessing external storage
+     * @param width Width of the bitmap to create
+     * @param height Height of the bitmap to create
+     * @return The saved file, or null if save failed or no content
+     */
+    @CheckResult
+    fun saveToFile(context: android.content.Context, width: Int, height: Int): java.io.File? {
+        val currentPaths = paths.value
+        if (currentPaths.isEmpty()) {
+            Timber.d("No paths to save")
+            return null
+        }
+
+        try {
+            // Create a transparent bitmap
+            val bitmap = android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888)
+            val canvas = android.graphics.Canvas(bitmap)
+
+            // Draw all paths
+            val paint = android.graphics.Paint().apply {
+                isAntiAlias = true
+                isDither = true
+                style = android.graphics.Paint.Style.STROKE
+                strokeJoin = android.graphics.Paint.Join.ROUND
+                strokeCap = android.graphics.Paint.Cap.ROUND
+            }
+
+            for (action in currentPaths) {
+                paint.strokeWidth = action.strokeWidth
+                if (action.isEraser) {
+                    paint.xfermode = android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.CLEAR)
+                } else {
+                    paint.xfermode = null
+                    paint.color = action.color
+                }
+                canvas.drawPath(action.path, paint)
+            }
+
+            // Save to file
+            val saveDirectory = java.io.File(context.getExternalFilesDir(null), "Whiteboard")
+            if (!saveDirectory.exists()) {
+                saveDirectory.mkdirs()
+            }
+            val timestamp = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.getDefault()).format(java.util.Date())
+            val file = java.io.File(saveDirectory, "whiteboard_$timestamp.png")
+
+            file.outputStream().use { outputStream ->
+                bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, outputStream)
+            }
+            bitmap.recycle()
+
+            Timber.i("Whiteboard saved to: %s", file.absolutePath)
+            return file
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to save whiteboard")
+            return null
+        }
+    }
+
+    /**
      * Clear the canvas and the undo/redo states
      */
     fun reset() {
