@@ -25,6 +25,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -104,9 +105,9 @@ import com.ichi2.anki.noteeditor.NoteEditorLauncher
 import com.ichi2.anki.reviewer.ReviewerEffect
 import com.ichi2.anki.reviewer.ReviewerEvent
 import com.ichi2.anki.reviewer.ReviewerViewModel
+import com.ichi2.anki.ui.windows.reviewer.whiteboard.WhiteboardViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import com.ichi2.anki.Whiteboard as WhiteboardView
 
 private val ratings = listOf(
     "Again" to CardAnswer.Rating.AGAIN,
@@ -160,16 +161,30 @@ class InvertedTopCornersShape(private val cornerRadius: Dp) : Shape {
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun ReviewerContent(viewModel: ReviewerViewModel, whiteboard: WhiteboardView?) {
+fun ReviewerContent(
+    viewModel: ReviewerViewModel,
+    whiteboardViewModel: WhiteboardViewModel?
+) {
     val state by viewModel.state.collectAsState()
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     var showBottomSheet by remember { mutableStateOf(false) }
     var toolbarHeight by remember { mutableIntStateOf(0) }
+    var whiteboardToolbarHeight by remember { mutableIntStateOf(0) }
     val toolbarHeightDp = with(LocalDensity.current) { toolbarHeight.toDp() }
+    val whiteboardToolbarHeightDp = with(LocalDensity.current) { whiteboardToolbarHeight.toDp() }
+    val totalBottomPadding = toolbarHeightDp + (if (state.isWhiteboardEnabled) whiteboardToolbarHeightDp + 8.dp else 0.dp)
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val layoutDirection = LocalLayoutDirection.current
+
+    // Load whiteboard state when first enabled
+    val isDarkMode = isSystemInDarkTheme()
+    LaunchedEffect(state.isWhiteboardEnabled, whiteboardViewModel, isDarkMode) {
+        if (state.isWhiteboardEnabled && whiteboardViewModel != null) {
+            whiteboardViewModel.loadState(isDarkMode)
+        }
+    }
 
     val editCardLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -261,11 +276,40 @@ fun ReviewerContent(viewModel: ReviewerViewModel, whiteboard: WhiteboardView?) {
                         toolbarHeight = (toolbarHeightDp + 48.dp).value.toInt()
                     )
 
-                    Whiteboard(
-                        enabled = state.isWhiteboardEnabled,
-                        whiteboard = whiteboard,
-                        modifier = Modifier.padding(bottom = toolbarHeightDp + 48.dp)
-                    )
+                    // Whiteboard canvas
+                    if (state.isWhiteboardEnabled && whiteboardViewModel != null) {
+                        WhiteboardCanvas(
+                            viewModel = whiteboardViewModel,
+                            modifier = Modifier.padding(bottom = totalBottomPadding + 48.dp)
+                        )
+                    }
+
+                    // Whiteboard toolbar (shown above answer buttons when whiteboard is enabled)
+                    if (state.isWhiteboardEnabled && whiteboardViewModel != null) {
+                        WhiteboardToolbar(
+                            viewModel = whiteboardViewModel,
+                            onBrushClick = { _, index ->
+                                whiteboardViewModel.setActiveBrush(index)
+                            },
+                            onBrushLongClick = { index ->
+                                if (whiteboardViewModel.brushes.value.size > 1) {
+                                    whiteboardViewModel.removeBrush(index)
+                                }
+                            },
+                            onAddBrush = {
+                                // TODO: Show color picker dialog
+                                whiteboardViewModel.addBrush(android.graphics.Color.RED)
+                            },
+                            onEraserClick = {
+                                whiteboardViewModel.enableEraser()
+                            },
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .offset(y = -ScreenOffset - toolbarHeightDp - 8.dp)
+                                .padding(bottom = paddingValues.calculateBottomPadding())
+                                .onSizeChanged { whiteboardToolbarHeight = it.height }
+                        )
+                    }
 
                     HorizontalFloatingToolbar(
                         modifier = Modifier
