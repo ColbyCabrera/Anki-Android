@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" comment="Application name. Duplicated in sync_conflict_keep_local_new for sync context">Enki</string>
+    <string name="app_name" comment="Application name. Duplicated in sync_conflict_keep_local_new for sync context">Hirameki</string>
     <string name="navigation_drawer_open">navigation drawer open</string>
     <string name="rebuild" comment="Generic rebuild action. Duplicated in rebuild_cram_label for filtered deck context">Rebuild</string>
     <string name="empty_cards_action" comment="Generic empty action. Duplicated in empty_cram_label for filtered deck context">Empty</string>
