@@ -14,7 +14,7 @@ android {
     namespace = "com.ichi2.anki"
 
     defaultConfig {
-        applicationId = "com.ichi2.anki"
+        applicationId = "com.hirameki.flashcards"
         minSdk = 31
         targetSdk = 36
         versionCode = 20190101

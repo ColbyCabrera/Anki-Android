@@ -135,7 +135,7 @@
         <item quantity="other">%1$d minutes</item>
     </plurals>
 
-    <string name="fact_adder_intent_title" comment="Label of the 'Add Note' window. This title can't be seen in AnkiDroid directly.">AnkiDroid card</string>
+    <string name="fact_adder_intent_title" comment="Label of the 'Add Note' window. This title can't be seen in AnkiDroid directly.">Hirameki card</string>
     <string name="note_editor_copy_note" maxLength="28">Copy note</string>
     <string name="card_editor_reposition_card" comment="reposition a card in the new queue" maxLength="28">Reposition</string>
     <string name="card_editor_reset_card" maxLength="28">Reset progress</string>
@@ -152,7 +152,7 @@
     <string name="unknown_type_field_warning">Type answer: unknown field %s</string>
     <string name="delete_deck" comment="Message on a progress bar starting a deck is being deleted.">Deleting deck…</string>
 
-    <string name="info_rate">Rate AnkiDroid</string>
+    <string name="info_rate">Rate Hirameki</string>
     <string name="import_title">Importing</string>
     <string name="import_preparing_file">Preparing file for import&#8230;</string>
     <string name="import_message_add" comment="Adding a new deck to the collection (import)">Add</string>
@@ -165,18 +165,18 @@
     <string name="import_error_load_imported_database">Anki Database (.anki2) replacements are not yet supported. Please see the manual for replacement instructions.</string>
     <string name="import_error_content_provider">The selected file couldn’t be imported automatically by AnkiDroid. Please see the user manual for how to manually import Anki files: \n%s</string>
     <string name="import_error_copy_to_cache">Failed to cache file (possibly out of storage space)</string>
-    <string name="import_interrupted">Import interrupted: AnkiDroid was closed</string>
+    <string name="import_interrupted">Import interrupted: Hirameki was closed</string>
     <string name="export_ready_title">Export ready</string>
     <string name="export_send_no_handlers">No applications available to handle apkg. Saving…</string>
     <string name="export_save_apkg_successful">Successfully saved Anki package</string>
     <string name="export_save_apkg_unsuccessful">Save Anki package failed</string>
     <string name="export_share_title">Send Anki package using</string>
-    <string name="export_email_subject">AnkiDroid exported flashcards: %s</string>
+    <string name="export_email_subject">Hirameki exported flashcards: %s</string>
     <string name="export_email_text">
         <![CDATA[
         Hi!
         <br/><br/>
-        This is an Anki flashcards deck sent from AnkiDroid[1].
+        This is an Anki flashcards deck sent from Hirameki[1].
         Try to open it using one of the available Anki distributions[2] and enjoy easy and efficient learning!<br/><br/>
         [1] %1$s<br/>
         [2] %2$s
@@ -221,13 +221,13 @@
 
     <string name="title_whiteboard_editor" maxLength="28">Whiteboard editor</string>
 
-    <string name="user_is_a_robot">Detected automated test. If you are a human, contact AnkiDroid support</string>
+    <string name="user_is_a_robot">Detected automated test. If you are a human, contact Hirameki support</string>
 
     <!-- JS api -->
-    <string name="api_version_developer_contact">This card uses unsupported AnkiDroid features. Contact developer %1$s, or view the wiki. %2$s</string>
+    <string name="api_version_developer_contact">This card uses unsupported Hirameki features. Contact developer %1$s, or view the wiki. %2$s</string>
     <string name="invalid_json_data">Card provided invalid data. %s</string>
-    <string name="valid_js_api_version">Invalid AnkiDroid JS API version. Contact developer %s, or view wiki</string>
-    <string name="update_js_api_version">AnkiDroid JS API update available. Contact developer %s, or view wiki</string>
+    <string name="valid_js_api_version">Invalid Hirameki JS API version. Contact developer %s, or view wiki</string>
+    <string name="update_js_api_version">Hirameki JS API update available. Contact developer %s, or view wiki</string>
     <string name="reviewer_invalid_api_version_visit_documentation">View</string>
     <string name="anki_js_error_code">(Error Code: %d)</string>
 
@@ -240,7 +240,7 @@
 
     <!-- Deck Picker -->
     <string name="ankidroid_init_failed_webview_title">Fatal Error</string>
-    <string name="ankidroid_init_failed_webview">AnkiDroid relies on the System WebView which is unavailable. This can happen if the system is installing updates. Please try again in a few minutes.\n\n%s</string>
+    <string name="ankidroid_init_failed_webview">Hirameki relies on the System WebView which is unavailable. This can happen if the system is installing updates. Please try again in a few minutes.\n\n%s</string>
 
     <!-- A Menu item to change the Font Size (currently in the Note Editor) -->
     <string name="menu_font_size" maxLength="28">Font size</string>
@@ -271,8 +271,8 @@
         Opening AnkiDroid again will work correctly">Android backup in progress. Please try again</string>
 
 
-    <string name="create_shortcut_error_vivo" comment="iManager is an app on Vivo phones">You may need to use iManager to allow AnkiDroid to add shortcuts</string>
-    <string name="create_shortcut_failed" comment="home screen == launcher">Your home screen does not allow AnkiDroid to add shortcuts</string>
+    <string name="create_shortcut_error_vivo" comment="iManager is an app on Vivo phones">You may need to use iManager to allow Hirameki to add shortcuts</string>
+    <string name="create_shortcut_failed" comment="home screen == launcher">Your home screen does not allow Hirameki to add shortcuts</string>
     <string name="create_shortcut_error">Error adding shortcut: %s</string>
     <string name="note_editor_capitalize" comment="This is for a switch with a checkbox - on: enabled" maxLength="28">Capitalize sentences</string>
     <string name="menu_scroll_toolbar" comment="Checkbox stating whether note editor toolbar is scrollable or stacked. Checked: Scroll" maxLength="28">Scroll toolbar</string>
@@ -343,7 +343,7 @@
     <string name="intro_sync_from_ankiweb">Sync from AnkiWeb</string>
 
     <!-- IntentHandler -->
-    <string name="app_not_initialized_new">AnkiDroid is not initialized yet. Please open AnkiDroid and try again</string>
+    <string name="app_not_initialized_new">Hirameki is not initialized yet. Please open Hirameki and try again</string>
 
     <string name="already_logged_in">Already logged in</string>
 
