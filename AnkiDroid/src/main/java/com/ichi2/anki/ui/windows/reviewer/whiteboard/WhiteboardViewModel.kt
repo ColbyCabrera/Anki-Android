@@ -14,6 +14,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.ichi2.anki.ui.windows.reviewer.whiteboard
+
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.graphics.Path
@@ -81,8 +82,10 @@ class WhiteboardViewModel(
     val paths = MutableStateFlow<List<DrawingAction>>(emptyList())
     private val undoStack = MutableStateFlow<List<UndoableAction>>(emptyList())
     private val redoStack = MutableStateFlow<List<UndoableAction>>(emptyList())
-    val canUndo = undoStack.map { it.isNotEmpty() }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
-    val canRedo = redoStack.map { it.isNotEmpty() }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
+    val canUndo =
+        undoStack.map { it.isNotEmpty() }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
+    val canRedo =
+        redoStack.map { it.isNotEmpty() }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     // State for brushes
     val brushes = MutableStateFlow<List<BrushInfo>>(emptyList())
@@ -99,10 +102,13 @@ class WhiteboardViewModel(
     val isStylusOnlyMode = MutableStateFlow(false)
     val toolbarAlignment = MutableStateFlow(ToolbarAlignment.BOTTOM)
 
-    val eraserDisplayWidth =
-        combine(eraserMode, inkEraserStrokeWidth, strokeEraserStrokeWidth) { mode, inkWidth, strokeWidth ->
-            if (mode == EraserMode.INK) inkWidth else strokeWidth
-        }.stateIn(viewModelScope, SharingStarted.Eagerly, WhiteboardRepository.DEFAULT_ERASER_WIDTH)
+    val eraserDisplayWidth = combine(
+        eraserMode,
+        inkEraserStrokeWidth,
+        strokeEraserStrokeWidth
+    ) { mode, inkWidth, strokeWidth ->
+        if (mode == EraserMode.INK) inkWidth else strokeWidth
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, WhiteboardRepository.DEFAULT_ERASER_WIDTH)
 
     private val pathsErasedInCurrentGesture = mutableListOf<DrawingAction>()
     private var pathsBeforeGesture: List<DrawingAction> = emptyList()
@@ -132,13 +138,12 @@ class WhiteboardViewModel(
      */
     fun addPath(path: Path) {
         val isPixelEraser = isEraserActive.value && eraserMode.value == EraserMode.INK
-        val newAction =
-            DrawingAction(
-                path,
-                brushColor.value,
-                activeStrokeWidth.value,
-                isPixelEraser,
-            )
+        val newAction = DrawingAction(
+            path,
+            brushColor.value,
+            activeStrokeWidth.value,
+            isPixelEraser,
+        )
         paths.update { it + newAction }
         undoStack.update { it + AddAction(newAction) }
         redoStack.value = emptyList()
@@ -164,7 +169,8 @@ class WhiteboardViewModel(
         val remainingPaths = paths.value.toMutableList()
         var pathWasErased = false
 
-        val pathsToEvaluate = remainingPaths.filter { it !in pathsErasedInCurrentGesture && !it.isEraser }
+        val pathsToEvaluate =
+            remainingPaths.filter { it !in pathsErasedInCurrentGesture && !it.isEraser }
 
         for (action in pathsToEvaluate) {
             if (isPathIntersectingWithCircle(action, x, y, activeStrokeWidth.value / 2)) {
@@ -224,15 +230,14 @@ class WhiteboardViewModel(
      */
     fun endPathEraseGesture() {
         if (pathsErasedInCurrentGesture.isNotEmpty()) {
-            val removedWithIndices =
-                pathsErasedInCurrentGesture.mapNotNull { removedAction ->
-                    val index = pathsBeforeGesture.indexOf(removedAction)
-                    if (index != -1) {
-                        Pair(index, removedAction)
-                    } else {
-                        null
-                    }
+            val removedWithIndices = pathsErasedInCurrentGesture.mapNotNull { removedAction ->
+                val index = pathsBeforeGesture.indexOf(removedAction)
+                if (index != -1) {
+                    Pair(index, removedAction)
+                } else {
+                    null
                 }
+            }
             val action = RemoveAction(removedWithIndices)
             undoStack.update { it + action }
             redoStack.value = emptyList()
@@ -253,6 +258,7 @@ class WhiteboardViewModel(
             is AddAction -> {
                 paths.update { list -> list.filterNot { it === lastAction.added } }
             }
+
             is RemoveAction -> {
                 paths.update { currentPaths ->
                     val mutablePaths = currentPaths.toMutableList()
@@ -262,6 +268,7 @@ class WhiteboardViewModel(
                     mutablePaths
                 }
             }
+
             is ClearAction -> {
                 paths.update { it + lastAction.cleared }
             }
@@ -281,10 +288,12 @@ class WhiteboardViewModel(
             is AddAction -> {
                 paths.update { it + actionToRedo.added }
             }
+
             is RemoveAction -> {
                 val actionsToRemove = actionToRedo.removed.map { it.second }
                 paths.update { list -> list.filterNot { it in actionsToRemove } }
             }
+
             is ClearAction -> {
                 paths.value = emptyList()
             }
@@ -332,12 +341,11 @@ class WhiteboardViewModel(
         eraserMode.value = mode
         repository.eraserMode = mode
         if (isEraserActive.value) {
-            activeStrokeWidth.value =
-                if (mode == EraserMode.INK) {
-                    inkEraserStrokeWidth.value
-                } else {
-                    strokeEraserStrokeWidth.value
-                }
+            activeStrokeWidth.value = if (mode == EraserMode.INK) {
+                inkEraserStrokeWidth.value
+            } else {
+                strokeEraserStrokeWidth.value
+            }
         }
     }
 
@@ -409,6 +417,7 @@ class WhiteboardViewModel(
                 val newIndex = (oldActiveIndex - 1).coerceAtLeast(0)
                 setActiveBrush(newIndex)
             }
+
             oldActiveIndex > indexToRemove -> {
                 setActiveBrush(oldActiveIndex - 1)
             }
@@ -451,44 +460,54 @@ class WhiteboardViewModel(
 
         try {
             // Create a transparent bitmap
-            val bitmap = android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888)
-            val canvas = android.graphics.Canvas(bitmap)
+            val bitmap = android.graphics.Bitmap.createBitmap(
+                width,
+                height,
+                android.graphics.Bitmap.Config.ARGB_8888
+            )
+            try {
+                val canvas = android.graphics.Canvas(bitmap)
 
-            // Draw all paths
-            val paint = android.graphics.Paint().apply {
-                isAntiAlias = true
-                isDither = true
-                style = android.graphics.Paint.Style.STROKE
-                strokeJoin = android.graphics.Paint.Join.ROUND
-                strokeCap = android.graphics.Paint.Cap.ROUND
-            }
-
-            for (action in currentPaths) {
-                paint.strokeWidth = action.strokeWidth
-                if (action.isEraser) {
-                    paint.xfermode = android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.CLEAR)
-                } else {
-                    paint.xfermode = null
-                    paint.color = action.color
+                // Draw all paths
+                val paint = android.graphics.Paint().apply {
+                    isAntiAlias = true
+                    isDither = true
+                    style = android.graphics.Paint.Style.STROKE
+                    strokeJoin = android.graphics.Paint.Join.ROUND
+                    strokeCap = android.graphics.Paint.Cap.ROUND
                 }
-                canvas.drawPath(action.path, paint)
-            }
 
-            // Save to file
-            val saveDirectory = java.io.File(context.getExternalFilesDir(null), "Whiteboard")
-            if (!saveDirectory.exists()) {
-                saveDirectory.mkdirs()
-            }
-            val timestamp = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.getDefault()).format(java.util.Date())
-            val file = java.io.File(saveDirectory, "whiteboard_$timestamp.png")
+                for (action in currentPaths) {
+                    paint.strokeWidth = action.strokeWidth
+                    if (action.isEraser) {
+                        paint.xfermode =
+                            android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.CLEAR)
+                    } else {
+                        paint.xfermode = null
+                        paint.color = action.color
+                    }
+                    canvas.drawPath(action.path, paint)
+                }
 
-            file.outputStream().use { outputStream ->
-                bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, outputStream)
-            }
-            bitmap.recycle()
+                // Save to file
+                val saveDirectory = java.io.File(context.getExternalFilesDir(null), "Whiteboard")
+                if (!saveDirectory.exists()) {
+                    saveDirectory.mkdirs()
+                }
+                val timestamp =
+                    java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.getDefault())
+                        .format(java.util.Date())
+                val file = java.io.File(saveDirectory, "whiteboard_$timestamp.png")
 
-            Timber.i("Whiteboard saved to: %s", file.absolutePath)
-            return file
+                file.outputStream().use { outputStream ->
+                    bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, outputStream)
+                }
+
+                Timber.i("Whiteboard saved to: %s", file.absolutePath)
+                return file
+            } finally {
+                bitmap.recycle()
+            }
         } catch (e: Exception) {
             Timber.w(e, "Failed to save whiteboard")
             return null
