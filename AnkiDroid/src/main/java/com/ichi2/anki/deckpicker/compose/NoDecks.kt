@@ -102,14 +102,15 @@ fun NoDecks(
         ), label = "rotation"
     )
 
-    val morphShape = remember(animatableShift.value) {
-        MorphShape(
-            morph = Morph(
-                start = MaterialShapes.Pentagon, // Fallback to safe shape
-                end = MaterialShapes.Cookie12Sided, // Use consistent shape
-            ), percentage = animatableShift.value
+    // Create Morph once - this can be expensive due to path calculations
+    val morph = remember {
+        Morph(
+            start = MaterialShapes.Pentagon,
+            end = MaterialShapes.Cookie12Sided,
         )
     }
+
+    val morphShape = MorphShape(morph = morph, percentage = animatableShift.value)
 
     Box(
         modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
@@ -119,13 +120,13 @@ fun NoDecks(
             modifier = Modifier
                 .size(300.dp)
                 .scale(scaleX = 1.2f, scaleY = 1.2f) // Make it large
-            .graphicsLayer {
-                this.alpha = 0.1f // Subtle background
-                this.shadowElevation = 0f
-                this.shape = morphShape
-                this.clip = true
-                this.rotationZ = rotation
-            }
+                .graphicsLayer {
+                    this.alpha = 0.1f // Subtle background
+                    this.shadowElevation = 0f
+                    this.shape = morphShape
+                    this.clip = true
+                    this.rotationZ = rotation
+                }
                 .background(MaterialTheme.colorScheme.tertiaryContainer))
 
         // Content
