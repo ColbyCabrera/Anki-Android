@@ -60,79 +60,88 @@ import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun CongratsScreen(onDeckOptions: () -> Unit, onBack: () -> Unit, timeUntilNextDay: Long) {
+fun CongratsScreen(
+    onDeckOptions: () -> Unit,
+    onBack: () -> Unit,
+    timeUntilNextDay: Long,
+) {
     AnkiDroidTheme {
         Scaffold(topBar = {
             TopAppBar(
                 title = {
-                Text(
-                    text = stringResource(id = R.string.app_name),
-                    style = MaterialTheme.typography.displayMediumEmphasized
-                )
-            },
+                    Text(
+                        text = stringResource(id = R.string.app_name),
+                        style = MaterialTheme.typography.displayMediumEmphasized,
+                    )
+                },
                 subtitle = {},
                 titleHorizontalAlignment = Alignment.CenterHorizontally,
                 navigationIcon = {
                     FilledIconButton(
                         modifier = Modifier.padding(end = 8.dp),
                         onClick = onBack,
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        ),
+                        colors =
+                            IconButtonDefaults.filledIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            ),
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.arrow_back_24px),
-                            contentDescription = stringResource(R.string.back)
+                            contentDescription = stringResource(R.string.back),
                         )
                     }
-                }, actions = {
+                },
+                actions = {
                     FilledIconButton(
                         onClick = onDeckOptions,
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        ),
+                        colors =
+                            IconButtonDefaults.filledIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            ),
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.tune_24px),
-                            contentDescription = stringResource(R.string.deck_options)
+                            contentDescription = stringResource(R.string.deck_options),
                         )
                     }
-                })
+                },
+            )
         }, content = { contentPadding ->
             val scrollState = rememberScrollState()
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(contentPadding)
-                    .verticalScroll(scrollState)
-                    .padding(top = 48.dp, start = 16.dp, end = 16.dp),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(contentPadding)
+                        .verticalScroll(scrollState)
+                        .padding(top = 48.dp, start = 16.dp, end = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Text(
                     text = stringResource(id = R.string.studyoptions_congrats_finished),
                     style = MaterialTheme.typography.headlineMedium,
-
                 )
                 Text(
                     text = stringResource(R.string.daily_limit_reached),
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyLarge,
                 )
                 Text(
                     text = stringResource(R.string.study_more),
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyLarge,
                 )
 
                 Column(
-                    modifier = Modifier
-                        .padding(top = 32.dp)
-                        .clip(MaterialTheme.shapes.medium)
-                        .background(MaterialTheme.colorScheme.tertiaryContainer)
+                    modifier =
+                        Modifier
+                            .padding(top = 32.dp)
+                            .clip(MaterialTheme.shapes.medium)
+                            .background(MaterialTheme.colorScheme.tertiaryContainer),
                 ) {
                     var remainingTime by remember(timeUntilNextDay) {
                         mutableLongStateOf(
-                            timeUntilNextDay.coerceAtLeast(0L)
+                            timeUntilNextDay.coerceAtLeast(0L),
                         )
                     }
 
@@ -161,18 +170,23 @@ fun CongratsScreen(onDeckOptions: () -> Unit, onBack: () -> Unit, timeUntilNextD
                         Modifier
                             .fillMaxSize()
                             .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = String.format(
-                                Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds
-                            ),
+                            text =
+                                String.format(
+                                    Locale.getDefault(),
+                                    "%02d:%02d:%02d",
+                                    hours,
+                                    minutes,
+                                    seconds,
+                                ),
                             fontFamily = RobotoMono,
                             fontSize = 70.sp,
                             fontWeight = FontWeight.SemiBold,
                             lineHeight = 70.sp,
                             color = MaterialTheme.colorScheme.onTertiaryContainer,
-                            softWrap = false
+                            softWrap = false,
                         )
                     }
                 }

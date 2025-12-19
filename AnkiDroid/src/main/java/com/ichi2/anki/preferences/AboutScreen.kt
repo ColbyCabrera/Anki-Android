@@ -51,7 +51,7 @@ fun AboutScreen(
     onBackClick: () -> Unit,
     onLogoClick: () -> Unit,
     onCopyDebugClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
@@ -64,29 +64,31 @@ fun AboutScreen(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(androidx.appcompat.R.string.abc_action_bar_up_description)
+                            contentDescription = stringResource(androidx.appcompat.R.string.abc_action_bar_up_description),
                         )
                     }
                 },
-                scrollBehavior = scrollBehavior
+                scrollBehavior = scrollBehavior,
             )
-        }
+        },
     ) { innerPadding ->
         Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier =
+                Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             // Logo
             Image(
                 painter = painterResource(R.drawable.ic_dialog_info),
                 contentDescription = null,
-                modifier = Modifier
-                    .size(96.dp)
-                    .clickable(onClick = onLogoClick)
+                modifier =
+                    Modifier
+                        .size(96.dp)
+                        .clickable(onClick = onLogoClick),
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -96,7 +98,7 @@ fun AboutScreen(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 16.dp)
+                modifier = Modifier.padding(horizontal = 16.dp),
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -115,13 +117,14 @@ fun AboutScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
+                modifier =
+                    Modifier
+                        .fillMaxWidth(),
             ) {
                 // Contributors
                 SectionTitle(stringResource(R.string.contributors_title))
                 HtmlTextView(
-                    text = contributorsText
+                    text = contributorsText,
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -129,7 +132,7 @@ fun AboutScreen(
                 // License
                 SectionTitle(stringResource(R.string.license))
                 HtmlTextView(
-                    text = licenseText
+                    text = licenseText,
                 )
             }
 
@@ -152,7 +155,7 @@ private fun VersionText(text: String) {
             text = text,
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(vertical = 2.dp)
+            modifier = Modifier.padding(vertical = 2.dp),
         )
     }
 }
@@ -162,7 +165,7 @@ private fun SectionTitle(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.padding(bottom = 8.dp)
+        modifier = Modifier.padding(bottom = 8.dp),
     )
 }
 
@@ -181,7 +184,7 @@ private fun HtmlTextView(text: String) {
         update = {
             it.text = text.parseAsHtml()
         },
-        modifier = Modifier.padding(vertical = 4.dp)
+        modifier = Modifier.padding(vertical = 4.dp),
     )
 }
 
@@ -198,7 +201,7 @@ private fun AboutScreenPreview() {
             licenseText = "License...",
             onBackClick = {},
             onLogoClick = {},
-            onCopyDebugClick = {}
+            onCopyDebugClick = {},
         )
     }
 }

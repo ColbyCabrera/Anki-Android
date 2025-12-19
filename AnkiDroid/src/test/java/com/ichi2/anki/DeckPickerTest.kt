@@ -7,7 +7,6 @@ import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.Menu
-import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.edit
 import androidx.core.content.pm.ShortcutManagerCompat
@@ -525,7 +524,12 @@ class DeckPickerTest : RobolectricTest() {
                 updateDeckList()
                 advanceRobolectricLooper()
                 advanceRobolectricLooper()
-                assertEquals(1, viewModel.flowOfDeckList.first().data.size)
+                assertEquals(
+                    1,
+                    viewModel.flowOfDeckList
+                        .first()
+                        .data.size,
+                )
                 assertTrue(getColUnsafe.sched.haveBuried(), "Deck should have buried cards")
                 supportFragmentManager.selectContextMenuOption(DeckPickerContextMenuOption.UNBURY, deckId)
                 kotlin.test.assertFalse(getColUnsafe.sched.haveBuried())
@@ -545,7 +549,12 @@ class DeckPickerTest : RobolectricTest() {
                 assertTrue(allCardsInSameDeck(cardIds, deckId))
                 updateDeckList()
                 updateDeckList()
-                assertEquals(1, viewModel.flowOfDeckList.first().data.size)
+                assertEquals(
+                    1,
+                    viewModel.flowOfDeckList
+                        .first()
+                        .data.size,
+                )
 
                 supportFragmentManager.selectContextMenuOption(DeckPickerContextMenuOption.CUSTOM_STUDY_EMPTY, deckId) // Empty
 
@@ -575,38 +584,46 @@ class DeckPickerTest : RobolectricTest() {
     }
 
     @Test
-    fun checkIfReturnsTrueWhenAtLeastOneDeckIsDisplayed() = runTest {
-        addDeck("Hello World")
-        // Reason for using 2 as the number of decks -> This deck + Default deck
-        assertThat("Deck added", col.decks.count(), equalTo(2))
-        val deckPicker =
-            startActivityNormallyOpenCollectionWithIntent(
-                DeckPicker::class.java,
-                Intent(),
+    fun checkIfReturnsTrueWhenAtLeastOneDeckIsDisplayed() =
+        runTest {
+            addDeck("Hello World")
+            // Reason for using 2 as the number of decks -> This deck + Default deck
+            assertThat("Deck added", col.decks.count(), equalTo(2))
+            val deckPicker =
+                startActivityNormallyOpenCollectionWithIntent(
+                    DeckPicker::class.java,
+                    Intent(),
+                )
+            assertThat(
+                "Deck is being displayed",
+                deckPicker.viewModel.flowOfDeckList
+                    .first()
+                    .data
+                    .isNotEmpty(),
+                equalTo(true),
             )
-        assertThat(
-            "Deck is being displayed",
-            deckPicker.viewModel.flowOfDeckList.first().data.isNotEmpty(),
-            equalTo(true),
-        )
-    }
+        }
 
     @Test
-    fun checkIfReturnsFalseWhenNoDeckIsDisplayed() = runTest {
-        // Only default deck would be there in the count, hence using the value as 1.
-        // Default deck does not get displayed in the DeckPicker if the default deck is empty.
-        assertThat("Contains only default deck", col.decks.count(), equalTo(1))
-        val deckPicker =
-            startActivityNormallyOpenCollectionWithIntent(
-                DeckPicker::class.java,
-                Intent(),
+    fun checkIfReturnsFalseWhenNoDeckIsDisplayed() =
+        runTest {
+            // Only default deck would be there in the count, hence using the value as 1.
+            // Default deck does not get displayed in the DeckPicker if the default deck is empty.
+            assertThat("Contains only default deck", col.decks.count(), equalTo(1))
+            val deckPicker =
+                startActivityNormallyOpenCollectionWithIntent(
+                    DeckPicker::class.java,
+                    Intent(),
+                )
+            assertThat(
+                "No deck is being displayed",
+                deckPicker.viewModel.flowOfDeckList
+                    .first()
+                    .data
+                    .isEmpty(),
+                equalTo(false),
             )
-        assertThat(
-            "No deck is being displayed",
-            deckPicker.viewModel.flowOfDeckList.first().data.isEmpty(),
-            equalTo(false),
-        )
-    }
+        }
 
     @Test
     fun `unbury is usable - Issue 15050`() {

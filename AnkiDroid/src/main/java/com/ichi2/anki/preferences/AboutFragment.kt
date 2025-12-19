@@ -43,15 +43,14 @@ import java.util.Locale
 import net.ankiweb.rsdroid.BuildConfig as BackendBuildConfig
 
 class AboutFragment : Fragment() {
-
     private val secretClickListener by lazy { DevOptionsSecretClickListener(this) }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
+        savedInstanceState: Bundle?,
+    ): View =
+        ComposeView(requireContext()).apply {
             // Dispose of the Composition when the view's LifecycleOwner
             // is destroyed
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
@@ -61,7 +60,9 @@ class AboutFragment : Fragment() {
                         SimpleDateFormat(DateFormat.getBestDateTimePattern(Locale.getDefault(), "d MMM yyyy"))
                             .format(Date(BuildConfig.BUILD_TIME))
 
-                    val backendText = "(anki " + BackendBuildConfig.ANKI_DESKTOP_VERSION + " / " + BackendBuildConfig.ANKI_COMMIT_HASH.subSequence(0, 8) + ")"
+                    val backendText =
+                        "(anki " + BackendBuildConfig.ANKI_DESKTOP_VERSION + " / " + BackendBuildConfig.ANKI_COMMIT_HASH.subSequence(0, 8) +
+                            ")"
 
                     val fsrsText = Fsrs.displayVersion?.let { "($it)" } ?: ""
 
@@ -87,12 +88,11 @@ class AboutFragment : Fragment() {
                         licenseText = licenseText,
                         onBackClick = { requireActivity().onBackPressedDispatcher.onBackPressed() },
                         onLogoClick = { secretClickListener.onSecretClick() },
-                        onCopyDebugClick = { copyDebugInfo() }
+                        onCopyDebugClick = { copyDebugInfo() },
                     )
                 }
             }
         }
-    }
 
     /**
      * Copies debug info (from [DebugInfoService.getDebugInfo]) to the clipboard
@@ -133,7 +133,8 @@ class AboutFragment : Fragment() {
          * Shows a dialog to confirm if developer options should be enabled or not
          */
         fun showEnableDevOptionsDialog(context: Context) {
-            AlertDialog.Builder(context)
+            AlertDialog
+                .Builder(context)
                 .setTitle(R.string.dev_options_enabled_pref)
                 .setIcon(R.drawable.ic_warning)
                 .setMessage(R.string.dev_options_warning)

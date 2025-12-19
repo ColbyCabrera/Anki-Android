@@ -312,25 +312,23 @@ fun ExportDialogPreview() {
     var notesState by remember { mutableStateOf(NotesExportState()) }
     var cardsState by remember { mutableStateOf(CardsExportState()) }
 
-
-        ExportDialog(
-            exportFormats = exportFormats,
-            selectedFormat = selectedFormat,
-            onFormatSelected = { selectedFormat = it },
-            decks = decks,
-            selectedDeck = selectedDeck,
-            onDeckSelected = { selectedDeck = it },
-            decksLoading = decksLoading,
-            showDeckSelector = showDeckSelector,
-            showSelectedNotesLabel = showNotesLabel,
-            collectionState = collectionState,
-            onCollectionStateChanged = { collectionState = it },
-            apkgState = apkgState,
-            onApkgStateChanged = { apkgState = it },
-            notesState = notesState,
-            onNotesStateChanged = { notesState = it },
-            cardsState = cardsState,
-            onCardsStateChanged = { cardsState = it },
-        )
-
+    ExportDialog(
+        exportFormats = exportFormats,
+        selectedFormat = selectedFormat,
+        onFormatSelected = { selectedFormat = it },
+        decks = decks,
+        selectedDeck = selectedDeck,
+        onDeckSelected = { selectedDeck = it },
+        decksLoading = decksLoading,
+        showDeckSelector = showDeckSelector,
+        showSelectedNotesLabel = showNotesLabel,
+        collectionState = collectionState,
+        onCollectionStateChanged = { collectionState = it },
+        apkgState = apkgState,
+        onApkgStateChanged = { apkgState = it },
+        notesState = notesState,
+        onNotesStateChanged = { notesState = it },
+        cardsState = cardsState,
+        onCardsStateChanged = { cardsState = it },
+    )
 }

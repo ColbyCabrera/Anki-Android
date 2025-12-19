@@ -74,12 +74,16 @@ private val expandedDeckCardRadius = 14.dp
 private val collapsedDeckCardRadius = 70.dp
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
-internal class RoundedPolygonShape(private val polygon: RoundedPolygon) : Shape {
+internal class RoundedPolygonShape(
+    private val polygon: RoundedPolygon,
+) : Shape {
     private var lastSize: Size? = null
     private var lastOutline: Outline? = null
 
     override fun createOutline(
-        size: Size, layoutDirection: LayoutDirection, density: Density
+        size: Size,
+        layoutDirection: LayoutDirection,
+        density: Density,
     ): Outline {
         val cachedOutline = lastOutline
         if (size == lastSize && cachedOutline != null) {
@@ -122,25 +126,24 @@ fun DeckItem(
 
     val cornerRadius by animateDpAsState(
         targetValue = if (!deck.collapsed && deck.canCollapse) expandedDeckCardRadius else collapsedDeckCardRadius,
-        animationSpec = motionScheme.defaultEffectsSpec()
+        animationSpec = motionScheme.defaultEffectsSpec(),
     )
 
     val content = @Composable {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .then(
-                    if (deck.depth == 0) {
-                        Modifier.clip(RoundedCornerShape(cornerRadius))
-                    } else {
-                        Modifier
-                    }
-                )
-                .combinedClickable(
-                    onClick = { onDeckClick() },
-                    onLongClick = { isContextMenuOpen = true }
-                )
-                .padding(horizontal = 8.dp, vertical = if (deck.depth > 0) 4.dp else 0.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .then(
+                        if (deck.depth == 0) {
+                            Modifier.clip(RoundedCornerShape(cornerRadius))
+                        } else {
+                            Modifier
+                        },
+                    ).combinedClickable(
+                        onClick = { onDeckClick() },
+                        onLongClick = { isContextMenuOpen = true },
+                    ).padding(horizontal = 8.dp, vertical = if (deck.depth > 0) 4.dp else 0.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // Add space between the edge of the deck for the circle shape
@@ -149,19 +152,21 @@ fun DeckItem(
             }
             Text(
                 text = deck.lastDeckNameComponent,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(vertical = 12.dp, horizontal = 8.dp),
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .padding(vertical = 12.dp, horizontal = 8.dp),
                 style = if (deck.depth == 0) MaterialTheme.typography.titleLargeEmphasized else MaterialTheme.typography.titleMedium,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
             Row(
-                modifier = Modifier
-                    .height(70.dp)
-                    .padding(start = 4.dp),
+                modifier =
+                    Modifier
+                        .height(70.dp)
+                        .padding(start = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(2.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 CardCountsContainer(
                     cardCount = deck.newCount,
@@ -178,22 +183,28 @@ fun DeckItem(
                 )
             }
 
-
             if (deck.canCollapse) {
                 IconButton(
                     onClick = { onExpandClick() },
-                    modifier = Modifier
-                        .padding(start = 6.dp)
-                        .size(36.dp)
+                    modifier =
+                        Modifier
+                            .padding(start = 6.dp)
+                            .size(36.dp),
                 ) {
                     Icon(
-                        painter = painterResource(
-                            if (deck.collapsed) R.drawable.ic_expand_more_black_24dp else R.drawable.ic_expand_less_black_24dp,
-                        ),
-                        contentDescription = if (deck.collapsed) stringResource(R.string.expand) else stringResource(
-                            R.string.collapse
-                        ),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        painter =
+                            painterResource(
+                                if (deck.collapsed) R.drawable.ic_expand_more_black_24dp else R.drawable.ic_expand_less_black_24dp,
+                            ),
+                        contentDescription =
+                            if (deck.collapsed) {
+                                stringResource(R.string.expand)
+                            } else {
+                                stringResource(
+                                    R.string.collapse,
+                                )
+                            },
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             } else {
@@ -202,7 +213,7 @@ fun DeckItem(
             DropdownMenu(
                 expanded = isContextMenuOpen,
                 onDismissRequest = { isContextMenuOpen = false },
-                shape = MaterialTheme.shapes.large
+                shape = MaterialTheme.shapes.large,
             ) {
                 if (deck.filtered) {
                     DropdownMenuItem(
@@ -253,7 +264,6 @@ fun DeckItem(
         }
     }
 
-
     when (deck.depth) {
         0 -> {
             content()
@@ -261,15 +271,17 @@ fun DeckItem(
 
         1 -> {
             Card(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 2.dp, vertical = 2.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                ),
+                modifier =
+                    modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 2.dp, vertical = 2.dp),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    ),
                 shape = RoundedCornerShape(cornerRadius),
-                elevation = CardDefaults.cardElevation(0.dp)
+                elevation = CardDefaults.cardElevation(0.dp),
             ) {
                 content()
             }
@@ -277,18 +289,18 @@ fun DeckItem(
 
         else -> {
             Box(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .padding(top = 2.dp, bottom = 2.dp)
-                    .clip(RoundedCornerShape(cornerRadius))
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                modifier =
+                    modifier
+                        .fillMaxWidth()
+                        .padding(top = 2.dp, bottom = 2.dp)
+                        .clip(RoundedCornerShape(cornerRadius))
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh),
             ) {
                 content()
             }
         }
     }
 }
-
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -299,26 +311,27 @@ fun CardCountsContainer(
     containerColor: Color = MaterialTheme.colorScheme.secondary,
 ) {
     Box(
-        modifier = Modifier
-            .size(32.dp)
-            .clip(shape)
-            .background(containerColor)
-            .semantics(mergeDescendants = true) {
-                this.contentDescription = contentDescription
-            },
-        contentAlignment = Alignment.Center
+        modifier =
+            Modifier
+                .size(32.dp)
+                .clip(shape)
+                .background(containerColor)
+                .semantics(mergeDescendants = true) {
+                    this.contentDescription = contentDescription
+                },
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = cardCount.toString(),
             color = MaterialTheme.colorScheme.onSecondary,
             style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier
-                .padding(0.dp)
-                .basicMarquee()
+            modifier =
+                Modifier
+                    .padding(0.dp)
+                    .basicMarquee(),
         )
     }
 }
-
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Preview
@@ -327,6 +340,6 @@ fun CardCountsContainerPreview() {
     CardCountsContainer(
         cardCount = 10,
         contentDescription = "New: 10",
-        shape = CloverShape
+        shape = CloverShape,
     )
 }

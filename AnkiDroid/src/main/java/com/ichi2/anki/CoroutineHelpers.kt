@@ -191,11 +191,12 @@ suspend fun <T> FragmentActivity.runCatching(
                     if (!isFinishing && !isDestroyed && canProperlyShowSnackbars()) {
                         showSnackbar(it)
                     } else {
-                        val reasons = buildList {
-                            if (isFinishing) add("isFinishing")
-                            if (isDestroyed) add("isDestroyed")
-                            if (!canProperlyShowSnackbars()) add("!canProperlyShowSnackbars()")
-                        }
+                        val reasons =
+                            buildList {
+                                if (isFinishing) add("isFinishing")
+                                if (isDestroyed) add("isDestroyed")
+                                if (!canProperlyShowSnackbars()) add("!canProperlyShowSnackbars()")
+                            }
                         Timber.i("Cannot show snackbar due to: ${reasons.joinToString(", ")}")
                     }
                 }

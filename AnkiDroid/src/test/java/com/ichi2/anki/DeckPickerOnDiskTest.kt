@@ -64,35 +64,38 @@ class DeckPickerOnDiskTest : RobolectricTest() {
 
     @Test
     @Flaky(OS.WINDOWS)
-    fun version16CollectionOpens() = runTest {
-        try {
-            setupColV16()
-            InitialActivityWithConflictTest.setupForValid(targetContext)
-            val deckPicker: DeckPicker =
-                super.startActivityNormallyOpenCollectionWithIntent(
-                    DeckPickerEx::class.java,
-                    Intent(),
+    fun version16CollectionOpens() =
+        runTest {
+            try {
+                setupColV16()
+                InitialActivityWithConflictTest.setupForValid(targetContext)
+                val deckPicker: DeckPicker =
+                    super.startActivityNormallyOpenCollectionWithIntent(
+                        DeckPickerEx::class.java,
+                        Intent(),
+                    )
+                advanceRobolectricLooper()
+                assertThat(
+                    "Collection should now be open",
+                    CollectionManager.isOpenUnsafe(),
                 )
-            advanceRobolectricLooper()
-            assertThat(
-                "Collection should now be open",
-                CollectionManager.isOpenUnsafe(),
-            )
-            assertThat(
-                CollectionType.SCHEMA_V_16.isCollection(
-                    col,
-                ),
-                equalTo(true),
-            )
-            assertThat(
-                "Decks should be visible",
-               deckPicker.viewModel.flowOfDeckList.first().data.size,
-                equalTo(1),
-            )
-        } finally {
-            InitialActivityWithConflictTest.setupForDefault()
+                assertThat(
+                    CollectionType.SCHEMA_V_16.isCollection(
+                        col,
+                    ),
+                    equalTo(true),
+                )
+                assertThat(
+                    "Decks should be visible",
+                    deckPicker.viewModel.flowOfDeckList
+                        .first()
+                        .data.size,
+                    equalTo(1),
+                )
+            } finally {
+                InitialActivityWithConflictTest.setupForDefault()
+            }
         }
-    }
 
     @Ignore("needs refactoring")
     @Test
