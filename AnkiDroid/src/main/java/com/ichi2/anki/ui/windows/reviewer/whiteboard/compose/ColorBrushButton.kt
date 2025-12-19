@@ -25,8 +25,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -56,9 +57,13 @@ fun ColorBrushButton(
             .requiredSize(minTouchTargetSize)
             .clip(RoundedCornerShape(100))
             .background(backgroundColor)
+            .semantics(mergeDescendants = true) {
+                role = Role.Button
+                contentDescription =
+                    "Brush, width ${brush.width.roundToInt()}${if (isSelected) ", selected" else ""}"
+            }
             .combinedClickable(
-                onClick = { onClick(view) },
-                onLongClick = onLongClick
+                onClick = { onClick(view) }, onLongClick = onLongClick
             )
             .padding(4.dp)
     ) {
@@ -67,17 +72,13 @@ fun ColorBrushButton(
             verticalArrangement = Arrangement.Center
         ) {
             BrushPreviewIcon(
-                strokeColor = colorNormal,
-                fillColor = Color(brush.color),
-                size = 18.dp
+                strokeColor = colorNormal, fillColor = Color(brush.color), size = 18.dp
             )
 
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = brush.width.roundToInt().toString(),
-                color = colorNormal,
-                fontSize = 12.sp
+                text = brush.width.roundToInt().toString(), color = colorNormal, fontSize = 12.sp
             )
         }
     }
@@ -85,9 +86,7 @@ fun ColorBrushButton(
 
 @Composable
 fun BrushPreviewIcon(
-    strokeColor: Color,
-    fillColor: Color,
-    size: Dp
+    strokeColor: Color, fillColor: Color, size: Dp
 ) {
     Box(modifier = Modifier.size(size)) {
         Canvas(modifier = Modifier.fillMaxSize()) {
@@ -96,8 +95,7 @@ fun BrushPreviewIcon(
 
             // Outer Ring
             drawCircle(
-                color = strokeColor,
-                style = Stroke(width = strokeWidthPx),
+                color = strokeColor, style = Stroke(width = strokeWidthPx),
                 // Radius is from center. Size is 18dp.
                 // If stroke is center-aligned, we need to subtract half stroke width.
                 radius = (size.toPx() - strokeWidthPx) / 2
@@ -109,8 +107,7 @@ fun BrushPreviewIcon(
             val innerRadius = (size.toPx() / 2) - paddingPx
 
             drawCircle(
-                color = fillColor,
-                radius = innerRadius
+                color = fillColor, radius = innerRadius
             )
         }
     }
@@ -119,12 +116,9 @@ fun BrushPreviewIcon(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AddBrushButton(
-    onClick: () -> Unit,
-    colorNormal: Color,
-    tooltip: String,
-    minTouchTargetSize: Dp = 48.dp
+    onClick: () -> Unit, colorNormal: Color, tooltip: String, minTouchTargetSize: Dp = 48.dp
 ) {
-     Box(
+    Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .requiredSize(minTouchTargetSize)
@@ -132,8 +126,7 @@ fun AddBrushButton(
             .combinedClickable(
                 onClick = onClick
             )
-            .semantics { contentDescription = tooltip }
-    ) {
+            .semantics { contentDescription = tooltip }) {
         Icon(
             painter = painterResource(id = R.drawable.ic_add),
             contentDescription = null,
