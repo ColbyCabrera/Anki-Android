@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -61,7 +62,11 @@ fun ColorBrushButton(
             .semantics(mergeDescendants = true) {
                 role = Role.Button
                 contentDescription =
-                    "Brush, width ${brush.width.roundToInt()}${if (isSelected) ", selected" else ""}"
+                    stringResource(
+                        if (isSelected) R.string.brush_content_description_selected
+                        else R.string.brush_content_description,
+                        brush.width.roundToInt()
+                    )
             }
             .combinedClickable(
                 onClick = { onClick(view) }, onLongClick = onLongClick
