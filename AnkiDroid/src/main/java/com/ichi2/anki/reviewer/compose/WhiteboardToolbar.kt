@@ -37,8 +37,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -129,12 +127,11 @@ fun WhiteboardToolbar(
                 modifier = Modifier.horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(0.dp)
             ) {
-                val view = LocalView.current
                 brushes.forEachIndexed { index, brush ->
                     ColorBrushButton(
                         brush = brush,
                         isSelected = (index == activeBrushIndex && !isEraserActive),
-                        onClick = { onBrushClick(view, index) },
+                        onClick = { view -> onBrushClick(view, index) },
                         onLongClick = { onBrushLongClick(index) },
                         colorNormal = colorNormal,
                         colorHighlight = colorHighlight
