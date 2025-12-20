@@ -61,7 +61,15 @@
     <string name="stylus_mode" comment="Title of the menu item that toggles the whiteboard stylus mode" maxLength="28"
         >Stylus mode</string>
     <string name="cannot_remove_last_brush_message">The last brush may not be removed</string>
+    <!-- Color picker dialog labels -->
+    <string name="color_picker_hue">Hue</string>
+    <string name="color_picker_saturation">Saturation</string>
+    <string name="color_picker_brightness">Brightness</string>
+    <string name="color_picker_alpha">Opacity</string>
+    <string name="select_color_title">Select color</string>
+    <string name="whiteboard_width">Width</string>
     <string name="enable_whiteboard" maxLength="28">Enable whiteboard</string>
+
     <string name="disable_whiteboard">Disable whiteboard</string>
     <string name="show_whiteboard">Show whiteboard</string>
     <string name="enable_eraser" maxLength="28">Enable eraser</string>
@@ -218,6 +226,7 @@
     <!-- Whiteboard save image message in the Study Screen -->
     <string name="white_board_image_save_failed">Failed to save whiteboard image. %s</string>
     <string name="white_board_image_saved">Whiteboard image saved to %s</string>
+    <string name="white_board_no_content">No content to save</string>
 
     <string name="title_whiteboard_editor" maxLength="28">Whiteboard editor</string>
 

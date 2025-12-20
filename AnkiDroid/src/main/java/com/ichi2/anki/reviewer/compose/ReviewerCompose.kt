@@ -25,6 +25,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -48,6 +49,7 @@ import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroup
@@ -69,6 +71,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -78,6 +81,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -104,9 +108,9 @@ import com.ichi2.anki.noteeditor.NoteEditorLauncher
 import com.ichi2.anki.reviewer.ReviewerEffect
 import com.ichi2.anki.reviewer.ReviewerEvent
 import com.ichi2.anki.reviewer.ReviewerViewModel
+import com.ichi2.anki.ui.windows.reviewer.whiteboard.WhiteboardViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import com.ichi2.anki.Whiteboard as WhiteboardView
 
 private val ratings = listOf(
     "Again" to CardAnswer.Rating.AGAIN,
@@ -160,16 +164,36 @@ class InvertedTopCornersShape(private val cornerRadius: Dp) : Shape {
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun ReviewerContent(viewModel: ReviewerViewModel, whiteboard: WhiteboardView?) {
+fun ReviewerContent(
+    viewModel: ReviewerViewModel, whiteboardViewModel: WhiteboardViewModel?
+) {
     val state by viewModel.state.collectAsState()
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     var showBottomSheet by remember { mutableStateOf(false) }
+    var showColorPickerDialog by remember { mutableStateOf(false) }
+    var showBrushOptions by remember { mutableStateOf(false) }
+    var showEraserOptions by remember { mutableStateOf(false) }
+    var brushIndexToRemove by remember { mutableStateOf<Int?>(null) }
     var toolbarHeight by remember { mutableIntStateOf(0) }
+    var whiteboardToolbarHeight by remember { mutableIntStateOf(0) }
     val toolbarHeightDp = with(LocalDensity.current) { toolbarHeight.toDp() }
+    val whiteboardToolbarHeightDp = with(LocalDensity.current) { whiteboardToolbarHeight.toDp() }
+    val totalBottomPadding =
+        toolbarHeightDp + (if (state.isWhiteboardEnabled) whiteboardToolbarHeightDp + 8.dp else 0.dp)
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val layoutDirection = LocalLayoutDirection.current
+
+    // Load whiteboard state when first enabled
+    // Capture isDarkMode once to prevent re-loading state on system theme changes
+    val currentDarkMode = isSystemInDarkTheme()
+    val initialDarkMode by rememberSaveable { mutableStateOf(currentDarkMode) }
+    LaunchedEffect(state.isWhiteboardEnabled, whiteboardViewModel) {
+        if (state.isWhiteboardEnabled && whiteboardViewModel != null) {
+            whiteboardViewModel.loadState(initialDarkMode)
+        }
+    }
 
     val editCardLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -261,11 +285,46 @@ fun ReviewerContent(viewModel: ReviewerViewModel, whiteboard: WhiteboardView?) {
                         toolbarHeight = (toolbarHeightDp + 48.dp).value.toInt()
                     )
 
-                    Whiteboard(
-                        enabled = state.isWhiteboardEnabled,
-                        whiteboard = whiteboard,
-                        modifier = Modifier.padding(bottom = toolbarHeightDp + 48.dp)
-                    )
+                    // Whiteboard canvas
+                    if (state.isWhiteboardEnabled && whiteboardViewModel != null) {
+                        WhiteboardCanvas(
+                            viewModel = whiteboardViewModel,
+                            modifier = Modifier.padding(bottom = totalBottomPadding + 48.dp)
+                        )
+                    }
+
+                    // Whiteboard toolbar (shown above answer buttons when whiteboard is enabled)
+                    if (state.isWhiteboardEnabled && whiteboardViewModel != null) {
+                        WhiteboardToolbar(
+                            viewModel = whiteboardViewModel,
+                            onBrushClick = { _, index ->
+                                if (whiteboardViewModel.activeBrushIndex.value == index && !whiteboardViewModel.isEraserActive.value) {
+                                    showBrushOptions = true
+                                } else {
+                                    whiteboardViewModel.setActiveBrush(index)
+                                }
+                            },
+                            onBrushLongClick = { index ->
+                                if (whiteboardViewModel.brushes.value.size > 1) {
+                                    brushIndexToRemove = index
+                                }
+                            },
+                            onAddBrush = {
+                                showColorPickerDialog = true
+                            },
+                            onEraserClick = {
+                                if (whiteboardViewModel.isEraserActive.value) {
+                                    showEraserOptions = true
+                                } else {
+                                    whiteboardViewModel.enableEraser()
+                                }
+                            },
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .offset(y = -ScreenOffset - toolbarHeightDp - 8.dp)
+                                .padding(bottom = paddingValues.calculateBottomPadding())
+                                .onSizeChanged { whiteboardToolbarHeight = it.height })
+                    }
 
                     HorizontalFloatingToolbar(
                         modifier = Modifier
@@ -429,6 +488,53 @@ fun ReviewerContent(viewModel: ReviewerViewModel, whiteboard: WhiteboardView?) {
                         })
                 }
             }
+        }
+
+        // Color picker dialog for adding new brush
+        if (showColorPickerDialog && whiteboardViewModel != null) {
+            ColorPickerDialog(
+                defaultColor = whiteboardViewModel.brushColor.value,
+                showAlpha = true,
+                onColorPicked = { color ->
+                    whiteboardViewModel.addBrush(color)
+                    showColorPickerDialog = false
+                },
+                onDismiss = { showColorPickerDialog = false })
+        }
+
+        // Brush removal confirmation dialog
+        if (brushIndexToRemove != null && whiteboardViewModel != null) {
+            AlertDialog(
+                onDismissRequest = { brushIndexToRemove = null },
+                text = { Text(stringResource(R.string.whiteboard_remove_brush_message)) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            brushIndexToRemove?.let { index ->
+                                whiteboardViewModel.removeBrush(index)
+                            }
+                            brushIndexToRemove = null
+                        }) {
+                        Text(stringResource(R.string.dialog_remove))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { brushIndexToRemove = null }) {
+                        Text(stringResource(R.string.dialog_cancel))
+                    }
+                })
+        }
+
+        // Brush options dialog
+        if (showBrushOptions && whiteboardViewModel != null) {
+            BrushOptionsDialog(
+                viewModel = whiteboardViewModel, onDismissRequest = { showBrushOptions = false })
+        }
+
+        // Eraser options dialog
+        if (showEraserOptions && whiteboardViewModel != null) {
+            EraserOptionsDialog(
+                viewModel = whiteboardViewModel, onDismissRequest = { showEraserOptions = false })
         }
     }
 }

@@ -35,17 +35,22 @@ import androidx.appcompat.widget.PopupMenu
 import androidx.appcompat.widget.ThemeUtils
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
-import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.slider.Slider
 import com.ichi2.anki.AnkiDroidApp
 import com.ichi2.anki.R
 import com.ichi2.anki.snackbar.showSnackbar
-import com.ichi2.compat.setTooltipTextCompat
+import com.ichi2.anki.ui.windows.reviewer.whiteboard.compose.AddBrushButton
+import com.ichi2.anki.ui.windows.reviewer.whiteboard.compose.ColorBrushButton
 import com.ichi2.themes.Themes
 import com.ichi2.utils.dp
 import com.ichi2.utils.increaseHorizontalPaddingOfMenuIcons
@@ -191,83 +196,80 @@ class WhiteboardFragment :
     }
 
     private fun updateBrushToolbar(brushesInfo: List<BrushInfo>) {
-        brushToolbarContainerHorizontal.removeAllViews()
-        brushToolbarContainerVertical.removeAllViews()
-        brushesInfo.forEachIndexed { index, brush ->
-            val inflater = LayoutInflater.from(requireContext())
-            val buttonHorizontal = inflater.inflate(R.layout.button_color_brush, brushToolbarContainerHorizontal, false) as MaterialButton
-            configureBrushButton(buttonHorizontal, brush, index)
-            brushToolbarContainerHorizontal.addView(buttonHorizontal)
+        val activeIndex = viewModel.activeBrushIndex.value
+        val isEraserActive = viewModel.isEraserActive.value
 
-            val buttonVertical = inflater.inflate(R.layout.button_color_brush, brushToolbarContainerVertical, false) as MaterialButton
-            configureBrushButton(buttonVertical, brush, index)
-            brushToolbarContainerVertical.addView(buttonVertical)
+        val colorNormal = Color(ThemeUtils.getThemeAttrColor(requireContext(), androidx.appcompat.R.attr.colorControlNormal))
+        val colorHighlight = Color(ThemeUtils.getThemeAttrColor(requireContext(), androidx.appcompat.R.attr.colorControlHighlight))
+
+        fun setupComposeView(container: LinearLayout, isHorizontal: Boolean) {
+            container.removeAllViews()
+            container.addView(
+                ComposeView(requireContext()).apply {
+                    setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+                    setContent {
+                        if (isHorizontal) {
+                            Row {
+                                RenderBrushes(brushesInfo, activeIndex, isEraserActive, colorNormal, colorHighlight)
+                            }
+                        } else {
+                            Column {
+                                RenderBrushes(brushesInfo, activeIndex, isEraserActive, colorNormal, colorHighlight)
+                            }
+                        }
+                    }
+                }
+            )
         }
 
-        fun addBrushButton() =
-            MaterialButton(requireContext(), null, com.google.android.material.R.attr.materialIconButtonStyle).apply {
-                setIconResource(R.drawable.ic_add)
-                setTooltipTextCompat(getString(R.string.add_brush))
-                val color = ThemeUtils.getThemeAttrColor(requireContext(), androidx.appcompat.R.attr.colorControlNormal)
-                iconTint = ColorStateList.valueOf(color)
-                setOnClickListener { showAddColorDialog() }
-            }
-        brushToolbarContainerHorizontal.addView(addBrushButton())
-        brushToolbarContainerVertical.addView(addBrushButton())
+        setupComposeView(brushToolbarContainerHorizontal, true)
+        setupComposeView(brushToolbarContainerVertical, false)
     }
 
-    /**
-     * Configures a brush button's properties and listeners.
-     */
-    private fun configureBrushButton(
-        button: MaterialButton,
-        brush: BrushInfo,
-        index: Int,
+    @androidx.compose.runtime.Composable
+    private fun RenderBrushes(
+        brushesInfo: List<BrushInfo>,
+        activeIndex: Int,
+        isEraserActive: Boolean,
+        colorNormal: Color,
+        colorHighlight: Color
     ) {
-        button.isCheckable = true
-        button.text = brush.width.roundToInt().toString()
-        button.tag = index
-        button.iconTint = null
-
-        (button.icon?.mutate() as? LayerDrawable)?.let { layerDrawable ->
-            (layerDrawable.findDrawableByLayerId(R.id.brush_preview_fill) as? GradientDrawable)?.setColor(brush.color)
+        brushesInfo.forEachIndexed { index, brush ->
+            ColorBrushButton(
+                brush = brush,
+                isSelected = (index == activeIndex && !isEraserActive),
+                onClick = { view ->
+                    if (viewModel.activeBrushIndex.value == index && !viewModel.isEraserActive.value) {
+                        showStrokeWidthPopup(view, index)
+                    } else {
+                        viewModel.setActiveBrush(index)
+                    }
+                },
+                onLongClick = {
+                    if (viewModel.brushes.value.size > 1) {
+                        showRemoveColorDialog(index)
+                    } else {
+                        Timber.i("Tried to remove the last brush of the whiteboard")
+                        showSnackbar(R.string.cannot_remove_last_brush_message)
+                    }
+                },
+                colorNormal = colorNormal,
+                colorHighlight = colorHighlight
+            )
         }
-
-        button.setOnClickListener {
-            if (viewModel.activeBrushIndex.value == index && !viewModel.isEraserActive.value) {
-                button.isChecked = true
-                showStrokeWidthPopup(it, index)
-            } else {
-                viewModel.setActiveBrush(index)
-            }
-        }
-
-        button.setOnLongClickListener {
-            if (viewModel.brushes.value.size > 1) {
-                showRemoveColorDialog(index)
-            } else {
-                Timber.i("Tried to remove the last brush of the whiteboard")
-                showSnackbar(R.string.cannot_remove_last_brush_message)
-            }
-            true
-        }
+        AddBrushButton(
+            onClick = { showAddColorDialog() },
+            colorNormal = colorNormal,
+            tooltip = getString(R.string.add_brush)
+        )
     }
 
     /**
      * Updates the selection state of the eraser and brush buttons.
      */
     private fun updateToolbarSelection() {
-        val activeIndex = viewModel.activeBrushIndex.value
-        val isEraserActive = viewModel.isEraserActive.value
-
-        val configureSelection: (View) -> Unit = { view ->
-            val button = view as MaterialButton
-            val buttonIndex = button.tag as? Int
-            button.isChecked = (buttonIndex == activeIndex && !isEraserActive)
-        }
-
-        brushToolbarContainerHorizontal.children.forEach(configureSelection)
-        brushToolbarContainerVertical.children.forEach(configureSelection)
+        // Recreate brush toolbar when selection or eraser state changes; acceptable for small lists
+        updateBrushToolbar(viewModel.brushes.value)
     }
 
     /**
@@ -298,7 +300,7 @@ class WhiteboardFragment :
         AlertDialog
             .Builder(requireContext())
             .setMessage(R.string.whiteboard_remove_brush_message)
-            .setPositiveButton(R.string.dialog_remove) { dialog, _ ->
+            .setPositiveButton(R.string.dialog_remove) { _, _ ->
                 Timber.i("Removed brush of index %d", index)
                 viewModel.removeBrush(index)
             }.setNegativeButton(R.string.dialog_cancel, null)

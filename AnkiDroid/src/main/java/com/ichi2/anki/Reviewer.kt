@@ -108,6 +108,8 @@ import com.ichi2.anki.snackbar.showSnackbar
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import com.ichi2.anki.ui.internationalization.toSentenceCase
 import com.ichi2.anki.ui.windows.reviewer.ReviewerFragment
+import com.ichi2.anki.ui.windows.reviewer.whiteboard.WhiteboardRepository
+import com.ichi2.anki.ui.windows.reviewer.whiteboard.WhiteboardViewModel
 import com.ichi2.anki.utils.ext.flag
 import com.ichi2.anki.utils.ext.setUserFlagForCards
 import com.ichi2.anki.utils.ext.showDialogFragment
@@ -144,7 +146,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     private var showWhiteboard = true
     private var prefFullscreenReview = false
     private var toggleStylus = false
-    private var isEraserMode = false
 
     // A flag that determines if the SchedulingStates in CurrentQueueState are
     // safe to persist in the database when answering a card. This is used to
@@ -164,10 +165,13 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
     @get:CheckResult
     @get:VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    @Deprecated("Use whiteboardViewModel instead", ReplaceWith("whiteboardViewModel"))
     var whiteboard: Whiteboard? = null
         protected set
 
-    private val whiteboardState = mutableStateOf<Whiteboard?>(null)
+    private val whiteboardViewModel: WhiteboardViewModel by viewModels {
+        WhiteboardViewModel.factory(sharedPrefs())
+    }
 
     // Record Audio
     private var isMicToolBarVisible = false
@@ -214,7 +218,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
         composeView.setContent {
             AnkiDroidTheme {
-                com.ichi2.anki.reviewer.compose.ReviewerContent(viewModel, whiteboardState.value)
+                com.ichi2.anki.reviewer.compose.ReviewerContent(viewModel, whiteboardViewModel)
             }
         }
 
@@ -384,19 +388,18 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
                 // DEFECT: Slight inefficiency here, as we set the database using these methods
                 val whiteboardVisibility = withContext(Dispatchers.IO) {
                     MetaDB.getWhiteboardVisibility(
-                        this@Reviewer,
-                        parentDid
+                        this@Reviewer, parentDid
                     )
                 }
                 setWhiteboardEnabledState(true)
                 setWhiteboardVisibility(whiteboardVisibility)
                 toggleStylus = withContext(Dispatchers.IO) {
                     MetaDB.getWhiteboardStylusState(
-                        this@Reviewer,
-                        parentDid
+                        this@Reviewer, parentDid
                     )
                 }
-                whiteboard!!.toggleStylus = toggleStylus
+                // Stylus mode is now managed in WhiteboardViewModel
+                // which loads from SharedPreferences
             }
 
             val isMicToolbarEnabled =
@@ -443,8 +446,8 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
             R.id.action_undo -> {
                 Timber.i("Reviewer:: Undo button pressed")
-                if (showWhiteboard && whiteboard != null && !whiteboard!!.undoEmpty()) {
-                    whiteboard!!.undo()
+                if (showWhiteboard && whiteboardViewModel.canUndo.value) {
+                    whiteboardViewModel.undo()
                 } else {
                     undo()
                 }
@@ -508,20 +511,34 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
             R.id.action_save_whiteboard -> {
                 Timber.i("Reviewer:: Save whiteboard button pressed")
-                if (whiteboard != null) {
+                lifecycleScope.launch {
+                    val displayMetrics = resources.displayMetrics
                     try {
-                        val savedWhiteboardFileName =
-                            whiteboard!!.saveWhiteboard(TimeManager.time).path
-                        showSnackbar(
-                            getString(
-                                R.string.white_board_image_saved, savedWhiteboardFileName
-                            ), Snackbar.LENGTH_SHORT
+                        val savedFile = whiteboardViewModel.saveToFile(
+                            this@Reviewer, displayMetrics.widthPixels, displayMetrics.heightPixels
                         )
+                        if (savedFile != null) {
+                            showSnackbar(
+                                getString(R.string.white_board_image_saved, savedFile.path),
+                                Snackbar.LENGTH_SHORT
+                            )
+                        } else {
+                            val errorReason = if (whiteboardViewModel.paths.value.isEmpty()) {
+                                getString(R.string.white_board_no_content)
+                            } else {
+                                getString(R.string.something_wrong)
+                            }
+                            showSnackbar(
+                                getString(R.string.white_board_image_save_failed, errorReason),
+                                Snackbar.LENGTH_SHORT
+                            )
+                        }
                     } catch (e: Exception) {
-                        Timber.w(e)
+                        Timber.e(e, "Unexpected error saving whiteboard")
                         showSnackbar(
                             getString(
-                                R.string.white_board_image_save_failed, e.localizedMessage
+                                R.string.white_board_image_save_failed,
+                                e.localizedMessage ?: getString(R.string.something_wrong)
                             ), Snackbar.LENGTH_SHORT
                         )
                     }
@@ -545,12 +562,8 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
             }
 
             R.id.action_toggle_stylus -> { // toggle stylus mode
-                Timber.i("Reviewer:: Stylus set to %b", !toggleStylus)
-                toggleStylus = !toggleStylus
-                whiteboard!!.toggleStylus = toggleStylus
-                lifecycleScope.launch(Dispatchers.IO) {
-                    MetaDB.storeWhiteboardStylusState(this@Reviewer, parentDid, toggleStylus)
-                }
+                Timber.i("Reviewer:: Stylus set to %b", !whiteboardViewModel.isStylusOnlyMode.value)
+                whiteboardViewModel.toggleStylusOnlyMode()
                 refreshActionBar()
             }
 
@@ -609,69 +622,26 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     }
 
     public override fun toggleEraser() {
-        val whiteboardIsShownAndHasStrokes = showWhiteboard && whiteboard?.undoEmpty() == false
-        if (whiteboardIsShownAndHasStrokes) {
-            Timber.i("Reviewer:: Whiteboard eraser mode set to %b", !isEraserMode)
-            isEraserMode = !isEraserMode
-            whiteboard?.reviewerEraserModeIsToggledOn = isEraserMode
-
-            refreshActionBar() // Switch the eraser item's title
-
-            // Keep ripple effect on the eraser button after the eraser mode is activated.
-            toolbar.post {
-                val eraserButtonView = toolbar.findViewById<View>(R.id.action_toggle_eraser)
-                eraserButtonView?.apply {
-                    isPressed = isEraserMode
-                    isActivated = isEraserMode
-                }
-            }
-
-            if (isEraserMode) {
-                startMonitoringEraserButtonRipple()
-                showSnackbar(getString(R.string.white_board_eraser_enabled), 1000)
-            } else {
-                stopMonitoringEraserButtonRipple()
+        if (showWhiteboard && prefWhiteboard) {
+            val isCurrentlyErasing = whiteboardViewModel.isEraserActive.value
+            if (isCurrentlyErasing) {
+                // Switch back to the last active brush
+                whiteboardViewModel.setActiveBrush(whiteboardViewModel.activeBrushIndex.value)
+                Timber.i("Reviewer:: Whiteboard eraser mode disabled")
                 showSnackbar(getString(R.string.white_board_eraser_disabled), 1000)
+            } else {
+                whiteboardViewModel.enableEraser()
+                Timber.i("Reviewer:: Whiteboard eraser mode enabled")
+                showSnackbar(getString(R.string.white_board_eraser_enabled), 1000)
             }
+            refreshActionBar()
         }
     }
 
     private val handler = Handler(Looper.getMainLooper())
 
-    /**
-     * The eraser button ripple should be shown while the eraser mode is activated,
-     * but the ripple gets removed after some timings
-     * (e.g., when the three dot menu opens,
-     *        when the side drawer opens & closes,
-     *        when the button is long-pressed)
-     * In such timings, this function re-press the button to re-display the ripple.
-     */
-    private val checkEraserButtonRippleRunnable = object : Runnable {
-        override fun run() {
-            val eraserButtonView = toolbar.findViewById<View>(R.id.action_toggle_eraser)
-            if (isEraserMode && eraserButtonView?.isPressed == false) {
-                Timber.d("eraser button ripple monitoring: unpressed status detected, and re-pressed")
-                eraserButtonView.isPressed = true
-                eraserButtonView.isActivated = true
-            }
-            handler.postDelayed(this, 100) // monitor every 100ms
-        }
-    }
-
-    private fun startMonitoringEraserButtonRipple() {
-        Timber.d("eraser button ripple monitoring: started")
-        handler.post(checkEraserButtonRippleRunnable)
-    }
-
-    private fun stopMonitoringEraserButtonRipple() {
-        Timber.d("eraser button ripple monitoring: stopped")
-        handler.removeCallbacks(checkEraserButtonRippleRunnable)
-    }
-
     public override fun clearWhiteboard() {
-        if (whiteboard != null) {
-            whiteboard!!.clear()
-        }
+        whiteboardViewModel.clearCanvas()
     }
 
     public override fun changeWhiteboardPenColor() {
@@ -708,17 +678,10 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
     override fun updateForNewCard() {
         super.updateForNewCard()
-        if (prefWhiteboard && whiteboard != null) {
-            whiteboard!!.clear()
+        if (prefWhiteboard) {
+            whiteboardViewModel.reset()
         }
         audioRecordingController?.updateUIForNewCard()
-    }
-
-    override fun unblockControls() {
-        if (prefWhiteboard && whiteboard != null) {
-            whiteboard!!.isEnabled = true
-        }
-        super.unblockControls()
     }
 
     override fun closeReviewer(result: Int) {
@@ -885,14 +848,14 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         // Undo button
         @DrawableRes val undoIconId: Int
         val undoEnabled: Boolean
-        val whiteboardIsShownAndHasStrokes = showWhiteboard && whiteboard?.undoEmpty() == false
+        val whiteboardIsShownAndHasStrokes = showWhiteboard && whiteboardViewModel.canUndo.value
         if (whiteboardIsShownAndHasStrokes) {
             undoIconId = R.drawable.ic_arrow_u_left_top
             undoEnabled = true
         } else {
             undoIconId = R.drawable.ic_undo_white
             undoEnabled = colIsOpenUnsafe() && getColUnsafe.undoAvailable()
-            this.isEraserMode = false
+            // Eraser state is now managed by WhiteboardViewModel
         }
         val alphaUndo = Themes.ALPHA_ICON_ENABLED_LIGHT
         val undoIcon = menu.findItem(R.id.action_undo)
@@ -910,9 +873,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
                     toggleEraserIcon.isVisible = true
                 }
             } else {
-                // Disable whiteboard eraser action button
-                isEraserMode = false
-                whiteboard?.reviewerEraserModeIsToggledOn = false
+                // Disable whiteboard eraser action button (eraser state is managed by ViewModel)
 
                 if (getColUnsafe.undoAvailable()) {
                     // set the undo title to a named action ('Undo Answer Card' etc...)
@@ -993,14 +954,14 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
                 whiteboardColorPaletteIcon.alpha = Themes.ALPHA_ICON_ENABLED_LIGHT
                 // eraser icon
                 toggleEraserIcon.icon = eraserIcon
-                if (isEraserMode) {
+                if (whiteboardViewModel.isEraserActive.value) {
                     toggleEraserIcon.setTitle(R.string.disable_eraser)
                 } else { // default
                     toggleEraserIcon.setTitle(R.string.enable_eraser)
                 }
                 // whiteboard editor icon
                 changePenColorIcon.icon = whiteboardColorPaletteIcon
-                if (toggleStylus) {
+                if (whiteboardViewModel.isStylusOnlyMode.value) {
                     toggleStylusIcon.setTitle(R.string.disable_stylus)
                     stylusIcon.alpha = Themes.ALPHA_ICON_ENABLED_LIGHT
                 } else {
@@ -1131,8 +1092,8 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
     override fun fillFlashcard() {
         super.fillFlashcard()
-        if (!isDisplayingAnswer && showWhiteboard && whiteboard != null) {
-            whiteboard!!.clear()
+        if (!isDisplayingAnswer && showWhiteboard) {
+            whiteboardViewModel.clearCanvas()
         }
     }
 
@@ -1419,8 +1380,8 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
     override fun onCardEdited(card: Card) {
         super.onCardEdited(card)
-        if (prefWhiteboard && whiteboard != null) {
-            whiteboard!!.clear()
+        if (prefWhiteboard) {
+            whiteboardViewModel.clearCanvas()
         }
         if (!isDisplayingAnswer) {
             // Editing the card may reuse mCurrentCard. If so, the scheduler won't call startTimer() to reset the timer
@@ -1449,9 +1410,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         lifecycleScope.launch(Dispatchers.IO) {
             MetaDB.storeWhiteboardState(this@Reviewer, parentDid, state)
         }
-        if (state && whiteboard == null) {
-            createWhiteboard()
-        }
+        // Whiteboard is now managed by WhiteboardViewModel and Compose UI
     }
 
     @Suppress("deprecation") // #9332: UI Visibility -> Insets
@@ -1558,42 +1517,14 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         return ByteArray(0)
     }
 
+    @Deprecated(
+        "Whiteboard is now managed by WhiteboardViewModel and Compose UI",
+        level = DeprecationLevel.WARNING
+    )
     private fun createWhiteboard() {
-        val whiteboard = createInstance(this, true, this).also { whiteboard ->
-            this.whiteboard = whiteboard
-            this.whiteboardState.value = whiteboard
-        }
-
-        // We use the pen color of the selected deck at the time the whiteboard is enabled.
-        // This is how all other whiteboard settings are
-        lifecycleScope.launch {
-            val whiteboardPenColor = withContext(Dispatchers.IO) {
-                MetaDB.getWhiteboardPenColor(this@Reviewer, parentDid).fromPreferences()
-            }
-            if (whiteboardPenColor != null) {
-                whiteboard.penColor = whiteboardPenColor
-            }
-        }
-        whiteboard.onPaintColorChangeListener = OnPaintColorChangeListener { color ->
-            lifecycleScope.launch(Dispatchers.IO) {
-                MetaDB.storeWhiteboardPenColor(
-                    this@Reviewer, parentDid, !currentTheme.isNightMode, color
-                )
-            }
-        }
-        whiteboard.setOnTouchListener { v: View, event: MotionEvent? ->
-            if (event == null) return@setOnTouchListener false
-            // If the whiteboard is currently drawing, and triggers the system UI to show, we want to continue drawing.
-            if (!whiteboard.isCurrentlyDrawing && (!showWhiteboard || (prefFullscreenReview && isImmersiveSystemUiVisible(
-                    this@Reviewer
-                )))
-            ) {
-                // Bypass whiteboard listener when it's hidden or fullscreen immersive mode is temporarily suspended
-                v.performClick()
-                return@setOnTouchListener gestureDetector!!.onTouchEvent(event)
-            }
-            whiteboard.handleTouchEvent(event)
-        }
+        // Old whiteboard creation is no longer needed
+        // The whiteboard is now rendered via WhiteboardCanvas composable
+        // and state is managed by WhiteboardViewModel
     }
 
     // Show or hide the whiteboard
@@ -1602,11 +1533,11 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         lifecycleScope.launch(Dispatchers.IO) {
             MetaDB.storeWhiteboardVisibility(this@Reviewer, parentDid, state)
         }
+        // Whiteboard visibility is now managed by Compose UI
+        // The drawer swipe is still controlled here for backwards compatibility
         if (state) {
-            whiteboard!!.visibility = View.VISIBLE
             disableDrawerSwipe()
         } else {
-            whiteboard!!.visibility = View.GONE
             if (!hasDrawerSwipeConflicts) {
                 enableDrawerSwipe()
             }
