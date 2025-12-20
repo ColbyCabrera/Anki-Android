@@ -81,6 +81,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -185,10 +186,12 @@ fun ReviewerContent(
     val layoutDirection = LocalLayoutDirection.current
 
     // Load whiteboard state when first enabled
-    val isDarkMode = isSystemInDarkTheme()
-    LaunchedEffect(state.isWhiteboardEnabled, whiteboardViewModel, isDarkMode) {
+    // Capture isDarkMode once to prevent re-loading state on system theme changes
+    val currentDarkMode = isSystemInDarkTheme()
+    val initialDarkMode by rememberSaveable { mutableStateOf(currentDarkMode) }
+    LaunchedEffect(state.isWhiteboardEnabled, whiteboardViewModel) {
         if (state.isWhiteboardEnabled && whiteboardViewModel != null) {
-            whiteboardViewModel.loadState(isDarkMode)
+            whiteboardViewModel.loadState(initialDarkMode)
         }
     }
 
