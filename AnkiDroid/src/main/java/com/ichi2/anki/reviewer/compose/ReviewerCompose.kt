@@ -162,18 +162,19 @@ class InvertedTopCornersShape(private val cornerRadius: Dp) : Shape {
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ReviewerContent(
-    viewModel: ReviewerViewModel,
-    whiteboardViewModel: WhiteboardViewModel?
+    viewModel: ReviewerViewModel, whiteboardViewModel: WhiteboardViewModel?
 ) {
     val state by viewModel.state.collectAsState()
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     var showBottomSheet by remember { mutableStateOf(false) }
+    var showColorPickerDialog by remember { mutableStateOf(false) }
     var toolbarHeight by remember { mutableIntStateOf(0) }
     var whiteboardToolbarHeight by remember { mutableIntStateOf(0) }
     val toolbarHeightDp = with(LocalDensity.current) { toolbarHeight.toDp() }
     val whiteboardToolbarHeightDp = with(LocalDensity.current) { whiteboardToolbarHeight.toDp() }
-    val totalBottomPadding = toolbarHeightDp + (if (state.isWhiteboardEnabled) whiteboardToolbarHeightDp + 8.dp else 0.dp)
+    val totalBottomPadding =
+        toolbarHeightDp + (if (state.isWhiteboardEnabled) whiteboardToolbarHeightDp + 8.dp else 0.dp)
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val layoutDirection = LocalLayoutDirection.current
@@ -297,8 +298,7 @@ fun ReviewerContent(
                                 }
                             },
                             onAddBrush = {
-                                // TODO: Show color picker dialog
-                                whiteboardViewModel.addBrush(android.graphics.Color.RED)
+                                showColorPickerDialog = true
                             },
                             onEraserClick = {
                                 whiteboardViewModel.enableEraser()
@@ -307,8 +307,7 @@ fun ReviewerContent(
                                 .align(Alignment.BottomCenter)
                                 .offset(y = -ScreenOffset - toolbarHeightDp - 8.dp)
                                 .padding(bottom = paddingValues.calculateBottomPadding())
-                                .onSizeChanged { whiteboardToolbarHeight = it.height }
-                        )
+                                .onSizeChanged { whiteboardToolbarHeight = it.height })
                     }
 
                     HorizontalFloatingToolbar(
@@ -473,6 +472,18 @@ fun ReviewerContent(
                         })
                 }
             }
+        }
+
+        // Color picker dialog for adding new brush
+        if (showColorPickerDialog && whiteboardViewModel != null) {
+            ColorPickerDialog(
+                defaultColor = whiteboardViewModel.brushColor.value,
+                showAlpha = true,
+                onColorPicked = { color ->
+                    whiteboardViewModel.addBrush(color)
+                    showColorPickerDialog = false
+                },
+                onDismiss = { showColorPickerDialog = false })
         }
     }
 }
