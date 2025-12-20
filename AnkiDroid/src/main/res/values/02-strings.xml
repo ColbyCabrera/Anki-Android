@@ -218,6 +218,7 @@
     <!-- Whiteboard save image message in the Study Screen -->
     <string name="white_board_image_save_failed">Failed to save whiteboard image. %s</string>
     <string name="white_board_image_saved">Whiteboard image saved to %s</string>
+    <string name="white_board_no_content">No content to save</string>
 
     <string name="title_whiteboard_editor" maxLength="28">Whiteboard editor</string>
 

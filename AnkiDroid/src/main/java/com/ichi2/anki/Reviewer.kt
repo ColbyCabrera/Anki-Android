@@ -514,19 +514,32 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
             R.id.action_save_whiteboard -> {
                 Timber.i("Reviewer:: Save whiteboard button pressed")
                 val displayMetrics = resources.displayMetrics
-                val savedFile = whiteboardViewModel.saveToFile(
-                    this,
-                    displayMetrics.widthPixels,
-                    displayMetrics.heightPixels
-                )
-                if (savedFile != null) {
-                    showSnackbar(
-                        getString(R.string.white_board_image_saved, savedFile.path),
-                        Snackbar.LENGTH_SHORT
+                try {
+                    val savedFile = whiteboardViewModel.saveToFile(
+                        this,
+                        displayMetrics.widthPixels,
+                        displayMetrics.heightPixels
                     )
-                } else {
+                    if (savedFile != null) {
+                        showSnackbar(
+                            getString(R.string.white_board_image_saved, savedFile.path),
+                            Snackbar.LENGTH_SHORT
+                        )
+                    } else {
+                        val errorReason = if (whiteboardViewModel.paths.value.isEmpty()) {
+                            getString(R.string.white_board_no_content)
+                        } else {
+                            getString(R.string.something_wrong)
+                        }
+                        showSnackbar(
+                            getString(R.string.white_board_image_save_failed, errorReason),
+                            Snackbar.LENGTH_SHORT
+                        )
+                    }
+                } catch (e: Exception) {
+                    Timber.e(e, "Unexpected error saving whiteboard")
                     showSnackbar(
-                        getString(R.string.white_board_image_save_failed, "No content to save"),
+                        getString(R.string.white_board_image_save_failed, e.localizedMessage ?: getString(R.string.something_wrong)),
                         Snackbar.LENGTH_SHORT
                     )
                 }

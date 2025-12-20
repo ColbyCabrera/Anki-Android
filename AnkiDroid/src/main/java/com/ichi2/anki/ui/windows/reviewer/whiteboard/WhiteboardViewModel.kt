@@ -492,7 +492,10 @@ class WhiteboardViewModel(
                 // Save to file
                 val saveDirectory = java.io.File(context.getExternalFilesDir(null), "Whiteboard")
                 if (!saveDirectory.exists()) {
-                    saveDirectory.mkdirs()
+                    if (!saveDirectory.mkdirs()) {
+                        Timber.w("Failed to create directory: %s", saveDirectory.absolutePath)
+                        return null
+                    }
                 }
                 val timestamp =
                     java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.getDefault())
