@@ -505,6 +505,9 @@ class WhiteboardViewModel(
                         e,
                         "OutOfMemoryError when creating bitmap with ARGB_8888, trying RGB_565",
                     )
+                    // Note: RGB_565 has no alpha channel, so eraser paths drawn with
+                    // PorterDuff.Mode.CLEAR will render as black instead of transparent.
+                    // This is an acceptable trade-off for low-memory situations.
                     try {
                         android.graphics.Bitmap.createBitmap(
                             effectiveWidth,
