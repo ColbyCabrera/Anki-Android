@@ -388,16 +388,14 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
                 // DEFECT: Slight inefficiency here, as we set the database using these methods
                 val whiteboardVisibility = withContext(Dispatchers.IO) {
                     MetaDB.getWhiteboardVisibility(
-                        this@Reviewer,
-                        parentDid
+                        this@Reviewer, parentDid
                     )
                 }
                 setWhiteboardEnabledState(true)
                 setWhiteboardVisibility(whiteboardVisibility)
                 toggleStylus = withContext(Dispatchers.IO) {
                     MetaDB.getWhiteboardStylusState(
-                        this@Reviewer,
-                        parentDid
+                        this@Reviewer, parentDid
                     )
                 }
                 // Stylus mode is now managed in WhiteboardViewModel
@@ -513,35 +511,37 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
             R.id.action_save_whiteboard -> {
                 Timber.i("Reviewer:: Save whiteboard button pressed")
-                val displayMetrics = resources.displayMetrics
-                try {
-                    val savedFile = whiteboardViewModel.saveToFile(
-                        this,
-                        displayMetrics.widthPixels,
-                        displayMetrics.heightPixels
-                    )
-                    if (savedFile != null) {
-                        showSnackbar(
-                            getString(R.string.white_board_image_saved, savedFile.path),
-                            Snackbar.LENGTH_SHORT
+                lifecycleScope.launch {
+                    val displayMetrics = resources.displayMetrics
+                    try {
+                        val savedFile = whiteboardViewModel.saveToFile(
+                            this@Reviewer, displayMetrics.widthPixels, displayMetrics.heightPixels
                         )
-                    } else {
-                        val errorReason = if (whiteboardViewModel.paths.value.isEmpty()) {
-                            getString(R.string.white_board_no_content)
+                        if (savedFile != null) {
+                            showSnackbar(
+                                getString(R.string.white_board_image_saved, savedFile.path),
+                                Snackbar.LENGTH_SHORT
+                            )
                         } else {
-                            getString(R.string.something_wrong)
+                            val errorReason = if (whiteboardViewModel.paths.value.isEmpty()) {
+                                getString(R.string.white_board_no_content)
+                            } else {
+                                getString(R.string.something_wrong)
+                            }
+                            showSnackbar(
+                                getString(R.string.white_board_image_save_failed, errorReason),
+                                Snackbar.LENGTH_SHORT
+                            )
                         }
+                    } catch (e: Exception) {
+                        Timber.e(e, "Unexpected error saving whiteboard")
                         showSnackbar(
-                            getString(R.string.white_board_image_save_failed, errorReason),
-                            Snackbar.LENGTH_SHORT
+                            getString(
+                                R.string.white_board_image_save_failed,
+                                e.localizedMessage ?: getString(R.string.something_wrong)
+                            ), Snackbar.LENGTH_SHORT
                         )
                     }
-                } catch (e: Exception) {
-                    Timber.e(e, "Unexpected error saving whiteboard")
-                    showSnackbar(
-                        getString(R.string.white_board_image_save_failed, e.localizedMessage ?: getString(R.string.something_wrong)),
-                        Snackbar.LENGTH_SHORT
-                    )
                 }
             }
 
@@ -682,11 +682,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
             whiteboardViewModel.reset()
         }
         audioRecordingController?.updateUIForNewCard()
-    }
-
-    override fun unblockControls() {
-        // Whiteboard controls are now handled in Compose via WhiteboardViewModel
-        super.unblockControls()
     }
 
     override fun closeReviewer(result: Int) {
@@ -1522,7 +1517,10 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         return ByteArray(0)
     }
 
-    @Deprecated("Whiteboard is now managed by WhiteboardViewModel and Compose UI", level = DeprecationLevel.WARNING)
+    @Deprecated(
+        "Whiteboard is now managed by WhiteboardViewModel and Compose UI",
+        level = DeprecationLevel.WARNING
+    )
     private fun createWhiteboard() {
         // Old whiteboard creation is no longer needed
         // The whiteboard is now rendered via WhiteboardCanvas composable
