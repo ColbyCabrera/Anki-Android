@@ -547,8 +547,12 @@ class WhiteboardViewModel(
                     }
 
                     // Save to file
-                    val saveDirectory =
-                        java.io.File(context.getExternalFilesDir(null), "Whiteboard")
+                    val baseDir = context.getExternalFilesDir(null)
+                        ?: run {
+                            Timber.w("External storage unavailable, falling back to internal storage")
+                            context.filesDir
+                        }
+                    val saveDirectory = java.io.File(baseDir, "Whiteboard")
                     if (!saveDirectory.exists()) {
                         if (!saveDirectory.mkdirs()) {
                             Timber.w("Failed to create directory: %s", saveDirectory.absolutePath)
