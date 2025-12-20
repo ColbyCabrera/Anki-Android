@@ -300,7 +300,7 @@ class WhiteboardFragment :
         AlertDialog
             .Builder(requireContext())
             .setMessage(R.string.whiteboard_remove_brush_message)
-            .setPositiveButton(R.string.dialog_remove) { dialog, _ ->
+            .setPositiveButton(R.string.dialog_remove) { _, _ ->
                 Timber.i("Removed brush of index %d", index)
                 viewModel.removeBrush(index)
             }.setNegativeButton(R.string.dialog_cancel, null)
