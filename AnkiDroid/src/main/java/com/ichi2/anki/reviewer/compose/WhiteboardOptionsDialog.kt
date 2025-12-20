@@ -59,7 +59,7 @@ import kotlin.math.roundToInt
 @Composable
 fun BrushOptionsDialog(
     viewModel: WhiteboardViewModel,
-    onDismissRequest: () -> Unit
+    onDismissRequest: () -> Unit,
 ) {
     val brushes by viewModel.brushes.collectAsState()
     val activeIndex by viewModel.activeBrushIndex.collectAsState()
@@ -74,7 +74,7 @@ fun BrushOptionsDialog(
                 viewModel.updateBrushColor(it)
                 showColorPicker = false
             },
-            onDismiss = { showColorPicker = false }
+            onDismiss = { showColorPicker = false },
         )
     }
 
@@ -90,20 +90,20 @@ fun BrushOptionsDialog(
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 // Brush Preview & Color Selector
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     Box(
                         modifier = Modifier
                             .size(64.dp)
                             .clip(CircleShape)
                             .background(Color(brush.color))
-                            .border(2.dp, MaterialTheme.colorScheme.outline, CircleShape)
+                            .border(2.dp, MaterialTheme.colorScheme.outline, CircleShape),
                     )
                     Spacer(modifier = Modifier.width(16.dp))
                     OutlinedButton(onClick = { showColorPicker = true }) {
@@ -115,26 +115,26 @@ fun BrushOptionsDialog(
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Text(
                             stringResource(R.string.whiteboard_width),
-                            style = MaterialTheme.typography.labelMedium
+                            style = MaterialTheme.typography.labelMedium,
                         )
                         Text(
                             brush.width.roundToInt().toString(),
-                            style = MaterialTheme.typography.labelMedium
+                            style = MaterialTheme.typography.labelMedium,
                         )
                     }
                     Slider(
                         value = brush.width,
                         onValueChange = { viewModel.setActiveStrokeWidth(it) },
                         valueRange = 1f..60f,
-                        steps = 7
+                        steps = 7,
                     )
                 }
             }
-        }
+        },
     )
 }
 
@@ -144,7 +144,7 @@ fun BrushOptionsDialog(
 @Composable
 fun EraserOptionsDialog(
     viewModel: WhiteboardViewModel,
-    onDismissRequest: () -> Unit
+    onDismissRequest: () -> Unit,
 ) {
     val mode by viewModel.eraserMode.collectAsState()
     val width by viewModel.eraserDisplayWidth.collectAsState()
@@ -160,21 +160,21 @@ fun EraserOptionsDialog(
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 // Mode Selector
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                     SegmentedButton(
                         selected = mode == EraserMode.INK,
                         onClick = { viewModel.setEraserMode(EraserMode.INK) },
-                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
                     ) {
                         Text(stringResource(R.string.whiteboard_ink_eraser))
                     }
                     SegmentedButton(
                         selected = mode == EraserMode.STROKE,
                         onClick = { viewModel.setEraserMode(EraserMode.STROKE) },
-                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
                     ) {
                         Text(stringResource(R.string.whiteboard_stroke_eraser))
                     }
@@ -184,22 +184,22 @@ fun EraserOptionsDialog(
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Text(
                             stringResource(R.string.whiteboard_width),
-                            style = MaterialTheme.typography.labelMedium
+                            style = MaterialTheme.typography.labelMedium,
                         )
                         Text(
                             width.roundToInt().toString(),
-                            style = MaterialTheme.typography.labelMedium
+                            style = MaterialTheme.typography.labelMedium,
                         )
                     }
                     Slider(
                         value = width,
                         onValueChange = { viewModel.setActiveStrokeWidth(it) },
                         valueRange = 5f..200f,
-                        steps = 39 // 5 to 200 in steps of 5
+                        steps = 7,
                     )
                 }
 
@@ -211,12 +211,12 @@ fun EraserOptionsDialog(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    )
+                        contentColor = MaterialTheme.colorScheme.error,
+                    ),
                 ) {
                     Text(stringResource(R.string.whiteboard_clear))
                 }
             }
-        }
+        },
     )
 }
