@@ -487,6 +487,12 @@ class WhiteboardViewModel(
                     }
                     effectiveWidth = (effectiveWidth * scale).toInt()
                     effectiveHeight = (effectiveHeight * scale).toInt()
+
+                    // Ensure scaled dimensions are valid
+                    if (effectiveWidth <= 0 || effectiveHeight <= 0) {
+                        Timber.w("Scaled dimensions invalid: %d x %d", effectiveWidth, effectiveHeight)
+                        return@withContext null
+                    }
                     Timber.d("Downscaling bitmap to %d x %d", effectiveWidth, effectiveHeight)
                 }
 
