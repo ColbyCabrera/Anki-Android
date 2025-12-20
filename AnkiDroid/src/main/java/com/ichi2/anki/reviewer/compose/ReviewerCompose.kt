@@ -171,6 +171,8 @@ fun ReviewerContent(
     val scope = rememberCoroutineScope()
     var showBottomSheet by remember { mutableStateOf(false) }
     var showColorPickerDialog by remember { mutableStateOf(false) }
+    var showBrushOptions by remember { mutableStateOf(false) }
+    var showEraserOptions by remember { mutableStateOf(false) }
     var brushIndexToRemove by remember { mutableStateOf<Int?>(null) }
     var toolbarHeight by remember { mutableIntStateOf(0) }
     var whiteboardToolbarHeight by remember { mutableIntStateOf(0) }
@@ -293,7 +295,11 @@ fun ReviewerContent(
                         WhiteboardToolbar(
                             viewModel = whiteboardViewModel,
                             onBrushClick = { _, index ->
-                                whiteboardViewModel.setActiveBrush(index)
+                                if (whiteboardViewModel.activeBrushIndex.value == index && !whiteboardViewModel.isEraserActive.value) {
+                                    showBrushOptions = true
+                                } else {
+                                    whiteboardViewModel.setActiveBrush(index)
+                                }
                             },
                             onBrushLongClick = { index ->
                                 if (whiteboardViewModel.brushes.value.size > 1) {
@@ -304,7 +310,11 @@ fun ReviewerContent(
                                 showColorPickerDialog = true
                             },
                             onEraserClick = {
-                                whiteboardViewModel.enableEraser()
+                                if (whiteboardViewModel.isEraserActive.value) {
+                                    showEraserOptions = true
+                                } else {
+                                    whiteboardViewModel.enableEraser()
+                                }
                             },
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
@@ -486,8 +496,7 @@ fun ReviewerContent(
                     whiteboardViewModel.addBrush(color)
                     showColorPickerDialog = false
                 },
-                onDismiss = { showColorPickerDialog = false }
-            )
+                onDismiss = { showColorPickerDialog = false })
         }
 
         // Brush removal confirmation dialog
@@ -502,8 +511,7 @@ fun ReviewerContent(
                                 whiteboardViewModel.removeBrush(index)
                             }
                             brushIndexToRemove = null
-                        }
-                    ) {
+                        }) {
                         Text(stringResource(R.string.dialog_remove))
                     }
                 },
@@ -511,8 +519,19 @@ fun ReviewerContent(
                     TextButton(onClick = { brushIndexToRemove = null }) {
                         Text(stringResource(R.string.dialog_cancel))
                     }
-                }
-            )
+                })
+        }
+
+        // Brush options dialog
+        if (showBrushOptions && whiteboardViewModel != null) {
+            BrushOptionsDialog(
+                viewModel = whiteboardViewModel, onDismissRequest = { showBrushOptions = false })
+        }
+
+        // Eraser options dialog
+        if (showEraserOptions && whiteboardViewModel != null) {
+            EraserOptionsDialog(
+                viewModel = whiteboardViewModel, onDismissRequest = { showEraserOptions = false })
         }
     }
 }
