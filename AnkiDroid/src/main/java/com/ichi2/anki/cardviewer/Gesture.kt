@@ -17,7 +17,6 @@ package com.ichi2.anki.cardviewer
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.os.Build
 import com.ichi2.anki.R
 import com.ichi2.anki.cardviewer.TapGestureMode.FOUR_POINT
 import com.ichi2.anki.cardviewer.TapGestureMode.NINE_POINT
@@ -34,7 +33,7 @@ const val GESTURE_PREFIX = "\u235D"
 // #17090: maracas emoji is unusable on API 30 or below.
 // androidX emoji2 doesn't work by default on an API 30 emulator.
 // either requires a GMS dependency, or bloats the APK size by 9.8MB
-val SHAKE_GESTURE_PREFIX = if (Build.VERSION.SDK_INT > 30) "\uD83E\uDE87" else ""
+const val SHAKE_GESTURE_PREFIX = "\uD83E\uDE87"
 
 fun interface GestureListener {
     fun onGesture(gesture: Gesture)

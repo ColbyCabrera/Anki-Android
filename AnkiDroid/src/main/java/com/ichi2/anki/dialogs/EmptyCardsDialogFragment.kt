@@ -24,13 +24,11 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.graphics.Insets
-import android.os.Build
 import android.os.Bundle
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
-import android.util.DisplayMetrics
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets.Type.displayCutout
@@ -285,26 +283,15 @@ class EmptyCardsDialogFragment : DialogFragment() {
     private fun View.updateViewHeight() {
         val currentOrientation = requireContext().resources.configuration.orientation
         val targetPercent = if (currentOrientation == ORIENTATION_LANDSCAPE) 0.25 else 0.5
-        val screenHeight =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                val windowMetrics =
-                    (context as Activity)
-                        .windowManager
-                        .currentWindowMetrics
-                val insets: Insets =
-                    windowMetrics.getWindowInsets().getInsetsIgnoringVisibility(
-                        navigationBars() or displayCutout(),
-                    )
-                windowMetrics.bounds.height() - (insets.top + insets.bottom)
-            } else {
-                val displayMetrics = DisplayMetrics()
-                @Suppress("DEPRECATION")
-                (context as Activity)
-                    .windowManager
-                    .defaultDisplay
-                    .getMetrics(displayMetrics)
-                displayMetrics.heightPixels
-            }
+        val windowMetrics =
+            (context as Activity)
+                .windowManager
+                .currentWindowMetrics
+        val insets: Insets =
+            windowMetrics.getWindowInsets().getInsetsIgnoringVisibility(
+                navigationBars() or displayCutout(),
+            )
+        val screenHeight = windowMetrics.bounds.height() - (insets.top + insets.bottom)
         val calculatedHeight = (screenHeight * targetPercent).toInt()
         (layoutParams as ViewGroup.LayoutParams).height = calculatedHeight
         layoutParams = layoutParams

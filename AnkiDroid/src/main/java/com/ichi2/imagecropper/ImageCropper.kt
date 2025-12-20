@@ -23,7 +23,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Rect
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
 import android.view.Menu
@@ -171,13 +170,7 @@ class ImageCropper :
         return when (fileExtension?.lowercase()) {
             "png" -> Bitmap.CompressFormat.PNG
             "jpeg", "jpg" -> Bitmap.CompressFormat.JPEG
-            "webp" -> {
-                if (Build.VERSION.SDK_INT >= 30) {
-                    Bitmap.CompressFormat.WEBP_LOSSLESS
-                } else {
-                    Bitmap.CompressFormat.WEBP
-                }
-            }
+            "webp" -> Bitmap.CompressFormat.WEBP_LOSSLESS
             else -> {
                 Timber.w("Unknown image format: $fileExtension. Defaulting to JPEG.")
                 Bitmap.CompressFormat.JPEG

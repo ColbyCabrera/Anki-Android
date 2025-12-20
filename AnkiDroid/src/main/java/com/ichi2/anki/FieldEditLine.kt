@@ -17,7 +17,6 @@ package com.ichi2.anki
 
 import android.content.Context
 import android.graphics.drawable.Drawable
-import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
 import android.os.Parcelable.ClassLoaderCreator
@@ -32,7 +31,6 @@ import android.widget.ImageButton
 import android.widget.TextView
 import androidx.annotation.DrawableRes
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.os.ParcelCompat
 import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat
 import com.ichi2.anki.common.utils.annotation.KotlinCleanup
@@ -71,21 +69,6 @@ class FieldEditLine : FrameLayout {
         val constraintLayout: ConstraintLayout = findViewById(R.id.constraint_layout)
         expandButton = findViewById(R.id.id_expand_button)
         // 7433 -
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            editText.id = View.generateViewId()
-            toggleSticky.id = View.generateViewId()
-            mediaButton.id = View.generateViewId()
-            expandButton.id = View.generateViewId()
-            editText.nextFocusForwardId = toggleSticky.id
-            toggleSticky.nextFocusForwardId = mediaButton.id
-            mediaButton.nextFocusForwardId = expandButton.id
-            ConstraintSet().apply {
-                clone(constraintLayout)
-                connect(toggleSticky.id, ConstraintSet.END, mediaButton.id, ConstraintSet.START)
-                connect(mediaButton.id, ConstraintSet.END, expandButton.id, ConstraintSet.START)
-                applyTo(constraintLayout)
-            }
-        }
         setExpanderBackgroundImage()
         expandButton.setOnClickListener { toggleExpansionState() }
         editText.init()

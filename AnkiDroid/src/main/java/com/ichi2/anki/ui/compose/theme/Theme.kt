@@ -20,7 +20,6 @@
  ****************************************************************************************/
 package com.ichi2.anki.ui.compose.theme
 
-import android.os.Build
 import android.util.TypedValue
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
@@ -29,10 +28,8 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.Shapes
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
@@ -66,17 +63,9 @@ fun AnkiDroidTheme(
     val context = LocalContext.current
     val currentAnkiTheme = Themes.currentTheme
     val colorScheme = if (currentAnkiTheme.isNightMode) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            dynamicDarkColorScheme(context)
-        } else {
-            darkColorScheme()
-        }
+        dynamicDarkColorScheme(context)
     } else {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            dynamicLightColorScheme(context)
-        } else {
-            lightColorScheme()
-        }
+        dynamicLightColorScheme(context)
     }
 
     val ankiColors = AnkiColors(

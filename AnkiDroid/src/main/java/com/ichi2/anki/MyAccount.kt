@@ -289,13 +289,11 @@ open class MyAccount : AnkiActivity() {
                 loggedInLogo = findViewById(R.id.login_logo)
             }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            password.setAutoFillListener {
-                // disable "show password".
-                passwordLayout.isEndIconVisible = false
-                Timber.i("Attempting login from autofill")
-                attemptLogin()
-            }
+        password.setAutoFillListener {
+            // disable "show password".
+            passwordLayout.isEndIconVisible = false
+            Timber.i("Attempting login from autofill")
+            attemptLogin()
         }
     }
 

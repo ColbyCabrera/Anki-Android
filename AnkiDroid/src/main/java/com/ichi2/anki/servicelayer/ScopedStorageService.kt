@@ -18,7 +18,6 @@
 package com.ichi2.anki.servicelayer
 
 import android.content.Context
-import android.os.Build
 import android.os.Environment
 import com.ichi2.anki.CollectionHelper
 import com.ichi2.anki.preferences.sharedPrefs
@@ -123,9 +122,6 @@ object ScopedStorageService {
         // We do not check for == Q here, instead relying on `isExternalStorageLegacy`
         // requestLegacyExternalStorage is a strong assumption, but we need to handle the case that
         // this assumption breaks down
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            return false
-        }
 
         // the user could obtain MANAGE_EXTERNAL_STORAGE
         if (Permissions.canManageExternalStorage(context)) {
@@ -159,9 +155,6 @@ object ScopedStorageService {
     fun collectionWillBeMadeInaccessibleAfterUninstall(context: Context): Boolean {
         // If we're < Q then `requestLegacyExternalStorage` was not introduced
         // If we're == Q then `preserveLegacyExternalStorage` is expected to be in place
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
-            return false
-        }
 
         // the user could obtain MANAGE_EXTERNAL_STORAGE
         if (Permissions.canManageExternalStorage(context)) {

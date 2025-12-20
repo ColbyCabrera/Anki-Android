@@ -5,10 +5,8 @@
         <!-- Android colors -->
         <item name="colorAccent">@color/material_blue_grey_700</item>
 
-        <item name="colorSurfaceContainerHighest">?attr/colorSurfaceContainer</item>
-        <item name="colorSurfaceContainerHigh">?android:attr/colorBackground</item>
-        <item name="colorSurfaceContainer">#0F03A9F4</item>
         <item name="colorSurfaceContainerLow">?android:attr/colorBackground</item>
+        <item name="colorSurfaceContainer">@color/faded_primary</item>
 
         <item name="android:textColor">@color/text_color_light</item>
         <item name="android:textColorSecondary">@color/text_color_secondary_light</item>
@@ -113,9 +111,9 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:enforceNavigationBarContrast" tools:targetApi="q">false</item>
-        <item name="android:enforceStatusBarContrast" tools:targetApi="q">false</item>
-        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
+        <item name="android:enforceNavigationBarContrast">false</item>
+        <item name="android:enforceStatusBarContrast">false</item>
+        <item name="android:windowLightNavigationBar">true</item>
         <item name="editTextDisabled">@color/material_grey_500</item>
 
         <!-- Snackbar. Attributes snackbarStyle, snackbarTextViewStyle and snackbarButtonStyle

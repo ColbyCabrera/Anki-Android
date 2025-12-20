@@ -20,7 +20,6 @@ import android.content.pm.IPackageStatsObserver
 import android.os.Build
 import android.os.storage.StorageManager
 import android.os.storage.StorageVolume
-import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import com.ichi2.anki.R
 import com.ichi2.anki.utils.TranslatableException
@@ -40,12 +39,8 @@ import kotlin.coroutines.resume
  * This should amount to the sum of User data and Cache in App info -> Storage and cache.
  * @throws NoSuchMethodException occasionally on some phones < [Build.VERSION_CODES.O] (#17387)
  */
-suspend fun Context.getUserDataAndCacheSize(): Long =
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        getUserDataAndCacheSizeUsingStorageStatsManager()
-    } else {
-        getUserDataAndCacheSizeUsingGetPackageSizeInfo()
-    }
+fun Context.getUserDataAndCacheSize(): Long =
+    getUserDataAndCacheSizeUsingStorageStatsManager()
 
 /*
  * The logic was taken from this SO question: https://stackoverflow.com/q/43472398/#44708209
@@ -57,7 +52,6 @@ suspend fun Context.getUserDataAndCacheSize(): Long =
  *   Investigate whether this approach is sufficient, and if so, why.
  *   See `com.android.packageinstaller.handheld.UninstallAlertDialogFragment#getAppDataSizeForUser`.
  */
-@RequiresApi(Build.VERSION_CODES.O)
 private fun Context.getUserDataAndCacheSizeUsingStorageStatsManager(): Long {
     // See StorageManager#isFatVolumeIdentifier
     fun String.isFatVolumeIdentifier() = length == 9 && this[4] == '-'

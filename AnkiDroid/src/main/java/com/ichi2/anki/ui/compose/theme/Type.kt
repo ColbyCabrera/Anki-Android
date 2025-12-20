@@ -20,7 +20,6 @@
  ****************************************************************************************/
 package com.ichi2.anki.ui.compose.theme
 
-import android.os.Build
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.ExperimentalTextApi
@@ -50,20 +49,14 @@ val RobotoMono = FontFamily(
 )
 
 @OptIn(ExperimentalTextApi::class)
-val GoogleSansFlexLowWidth = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-    FontFamily(
-        Font(
-            R.font.google_sans_flex,
-            variationSettings = FontVariation.Settings(
-                FontVariation.width(3F),
-                FontVariation.slant(-6f),
-            )
+val GoogleSansFlexLowWidth = FontFamily(
+    Font(
+        R.font.google_sans_flex, variationSettings = FontVariation.Settings(
+            FontVariation.width(3F),
+            FontVariation.slant(-6f),
         )
     )
-} else {
-    GoogleSansRounded
-}
-
+)
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 val AppTypography = Typography(

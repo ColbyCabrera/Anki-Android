@@ -24,7 +24,6 @@ import android.graphics.Color
 import android.graphics.Insets
 import android.graphics.Paint
 import android.graphics.drawable.Drawable
-import android.os.Build
 import android.util.AttributeSet
 import android.util.DisplayMetrics
 import android.util.TypedValue
@@ -251,23 +250,16 @@ class Toolbar : FrameLayout {
     private val screenWidth: Int
         get() {
             val displayMetrics = DisplayMetrics()
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                val windowMetrics =
-                    (context as Activity)
-                        .windowManager
-                        .currentWindowMetrics
-                val insets: Insets =
-                    windowMetrics.getWindowInsets().getInsetsIgnoringVisibility(
-                        WindowInsets.Type.navigationBars()
-                            or WindowInsets.Type.displayCutout(),
-                    )
-                displayMetrics.widthPixels = windowMetrics.bounds.width() - (insets.right + insets.left)
-            } else {
+            val windowMetrics =
                 (context as Activity)
                     .windowManager
-                    .defaultDisplay
-                    .getMetrics(displayMetrics)
-            }
+                    .currentWindowMetrics
+            val insets: Insets =
+                windowMetrics.getWindowInsets().getInsetsIgnoringVisibility(
+                    WindowInsets.Type.navigationBars()
+                        or WindowInsets.Type.displayCutout(),
+                )
+            displayMetrics.widthPixels = windowMetrics.bounds.width() - (insets.right + insets.left)
             return displayMetrics.widthPixels
         }
 

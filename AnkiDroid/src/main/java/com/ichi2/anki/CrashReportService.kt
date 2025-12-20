@@ -36,12 +36,10 @@ import org.acra.ACRA
 import org.acra.ReportField
 import org.acra.config.CoreConfigurationBuilder
 import org.acra.config.DialogConfigurationBuilder
-import org.acra.config.HttpSenderConfigurationBuilder
 import org.acra.config.LimiterConfigurationBuilder
 import org.acra.config.LimiterData
 import org.acra.config.MailSenderConfigurationBuilder
 import org.acra.config.ToastConfigurationBuilder
-import org.acra.sender.HttpSender
 import timber.log.Timber
 
 object CrashReportService {
@@ -93,7 +91,7 @@ object CrashReportService {
     private fun createAcraCoreConfigBuilder(): CoreConfigurationBuilder {
         val builder =
             CoreConfigurationBuilder()
-                .withBuildConfigClass(com.ichi2.anki.BuildConfig::class.java) // AnkiDroid BuildConfig - Acrarium#319
+                .withBuildConfigClass(BuildConfig::class.java) // AnkiDroid BuildConfig - Acrarium#319
                 .withExcludeMatchingSharedPreferencesKeys("username", "hkey")
                 .withSharedPreferencesName("acra")
                 .withReportContent(
@@ -183,7 +181,7 @@ object CrashReportService {
         } else {
             setProductionACRAConfig(application.sharedPrefs())
         }
-        if (ACRA.isACRASenderServiceProcess() && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+        if (ACRA.isACRASenderServiceProcess()) {
             try {
                 setDataDirectorySuffix("acra")
             } catch (e: java.lang.Exception) {

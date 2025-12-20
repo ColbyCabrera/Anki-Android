@@ -16,7 +16,6 @@
 package com.ichi2.anki.widgets
 
 import android.content.Context
-import android.os.Build
 import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatImageButton
 import com.ichi2.anki.common.utils.annotation.KotlinCleanup
@@ -49,9 +48,7 @@ class SafeImageButton @JvmOverloads constructor(
             savedContentDescription = contentDescription
             contentDescription = null
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            tooltipText = null
-        }
+        tooltipText = null
     }
 
     override fun onAttachedToWindow() {

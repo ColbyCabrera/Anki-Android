@@ -15,7 +15,6 @@
  */
 package com.ichi2.anki.preferences
 
-import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.preference.ListPreference
 import androidx.preference.Preference
@@ -25,7 +24,6 @@ import com.ichi2.anki.R
 import com.ichi2.anki.launchCatchingTask
 import com.ichi2.anki.settings.Prefs
 import com.ichi2.anki.utils.CollectionPreferences
-import com.ichi2.themes.Theme
 import com.ichi2.themes.Themes
 import com.ichi2.themes.Themes.systemIsInNightMode
 import com.ichi2.themes.Themes.updateCurrentTheme
@@ -42,19 +40,6 @@ class AppearanceSettingsFragment : SettingsFragment() {
         val nightThemePref = requirePreference<ListPreference>(R.string.night_theme_key)
         val themeIsFollowSystem = appThemePref.value == Themes.FOLLOW_SYSTEM_MODE
 
-        // Remove follow system options in android versions which do not have system dark mode
-        // When minSdk reaches 29, the only necessary change is to remove this if-block
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            dayThemePref.isVisible = false
-            nightThemePref.isVisible = false
-
-            // Drop "Follow system" option (the first one)
-            appThemePref.entries = resources.getStringArray(R.array.app_theme_labels).drop(1).toTypedArray()
-            appThemePref.entryValues = resources.getStringArray(R.array.app_theme_values).drop(1).toTypedArray()
-            if (themeIsFollowSystem) {
-                appThemePref.value = Theme.fallback.id
-            }
-        }
         dayThemePref.isEnabled = themeIsFollowSystem
         nightThemePref.isEnabled = themeIsFollowSystem
 

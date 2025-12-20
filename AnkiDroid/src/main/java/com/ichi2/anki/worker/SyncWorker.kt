@@ -18,7 +18,6 @@ package com.ichi2.anki.worker
 import android.app.Notification
 import android.content.Context
 import android.content.pm.ServiceInfo
-import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.work.Constraints
@@ -200,11 +199,7 @@ class SyncWorker(
                 addAction(R.drawable.close_icon, cancelTitle, cancelIntent)
                 foregroundServiceBehavior = NotificationCompat.FOREGROUND_SERVICE_DEFERRED
             }
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            ForegroundInfo(NotificationId.SYNC, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
-        } else {
-            ForegroundInfo(NotificationId.SYNC, notification)
-        }
+        return ForegroundInfo(NotificationId.SYNC, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
     }
 
     private fun notify(notification: Notification) {

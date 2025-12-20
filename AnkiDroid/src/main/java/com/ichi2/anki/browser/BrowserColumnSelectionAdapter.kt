@@ -16,7 +16,6 @@
 
 package com.ichi2.anki.browser
 
-import android.os.Build
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -152,9 +151,7 @@ class BrowserColumnSelectionAdapter(
 
                 val label = context.getString(if (isExclude) R.string.exclude_column else R.string.include_column)
                 contentDescription = label
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    tooltipText = label
-                }
+                tooltipText = label
                 setOnClickListener {
                     onToggle(absoluteAdapterPosition)
                 }

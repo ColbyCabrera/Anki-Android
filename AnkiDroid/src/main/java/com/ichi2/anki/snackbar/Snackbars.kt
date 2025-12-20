@@ -15,10 +15,8 @@
 package com.ichi2.anki.snackbar
 
 import android.app.Activity
-import android.os.Build
 import android.view.View
 import android.widget.TextView
-import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.fragment.app.DialogFragment
@@ -200,9 +198,7 @@ fun View.showSnackbar(
     snackbar.setMaxLines(4)
     snackbar.behavior = SwipeDismissBehaviorFix()
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        snackbar.fixMarginsWhenInsetsChange()
-    }
+    snackbar.fixMarginsWhenInsetsChange()
 
     if (snackbarBuilder != null) {
         snackbar.snackbarBuilder()
@@ -344,7 +340,6 @@ fun Snackbar.setMaxLines(maxLines: Int) {
  * and the one method is not private that calls it is [Snackbar.onAttachedToWindow],
  * so we hack into its package namespace using a helper method.
  */
-@RequiresApi(Build.VERSION_CODES.Q)
 private fun Snackbar.fixMarginsWhenInsetsChange() {
     view.post {
         view.rootView.setOnApplyWindowInsetsListener { rootView, insets ->

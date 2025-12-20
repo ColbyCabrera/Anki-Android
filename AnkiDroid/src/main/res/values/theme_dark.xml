@@ -16,10 +16,8 @@
         <item name="android:textColor">@color/text_color_dark</item>
         <item name="android:textColorSecondary">@color/text_color_secondary_dark</item>
 
-        <item name="colorSurfaceContainerHighest">?attr/colorSurfaceContainer</item>
-        <item name="colorSurfaceContainerHigh">?android:attr/colorBackground</item>
-        <item name="colorSurfaceContainer">#0F42A5F5</item>
         <item name="colorSurfaceContainerLow">?android:attr/colorBackground</item>
+        <item name="colorSurfaceContainer">@color/faded_primary</item>
         <!-- Widget colors -->
         <item name="widgetColorActivated">?attr/colorAccent</item>
         <item name="preferenceCategoryTitleTextColor">?attr/colorAccent</item>
@@ -120,9 +118,9 @@
         <item name="android:statusBarColor" >@color/statusBarScrim</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:navigationBarColor" >@android:color/transparent</item>
-        <item name="android:enforceNavigationBarContrast" tools:targetApi="q">false</item>
-        <item name="android:enforceStatusBarContrast" tools:targetApi="q">false</item>
-        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
+        <item name="android:enforceNavigationBarContrast">false</item>
+        <item name="android:enforceStatusBarContrast">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
 
         <!-- Snackbar. Attributes snackbarStyle, snackbarTextViewStyle and snackbarButtonStyle
              must be *all* present in a theme (or its parent) in order for the snackbar

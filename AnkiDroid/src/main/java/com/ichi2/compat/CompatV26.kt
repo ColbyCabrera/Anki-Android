@@ -20,7 +20,6 @@ import android.content.Context
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.view.View
-import androidx.annotation.RequiresApi
 import androidx.annotation.VisibleForTesting
 import java.io.File
 import java.io.FileNotFoundException
@@ -37,7 +36,6 @@ import java.nio.file.StandardCopyOption
 import kotlin.time.Duration
 
 /** Implementation of [Compat] for SDK level 26 and higher. Check  [Compat]'s for more detail.  */
-@RequiresApi(26)
 open class CompatV26 : CompatV24() {
     override fun setTooltipTextByContentDescription(view: View) { // Nothing to do API26+
     }

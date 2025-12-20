@@ -17,9 +17,7 @@
 package com.ichi2.utils
 
 import android.content.SharedPreferences
-import android.os.Build
 import android.webkit.WebView
-import androidx.annotation.RequiresApi
 import androidx.annotation.UiThread
 
 object WebViewDebugging {
@@ -40,7 +38,6 @@ object WebViewDebugging {
     }
 
     /** Throws IllegalStateException if a WebView has been initialized  */
-    @RequiresApi(api = Build.VERSION_CODES.P)
     fun setDataDirectorySuffix(suffix: String) {
         WebView.setDataDirectorySuffix(suffix)
         sHasSetDataDirectory = true

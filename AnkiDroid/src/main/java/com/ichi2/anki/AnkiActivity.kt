@@ -16,7 +16,6 @@ import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.media.AudioManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.view.KeyboardShortcutGroup
 import android.view.Menu
@@ -53,7 +52,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.color.MaterialColors
-import com.google.android.material.snackbar.Snackbar
 import com.ichi2.anim.ActivityTransitionAnimation
 import com.ichi2.anim.ActivityTransitionAnimation.Direction
 import com.ichi2.anim.ActivityTransitionAnimation.Direction.DEFAULT
@@ -158,9 +156,7 @@ open class AnkiActivity :
                 WindowManager.LayoutParams.FLAG_FULLSCREEN,
             )
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-            window.navigationBarColor = getColor(R.color.transparent)
-        }
+        window.navigationBarColor = getColor(R.color.transparent)
         supportFragmentManager.setFragmentResultListener(REQUEST_EXPORT_SAVE, this) { _, bundle ->
             saveExportFile(
                 bundle.getString(KEY_EXPORT_PATH) ?: error("Missing required exportPath!"),

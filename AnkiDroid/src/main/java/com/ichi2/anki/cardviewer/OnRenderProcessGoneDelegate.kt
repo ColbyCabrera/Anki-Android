@@ -49,7 +49,6 @@ open class OnRenderProcessGoneDelegate(
     private var lastCrashingCardId: CardId? = null
 
     /** Fix: #5780 - WebView Renderer OOM crashes reviewer  */
-    @RequiresApi(api = Build.VERSION_CODES.O)
     fun onRenderProcessGone(
         view: WebView,
         detail: RenderProcessGoneDetail,

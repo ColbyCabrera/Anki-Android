@@ -74,7 +74,7 @@ object Permissions {
         context: Context,
         permission: String,
     ): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && permission == MANAGE_EXTERNAL_STORAGE) {
+        if (permission == MANAGE_EXTERNAL_STORAGE) {
             // checkSelfPermission doesn't return PERMISSION_GRANTED, even if it's granted.
             return isExternalStorageManager()
         }
@@ -90,7 +90,6 @@ object Permissions {
         permissions: Collection<String>,
     ): Boolean = permissions.all { hasPermission(context, it) }
 
-    @RequiresApi(Build.VERSION_CODES.R)
     fun isExternalStorageManager(): Boolean {
         // BUG: Environment.isExternalStorageManager() crashes under robolectric
         // https://github.com/robolectric/robolectric/issues/7300
@@ -105,11 +104,7 @@ object Permissions {
      * On >= Android 11, returns [isExternalStorageManager]
      */
     fun isExternalStorageManagerCompat(): Boolean {
-        return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-            return false
-        } else {
-            isExternalStorageManager()
-        }
+        return isExternalStorageManager()
     }
 
     /**
@@ -136,7 +131,7 @@ object Permissions {
      * Check if we have read and write access permission to the external storage
      * Note: This can return true >= R on a debug build or if storage is preserved
      *
-     * @see IntentHandler.grantedStoragePermissions
+     * @see com.ichi2.anki.IntentHandler.grantedStoragePermissions
      *
      * @param context
      */
@@ -193,8 +188,7 @@ object Permissions {
         if (isRobolectric) {
             return false
         }
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.R &&
-            context.arePermissionsDefinedInAnkiDroidManifest(MANAGE_EXTERNAL_STORAGE)
+        return context.arePermissionsDefinedInAnkiDroidManifest(MANAGE_EXTERNAL_STORAGE)
     }
 
     fun canPostNotifications(context: Context): Boolean =

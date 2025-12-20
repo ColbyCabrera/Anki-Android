@@ -15,11 +15,9 @@
  */
 package com.ichi2.anki.ui.windows.permissions
 
-import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
 import com.ichi2.anki.R
 import com.ichi2.utils.Permissions
 import com.ichi2.utils.Permissions.canManageExternalStorage
@@ -33,7 +31,6 @@ import com.ichi2.utils.Permissions.canManageExternalStorage
  *   Used for saving the collection in a public directory
  *   which isn't deleted when the app is uninstalled
  */
-@RequiresApi(Build.VERSION_CODES.R)
 class PermissionsStartingAt30Fragment : PermissionsFragment(R.layout.permissions_starting_at_30) {
     private val accessAllFilesLauncher =
         registerForActivityResult(

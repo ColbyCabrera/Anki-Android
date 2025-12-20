@@ -16,11 +16,9 @@
 
 package com.ichi2.anki.ui.windows.permissions
 
-import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
 import androidx.core.view.isVisible
 import com.ichi2.anki.R
 import com.ichi2.utils.Permissions
@@ -33,7 +31,6 @@ import timber.log.Timber
  *
  * See [the docs](https://developer.android.com/training/permissions/explaining-access#privacy-dashboard).
  */
-@RequiresApi(Build.VERSION_CODES.S)
 class AllPermissionsExplanationFragment : PermissionsFragment(R.layout.all_permissions_explanation_fragment) {
     /**
      * Attempts to open the dialog for granting permissions. Falls back to opening the OS settings if the dialog fails to

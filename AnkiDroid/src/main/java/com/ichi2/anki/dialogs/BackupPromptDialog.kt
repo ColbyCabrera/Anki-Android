@@ -17,7 +17,6 @@
 package com.ichi2.anki.dialogs
 
 import android.content.Context
-import android.os.Build
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.edit
@@ -190,14 +189,6 @@ class BackupPromptDialog private constructor(
             // It's much safer to ignore this. We'd like users to sync, but we shouldn't nag  if they don't consent
             if (Permissions.canManageExternalStorage(context)) {
                 Timber.d("User is on a 'full' build. Disabling backup reminder without confirmation")
-                return null
-            }
-
-            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
-                // It is an assumption that Q will always handle android.R.attr.preserveLegacyExternalStorage
-                // If we are incorrect, a user doesn't see a confirmation dialog
-                // AND the user would be able to regain access with a 'full' build.
-                Timber.d("User can regain access to their collection. Disabling backup reminder without confirmation")
                 return null
             }
 

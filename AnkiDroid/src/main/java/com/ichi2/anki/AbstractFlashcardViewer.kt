@@ -32,7 +32,6 @@ import android.graphics.Color
 import android.hardware.SensorManager
 import android.media.MediaPlayer
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -69,7 +68,6 @@ import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.CheckResult
 import androidx.annotation.IdRes
-import androidx.annotation.RequiresApi
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.core.net.toFile
@@ -2589,7 +2587,6 @@ abstract class AbstractFlashcardViewer : NavigationDrawerActivity(), ViewerComma
             }
         }
 
-        @RequiresApi(Build.VERSION_CODES.O)
         override fun onRenderProcessGone(
             view: WebView,
             detail: RenderProcessGoneDetail,

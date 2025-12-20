@@ -16,9 +16,7 @@
 
 package com.ichi2.anki.ui.windows.permissions
 
-import android.os.Build
 import android.os.Bundle
-import androidx.annotation.RequiresApi
 import androidx.fragment.app.commit
 import com.ichi2.anki.AnkiActivity
 import com.ichi2.anki.R
@@ -32,7 +30,6 @@ import com.ichi2.themes.setTransparentStatusBar
  *
  * This activity is used to host the [AllPermissionsExplanationFragment] fragment.
  */
-@RequiresApi(Build.VERSION_CODES.S)
 class AllPermissionsExplanationActivity : AnkiActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         if (showedActivityFailedScreen(savedInstanceState)) {
