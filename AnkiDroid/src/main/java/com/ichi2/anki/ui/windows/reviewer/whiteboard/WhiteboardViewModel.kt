@@ -105,7 +105,9 @@ class WhiteboardViewModel(
     val toolbarAlignment = MutableStateFlow(ToolbarAlignment.BOTTOM)
 
     val eraserDisplayWidth = combine(
-        eraserMode, inkEraserStrokeWidth, strokeEraserStrokeWidth
+        eraserMode,
+        inkEraserStrokeWidth,
+        strokeEraserStrokeWidth,
     ) { mode, inkWidth, strokeWidth ->
         if (mode == EraserMode.INK) inkWidth else strokeWidth
     }.stateIn(viewModelScope, SharingStarted.Eagerly, WhiteboardRepository.DEFAULT_ERASER_WIDTH)
@@ -455,7 +457,7 @@ class WhiteboardViewModel(
     suspend fun saveToFile(
         context: android.content.Context,
         width: Int,
-        height: Int
+        height: Int,
     ): java.io.File? {
         val currentPaths = paths.value
         if (currentPaths.isEmpty()) {
@@ -465,12 +467,57 @@ class WhiteboardViewModel(
 
         return withContext(Dispatchers.IO) {
             try {
+                // Define a safe cap for bitmap dimensions
+                val maxDimension = 2048
+
+                if (width <= 0 || height <= 0) {
+                    Timber.w("Invalid dimensions for bitmap: %d x %d", width, height)
+                    return@withContext null
+                }
+
+                var effectiveWidth = width
+                var effectiveHeight = height
+                var scale = 1.0f
+
+                if (effectiveWidth > maxDimension || effectiveHeight > maxDimension) {
+                    scale = if (effectiveWidth > effectiveHeight) {
+                        maxDimension.toFloat() / effectiveWidth
+                    } else {
+                        maxDimension.toFloat() / effectiveHeight
+                    }
+                    effectiveWidth = (effectiveWidth * scale).toInt()
+                    effectiveHeight = (effectiveHeight * scale).toInt()
+                    Timber.d("Downscaling bitmap to %d x %d", effectiveWidth, effectiveHeight)
+                }
+
                 // Create a transparent bitmap
-                val bitmap = android.graphics.Bitmap.createBitmap(
-                    width, height, android.graphics.Bitmap.Config.ARGB_8888
-                )
+                val bitmap = try {
+                    android.graphics.Bitmap.createBitmap(
+                        effectiveWidth,
+                        effectiveHeight,
+                        android.graphics.Bitmap.Config.ARGB_8888,
+                    )
+                } catch (e: OutOfMemoryError) {
+                    Timber.w(
+                        e,
+                        "OutOfMemoryError when creating bitmap with ARGB_8888, trying RGB_565",
+                    )
+                    try {
+                        android.graphics.Bitmap.createBitmap(
+                            effectiveWidth,
+                            effectiveHeight,
+                            android.graphics.Bitmap.Config.RGB_565,
+                        )
+                    } catch (e2: OutOfMemoryError) {
+                        Timber.e(e2, "Failed to create bitmap even with RGB_565")
+                        return@withContext null
+                    }
+                }
                 try {
                     val canvas = android.graphics.Canvas(bitmap)
+                    if (scale != 1.0f) {
+                        canvas.scale(scale, scale)
+                    }
 
                     // Draw all paths
                     val paint = android.graphics.Paint().apply {
@@ -511,7 +558,7 @@ class WhiteboardViewModel(
                         bitmap.compress(
                             android.graphics.Bitmap.CompressFormat.PNG,
                             100,
-                            outputStream
+                            outputStream,
                         )
                     }
 
