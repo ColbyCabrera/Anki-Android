@@ -467,9 +467,6 @@ class WhiteboardViewModel(
 
         return withContext(Dispatchers.IO) {
             try {
-                // Define a safe cap for bitmap dimensions
-                val maxDimension = 2048
-
                 if (width <= 0 || height <= 0) {
                     Timber.w("Invalid dimensions for bitmap: %d x %d", width, height)
                     return@withContext null
@@ -479,11 +476,11 @@ class WhiteboardViewModel(
                 var effectiveHeight = height
                 var scale = 1.0f
 
-                if (effectiveWidth > maxDimension || effectiveHeight > maxDimension) {
+                if (effectiveWidth > MAX_BITMAP_DIMENSION || effectiveHeight > MAX_BITMAP_DIMENSION) {
                     scale = if (effectiveWidth > effectiveHeight) {
-                        maxDimension.toFloat() / effectiveWidth
+                        MAX_BITMAP_DIMENSION.toFloat() / effectiveWidth
                     } else {
-                        maxDimension.toFloat() / effectiveHeight
+                        MAX_BITMAP_DIMENSION.toFloat() / effectiveHeight
                     }
                     effectiveWidth = (effectiveWidth * scale).toInt()
                     effectiveHeight = (effectiveHeight * scale).toInt()
@@ -590,6 +587,8 @@ class WhiteboardViewModel(
     }
 
     companion object {
+        private const val MAX_BITMAP_DIMENSION = 2048
+
         fun factory(sharedPreferences: SharedPreferences): ViewModelProvider.Factory =
             viewModelFactory {
                 initializer {
