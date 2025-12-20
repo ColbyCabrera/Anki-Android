@@ -52,6 +52,11 @@ fun ColorBrushButton(
 ) {
     val view = LocalView.current
     val backgroundColor = if (isSelected) colorHighlight else Color.Transparent
+    val brushContentDescription = stringResource(
+        if (isSelected) R.string.brush_content_description_selected
+        else R.string.brush_content_description,
+        brush.width.roundToInt()
+    )
 
     Box(
         contentAlignment = Alignment.Center,
@@ -61,12 +66,7 @@ fun ColorBrushButton(
             .background(backgroundColor)
             .semantics(mergeDescendants = true) {
                 role = Role.Button
-                contentDescription =
-                    stringResource(
-                        if (isSelected) R.string.brush_content_description_selected
-                        else R.string.brush_content_description,
-                        brush.width.roundToInt()
-                    )
+                contentDescription = brushContentDescription
             }
             .combinedClickable(
                 onClick = { onClick(view) }, onLongClick = onLongClick
