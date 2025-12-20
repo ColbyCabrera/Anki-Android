@@ -51,6 +51,8 @@
     <string name="undo_empty">Nothing to undo</string>
     <string name="browser">Browser</string>
     <string name="total_new">Total New</string>
+    <string name="brush_content_description">Brush, width %1$d</string>
+    <string name="brush_content_description_selected">Brush, width %1$d, selected</string>
     <string name="learning">Learning</string>
     <string name="review">Review</string>
     <string name="buried_cards_are_not_included_in_counts_above">Buried cards are not included in counts above.</string>
