@@ -4,6 +4,7 @@ import android.view.View
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -113,7 +114,6 @@ fun BrushPreviewIcon(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AddBrushButton(
     onClick: () -> Unit, colorNormal: Color, tooltip: String, minTouchTargetSize: Dp = 48.dp
@@ -123,7 +123,7 @@ fun AddBrushButton(
         modifier = Modifier
             .requiredSize(minTouchTargetSize)
             .clip(RoundedCornerShape(100))
-            .combinedClickable(
+            .clickable(
                 onClick = onClick
             )
             .semantics { contentDescription = tooltip }) {
