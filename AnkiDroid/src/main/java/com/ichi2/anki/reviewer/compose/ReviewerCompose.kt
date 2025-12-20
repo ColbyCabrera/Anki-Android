@@ -49,6 +49,7 @@ import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroup
@@ -70,6 +71,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -169,6 +171,7 @@ fun ReviewerContent(
     val scope = rememberCoroutineScope()
     var showBottomSheet by remember { mutableStateOf(false) }
     var showColorPickerDialog by remember { mutableStateOf(false) }
+    var brushIndexToRemove by remember { mutableStateOf<Int?>(null) }
     var toolbarHeight by remember { mutableIntStateOf(0) }
     var whiteboardToolbarHeight by remember { mutableIntStateOf(0) }
     val toolbarHeightDp = with(LocalDensity.current) { toolbarHeight.toDp() }
@@ -294,7 +297,7 @@ fun ReviewerContent(
                             },
                             onBrushLongClick = { index ->
                                 if (whiteboardViewModel.brushes.value.size > 1) {
-                                    whiteboardViewModel.removeBrush(index)
+                                    brushIndexToRemove = index
                                 }
                             },
                             onAddBrush = {
@@ -483,7 +486,33 @@ fun ReviewerContent(
                     whiteboardViewModel.addBrush(color)
                     showColorPickerDialog = false
                 },
-                onDismiss = { showColorPickerDialog = false })
+                onDismiss = { showColorPickerDialog = false }
+            )
+        }
+
+        // Brush removal confirmation dialog
+        if (brushIndexToRemove != null && whiteboardViewModel != null) {
+            AlertDialog(
+                onDismissRequest = { brushIndexToRemove = null },
+                text = { Text(stringResource(R.string.whiteboard_remove_brush_message)) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            brushIndexToRemove?.let { index ->
+                                whiteboardViewModel.removeBrush(index)
+                            }
+                            brushIndexToRemove = null
+                        }
+                    ) {
+                        Text(stringResource(R.string.dialog_remove))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { brushIndexToRemove = null }) {
+                        Text(stringResource(R.string.dialog_cancel))
+                    }
+                }
+            )
         }
     }
 }
