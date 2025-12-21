@@ -33,11 +33,11 @@
 
                 <ImageView
                     android:id="@+id/login_logo"
-                    android:layout_width="330dp"
-                    android:layout_height="223dp"
+                    android:layout_width="60dp"
+                    android:layout_height="80dp"
                     android:layout_gravity="center"
                     android:layout_marginBottom="0dp"
-                    app:srcCompat="@drawable/logged_in_logo" />
+                    app:srcCompat="@drawable/ic_link" />
 
                 <com.ichi2.ui.FixedTextView
                     android:layout_width="wrap_content"
