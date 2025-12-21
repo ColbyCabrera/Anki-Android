@@ -209,7 +209,6 @@ open class CardTemplateEditor :
 
         slidingTabLayout = findViewById(R.id.sliding_tabs)
         viewPager = findViewById(R.id.card_template_editor_pager)
-        setNavigationBarColor(R.attr.alternativeBackgroundColor)
 
         // Disable the home icon
         enableToolbar()
@@ -488,7 +487,6 @@ open class CardTemplateEditor :
         override fun getItemId(position: Int): Long = baseId + position
 
         override fun containsItem(id: Long): Boolean {
-            @Suppress("ConvertTwoComparisonsToRangeCheck") // more readable without the range check
             return (id - baseId < itemCount) && (id - baseId >= 0)
         }
 
@@ -942,7 +940,7 @@ open class CardTemplateEditor :
          * Setups the part of the menu that can be used either in template editor or in previewer fragment.
          */
         fun setupCommonMenu(menu: Menu) {
-            menu.findItem(R.id.action_restore_to_default).title = CollectionManager.TR.cardTemplatesRestoreToDefault()
+            menu.findItem(R.id.action_restore_to_default).title = TR.cardTemplatesRestoreToDefault()
             if (noteTypeCreatesDynamicNumberOfNotes()) {
                 Timber.d("Editing cloze/occlusion note type, disabling add/delete card template and deck override functionality")
                 menu.findItem(R.id.action_add).isVisible = false
