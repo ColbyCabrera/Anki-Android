@@ -165,7 +165,7 @@ This may take some time.</string>
     <!-- Context Menu -->
     <string name="card_browser_context_menu" comment="The value which appears in the system context menu. Note the casing difference">Card Browser</string>
 
-    <string name="context_menu_anki_card_label">Anki Card</string>
+    <string name="context_menu_anki_card_label">Hirameki</string>
 
     <!-- Sync conflict -->
     <string name="sync_conflict_message_new">The collections can’t be combined.
