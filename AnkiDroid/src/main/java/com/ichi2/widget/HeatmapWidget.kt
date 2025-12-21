@@ -1,5 +1,4 @@
 /*
-* Copyright (c) 2009 Andrew <andrewdubya@gmail>
 * Copyright (c) 2025 Colby Cabrera <colbycabrera.wd@gmail.com>
 *
 * This program is free software; you can redistribute it and/or modify it under
@@ -94,11 +93,15 @@ class HeatmapWidget : GlanceAppWidget() {
         // Cell width 10.dp + 2.dp gap = 12.dp
         val numWeeks = (availableWidth.value / WEEK_COLUMN_WIDTH).toInt().coerceAtLeast(8)
 
+        // Widgets run outside the main app context and don't have collection access,
+        // so direct time APIs are appropriate here rather than collection.getTime()
+        @Suppress("DirectSystemCurrentTimeMillisUsage")
         val today = System.currentTimeMillis()
         val dayMillis = DAY_IN_MILLIS
         val currentDayIndex = today / dayMillis
 
         // Calculate ISO Day of Week (0 = Mon, 6 = Sun)
+        @Suppress("DirectCalendarInstanceUsage")
         val calendar = Calendar.getInstance()
         calendar.timeInMillis = today
         // Calendar.DAY_OF_WEEK: Sun=1, Mon=2, ... Sat=7
@@ -312,6 +315,9 @@ class HeatmapWidget : GlanceAppWidget() {
                     // Limit query to recent history for performance.
                     // revlog.id is the primary key (timestamp in ms), so the WHERE clause
                     // enables an efficient index range scan instead of a full table scan.
+                    // Widgets run outside the main app context and may not have collection access,
+                    // so direct time APIs are appropriate here
+                    @Suppress("DirectSystemCurrentTimeMillisUsage")
                     val cutoffMillis = System.currentTimeMillis() - (MAX_HEATMAP_DAYS * DAY_IN_MILLIS)
                     val query =
                         "SELECT CAST(id/$DAY_IN_MILLIS AS INTEGER) as day, count() FROM revlog " +
@@ -341,6 +347,8 @@ class HeatmapWidget : GlanceAppWidget() {
 fun HeatmapWidgetPreview() {
     val context = androidx.glance.LocalContext.current
     // Generate dummy data
+    // Preview function uses dummy data - direct time APIs are appropriate
+    @Suppress("DirectSystemCurrentTimeMillisUsage")
     val today = System.currentTimeMillis() / HeatmapWidget.DAY_IN_MILLIS
     val dummyData = mutableMapOf<Long, Int>()
     // Fill some days
