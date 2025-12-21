@@ -104,13 +104,14 @@ class WhiteboardViewModel(
     val isStylusOnlyMode = MutableStateFlow(false)
     val toolbarAlignment = MutableStateFlow(ToolbarAlignment.BOTTOM)
 
-    val eraserDisplayWidth = combine(
-        eraserMode,
-        inkEraserStrokeWidth,
-        strokeEraserStrokeWidth,
-    ) { mode, inkWidth, strokeWidth ->
-        if (mode == EraserMode.INK) inkWidth else strokeWidth
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, WhiteboardRepository.DEFAULT_ERASER_WIDTH)
+    val eraserDisplayWidth =
+        combine(
+            eraserMode,
+            inkEraserStrokeWidth,
+            strokeEraserStrokeWidth,
+        ) { mode, inkWidth, strokeWidth ->
+            if (mode == EraserMode.INK) inkWidth else strokeWidth
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, WhiteboardRepository.DEFAULT_ERASER_WIDTH)
 
     private val pathsErasedInCurrentGesture = mutableListOf<DrawingAction>()
     private var pathsBeforeGesture: List<DrawingAction> = emptyList()
@@ -140,12 +141,13 @@ class WhiteboardViewModel(
      */
     fun addPath(path: Path) {
         val isPixelEraser = isEraserActive.value && eraserMode.value == EraserMode.INK
-        val newAction = DrawingAction(
-            path,
-            brushColor.value,
-            activeStrokeWidth.value,
-            isPixelEraser,
-        )
+        val newAction =
+            DrawingAction(
+                path,
+                brushColor.value,
+                activeStrokeWidth.value,
+                isPixelEraser,
+            )
         paths.update { it + newAction }
         undoStack.update { it + AddAction(newAction) }
         redoStack.value = emptyList()
@@ -232,14 +234,15 @@ class WhiteboardViewModel(
      */
     fun endPathEraseGesture() {
         if (pathsErasedInCurrentGesture.isNotEmpty()) {
-            val removedWithIndices = pathsErasedInCurrentGesture.mapNotNull { removedAction ->
-                val index = pathsBeforeGesture.indexOf(removedAction)
-                if (index != -1) {
-                    Pair(index, removedAction)
-                } else {
-                    null
+            val removedWithIndices =
+                pathsErasedInCurrentGesture.mapNotNull { removedAction ->
+                    val index = pathsBeforeGesture.indexOf(removedAction)
+                    if (index != -1) {
+                        Pair(index, removedAction)
+                    } else {
+                        null
+                    }
                 }
-            }
             val action = RemoveAction(removedWithIndices)
             undoStack.update { it + action }
             redoStack.value = emptyList()
@@ -343,11 +346,12 @@ class WhiteboardViewModel(
         eraserMode.value = mode
         repository.eraserMode = mode
         if (isEraserActive.value) {
-            activeStrokeWidth.value = if (mode == EraserMode.INK) {
-                inkEraserStrokeWidth.value
-            } else {
-                strokeEraserStrokeWidth.value
-            }
+            activeStrokeWidth.value =
+                if (mode == EraserMode.INK) {
+                    inkEraserStrokeWidth.value
+                } else {
+                    strokeEraserStrokeWidth.value
+                }
         }
     }
 
@@ -477,11 +481,12 @@ class WhiteboardViewModel(
                 var scale = 1.0f
 
                 if (effectiveWidth > MAX_BITMAP_DIMENSION || effectiveHeight > MAX_BITMAP_DIMENSION) {
-                    scale = if (effectiveWidth > effectiveHeight) {
-                        MAX_BITMAP_DIMENSION.toFloat() / effectiveWidth
-                    } else {
-                        MAX_BITMAP_DIMENSION.toFloat() / effectiveHeight
-                    }
+                    scale =
+                        if (effectiveWidth > effectiveHeight) {
+                            MAX_BITMAP_DIMENSION.toFloat() / effectiveWidth
+                        } else {
+                            MAX_BITMAP_DIMENSION.toFloat() / effectiveHeight
+                        }
                     effectiveWidth = (effectiveWidth * scale).toInt()
                     effectiveHeight = (effectiveHeight * scale).toInt()
 
@@ -494,31 +499,32 @@ class WhiteboardViewModel(
                 }
 
                 // Create a transparent bitmap
-                val bitmap = try {
-                    android.graphics.Bitmap.createBitmap(
-                        effectiveWidth,
-                        effectiveHeight,
-                        android.graphics.Bitmap.Config.ARGB_8888,
-                    )
-                } catch (e: OutOfMemoryError) {
-                    Timber.w(
-                        e,
-                        "OutOfMemoryError when creating bitmap with ARGB_8888, trying RGB_565",
-                    )
-                    // Note: RGB_565 has no alpha channel, so eraser paths drawn with
-                    // PorterDuff.Mode.CLEAR will render as black instead of transparent.
-                    // This is an acceptable trade-off for low-memory situations.
+                val bitmap =
                     try {
                         android.graphics.Bitmap.createBitmap(
                             effectiveWidth,
                             effectiveHeight,
-                            android.graphics.Bitmap.Config.RGB_565,
+                            android.graphics.Bitmap.Config.ARGB_8888,
                         )
-                    } catch (e2: OutOfMemoryError) {
-                        Timber.e(e2, "Failed to create bitmap even with RGB_565")
-                        return@withContext null
+                    } catch (e: OutOfMemoryError) {
+                        Timber.w(
+                            e,
+                            "OutOfMemoryError when creating bitmap with ARGB_8888, trying RGB_565",
+                        )
+                        // Note: RGB_565 has no alpha channel, so eraser paths drawn with
+                        // PorterDuff.Mode.CLEAR will render as black instead of transparent.
+                        // This is an acceptable trade-off for low-memory situations.
+                        try {
+                            android.graphics.Bitmap.createBitmap(
+                                effectiveWidth,
+                                effectiveHeight,
+                                android.graphics.Bitmap.Config.RGB_565,
+                            )
+                        } catch (e2: OutOfMemoryError) {
+                            Timber.e(e2, "Failed to create bitmap even with RGB_565")
+                            return@withContext null
+                        }
                     }
-                }
                 try {
                     val canvas = android.graphics.Canvas(bitmap)
                     if (scale != 1.0f) {
@@ -526,13 +532,14 @@ class WhiteboardViewModel(
                     }
 
                     // Draw all paths
-                    val paint = android.graphics.Paint().apply {
-                        isAntiAlias = true
-                        isDither = true
-                        style = android.graphics.Paint.Style.STROKE
-                        strokeJoin = android.graphics.Paint.Join.ROUND
-                        strokeCap = android.graphics.Paint.Cap.ROUND
-                    }
+                    val paint =
+                        android.graphics.Paint().apply {
+                            isAntiAlias = true
+                            isDither = true
+                            style = android.graphics.Paint.Style.STROKE
+                            strokeJoin = android.graphics.Paint.Join.ROUND
+                            strokeCap = android.graphics.Paint.Cap.ROUND
+                        }
 
                     for (action in currentPaths) {
                         paint.strokeWidth = action.strokeWidth
@@ -547,11 +554,12 @@ class WhiteboardViewModel(
                     }
 
                     // Save to file
-                    val baseDir = context.getExternalFilesDir(null)
-                        ?: run {
-                            Timber.w("External storage unavailable, falling back to internal storage")
-                            context.filesDir
-                        }
+                    val baseDir =
+                        context.getExternalFilesDir(null)
+                            ?: run {
+                                Timber.w("External storage unavailable, falling back to internal storage")
+                                context.filesDir
+                            }
                     val saveDirectory = java.io.File(baseDir, "Whiteboard")
                     if (!saveDirectory.exists()) {
                         if (!saveDirectory.mkdirs()) {
@@ -559,8 +567,11 @@ class WhiteboardViewModel(
                             return@withContext null
                         }
                     }
+                    // File naming uses wall-clock time, not collection scheduling time
+                    @Suppress("DirectDateInstantiation")
                     val timestamp =
-                        java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.getDefault())
+                        java.text
+                            .SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.getDefault())
                             .format(java.util.Date())
                     val file = java.io.File(saveDirectory, "whiteboard_$timestamp.png")
 
