@@ -21,12 +21,8 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -39,12 +35,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -63,13 +58,13 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -102,10 +97,10 @@ private val subDeckPadding = 16.dp
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun RenderDeck(
+private fun DeckRow(
     deck: DisplayDeckNode,
-    children: List<DisplayDeckNode>,
-    deckToChildrenMap: Map<DisplayDeckNode, List<DisplayDeckNode>>,
+    isLastInGroup: Boolean,
+    modifier: Modifier = Modifier,
     onDeckClick: (DisplayDeckNode) -> Unit,
     onExpandClick: (DisplayDeckNode) -> Unit,
     onDeckOptions: (DisplayDeckNode) -> Unit,
@@ -115,84 +110,61 @@ private fun RenderDeck(
     onRebuild: (DisplayDeckNode) -> Unit,
     onEmpty: (DisplayDeckNode) -> Unit,
 ) {
-    val cornerRadius by animateDpAsState(
-        targetValue = if (!deck.collapsed && deck.canCollapse) expandedDeckCardRadius else collapsedDeckCardRadius,
-        animationSpec = motionScheme.defaultEffectsSpec()
+    val isTop = deck.depth == 0
+    val isExpanded = !deck.collapsed && deck.canCollapse
+
+    // Animate the corner radius for the "Card" background
+    val topRadius by animateDpAsState(
+        targetValue = if (isTop) {
+            if (isExpanded) expandedDeckCardRadius else collapsedDeckCardRadius
+        } else 0.dp,
+        label = "topRadius"
     )
 
-    var rememberedChildren by remember { mutableStateOf<List<DisplayDeckNode>?>(null) }
-    if (!deck.collapsed) {
-        rememberedChildren = children
-    }
-
-    val content = @Composable {
-        DeckItem(
-            deck = deck,
-            onDeckClick = { onDeckClick(deck) },
-            onExpandClick = { onExpandClick(deck) },
-            onDeckOptions = { onDeckOptions(deck) },
-            onRename = { onRename(deck) },
-            onExport = { onExport(deck) },
-            onDelete = { onDelete(deck) },
-            onRebuild = { onRebuild(deck) },
-            onEmpty = { onEmpty(deck) },
-        )
-        AnimatedVisibility(
-            visible = !deck.collapsed,
-            enter = expandVertically(motionScheme.defaultSpatialSpec()) + fadeIn(motionScheme.defaultEffectsSpec()) + scaleIn(
-                initialScale = 0.3f,
-                animationSpec = motionScheme.defaultSpatialSpec()
-            ),
-            exit = shrinkVertically(motionScheme.fastSpatialSpec()) + fadeOut(motionScheme.defaultEffectsSpec()) + scaleOut(
-                targetScale = 0.92f,
-                animationSpec = motionScheme.fastSpatialSpec()
-            ),
-        ) {
-            Column {
-                for (child in (rememberedChildren ?: emptyList())) {
-                    key(child.did) {
-                        val grandChildren = deckToChildrenMap[child] ?: emptyList()
-                        RenderDeck(
-                            deck = child,
-                            children = grandChildren,
-                            deckToChildrenMap = deckToChildrenMap,
-                            onDeckClick = onDeckClick,
-                            onExpandClick = onExpandClick,
-                            onDeckOptions = onDeckOptions,
-                            onRename = onRename,
-                            onExport = onExport,
-                            onDelete = onDelete,
-                            onRebuild = onRebuild,
-                            onEmpty = onEmpty,
-                        )
-                    }
-                }
+    val bottomRadius by animateDpAsState(
+        targetValue = if (isLastInGroup) {
+            // If it's a single item (isTop and isLastInGroup), match the top radius logic (pill or rounded rect)
+            // If it's just the bottom of a group, use the expanded radius
+            if (isTop) {
+                if (isExpanded) 0.dp else collapsedDeckCardRadius
+            } else {
+                expandedDeckCardRadius
             }
-        }
-    }
+        } else 0.dp,
+        label = "bottomRadius"
+    )
 
-    if (deck.depth == 0) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 4.dp),
-            shape = RoundedCornerShape(cornerRadius),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                contentColor = MaterialTheme.colorScheme.onSurface
-            )
-        ) {
-            Column(Modifier.padding(8.dp)) {
-                content()
-            }
-        }
-    } else {
+    val shape = RoundedCornerShape(
+        topStart = topRadius,
+        topEnd = topRadius,
+        bottomStart = bottomRadius,
+        bottomEnd = bottomRadius
+    )
+
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(bottom = if (isLastInGroup) 4.dp else 0.dp),
+        shape = shape,
+        color = CardDefaults.cardColors().containerColor(enabled = true).value, // Use standard card container color
+        contentColor = MaterialTheme.colorScheme.onSurface
+    ) {
         Column(
-            modifier = Modifier.padding(
-                start = if (deck.depth == 1) 0.dp else subDeckPadding,
-            )
+            modifier = Modifier
+                .padding(8.dp) // Inner padding of the "Card"
+                .padding(start = if (deck.depth <= 1) 0.dp else (deck.depth - 1) * subDeckPadding)
         ) {
-            content()
+            DeckItem(
+                deck = deck,
+                onDeckClick = { onDeckClick(deck) },
+                onExpandClick = { onExpandClick(deck) },
+                onDeckOptions = { onDeckOptions(deck) },
+                onRename = { onRename(deck) },
+                onExport = { onExport(deck) },
+                onDelete = { onDelete(deck) },
+                onRebuild = { onRebuild(deck) },
+                onEmpty = { onEmpty(deck) },
+            )
         }
     }
 }
@@ -230,26 +202,6 @@ fun DeckPickerContent(
         MorphShape(
             morph = morph, percentage = state.distanceFraction
         )
-    }
-
-    // Build the deck tree
-    // We remember the result to avoid rebuilding the tree on every recomposition
-    // if the deck list hasn't changed.
-    val (deckToChildrenMap, rootDecks) = remember(decks) {
-        val deckToChildrenMap = mutableMapOf<DisplayDeckNode, MutableList<DisplayDeckNode>>()
-        val rootDecks = mutableListOf<DisplayDeckNode>()
-        val deckMap = decks.associateBy { it.did }
-
-        for (deck in decks) {
-            val parentId = deck.deckNode.parent?.get()?.did
-            if (parentId != null && deckMap.containsKey(parentId)) {
-                val parent = deckMap[parentId]!!
-                deckToChildrenMap.getOrPut(parent) { mutableListOf() }.add(deck)
-            } else {
-                rootDecks.add(deck)
-            }
-        }
-        deckToChildrenMap to rootDecks
     }
 
     Box(
@@ -312,12 +264,18 @@ fun DeckPickerContent(
                     contentPadding = contentPadding,
                     state = listState
                 ) {
-                    items(rootDecks, key = { it.did }) { rootDeck ->
-                        val children = deckToChildrenMap[rootDeck] ?: emptyList()
-                        RenderDeck(
-                            deck = rootDeck,
-                            children = children,
-                            deckToChildrenMap = deckToChildrenMap,
+                    itemsIndexed(
+                        items = decks,
+                        key = { _, deck -> deck.did }
+                    ) { index, deck ->
+                        val nextDeck = decks.getOrNull(index + 1)
+                        // A group ends if the next deck is null (end of list) or is a root deck (depth 0)
+                        val isLastInGroup = nextDeck == null || nextDeck.depth == 0
+
+                        DeckRow(
+                            modifier = Modifier.animateItem(),
+                            deck = deck,
+                            isLastInGroup = isLastInGroup,
                             onDeckClick = onDeckClick,
                             onExpandClick = onExpandClick,
                             onDeckOptions = onDeckOptions,
