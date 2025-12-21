@@ -26,6 +26,7 @@ import android.view.Window
 import android.view.WindowManager
 import android.view.animation.Animation
 import android.widget.ProgressBar
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -41,12 +42,15 @@ import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent.COLOR_SCHEME_DARK
 import androidx.browser.customtabs.CustomTabsIntent.COLOR_SCHEME_LIGHT
 import androidx.browser.customtabs.CustomTabsIntent.COLOR_SCHEME_SYSTEM
+import androidx.compose.foundation.layout.statusBars
 import androidx.core.app.NotificationCompat
 import androidx.core.app.PendingIntentCompat
 import androidx.core.app.ShareCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -141,7 +145,6 @@ open class AnkiActivity :
         activityName = javaClass.simpleName
     }
 
-    @Suppress("deprecation") // #9332: UI Visibility -> Insets
     override fun onCreate(savedInstanceState: Bundle?) {
         // The hardware buttons should control the music volume
         volumeControlStream = AudioManager.STREAM_MUSIC
@@ -149,14 +152,15 @@ open class AnkiActivity :
         Themes.setTheme(this)
         Themes.disableXiaomiForceDarkMode(this)
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         // Disable the notifications bar if running under the test monkey.
         if (AdaptionUtil.isUserATestClient) {
-            window.setFlags(
-                WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN,
-            )
+            val controller =
+                WindowInsetsControllerCompat(window, window.decorView)
+            controller.hide(WindowInsetsCompat.Type.statusBars())
+            controller.systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
-        window.navigationBarColor = getColor(R.color.transparent)
         supportFragmentManager.setFragmentResultListener(REQUEST_EXPORT_SAVE, this) { _, bundle ->
             saveExportFile(
                 bundle.getString(KEY_EXPORT_PATH) ?: error("Missing required exportPath!"),
@@ -681,14 +685,6 @@ open class AnkiActivity :
             savedInstanceState = savedInstanceState,
             activitySuperOnCreate = { state -> super.onCreate(state) },
         )
-
-    /** @see Window.setNavigationBarColor */
-    @Suppress("deprecation", "API35 properly handle edge-to-edge")
-    fun setNavigationBarColor(
-        @AttrRes attr: Int,
-    ) {
-        window.navigationBarColor = Themes.getColorFromAttr(this, attr)
-    }
 
     fun closeCollectionAndFinish() {
         Timber.i("closeCollectionAndFinish()")
