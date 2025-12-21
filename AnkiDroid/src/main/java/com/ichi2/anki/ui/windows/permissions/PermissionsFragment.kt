@@ -76,7 +76,6 @@ abstract class PermissionsFragment(
     }
 
     /** Opens the Android 'MANAGE_ALL_FILES' page if the device provides this feature */
-    @RequiresApi(Build.VERSION_CODES.R)
     protected fun ActivityResultLauncher<Intent>.showManageAllFilesScreen() {
         val intent =
             Intent(
@@ -99,7 +98,6 @@ abstract class PermissionsFragment(
      * Set this PermissionItem so that when it is clicked, the app requests external file management permissions
      * from the user.
      */
-    @RequiresApi(Build.VERSION_CODES.R)
     protected fun PermissionsItem.requestExternalStorageOnClick(launcher: ActivityResultLauncher<Intent>) {
         setOnPermissionsRequested { areAlreadyGranted ->
             if (!areAlreadyGranted) launcher.showManageAllFilesScreen()

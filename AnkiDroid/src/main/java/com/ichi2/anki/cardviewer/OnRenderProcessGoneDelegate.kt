@@ -105,7 +105,6 @@ open class OnRenderProcessGoneDelegate(
         return true
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     protected open fun displayFatalError(detail: RenderProcessGoneDetail) {
         if (activityIsMinimised()) {
             Timber.d("Not showing toast - screen isn't visible")
@@ -115,7 +114,6 @@ open class OnRenderProcessGoneDelegate(
         showThemedToast(target, errorMessage, false)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     protected open fun displayNonFatalError(detail: RenderProcessGoneDetail) {
         if (activityIsMinimised()) {
             Timber.d("Not showing toast - screen isn't visible")
@@ -125,14 +123,12 @@ open class OnRenderProcessGoneDelegate(
         showThemedToast(target, nonFatalError, false)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     protected fun getErrorCause(detail: RenderProcessGoneDetail): String {
         // It's not necessarily an OOM crash, false implies a general code which is for "system terminated".
         val errorCauseId = if (detail.didCrash()) R.string.webview_crash_unknown else R.string.webview_crash_oom
         return target.resources.getString(errorCauseId)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     protected open fun displayRenderLoopDialog(
         currentCardId: CardId,
         detail: RenderProcessGoneDetail,

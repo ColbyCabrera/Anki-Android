@@ -188,7 +188,6 @@ enum class PermissionSet(
 ) : Parcelable {
     LEGACY_ACCESS(Permissions.legacyStorageAccessPermissions, PermissionsUntil29Fragment::class.java),
 
-    @RequiresApi(Build.VERSION_CODES.R)
     EXTERNAL_MANAGER(listOf(Permissions.MANAGE_EXTERNAL_STORAGE), PermissionsStartingAt30Fragment::class.java),
 
     APP_PRIVATE(emptyList(), null),
@@ -204,7 +203,8 @@ internal fun selectAnkiDroidFolder(
     canManageExternalStorage: Boolean,
     currentFolderIsAccessibleAndLegacy: Boolean,
 ): AnkiDroidFolder {
-    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q || currentFolderIsAccessibleAndLegacy) {
+    // Since minSdkVersion is 31, we only reach here if currentFolderIsAccessibleAndLegacy is true
+    if (currentFolderIsAccessibleAndLegacy) {
         // match AnkiDroid behaviour before scoped storage - force the use of ~/AnkiDroid,
         // since it's fast & safe up to & including 'Q'
         // If a user upgrades their OS from Android 10 to 11 then storage speed is severely reduced
@@ -221,7 +221,8 @@ internal fun selectAnkiDroidFolder(
 }
 
 fun selectAnkiDroidFolder(context: Context): AnkiDroidFolder {
-    val canAccessLegacyStorage = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || Environment.isExternalStorageLegacy()
+    // Since minSdkVersion is 31, Environment.isExternalStorageLegacy() is the only relevant check
+    val canAccessLegacyStorage = Environment.isExternalStorageLegacy()
     val currentFolderIsAccessibleAndLegacy = canAccessLegacyStorage && isLegacyStorage(context, setCollectionPath = false) == true
 
     return selectAnkiDroidFolder(
