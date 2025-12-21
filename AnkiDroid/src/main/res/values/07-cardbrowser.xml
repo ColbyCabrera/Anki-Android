@@ -38,7 +38,7 @@
     <string name="delete_card_title">Delete note?</string>
     <string name="card_browser_show_marked" maxLength="28">Filter marked</string>
     <string name="card_browser_show_suspended" maxLength="28">Filter suspended</string>
-    <string name="card_browser_search_by_tag" maxLength="28">Filter by tag</string>
+    <string name="card_browser_search_by_tag" comment="Filter by tag button. Duplicated in filter_by_tag for generic context" maxLength="28">Filter by tag</string>
     <string name="card_browser_search_tags_hint">Search tags</string>
     <string name="card_browser_search_by_flag" maxLength="28">Filter by flag</string>
     <string name="card_browser_list_my_searches" maxLength="28">My searches</string>
@@ -110,7 +110,7 @@
     <string name="save_changes_message">Please save your changes first</string>
 
     <string name="browser_find_replace_loading_fields">Retrieving fields names&#8230;</string>
-    <string name="note_editor_tags_title">Tags</string>
+    <string name="note_editor_tags_title" comment="Tags title for note editor. Duplicated in card_details_tags for card browser context">Tags</string>
 
     <string name="card_browser_no_cards_selected">No cards selected</string>
     <string name="card_browser_reposition_invalid_bounds">Could not determine card range</string>

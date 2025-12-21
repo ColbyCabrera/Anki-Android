@@ -146,7 +146,7 @@
     <string name="fact_adder_intent_title" comment="Label of the 'Add Note' window. This title can't be seen in AnkiDroid directly.">Hirameki card</string>
     <string name="note_editor_copy_note" maxLength="28">Copy note</string>
     <string name="card_editor_reposition_card" comment="reposition a card in the new queue" maxLength="28">Reposition</string>
-    <string name="card_editor_reset_card" maxLength="28">Reset progress</string>
+    <string name="card_editor_reset_card" comment="Reset card progress button. Duplicated in reset_progress for generic context" maxLength="28">Reset progress</string>
     <string name="card_editor_reschedule_card" comment="Action to reschedule a card" maxLength="28">Reschedule</string>
     <string name="card_editor_preview_card" comment="Button offering to preview some card(s)" maxLength="28">Preview</string>
     <string name="copy_as_markdown" comment="Copies text to the clipboard as Markdown" maxLength="28">Copy as Markdown</string>
@@ -194,7 +194,7 @@
     <string name="export_choice_save_to">Save to</string>
     <string name="export_saving_exported_collection">Saving exported file&#8230;</string>
     <string name="study_options" comment="Name for a preference category in Filtered deck (aka Cram deck, aka Custom study) options" maxLength="28">Options</string>
-    <string name="menu__deck_options" maxLength="28">Deck options</string>
+    <string name="menu__deck_options" comment="Menu item for deck options. Duplicated in deck_options for generic context" maxLength="28">Deck options</string>
     <string name="menu__study_options" comment="Menu item that opens options for a Filtered deck (aka Cram deck, aka Custom study)">Study options</string>
     <string name="select_tts" maxLength="28">Set TTS language</string>
     <string name="dyn_deck_desc">This is a special deck for studying outside of the normal schedule. Cards will be automatically returned to their original decks after you review them. Deleting this deck from the deck list will return all remaining cards to their original deck.</string>
@@ -364,7 +364,7 @@
     <string name="deck_shortcut_doesnt_exist">Deck deleted. Please remove the shortcut</string>
 
     <!-- Browser Options Dialog -->
-    <string name="show_cards" comment="Label for toggle cards button in BrowserOptionsDialog">Cards</string>
+    <string name="show_cards" comment="Label for toggle cards button in BrowserOptionsDialog. Duplicated in cards for generic context">Cards</string>
     <string name="show_notes" comment="Label for toggle notes button in BrowserOptionsDialog">Notes</string>
     <string name="toggle_cards_notes">Toggle Cards/Notes</string>
     <string name="truncate_content_help">Truncate the height of each row of the Browser to show only first 3&#160;lines of content</string>
@@ -425,7 +425,7 @@ opening the system text to speech settings fails">Failed to open text to speech 
 
     <string name="card_template_reposition_template" comment="move a card template to a new position" maxLength="28">Reposition</string>
     <string name="previewer_next" comment="Name of the next button in the previewer" maxLength="28">Next</string>
-    <string name="previewer_back" comment="Name of the back button in the previewer" maxLength="28">Back</string>
+    <string name="previewer_back" comment="Name of the back button in the previewer. Duplicated in back_field_name and back for different contexts" maxLength="28">Back</string>
 
     <string name="start_recording">Record</string>
     <string name="stop_recording">Stop</string>
@@ -465,7 +465,7 @@ opening the system text to speech settings fails">Failed to open text to speech 
         <item quantity="other">%d notes</item>
     </plurals>
     <string name="fields">Fields</string>
-    <string name="cards">Cards</string>
+    <string name="cards" comment="Generic cards label. Duplicated in show_cards for browser context">Cards</string>
 
     <!-- Browser Options -->
     <string name="ignore_accents_in_search">Ignore accents in search</string>

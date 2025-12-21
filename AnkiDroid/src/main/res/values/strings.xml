@@ -5,7 +5,7 @@
     <string name="rebuild" comment="Generic rebuild action. Duplicated in rebuild_cram_label for filtered deck context">Rebuild</string>
     <string name="empty_cards_action" comment="Generic empty action. Duplicated in empty_cram_label for filtered deck context">Empty</string>
     <string name="deck_options" comment="Generic deck options label. Duplicated in menu__deck_options for menu context">Deck options</string>
-    <string name="add_card">Add card</string>
+    <string name="add_card" comment="Add card button. Duplicated in menu_add as case-insensitive match">Add card</string>
     <string name="get_shared" comment="Button to get shared decks. Duplicated in menu_get_shared_decks for menu context">Get shared decks</string>
     <string name="search_decks" maxLength="28">Search decks</string>
     <string name="close">Close</string>
@@ -20,7 +20,7 @@
     <string name="fab_menu_expanded">Expanded</string>
     <string name="fab_menu_collapsed">Collapsed</string>
     <string name="fab_menu_toggle">Toggle menu</string>
-    <string name="back">back</string>
+    <string name="back" comment="Generic back text. Duplicated in previewer_back and back_field_name for specific contexts">back</string>
     <string name="preview" comment="Generic preview label. Duplicated in card_editor_preview_card for card editor context">Preview</string>
     <string name="note_type_not_found_for_template_editor">Unable to open card template editor: note type not found</string>
     <string name="daily_limit_reached">There are more new cards available, but the daily limit has been reached. You can increase the limit in options, but please bear in mind that the more new cards you introduce, the higher your short-term review workload will become.</string>
@@ -31,8 +31,8 @@
     <string name="sync_starting">Sync starting…</string>
     <string name="syncing">Syncing…</string>
     <string name="filter" comment="Generic filter label. Duplicated in deck_conf_cram_filter for cram deck context">Filter</string>
-    <string name="card_browser_deselect_all">Deselect all</string>
-    <string name="deselect_all">Deselect all</string>
+    <string name="card_browser_deselect_all" comment="Deselect all in card browser. Duplicated in deselect_all for generic context">Deselect all</string>
+    <string name="deselect_all" comment="Generic deselect all. Duplicated in card_browser_deselect_all for browser context">Deselect all</string>
     <string name="reset_progress" comment="Generic reset progress action. Duplicated in card_editor_reset_card for card editor context">Reset progress</string>
     <string name="export_card">Export card</string>
     <string name="undo_delete_note">Undo delete note</string>
