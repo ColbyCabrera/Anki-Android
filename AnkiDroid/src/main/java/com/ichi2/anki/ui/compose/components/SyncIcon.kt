@@ -65,10 +65,11 @@ fun SyncIcon(
             }
         },
     ) {
-        val contentDescription = when (syncState) {
-            SyncIconState.PendingChanges -> stringResource(R.string.sync_menu_title_pending_changes)
-            SyncIconState.OneWay -> stringResource(R.string.sync_menu_title_one_way_sync)
-            SyncIconState.NotLoggedIn -> stringResource(R.string.sync_menu_title_no_account)
+        val contentDescription = when {
+            isSyncing -> stringResource(R.string.syncing)
+            syncState == SyncIconState.PendingChanges -> stringResource(R.string.sync_menu_title_pending_changes)
+            syncState == SyncIconState.OneWay -> stringResource(R.string.sync_menu_title_one_way_sync)
+            syncState == SyncIconState.NotLoggedIn -> stringResource(R.string.sync_menu_title_no_account)
             else -> stringResource(R.string.sync_now)
         }
 
