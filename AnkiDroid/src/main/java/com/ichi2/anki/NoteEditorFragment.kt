@@ -19,45 +19,55 @@
 /**
  * COMPOSE MIGRATION STATUS & CLEANUP PLAN
  * ========================================
+ * Last Updated: December 2024
  *
- * This file is undergoing a gradual migration from XML-based Views to Jetpack Compose.
- * The Compose UI is now functional for the core note editor, toolbar, fields, deck/notetype
- * selectors, and tags/cards buttons. Legacy XML code paths remain as fallback references
- * and are guarded or commented out.
+ * CURRENT STATE:
+ * - The note editor now ALWAYS uses Compose UI (setupComposeEditor is the only initialization path)
+ * - The `isComposeMode` flag is still present but always set to true during normal operation
+ * - Legacy XML code paths exist but are guarded by null checks (e.g., fieldsLayoutContainer == null)
+ * - The flag is checked in 20+ places for conditional routing between Compose/XML logic
  *
- * AREAS WITH PENDING CLEANUP (with line references as of latest commit):
- * - Lines ~489-493:   Snackbar anchor (toolbar reference) - migrate to Compose scaffold
- * - Lines ~840-851:   Field/Tags/Cards button XML references - now in Compose
- * - Lines ~963-966:   Note type and deck selector XML comments
- * - Lines ~1032-1040: Tags button and note type spinner listeners
- * - Lines ~2080-2083: Tab order/focus handling for deck spinner (Android <O compatibility)
- * - Lines ~2972-2983: Note type change listener and tags button enable/disable
+ * ISCOMPOSEMODE FLAG STATUS:
+ * - Set to `true` at line ~675 in setupComposeEditor() (always called)
+ * - Set to `false` at line ~2628 in populateEditFields() (legacy path, guarded by null check)
+ * - populateEditFields() early-returns if fieldsLayoutContainer is null, so `isComposeMode = false`
+ *   is never actually executed in Compose mode
+ * - The flag can be removed once all legacy code paths using it are deleted
  *
- * MIGRATION PLAN & TIMELINE:
- * 1. ✅ Phase 1 (Completed): Core Compose UI for fields, toolbar, selectors
- * 2. 🔄 Phase 2 (In Progress): Add integration tests for both XML fallback and Compose paths
- *    - Test snackbar anchoring in both modes
- *    - Test field layout, sticky buttons, multimedia buttons
- *    - Test image occlusion buttons and workflows
- *    - Test note type/deck selection and persistence
- *    - Test tags dialog integration
- *    - Test keyboard shortcuts and tab order
- * 3. ⏳ Phase 3 (Q1 2026): Remove all legacy XML references once tests pass
- *    - Remove commented XML view lookups
- *    - Remove legacy field container and toolbar XML
- *    - Clean up conditional fallback code
- *    - Verify all functionality migrated and tested
- * 4. ⏳ Phase 4 (Q2 2026): Full Compose adoption
- *    - Remove feature flags/preferences guarding Compose
- *    - Archive legacy layout XML files
- *    - Final performance and accessibility audit
+ * LEGACY CODE TO REMOVE (to eliminate isComposeMode flag):
+ * 1. populateEditFields() - Legacy XML field population (lines ~2600-2800)
+ * 2. setNote() / refreshNoteData() - Legacy note setup calling populateEditFields()
+ * 3. updateFieldsFromMap() - Legacy note type change handling
+ * 4. SetNoteTypeListener - Legacy spinner listener with populateEditFields() call
+ * 5. fieldsLayoutContainer, editFields, FieldEditText references
+ * 6. noteTypeSpinner, deckSpinnerSelection legacy widgets
+ * 7. All `if (isComposeMode)` branches - keep only the Compose paths
+ *
+ * NEXT STEPS TO REMOVE isComposeMode:
+ * Step 1: Verify all Compose paths work independently
+ *    - Ensure NoteEditorViewModel handles all field/note type/deck operations
+ *    - Confirm currentFieldStrings works solely from ViewModel state
+ * Step 2: Remove legacy field population code
+ *    - Delete populateEditFields() function entirely
+ *    - Remove setNote(), refreshNoteData(), updateFieldsFromMap() if unused
+ *    - Remove FieldEditText, FieldEditLine, fieldsLayoutContainer references
+ * Step 3: Remove legacy spinners and widgets
+ *    - Delete noteTypeSpinner, deckSpinnerSelection code
+ *    - Remove SetNoteTypeListener inner class
+ * Step 4: Remove isComposeMode checks
+ *    - Find all `if (isComposeMode)` blocks
+ *    - Keep only the Compose branch, delete XML fallback code
+ *    - Delete the isComposeMode property itself
+ * Step 5: Clean up imports and unused references
  *
  * TESTING REQUIREMENTS BEFORE REMOVAL:
- * - Integration tests covering both legacy and Compose code paths
+ * - Ensure NoteEditorViewModelTest covers all operations
+ * - Test note type switching persists correctly
+ * - Test deck selection persists correctly
+ * - Test multimedia attachment flows
+ * - Test image occlusion workflows
+ * - Test cloze deletion insertion
  * - Accessibility testing (TalkBack, Switch Access)
- * - Performance benchmarks (layout inflation, memory)
- * - Compatibility testing across Android versions (API 23+)
- * - Regression testing for multimedia, image occlusion, cloze deletions
  */
 
 package com.ichi2.anki
@@ -3826,7 +3836,7 @@ class NoteEditorFragment :
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun setCurrentlySelectedNoteType(noteTypeId: NoteTypeId) {
         if (isComposeMode) {
-            noteEditorViewModel.selectNoteType(noteTypeId)
+          //  noteEditorViewModel.selectNoteType(noteTypeId)
             return
         }
         val position = allNoteTypeIds!!.indexOf(noteTypeId)
