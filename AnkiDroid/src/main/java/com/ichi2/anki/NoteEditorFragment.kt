@@ -756,6 +756,23 @@ class NoteEditorFragment :
                     val currentNotetype = col.notetypes.current()
                     updateCards(currentNotetype)
                 }
+
+                // Handle Copy Note: Apply copied field contents and tags after ViewModel init
+                // This mirrors the legacy setupEditor() behavior for EXTRA_CONTENTS and EXTRA_TAGS
+                if (addNote) {
+                    val copiedContents = requireArguments().getString(EXTRA_CONTENTS)
+                    copiedContents?.let { contents ->
+                        Timber.d("setupComposeEditor: Applying copied field contents")
+                        setEditFieldTexts(contents)
+                    }
+
+                    val copiedTags = requireArguments().getStringArray(EXTRA_TAGS)
+                    copiedTags?.let { tags ->
+                        Timber.d("setupComposeEditor: Applying copied tags: %s", tags.joinToString())
+                        selectedTags = ArrayList(tags.toList())
+                        noteEditorViewModel.updateTags(tags.toSet())
+                    }
+                }
             }
         }
 
@@ -2478,7 +2495,37 @@ class NoteEditorFragment :
         fieldEditText: EditText?,
         formattedValue: String?,
     ) {
-        if (fieldEditText!!.hasFocus()) {
+        if (isComposeMode) {
+            // Note: In Compose, we don't have direct access to the cursor here easily without a lot of plumbing.
+            // For now, we'll just append it to the current field text in the ViewModel if no focus is tracked,
+            // or find the focused field if possible.
+            val state = noteEditorViewModel.noteEditorState.value
+            val focusedIndex = state.focusedFieldIndex ?: 0
+            val currentFieldValue = state.fields.getOrNull(focusedIndex)?.value ?: TextFieldValue()
+
+            val start = currentFieldValue.selection.start
+            val end = currentFieldValue.selection.end
+            val text = currentFieldValue.text
+
+            val newText = text.replaceRange(min(start, end), max(start, end), formattedValue ?: "")
+            val newSelectionStart = min(start, end) + (formattedValue?.length ?: 0)
+
+            noteEditorViewModel.updateFieldValue(
+                focusedIndex,
+                TextFieldValue(
+                    text = newText,
+                    selection = TextRange(newSelectionStart),
+                ),
+            )
+            return
+        }
+
+        if (fieldEditText == null) {
+            Timber.w("insertStringInField: fieldEditText is null")
+            return
+        }
+
+        if (fieldEditText.hasFocus()) {
             // Crashes if start > end, although this is fine for a selection via keyboard.
             val start = fieldEditText.selectionStart
             val end = fieldEditText.selectionEnd
@@ -2494,8 +2541,15 @@ class NoteEditorFragment :
         fieldIndex: Int,
         newString: String,
     ) {
+        if (isComposeMode) {
+            noteEditorViewModel.updateFieldValue(fieldIndex, TextFieldValue(text = newString))
+            return
+        }
         clearField(fieldIndex)
-        insertStringInField(getFieldForTest(fieldIndex), newString)
+        val field = getFieldForTest(fieldIndex)
+        if (field != null) {
+            insertStringInField(field, newString)
+        }
     }
 
     private suspend fun getCurrentMultimediaEditableNote(): MultimediaEditableNote {
@@ -3104,6 +3158,24 @@ class NoteEditorFragment :
             fields = Utils.splitFields(contents)
             len = fields.size
         }
+
+        if (isComposeMode) {
+            // Compose mode: update fields through ViewModel
+            val currentState = noteEditorViewModel.noteEditorState.value
+            for (i in currentState.fields.indices) {
+                val newText = if (i < len) fields!![i] else ""
+                noteEditorViewModel.updateFieldValue(
+                    i,
+                    TextFieldValue(text = newText),
+                )
+            }
+            return
+        }
+
+        if (editFields == null) {
+            Timber.w("setEditFieldTexts: editFields is null in XML mode")
+            return
+        }
         for (i in editFields!!.indices) {
             if (i < len) {
                 editFields!![i].setText(fields!![i])
@@ -3142,6 +3214,17 @@ class NoteEditorFragment :
     @KotlinCleanup("remove 'requireNoNulls'")
     val fieldsText: String
         get() {
+            if (isComposeMode) {
+                // Compose mode: get from ViewModel
+                val fieldStates = noteEditorViewModel.noteEditorState.value.fields
+                val fields = Array(fieldStates.size) { i -> fieldStates[i].value.text }
+                return Utils.joinFields(fields)
+            }
+
+            if (editFields == null) {
+                Timber.w("fieldsText: editFields is null in XML mode")
+                return ""
+            }
             val fields = arrayOfNulls<String>(editFields!!.size)
             for (i in editFields!!.indices) {
                 fields[i] = getCurrentFieldText(i)
@@ -3676,16 +3759,76 @@ class NoteEditorFragment :
         i: Int,
         newText: String?,
     ) {
+        if (isComposeMode) {
+            noteEditorViewModel.updateFieldValue(i, TextFieldValue(text = newText ?: ""))
+            return
+        }
+        if (editFields == null) {
+            Timber.w("setFieldValueFromUi: editFields is null in XML mode")
+            return
+        }
         val editText = editFields!![i]
         editText.setText(newText)
         EditFieldTextWatcher(i).afterTextChanged(editText.text!!)
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    fun getFieldForTest(index: Int): FieldEditText = editFields!![index]
+    fun getFieldTextForTest(index: Int): String {
+        return if (isComposeMode) {
+            noteEditorViewModel.noteEditorState.value.fields.getOrNull(index)?.value?.text ?: ""
+        } else {
+            editFields!![index].text.toString()
+        }
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    fun setFieldTextForTest(
+        index: Int,
+        text: String,
+    ) {
+        if (isComposeMode) {
+            noteEditorViewModel.updateFieldValue(index, TextFieldValue(text))
+        } else {
+            setFieldValueFromUi(index, text)
+        }
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    fun getFieldForTest(index: Int): FieldEditText? {
+        if (isComposeMode) {
+            // Timber.w("getFieldForTest: editFields is null in Compose mode. Use getFieldTextForTest instead.")
+            return null
+        }
+        return editFields!![index]
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    fun setFieldSelectionForTest(
+        index: Int,
+        start: Int,
+        end: Int = start,
+    ) {
+        if (isComposeMode) {
+            val state = noteEditorViewModel.noteEditorState.value
+            val currentFieldValue = state.fields.getOrNull(index)?.value ?: TextFieldValue()
+            noteEditorViewModel.updateFieldValue(
+                index,
+                currentFieldValue.copy(selection = TextRange(start, end)),
+            )
+            noteEditorViewModel.onFieldFocus(index)
+        } else {
+            val field = editFields!![index]
+            field.requestFocus()
+            field.setSelection(start, end)
+        }
+    }
 
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun setCurrentlySelectedNoteType(noteTypeId: NoteTypeId) {
+        if (isComposeMode) {
+            noteEditorViewModel.selectNoteType(noteTypeId)
+            return
+        }
         val position = allNoteTypeIds!!.indexOf(noteTypeId)
         check(position != -1) { "$noteTypeId not found" }
         noteTypeSpinner!!.setSelection(position)
