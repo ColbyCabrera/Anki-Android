@@ -1253,7 +1253,8 @@ class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectio
     }
 
     fun copyNote() {
-        launchNoteEditor(NoteEditorLauncher.CopyNote(deckId, fieldsText, selectedTags)) { }
+        val currentTags = noteEditorViewModel.noteEditorState.value.tags
+        launchNoteEditor(NoteEditorLauncher.CopyNote(deckId, fieldsText, currentTags)) { }
     }
 
     private fun launchNoteEditor(
