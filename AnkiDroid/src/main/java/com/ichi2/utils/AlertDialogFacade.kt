@@ -36,12 +36,18 @@ import android.widget.TextView
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.widget.doOnTextChanged
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textfield.TextInputLayout
 import com.ichi2.anki.R
+import com.ichi2.anki.ui.compose.components.CheckboxPrompt
+import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import com.ichi2.themes.Theme
 import com.ichi2.themes.Themes
 import com.ichi2.ui.FixedTextView
@@ -209,24 +215,29 @@ fun AlertDialog.Builder.checkBoxPrompt(
     if (stringRes == null && text == null) {
         throw IllegalArgumentException("either `stringRes` or `text` must be set")
     }
-    val checkBoxView = View.inflate(this.context, R.layout.alert_dialog_checkbox, null)
-    val checkBox = checkBoxView.findViewById<CheckBox>(R.id.checkbox)
+    val checkBoxLabel = (if (stringRes != null) context.getString(stringRes) else text).toString()
 
-    val checkBoxLabel = if (stringRes != null) context.getString(stringRes) else text
-    checkBox.text = checkBoxLabel
-    checkBox.isChecked = isCheckedDefault
-
-    checkBox.setOnCheckedChangeListener { _, isChecked ->
-        onToggle(isChecked)
-    }
-
-    return this.setView(checkBoxView)
+    return this.setView(
+        ComposeView(context).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                AnkiDroidTheme {
+                    var isChecked by androidx.compose.runtime.remember {
+                        androidx.compose.runtime.mutableStateOf(isCheckedDefault)
+                    }
+                    CheckboxPrompt(
+                        text = checkBoxLabel,
+                        isChecked = isChecked,
+                        onCheckedChange = {
+                            isChecked = it
+                            onToggle(it)
+                        }
+                    )
+                }
+            }
+        }
+    )
 }
-
-fun AlertDialog.getCheckBoxPrompt(): CheckBox =
-    requireNotNull(findViewById(R.id.checkbox)) {
-        "CheckBox prompt is not available. Forgot to call AlertDialog.Builder.checkBoxPrompt()?"
-    }
 
 /**
  * Sets a custom view for the dialog.
