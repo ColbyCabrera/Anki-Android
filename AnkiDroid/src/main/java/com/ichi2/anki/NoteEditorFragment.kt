@@ -1361,7 +1361,7 @@ class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectio
             }
             CardTemplateNotetype.clearTempNoteTypeFiles()
 
-            if (inCardBrowserActivity) {
+            if (inCardBrowserActivity && requireActivity() !is NoteEditorActivity) {
                 Timber.i("not closing activity: fragmented")
                 return
             }
