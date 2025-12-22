@@ -1848,7 +1848,6 @@ class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectio
         setFieldValueFromUi(index, "")
     }
 
-    @KotlinCleanup("remove 'requireNoNulls'")
     val fieldsText: String
         get() {
             val fieldStates = noteEditorViewModel.noteEditorState.value.fields
