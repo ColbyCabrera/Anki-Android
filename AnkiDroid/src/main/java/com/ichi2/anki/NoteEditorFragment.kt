@@ -141,17 +141,21 @@ import java.util.function.Consumer
 const val CALLER_KEY = "caller"
 
 /**
- * Allows the user to edit a note, for instance if there is a typo. A card is a presentation of a note, and has two
- * sides: a question and an answer. Any number of fields can appear on each side. When you add a note to Anki, cards
- * which show that note are generated. Some models generate one card, others generate more than one.
- * Features:
- * - Hosts the Compose note editor screen and associated top app bar actions.
- * - Implements [DispatchKeyEventListener] to handle key events.
+ * Fragment for creating and editing notes (flashcards) in Anki.
  *
- * @see [the Anki Desktop manual](https://docs.ankiweb.net/getting-started.html.cards)
+ * A note contains field data that generates one or more cards based on its note type template.
+ * This editor allows users to:
+ * - Add new notes or edit existing ones
+ * - Select note types and target decks
+ * - Edit field contents with rich text formatting
+ * - Add multimedia (images, audio, video) to fields
+ * - Manage tags
+ * - Preview cards before saving
+ *
+ * The UI is built using Jetpack Compose via [NoteEditorScreen].
+ *
+ * @see [Anki Desktop manual](https://docs.ankiweb.net/getting-started.html.cards)
  */
-@KotlinCleanup("Go through the class and select elements to fix")
-@KotlinCleanup("see if we can lateinit")
 class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectionListener,
     TagsDialogListener, BaseSnackbarBuilderProvider, DispatchKeyEventListener, MenuProvider,
     ShortcutGroupProvider {
@@ -1018,6 +1022,14 @@ class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectio
         return true
     }
 
+    /**
+     * Checks if there are unsaved changes in the note editor.
+     *
+     * Compares current field values and tags against the original note state
+     * to determine if the user has made any modifications.
+     *
+     * @return true if there are unsaved changes, false otherwise
+     */
     @VisibleForTesting
     fun hasUnsavedChanges(): Boolean {
         if (!collectionHasLoaded()) {
@@ -1046,6 +1058,11 @@ class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectio
     // SAVE NOTE METHODS
     // ----------------------------------------------------------------------------
 
+    /**
+     * Saves a new note with progress dialog.
+     *
+     * Used after user confirmation in [noClozeDialog] when adding a cloze note without cloze deletions.
+     */
     private suspend fun saveNoteWithProgress() {
         requireActivity().withProgress(resources.getString(R.string.saving_facts)) {
             undoableOp {
@@ -1252,6 +1269,12 @@ class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectio
     // ----------------------------------------------------------------------------
     // CUSTOM METHODS
     // ----------------------------------------------------------------------------
+    /**
+     * Opens the card previewer to show how the current note will appear as cards.
+     *
+     * Validates that the note has at least one non-empty field before launching the preview.
+     * For existing notes, shows card ordinal selection if multiple templates exist.
+     */
     @VisibleForTesting
     suspend fun performPreview() {
         val convertNewlines = shouldReplaceNewlines()
@@ -1357,6 +1380,9 @@ class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectio
         }
     }
 
+    /**
+     * Shows the deck selection dialog for choosing where to add the note.
+     */
     private fun showDeckSelectionDialog() {
         launchCatchingTask {
             val selectableDecks = withCol {
@@ -1373,6 +1399,9 @@ class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectio
         }
     }
 
+    /**
+     * Shows the tags dialog for editing the note's tags.
+     */
     private fun showTagsDialog() {
         val currentTags = noteEditorViewModel.noteEditorState.value.tags
         val selTags = if (currentTags.isNotEmpty()) {
@@ -1403,6 +1432,11 @@ class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectio
         noteEditorViewModel.updateTags(selectedTags.toSet())
     }
 
+    /**
+     * Opens the card template editor for the current note type.
+     *
+     * Allows editing the HTML templates that define how cards are rendered.
+     */
     private fun showCardTemplateEditor() {
         val intent = Intent(requireContext(), CardTemplateEditor::class.java)
         val noteTypeName = noteEditorViewModel.noteEditorState.value.selectedNoteTypeName
