@@ -85,26 +85,26 @@ sealed interface NoteEditorLauncher : Destination {
          * @return The appropriate [NoteEditorLauncher].
          */
         fun fromIntent(intent: Intent): NoteEditorLauncher {
-            // Case 1: The intent has FRAGMENT_NAME_EXTRA and it's for NoteEditorFragment.
-            if (intent.hasExtra(NoteEditorActivity.FRAGMENT_NAME_EXTRA) &&
-                intent.getStringExtra(NoteEditorActivity.FRAGMENT_NAME_EXTRA) == NoteEditorFragment::class.java.name) {
-                // In this case, the arguments MUST be in FRAGMENT_ARGS_EXTRA.
-                val args = intent.getBundleExtra(NoteEditorActivity.FRAGMENT_ARGS_EXTRA)
-                if (args != null) {
-                    return PassArguments(args)
+            // Case 1: The intent has FRAGMENT_NAME_EXTRA - handle this as a special case.
+            if (intent.hasExtra(NoteEditorActivity.FRAGMENT_NAME_EXTRA)) {
+                if (intent.getStringExtra(NoteEditorActivity.FRAGMENT_NAME_EXTRA) == NoteEditorFragment::class.java.name) {
+                    val args = intent.getBundleExtra(NoteEditorActivity.FRAGMENT_ARGS_EXTRA)
+                    if (args != null) {
+                        return PassArguments(args)
+                    }
                 }
+                // If FRAGMENT_NAME_EXTRA is present but doesn't match or has no args, default to AddNote
+                return AddNote()
             }
 
-            // Case 2: The intent does not specify a fragment, so we assume it's for the default NoteEditor flow.
-            // Arguments might be directly in FRAGMENT_ARGS_EXTRA.
+            // Case 2: No FRAGMENT_NAME_EXTRA - check for arguments in FRAGMENT_ARGS_EXTRA.
             val directArgs = intent.getBundleExtra(NoteEditorActivity.FRAGMENT_ARGS_EXTRA)
             if (directArgs != null) {
                 return PassArguments(directArgs)
             }
 
-            // Case 3: Arguments might be nested inside the main `extras` bundle.
+            // Case 3: The entire `extras` bundle is the arguments. This is a common case for external intents.
             intent.extras?.let { bundle ->
-                // Case 3: The entire `extras` bundle is the arguments. This is a common case for external intents.
                 if (!bundle.isEmpty) {
                     return PassArguments(bundle)
                 }
