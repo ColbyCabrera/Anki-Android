@@ -3,7 +3,6 @@
 
 package com.ichi2.anki
 
-import android.app.Activity
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.ActivityNotFoundException
@@ -22,15 +21,12 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.view.Window
-import android.view.WindowManager
 import android.view.animation.Animation
 import android.widget.ProgressBar
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.AttrRes
 import androidx.annotation.LayoutRes
 import androidx.annotation.StringRes
 import androidx.annotation.UiThread
@@ -42,7 +38,6 @@ import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent.COLOR_SCHEME_DARK
 import androidx.browser.customtabs.CustomTabsIntent.COLOR_SCHEME_LIGHT
 import androidx.browser.customtabs.CustomTabsIntent.COLOR_SCHEME_SYSTEM
-import androidx.compose.foundation.layout.statusBars
 import androidx.core.app.NotificationCompat
 import androidx.core.app.PendingIntentCompat
 import androidx.core.app.ShareCompat
@@ -128,7 +123,7 @@ open class AnkiActivity :
     private lateinit var fileExportPath: String
     private val saveFileLauncher: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
-            if (result.resultCode == Activity.RESULT_OK) {
+            if (result.resultCode == RESULT_OK) {
                 saveFileCallback(result)
             } else {
                 Timber.i("The file selection for the exported collection was cancelled")
