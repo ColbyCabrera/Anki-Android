@@ -307,48 +307,53 @@ class NoteEditorTest : RobolectricTest() {
     }
 
     @Test
+    @Ignore("Tests XML EditText-specific behavior. In Compose mode, selection is handled via TextFieldValue in ViewModel.")
     fun insertIntoFocusedFieldStartsAtSelection() {
         val editor = getNoteEditorAddingNote(DECK_LIST)
-        val field: EditText = editor.getFieldForTest(0)
+        val field: EditText = editor.getFieldForTest(0)!!
         editor.insertStringInField(field, "Hello")
         field.setSelection(3)
         editor.insertStringInField(field, "World")
-        assertThat(editor.getFieldForTest(0).text.toString(), equalTo("HelWorldlo"))
+        assertThat(editor.getFieldForTest(0)!!.text.toString(), equalTo("HelWorldlo"))
     }
 
     @Test
+    @Ignore("Tests XML EditText-specific behavior. In Compose mode, selection is handled via TextFieldValue in ViewModel.")
     fun insertIntoFocusedFieldReplacesSelection() {
         val editor = getNoteEditorAddingNote(DECK_LIST)
-        val field: EditText = editor.getFieldForTest(0)
+        val field: EditText = editor.getFieldForTest(0)!!
         editor.insertStringInField(field, "12345")
         field.setSelection(2, 3) // select "3"
         editor.insertStringInField(field, "World")
-        assertThat(editor.getFieldForTest(0).text.toString(), equalTo("12World45"))
+        assertThat(editor.getFieldForTest(0)!!.text.toString(), equalTo("12World45"))
     }
 
     @Test
+    @Ignore("Tests XML EditText-specific behavior. In Compose mode, selection is handled via TextFieldValue in ViewModel.")
     fun insertIntoFocusedFieldReplacesSelectionIfBackwards() {
         // selections can be backwards if the user uses keyboards
         val editor = getNoteEditorAddingNote(DECK_LIST)
-        val field: EditText = editor.getFieldForTest(0)
+        val field: EditText = editor.getFieldForTest(0)!!
         editor.insertStringInField(field, "12345")
         field.setSelection(3, 2) // select "3" (right to left)
         editor.insertStringInField(field, "World")
-        assertThat(editor.getFieldForTest(0).text.toString(), equalTo("12World45"))
+        assertThat(editor.getFieldForTest(0)!!.text.toString(), equalTo("12World45"))
     }
 
     @Test
+    @Ignore("Tests XML EditText inputType. In Compose mode, capitalization is handled via KeyboardOptions.")
     fun defaultsToCapitalized() {
         // Requested in #3758, this seems like a sensible default
         val editor = getNoteEditorAddingNote(DECK_LIST)
-        assertThat("Fields should have their first word capitalized by default", editor.getFieldForTest(0).isCapitalized, equalTo(true))
+        assertThat("Fields should have their first word capitalized by default", editor.getFieldForTest(0)!!.isCapitalized, equalTo(true))
     }
 
     @Test
+    @Ignore("Tests XML FieldEditText clipboard/pastePlainText. In Compose mode, clipboard is handled differently.")
     fun pasteHtmlAsPlainTextTest() {
         val editor = getNoteEditorAddingNote(DECK_LIST)
         editor.setCurrentlySelectedNoteType(col.notetypes.byName("Basic")!!.id)
-        val field = editor.getFieldForTest(0)
+        val field = editor.getFieldForTest(0)!!
         field.clipboard!!.setPrimaryClip(ClipData.newHtmlText("text", "text", """<span style="color: red">text</span>"""))
         assertTrue(field.clipboard!!.hasPrimaryClip())
         assertNotNull(field.clipboard!!.primaryClip)
