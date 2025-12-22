@@ -400,7 +400,7 @@ class NoteEditorViewModel(
         // Use the current deck
         val currentDeckId =
             try {
-                col.config.get(com.ichi2.anki.libanki.Decks.Companion.CURRENT_DECK) ?: 1L
+                col.config.get(com.ichi2.anki.libanki.Decks.CURRENT_DECK) ?: 1L
             } catch (e: Exception) {
                 Timber.w(e, "Error getting current deck, using default")
                 1L
