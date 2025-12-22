@@ -104,11 +104,7 @@ sealed interface NoteEditorLauncher : Destination {
 
             // Case 3: Arguments might be nested inside the main `extras` bundle.
             intent.extras?.let { bundle ->
-                val nestedArgs = bundle.getBundle(NoteEditorActivity.FRAGMENT_ARGS_EXTRA)
-                if (nestedArgs != null) {
-                    return PassArguments(nestedArgs)
-                }
-                // Case 4: The entire `extras` bundle is the arguments. This is a common case for external intents.
+                // Case 3: The entire `extras` bundle is the arguments. This is a common case for external intents.
                 if (!bundle.isEmpty) {
                     return PassArguments(bundle)
                 }
