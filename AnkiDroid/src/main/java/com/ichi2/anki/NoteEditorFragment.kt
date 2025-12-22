@@ -1379,8 +1379,9 @@ class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectio
             R.id.action_font_size -> {
                 Timber.i("NoteEditor:: Font Size button pressed")
                 val fontSizeDialog = IntegerDialog()
-                // TODO: Get font size from current state
-                fontSizeDialog.setArgs(getString(R.string.menu_font_size), "18", 2)
+                val currentFontSize =
+                    sharedPrefs().getInt(PREF_NOTE_EDITOR_FONT_SIZE, 18).toString()
+                fontSizeDialog.setArgs(getString(R.string.menu_font_size), currentFontSize, 2)
                 fontSizeDialog.setCallbackRunnable { fontSizeSp: Int? -> setFontSize(fontSizeSp) }
                 showDialogFragment(fontSizeDialog)
                 return true
