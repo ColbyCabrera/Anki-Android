@@ -345,6 +345,7 @@ class ReviewerNoParamTest : RobolectricTest() {
     private val penColor: WhiteboardPenColor
         get() = MetaDB.getWhiteboardPenColor(targetContext, Consts.DEFAULT_DECK_ID)
 
+    @Suppress("DEPRECATION")
     @CheckResult
     private fun startReviewerForWhiteboard(): Whiteboard {
         // we need a card for the reviewer to start
@@ -358,6 +359,7 @@ class ReviewerNoParamTest : RobolectricTest() {
             ?: throw IllegalStateException("Could not get whiteboard")
     }
 
+    @Suppress("DEPRECATION")
     @CheckResult
     private fun startReviewerForWhiteboardInDarkMode(): Whiteboard {
         addBasicNote("Hello", "World")

@@ -19,6 +19,9 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat.Type.systemBars
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.commit
@@ -27,7 +30,6 @@ import com.ichi2.anki.android.input.ShortcutGroupProvider
 import com.ichi2.anki.dialogs.customstudy.CustomStudyDialog.CustomStudyAction
 import com.ichi2.anki.ui.windows.managespace.ManageSpaceActivity
 import com.ichi2.anki.utils.ext.setFragmentResultListener
-import com.ichi2.themes.setTransparentStatusBar
 import com.ichi2.utils.FragmentFactoryUtils
 import timber.log.Timber
 import kotlin.reflect.KClass
@@ -52,8 +54,16 @@ open class SingleFragmentActivity : AnkiActivity() {
         if (!ensureStoragePermissions()) {
             return
         }
+
         setContentView(R.layout.single_fragment_activity)
-        setTransparentStatusBar()
+
+        val fragmentContainer = findViewById<FragmentContainerView>(R.id.fragment_container)
+
+        ViewCompat.setOnApplyWindowInsetsListener(fragmentContainer) { view, insets ->
+            val systemBars = insets.getInsets(systemBars())
+            view.updatePadding(left = systemBars.left, right = systemBars.right, top = systemBars.top, bottom = systemBars.bottom)
+            insets
+        }
 
         // avoid recreating the fragment on configuration changes
         // the fragment should handle state restoration

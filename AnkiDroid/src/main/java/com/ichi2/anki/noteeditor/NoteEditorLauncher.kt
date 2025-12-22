@@ -8,6 +8,7 @@
  *
  *  This program is distributed in the hope that it will be useful, but WITHOUT ANY
  *  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+
  *  PARTICULAR PURPOSE. See the GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License along with
@@ -59,6 +60,60 @@ sealed interface NoteEditorLauncher : Destination {
      * @return Bundle containing arguments specific to this configuration.
      */
     fun toBundle(): Bundle
+
+    /**
+     * Companion object for [NoteEditorLauncher], providing factory methods for creating launchers.
+     */
+    companion object {
+        /**
+         * Creates a [NoteEditorLauncher] from an [Intent].
+         *
+         * This function is responsible for parsing the incoming intent and determining the correct
+         * [NoteEditorLauncher] to use. It handles various ways the NoteEditor can be launched,
+         * including from different parts of the app (like DeckPicker, CardBrowser) and from external
+         * intents.
+         *
+         * The logic is as follows:
+         * 1.  If the intent specifies a fragment class name for [NoteEditorFragment], it expects the arguments
+         *     to be in [NoteEditorActivity.FRAGMENT_ARGS_EXTRA].
+         * 2.  If not, it checks for arguments directly in [NoteEditorActivity.FRAGMENT_ARGS_EXTRA].
+         * 3.  It then checks for arguments nested within the main `extras` bundle.
+         * 4.  Finally, it considers the entire `extras` bundle as the arguments.
+         * 5.  If no arguments are found, it defaults to a simple [AddNote] launcher.
+         *
+         * @param intent The intent to parse.
+         * @return The appropriate [NoteEditorLauncher].
+         */
+        fun fromIntent(intent: Intent): NoteEditorLauncher {
+            // Case 1: The intent has FRAGMENT_NAME_EXTRA - handle this as a special case.
+            if (intent.hasExtra(NoteEditorActivity.FRAGMENT_NAME_EXTRA)) {
+                if (intent.getStringExtra(NoteEditorActivity.FRAGMENT_NAME_EXTRA) == NoteEditorFragment::class.java.name) {
+                    val args = intent.getBundleExtra(NoteEditorActivity.FRAGMENT_ARGS_EXTRA)
+                    if (args != null) {
+                        return PassArguments(args)
+                    }
+                }
+                // If FRAGMENT_NAME_EXTRA is present but doesn't match or has no args, default to AddNote
+                return AddNote()
+            }
+
+            // Case 2: No FRAGMENT_NAME_EXTRA - check for arguments in FRAGMENT_ARGS_EXTRA.
+            val directArgs = intent.getBundleExtra(NoteEditorActivity.FRAGMENT_ARGS_EXTRA)
+            if (directArgs != null) {
+                return PassArguments(directArgs)
+            }
+
+            // Case 3: The entire `extras` bundle is the arguments. This is a common case for external intents.
+            intent.extras?.let { bundle ->
+                if (!bundle.isEmpty) {
+                    return PassArguments(bundle)
+                }
+            }
+
+            // Fallback for all other cases (no args, empty bundles, etc.)
+            return AddNote()
+        }
+    }
 
     /**
      * Represents opening the NoteEditor with an image occlusion.
