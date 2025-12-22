@@ -110,7 +110,7 @@ class ImageCropper :
             } else {
                 false
             }
-        } catch (ex: Exception) {
+        } catch (_: Exception) {
             false
         }
 
