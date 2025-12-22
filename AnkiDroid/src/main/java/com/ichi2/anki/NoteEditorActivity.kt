@@ -64,64 +64,23 @@ class NoteEditorActivity :
 
         setContentView(R.layout.note_editor)
 
-        /**
-         * The [NoteEditorActivity] activity supports multiple note editing workflows using fragments.
-         * It dynamically chooses the appropriate fragment to load and the arguments to pass to it,
-         * based on intent extras provided at launch time.
-         *
-         * - [FRAGMENT_NAME_EXTRA]: Fully qualified name of the fragment class to instantiate.
-         *   If set to [NoteEditorFragment], the activity initializes it with the arguments in
-         *   [FRAGMENT_ARGS_EXTRA].
-         *
-         * - [FRAGMENT_ARGS_EXTRA]: Bundle containing parameters for the fragment (e.g. note ID,
-         *   deck ID, etc.). Used to populate fields or determine editor behavior.
-         *
-         * This logic is encapsulated in the [launcher]  assignment, which selects the correct
-         * fragment mode (e.g. add note, edit note) based on intent contents.
-         */
-        val launcher =
-            if (intent.hasExtra(FRAGMENT_NAME_EXTRA)) {
-                val fragmentClassName = intent.getStringExtra(FRAGMENT_NAME_EXTRA)
-                if (fragmentClassName == NoteEditorFragment::class.java.name) {
-                    val fragmentArgs = intent.getBundleExtra(FRAGMENT_ARGS_EXTRA)
-                    if (fragmentArgs != null) {
-                        NoteEditorLauncher.PassArguments(fragmentArgs)
-                    } else {
-                        NoteEditorLauncher.AddNote()
-                    }
-                } else {
-                    NoteEditorLauncher.AddNote()
-                }
-            } else {
-                // Regular NoteEditor intent handling
-                intent.getBundleExtra(FRAGMENT_ARGS_EXTRA)?.let { fragmentArgs ->
-                    // If FRAGMENT_ARGS_EXTRA is provided, use it directly
-                    NoteEditorLauncher.PassArguments(fragmentArgs)
-                } ?: intent.extras?.let { bundle ->
-                    // Check if the bundle contains FRAGMENT_ARGS_EXTRA (for launchers that wrap their args)
-                    bundle.getBundle(FRAGMENT_ARGS_EXTRA)?.let { wrappedFragmentArgs ->
-                        NoteEditorLauncher.PassArguments(wrappedFragmentArgs)
-                    } ?: NoteEditorLauncher.PassArguments(bundle)
-                } ?: NoteEditorLauncher.AddNote()
-            }
-
-        val existingFragment = supportFragmentManager.findFragmentByTag(FRAGMENT_TAG)
-
-        if (existingFragment == null) {
+        if (savedInstanceState == null) {
+            val launcher = NoteEditorLauncher.fromIntent(intent)
             supportFragmentManager.commit {
-                replace(R.id.note_editor_fragment_frame, NoteEditorFragment.newInstance(launcher), FRAGMENT_TAG)
+                replace(
+                    R.id.note_editor_fragment_frame,
+                    NoteEditorFragment.newInstance(launcher),
+                    FRAGMENT_TAG
+                )
                 setReorderingAllowed(true)
-                /**
-                 * Initializes the noteEditorFragment reference only after the transaction is committed.
-                 * This ensures the fragment is fully created and available in the activity before
-                 * any code attempts to interact with it, preventing potential null reference issues.
-                 */
                 runOnCommit {
-                    noteEditorFragment = supportFragmentManager.findFragmentByTag(FRAGMENT_TAG) as NoteEditorFragment
+                    noteEditorFragment =
+                        supportFragmentManager.findFragmentByTag(FRAGMENT_TAG) as NoteEditorFragment
                 }
             }
         } else {
-            noteEditorFragment = existingFragment as NoteEditorFragment
+            noteEditorFragment =
+                supportFragmentManager.findFragmentByTag(FRAGMENT_TAG) as NoteEditorFragment
         }
 
         enableToolbar()
