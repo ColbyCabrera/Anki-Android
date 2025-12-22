@@ -97,6 +97,7 @@ import com.ichi2.anki.model.CardsOrNotes
 import com.ichi2.anki.model.SelectableDeck
 import com.ichi2.anki.model.SortType
 import com.ichi2.anki.dialogs.compose.TagsDialog
+import com.ichi2.anki.dialogs.compose.DeleteConfirmationDialog
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -133,6 +134,7 @@ fun CardBrowserScreen(
     var showSortMenu by remember { mutableStateOf(false) }
     var showFlagMenu by remember { mutableStateOf(false) }
     var showSetFlagMenu by remember { mutableStateOf(false) }
+    var showDeleteConfirmationDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     var toolbarHeight by remember { mutableIntStateOf(0) }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -186,6 +188,19 @@ fun CardBrowserScreen(
             confirmButtonText = stringResource(R.string.dialog_ok),
             showFilterByDeckToggle = true,
             onAddTag = { /* Handled by dialog state internally for immediate display, not persisted until confirm */ }
+        )
+    }
+
+    if (showDeleteConfirmationDialog) {
+        DeleteConfirmationDialog(
+            quantity = selectedRows.size,
+            onDismissRequest = { showDeleteConfirmationDialog = false },
+            onConfirm = {
+                scope.launch {
+                    viewModel.deleteSelectedNotes()
+                    showDeleteConfirmationDialog = false
+                }
+            }
         )
     }
 
@@ -302,10 +317,8 @@ fun CardBrowserScreen(
                     showMoreOptionsMenu = false
                 },
                 onDeleteNote = {
-                    scope.launch {
-                        viewModel.deleteSelectedNotes()
-                        showMoreOptionsMenu = false
-                    }
+                    showDeleteConfirmationDialog = true
+                    showMoreOptionsMenu = false
                 },
                 onCardInfo = {
                     onCardInfo()
