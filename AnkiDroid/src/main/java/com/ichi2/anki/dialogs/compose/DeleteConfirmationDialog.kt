@@ -7,7 +7,7 @@
  * version.                                                                             *
  *                                                                                      *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY      *
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A      *
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A      * 
  * PARTICULAR PURPOSE. See the GNU General Public License for more details.             *
  *                                                                                      *
  * You should have received a copy of the GNU General Public License along with         *
@@ -38,19 +38,13 @@ fun DeleteConfirmationDialog(
             Text(text = pluralStringResource(R.plurals.card_browser_delete_notes, quantity))
         },
         text = {
-            if (quantity == 1) {
-                // For a single note, we can use the existing message which asks about the note and its cards
-                // We pass an empty string because the original resource expects a string (card content),
-                // but we don't have it readily available here and don't want to fetch it.
-                // The resource is: "Really delete this note and all its cards?\n%s"
-                Text(text = stringResource(R.string.delete_note_message, ""))
-            } else {
-                // The resource R.plurals.card_browser_delete_notes is "Delete note" / "Delete notes".
-                // So the title will just be "Delete notes".
-                // We should probably add the count in the body text for clarity.
-                // card_browser_subtitle_notes_mode is "%d note shown" / "%d notes shown".
-                Text(text = pluralStringResource(R.plurals.card_browser_subtitle_notes_mode, quantity, quantity))
-            }
+            Text(
+                text = pluralStringResource(
+                    R.plurals.delete_notes_confirmation,
+                    quantity,
+                    quantity
+                )
+            )
         },
         confirmButton = {
             TextButton(onClick = onConfirm) {
@@ -71,6 +65,18 @@ private fun DeleteConfirmationDialogPreview() {
     AnkiDroidTheme {
         DeleteConfirmationDialog(
             quantity = 5,
+            onDismissRequest = {},
+            onConfirm = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun SingleDeleteConfirmationDialogPreview() {
+    AnkiDroidTheme {
+        DeleteConfirmationDialog(
+            quantity = 1,
             onDismissRequest = {},
             onConfirm = {},
         )
