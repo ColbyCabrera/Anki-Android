@@ -655,8 +655,7 @@ class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectio
                         noteEditorViewModel.selectNoteType(noteTypeName)
                         // Update cards info after note type change
                         launchCatchingTask {
-                            val col = getColUnsafe
-                            val notetype = col.notetypes.all().find { it.name == noteTypeName }
+                            val notetype = withCol { notetypes.all().find { it.name == noteTypeName } }
                             if (notetype != null) {
                                 updateCards(notetype)
                             }
