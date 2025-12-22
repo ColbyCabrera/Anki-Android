@@ -21,6 +21,10 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.core.os.bundleOf
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat.Type.systemBars
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
 import com.google.android.material.appbar.MaterialToolbar
@@ -33,7 +37,6 @@ import com.ichi2.anki.snackbar.BaseSnackbarBuilderProvider
 import com.ichi2.anki.snackbar.SnackbarBuilder
 import com.ichi2.compat.CompatHelper.Companion.getSerializableCompat
 import com.ichi2.compat.CompatHelper.Companion.getSerializableExtraCompat
-import com.ichi2.themes.setTransparentStatusBar
 import com.ichi2.utils.FragmentFactoryUtils
 import timber.log.Timber
 import java.io.Serializable
@@ -73,11 +76,16 @@ class MultimediaActivity :
             return
         }
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         setContentView(R.layout.activity_multimedia)
-        setTransparentStatusBar()
 
         val toolbar: MaterialToolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
+
+        ViewCompat.setOnApplyWindowInsetsListener(toolbar) { view, insets ->
+            view.updatePadding(top = insets.getInsets(systemBars()).top)
+            insets
+        }
 
         // avoid recreating the fragment on configuration changes
         if (savedInstanceState != null) {
