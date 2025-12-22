@@ -20,7 +20,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
 import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat.Type.systemBars
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
@@ -55,7 +54,7 @@ open class SingleFragmentActivity : AnkiActivity() {
         if (!ensureStoragePermissions()) {
             return
         }
-        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         setContentView(R.layout.single_fragment_activity)
 
         val fragmentContainer = findViewById<FragmentContainerView>(R.id.fragment_container)
