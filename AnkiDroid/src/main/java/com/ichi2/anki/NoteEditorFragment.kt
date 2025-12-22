@@ -1134,11 +1134,6 @@ class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectio
                 return true
             }
 
-            KeyEvent.KEYCODE_N -> if (event.isCtrlPressed) {
-                // TODO: Re-implement note type selection trigger in Compose
-                return true
-            }
-
             KeyEvent.KEYCODE_T -> if (event.isCtrlPressed && event.isShiftPressed) {
                 showTagsDialog()
                 return true
@@ -2017,7 +2012,6 @@ class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectio
                 shortcut("Ctrl+ENTER") { getString(R.string.save) },
                 shortcut("Ctrl+D") { getString(R.string.select_deck) },
                 shortcut("Ctrl+L") { getString(R.string.card_template_editor_group) },
-                shortcut("Ctrl+N") { getString(R.string.select_note_type) },
                 shortcut("Ctrl+Shift+T") { getString(R.string.tag_editor) },
                 shortcut("Ctrl+Shift+C") { getString(R.string.multimedia_editor_popup_cloze) },
                 shortcut("Ctrl+P") { getString(R.string.card_editor_preview_card) },
@@ -2058,12 +2052,8 @@ class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectio
         val id: Long
         if (addNote) {
             kind = "add"
-            id = if (noteEditorViewModel.noteEditorState.value.isImageOcclusion) {
-                // TODO: Get currently selected note type ID from ViewModel
-                0
-            } else {
-                0
-            }
+            // For image occlusion, use the currently selected note type ID from ViewModel
+            id = noteEditorViewModel.currentNote.value?.noteTypeId ?: 0L
         } else {
             kind = "edit"
             id = editorNote?.id!!
