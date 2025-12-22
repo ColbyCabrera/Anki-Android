@@ -22,7 +22,6 @@ import android.app.Activity
 import android.app.Activity.RESULT_CANCELED
 import android.content.ActivityNotFoundException
 import android.content.ClipData
-import android.content.ClipDescription
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
@@ -52,18 +51,12 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.core.content.FileProvider
-import androidx.core.content.IntentCompat
 import androidx.core.content.edit
 import androidx.core.os.BundleCompat
-import androidx.core.util.component1
-import androidx.core.util.component2
 import androidx.core.view.MenuProvider
-import androidx.core.view.OnReceiveContentListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
-import anki.config.ConfigKey
 import com.google.android.material.snackbar.Snackbar
 import com.ichi2.anim.ActivityTransitionAnimation
 import com.ichi2.anki.CollectionManager.TR
@@ -96,7 +89,6 @@ import com.ichi2.anki.multimedia.MultimediaActivity.Companion.MULTIMEDIA_RESULT_
 import com.ichi2.anki.multimedia.MultimediaActivityExtra
 import com.ichi2.anki.multimedia.MultimediaBottomSheet
 import com.ichi2.anki.multimedia.MultimediaImageFragment
-import com.ichi2.anki.multimedia.MultimediaUtils.createImageFile
 import com.ichi2.anki.multimedia.MultimediaViewModel
 import com.ichi2.anki.multimediacard.IMultimediaEditableNote
 import com.ichi2.anki.multimediacard.fields.AudioRecordingField
@@ -128,13 +120,7 @@ import com.ichi2.anki.utils.ext.sharedPrefs
 import com.ichi2.anki.utils.ext.showDialogFragment
 import com.ichi2.anki.utils.openUrl
 import com.ichi2.compat.CompatHelper.Companion.getSerializableCompat
-import com.ichi2.imagecropper.ImageCropper
-import com.ichi2.imagecropper.ImageCropper.Companion.CROP_IMAGE_RESULT
-import com.ichi2.imagecropper.ImageCropperLauncher
 import com.ichi2.utils.ClipboardUtil
-import com.ichi2.utils.ClipboardUtil.hasMedia
-import com.ichi2.utils.ClipboardUtil.items
-import com.ichi2.utils.ContentResolverUtil
 import com.ichi2.utils.HashUtil
 import com.ichi2.utils.ImportUtils
 import com.ichi2.utils.IntentUtil.resolveMimeType
@@ -150,7 +136,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.ankiweb.rsdroid.BackendException
 import timber.log.Timber
-import java.io.File
 import java.util.function.Consumer
 
 const val CALLER_KEY = "caller"
@@ -190,8 +175,6 @@ class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectio
     private var editorNote: Note? = null
 
     private val multimediaViewModel: MultimediaViewModel by activityViewModels()
-
-    private var currentImageOccPath: String? = null
 
     // Null if adding a new card. Presently NonNull if editing an existing note - but this is subject to change
     private var currentEditedCard: Card? = null
@@ -307,39 +290,6 @@ class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectio
             }
         },
     )
-
-    /**
-     * Listener for handling content received via drag and drop or copy and paste.
-     * This listener processes URIs contained in the payload and attempts to paste the content into the target EditText view.
-     */
-    private val onReceiveContentListener = OnReceiveContentListener { view, payload ->
-        val (uriContent, remaining) = payload.partition { item -> item.uri != null }
-
-        if (uriContent == null) {
-            return@OnReceiveContentListener remaining
-        }
-
-        val clip = uriContent.clip
-        val description = clip.description
-
-        if (!hasMedia(description)) {
-            return@OnReceiveContentListener remaining
-        }
-
-        for (uri in clip.items().map { it.uri }) {
-            lifecycleScope.launch {
-                try {
-                    val pasteAsPng = shouldPasteAsPng()
-                    onPaste(view as EditText, uri, description, pasteAsPng)
-                } catch (e: Exception) {
-                    Timber.w(e)
-                    CrashReportService.sendExceptionReport(e, "NoteEditor::onReceiveContent")
-                }
-            }
-        }
-
-        return@OnReceiveContentListener remaining
-    }
 
     private inner class NoteEditorActivityResultCallback(
         private val callback: (result: ActivityResult) -> Unit,
@@ -542,7 +492,7 @@ class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectio
                 // Sync Fragment's deckId with ViewModel's deckId after initialization
                 // This ensures the hasUnsavedChanges() deck comparison works correctly
                 launchCatchingTask {
-                    deckId = noteEditorViewModel.currentNote.value?.let { note ->
+                    deckId = noteEditorViewModel.currentNote.value?.let { _ ->
                         if (addNote) {
                             // For new notes, use the calculated deck from ViewModel
                             noteEditorViewModel.noteEditorState.value.selectedDeckName.let { deckName ->
@@ -655,7 +605,8 @@ class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectio
                         noteEditorViewModel.selectNoteType(noteTypeName)
                         // Update cards info after note type change
                         launchCatchingTask {
-                            val notetype = withCol { notetypes.all().find { it.name == noteTypeName } }
+                            val notetype =
+                                withCol { notetypes.all().find { it.name == noteTypeName } }
                             if (notetype != null) {
                                 updateCards(notetype)
                             }
@@ -850,85 +801,6 @@ class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectio
         }
     }
 
-    /**
-     * Handles an intent containing an image from the user's gallery or the internet by opening
-     * MultimediaActivity specifically for creating a new card.
-     */
-    @NeedsTest("Test when the user directly passes image to the edit note field")
-    private suspend fun handleImageIntent(data: Intent) {
-        val imageUri = if (data.action == Intent.ACTION_SEND) {
-            BundleCompat.getParcelable(requireArguments(), Intent.EXTRA_STREAM, Uri::class.java)
-        } else {
-            data.data
-        }
-
-        if (imageUri == null) {
-            Timber.d("NoteEditor:: Image Uri is null")
-            showSnackbar(R.string.something_wrong)
-            return
-        }
-
-        try {
-            requireContext().contentResolver.takePersistableUriPermission(
-                imageUri, Intent.FLAG_GRANT_READ_URI_PERMISSION
-            )
-            Timber.d("Persisted URI permission for $imageUri")
-        } catch (e: SecurityException) {
-            Timber.w(e, "Unable to persist URI permission")
-        }
-
-        val cachedImagePath = copyUriToInternalCache(imageUri)
-        if (cachedImagePath == null) {
-            Timber.w("Failed to cache image")
-            showSnackbar(R.string.something_wrong)
-            return
-        }
-        val cachedUri = Uri.fromFile(File(requireContext().cacheDir, cachedImagePath))
-
-        val note = getCurrentMultimediaEditableNote()
-        if (note.isEmpty) {
-            Timber.w("Note is null, returning")
-            return
-        }
-        openMultimediaImageFragment(
-            fieldIndex = 0,
-            field = ImageField(),
-            multimediaNote = note,
-            imageUri = cachedUri,
-        )
-    }
-
-    /**
-     * Copies a given [Uri] to the app's internal cache directory.
-     */
-    private fun copyUriToInternalCache(uri: Uri): String? {
-        return try {
-            val inputStream = requireContext().contentResolver.openInputStream(uri) ?: return null
-
-            val fileName = ContentResolverUtil.getFileName(requireContext().contentResolver, uri)
-            val cacheDir = requireContext().cacheDir
-            val destFile = File(cacheDir, fileName)
-
-            val canonicalCacheDir = cacheDir.canonicalFile
-            val canonicalDestFile = destFile.canonicalFile
-
-            if (!canonicalDestFile.path.startsWith(canonicalCacheDir.path)) {
-                Timber.w("Rejected path due to directory traversal risk: $fileName")
-                return null
-            }
-
-            destFile.outputStream().use { output ->
-                inputStream.copyTo(output)
-            }
-
-            Timber.d("copyUriToInternalCache() copied to ${destFile.absolutePath}")
-            destFile.name
-        } catch (e: Exception) {
-            Timber.w(e, "Failed to copy URI to internal cache")
-            null
-        }
-    }
-
     override fun onSaveInstanceState(outState: Bundle) {
         addInstanceStateToBundle(outState)
         super.onSaveInstanceState(outState)
@@ -945,73 +817,6 @@ class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectio
             selectedTags = ArrayList(0)
         }
         savedInstanceState.putStringArrayList("tags", selectedTags?.let { ArrayList(it) })
-    }
-
-    private val cameraLauncher =
-        registerForActivityResult(ActivityResultContracts.TakePicture()) { isPictureTaken ->
-            if (isPictureTaken) {
-                currentImageOccPath?.let { imagePath ->
-                    val photoFile = File(imagePath)
-                    val imageUri: Uri = FileProvider.getUriForFile(
-                        requireContext(),
-                        requireActivity().packageName + ".apkgfileprovider",
-                        photoFile,
-                    )
-                    startCrop(imageUri)
-                }
-            } else {
-                Timber.d("Camera aborted or some interruption")
-            }
-        }
-
-    /** Launches an activity to crop the image, using the [ImageCropper] */
-    private val cropImageLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            when (result.resultCode) {
-                Activity.RESULT_OK -> {
-
-                    result.data?.let {
-                        val cropResultData = IntentCompat.getParcelableExtra(
-                            it,
-                            CROP_IMAGE_RESULT,
-                            ImageCropper.CropResultData::class.java,
-                        )
-                        Timber.d("Cropped image data: $cropResultData")
-                        if (cropResultData?.uriPath == null) return@registerForActivityResult
-                        setupImageOcclusionEditor(cropResultData.uriPath)
-                    }
-                }
-
-                else -> {
-                    Timber.v("Unable to crop the image")
-                }
-            }
-        }
-
-    private fun startCrop(imageUri: Uri) {
-        Timber.i("launching crop")
-        val intent = ImageCropperLauncher.ImageUri(imageUri).getIntent(requireContext())
-        cropImageLauncher.launch(intent)
-    }
-
-    private fun dispatchCameraEvent() {
-        val photoFile: File? = try {
-            requireContext().createImageFile()
-        } catch (e: Exception) {
-            Timber.w(e, "Error creating the file")
-            return
-        }
-
-        currentImageOccPath = photoFile?.absolutePath
-
-        photoFile?.let {
-            val photoURI: Uri = FileProvider.getUriForFile(
-                requireContext(),
-                requireActivity().packageName + ".apkgfileprovider",
-                it,
-            )
-            cameraLauncher.launch(photoURI)
-        }
     }
 
     private fun applyFormatter(
@@ -1493,11 +1298,6 @@ class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectio
         startActivity(intent)
     }
 
-    private fun setTags(tags: Array<String>) {
-        selectedTags = tags.toCollection(ArrayList())
-        noteEditorViewModel.updateTags(tags.toSet())
-    }
-
     private fun closeCardEditorWithCheck() {
         if (hasUnsavedChanges()) {
             showDiscardChangesDialog()
@@ -1653,9 +1453,6 @@ class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectio
 
         return note
     }
-
-    private suspend fun shouldPasteAsPng() =
-        withCol { config.getBool(ConfigKey.Bool.PASTE_IMAGES_AS_PNG) }
 
     @get:CheckResult
     val currentFieldStrings: Array<String?>
@@ -1823,24 +1620,6 @@ class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectio
 
             changed = true
         }
-    }
-
-    private fun onPaste(
-        editText: EditText,
-        uri: Uri,
-        description: ClipDescription,
-        pasteAsPng: Boolean,
-    ): Boolean {
-        MediaRegistration.onPaste(
-            requireContext(),
-            uri,
-            description,
-            pasteAsPng,
-            showError = { type -> showSnackbar(type.toHumanReadableString(requireContext())) },
-        ) ?: return false
-
-        // TODO: Implement insertion into Compose field
-        return true
     }
 
     @VisibleForTesting
@@ -2067,34 +1846,6 @@ class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectio
         newText: String?,
     ) {
         noteEditorViewModel.updateFieldValue(i, TextFieldValue(text = newText ?: ""))
-    }
-
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    fun getFieldTextForTest(index: Int): String {
-        return noteEditorViewModel.noteEditorState.value.fields.getOrNull(index)?.value?.text ?: ""
-    }
-
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    fun setFieldTextForTest(
-        index: Int,
-        text: String,
-    ) {
-        noteEditorViewModel.updateFieldValue(index, TextFieldValue(text))
-    }
-
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    fun setFieldSelectionForTest(
-        index: Int,
-        start: Int,
-        end: Int = start,
-    ) {
-        val state = noteEditorViewModel.noteEditorState.value
-        val currentFieldValue = state.fields.getOrNull(index)?.value ?: TextFieldValue()
-        noteEditorViewModel.updateFieldValue(
-            index,
-            currentFieldValue.copy(selection = TextRange(start, end)),
-        )
-        noteEditorViewModel.onFieldFocus(index)
     }
 
     companion object {
