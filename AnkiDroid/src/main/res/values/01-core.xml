@@ -129,7 +129,7 @@ using the + icon.</string>
     <string name="sd_card_not_mounted">Device storage not mounted</string>
     <string name="button_sync" comment="Text of the sync button" maxLength="28">Sync</string>
     <string name="cancel_sync_confirm" tools:ignore="UnusedResources">Do you want to cancel the sync?</string>
-    <string name="continue_sync" tools_ignore="UnusedResources">Continue sync</string>
+    <string name="continue_sync" tools:ignore="UnusedResources">Continue sync</string>
     <string name="sync_cancelled" tools:ignore="UnusedResources">Sync cancelled</string>
     <string name="sync_cancel_message" tools:ignore="UnusedResources">Cancelling…
 This may take some time.</string>
