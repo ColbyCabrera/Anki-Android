@@ -31,6 +31,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -179,6 +186,9 @@ fun DeckItem(
                             onRebuild()
                             isContextMenuOpen = false
                         },
+                        leadingIcon = {
+                            Icon(Icons.Filled.Refresh, contentDescription = null)
+                        }
                     )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.empty_cram_label)) },
@@ -186,6 +196,9 @@ fun DeckItem(
                             onEmpty()
                             isContextMenuOpen = false
                         },
+                        leadingIcon = {
+                            Icon(Icons.Filled.Close, contentDescription = null)
+                        }
                     )
                 } else {
                     DropdownMenuItem(
@@ -194,6 +207,9 @@ fun DeckItem(
                             onRename()
                             isContextMenuOpen = false
                         },
+                        leadingIcon = {
+                            Icon(Icons.Filled.Edit, contentDescription = null)
+                        }
                     )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.export_deck)) },
@@ -201,6 +217,9 @@ fun DeckItem(
                             onExport()
                             isContextMenuOpen = false
                         },
+                        leadingIcon = {
+                            Icon(Icons.Filled.Share, contentDescription = null)
+                        }
                     )
                 }
                 DropdownMenuItem(
@@ -209,6 +228,9 @@ fun DeckItem(
                         onDeckOptions()
                         isContextMenuOpen = false
                     },
+                    leadingIcon = {
+                        Icon(Icons.Filled.Settings, contentDescription = null)
+                    }
                 )
                 DropdownMenuItem(
                     text = { Text("Delete") },
@@ -216,6 +238,9 @@ fun DeckItem(
                         onDelete()
                         isContextMenuOpen = false
                     },
+                    leadingIcon = {
+                        Icon(Icons.Filled.Delete, contentDescription = null)
+                    }
                 )
             }
         }
