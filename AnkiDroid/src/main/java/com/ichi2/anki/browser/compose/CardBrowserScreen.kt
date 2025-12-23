@@ -52,6 +52,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -319,7 +320,14 @@ fun CardBrowserScreen(
                 .padding(
                     bottom = with(LocalDensity.current) { toolbarHeight.toDp() + 32.dp + contentPadding.calculateBottomPadding() },
                 ),
-        )
+        ) { snackbarData ->
+            Snackbar(
+                snackbarData = snackbarData,
+                containerColor = MaterialTheme.colorScheme.secondary,
+                contentColor = MaterialTheme.colorScheme.onSecondary,
+                actionColor = MaterialTheme.colorScheme.onSecondary,
+            )
+        }
 
         if (showFilterSheet) {
             FilterBottomSheet(
