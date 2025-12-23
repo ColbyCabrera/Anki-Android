@@ -103,6 +103,8 @@ import com.ichi2.anki.model.SelectableDeck
 import com.ichi2.anki.model.SortType
 import kotlinx.coroutines.launch
 
+private val ToolbarBottomSpacing = 32.dp
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun CardBrowserScreen(
@@ -262,7 +264,7 @@ fun CardBrowserScreen(
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = PaddingValues(
                                 top = 0.dp,
-                                bottom = toolbarHeightInDp + 32.dp + contentPadding.calculateBottomPadding(),
+                                bottom = toolbarHeightInDp + ToolbarBottomSpacing + contentPadding.calculateBottomPadding(),
                             ),
                         ) {
                             items(
@@ -318,7 +320,7 @@ fun CardBrowserScreen(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(
-                    bottom = with(LocalDensity.current) { toolbarHeight.toDp() + 32.dp + contentPadding.calculateBottomPadding() },
+                    bottom = toolbarHeightInDp + ToolbarBottomSpacing + contentPadding.calculateBottomPadding(),
                 ),
         ) { snackbarData ->
             Snackbar(
