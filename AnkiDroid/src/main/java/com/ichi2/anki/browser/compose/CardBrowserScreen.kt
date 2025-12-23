@@ -143,6 +143,7 @@ fun CardBrowserScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     val layoutDirection = LocalLayoutDirection.current
+    val toolbarHeightInDp = with(LocalDensity.current) { toolbarHeight.toDp() }
 
     LaunchedEffect(viewModel.flowOfSnackbarMessage) {
         viewModel.flowOfSnackbarMessage.collect { messageRes ->
@@ -242,7 +243,7 @@ fun CardBrowserScreen(
             when (val state = searchState) {
                 is SearchState.Initializing, is SearchState.Searching -> CardBrowserLoading(
                     Modifier.padding(
-                        bottom = with(LocalDensity.current) { toolbarHeight.toDp() },
+                        bottom = toolbarHeightInDp,
                     ),
                 )
 
@@ -257,7 +258,6 @@ fun CardBrowserScreen(
                         }
                         EmptyCardBrowser(deckName = deckName)
                     } else {
-                        val toolbarHeightInDp = with(LocalDensity.current) { toolbarHeight.toDp() }
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = PaddingValues(
