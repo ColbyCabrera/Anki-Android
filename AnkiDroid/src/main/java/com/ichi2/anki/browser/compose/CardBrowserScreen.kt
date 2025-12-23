@@ -52,8 +52,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
@@ -93,11 +95,11 @@ import com.ichi2.anki.browser.CardBrowserViewModel
 import com.ichi2.anki.browser.CardBrowserViewModel.SearchState
 import com.ichi2.anki.browser.CardOrNoteId
 import com.ichi2.anki.browser.ColumnHeading
+import com.ichi2.anki.dialogs.compose.DeleteConfirmationDialog
+import com.ichi2.anki.dialogs.compose.TagsDialog
 import com.ichi2.anki.model.CardsOrNotes
 import com.ichi2.anki.model.SelectableDeck
 import com.ichi2.anki.model.SortType
-import com.ichi2.anki.dialogs.compose.TagsDialog
-import com.ichi2.anki.dialogs.compose.DeleteConfirmationDialog
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -122,7 +124,7 @@ fun CardBrowserScreen(
     onGradeNow: () -> Unit,
     onResetProgress: () -> Unit,
     onExportCard: () -> Unit,
-    onFilterByTag: () -> Unit
+    onFilterByTag: () -> Unit,
 ) {
     val browserRows by viewModel.browserRows.collectAsStateWithLifecycle()
     val columnHeadings by viewModel.flowOfColumnHeadings.collectAsStateWithLifecycle()
@@ -147,10 +149,32 @@ fun CardBrowserScreen(
         }
     }
 
+    LaunchedEffect(viewModel.flowOfDeleteResult) {
+        viewModel.flowOfDeleteResult.collect { count ->
+            val message = context.resources.getQuantityString(
+                R.plurals.card_browser_cards_deleted,
+                count,
+                count,
+            )
+            val result = snackbarHostState.showSnackbar(
+                message = message,
+                actionLabel = context.getString(R.string.undo),
+                duration = SnackbarDuration.Short,
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                viewModel.undo()
+            }
+        }
+    }
+
     var showEditTagsDialog by remember { mutableStateOf(false) }
 
     if (showEditTagsDialog) {
-        var tagsLoadState by remember { mutableStateOf<Map<String, CardBrowserViewModel.TagStatus>?>(null) }
+        var tagsLoadState by remember {
+            mutableStateOf<Map<String, CardBrowserViewModel.TagStatus>?>(
+                null
+            )
+        }
 
         LaunchedEffect(Unit) {
             viewModel.loadAllTags()
@@ -187,7 +211,7 @@ fun CardBrowserScreen(
             title = stringResource(R.string.menu_edit_tags),
             confirmButtonText = stringResource(R.string.dialog_ok),
             showFilterByDeckToggle = true,
-            onAddTag = { /* Handled by dialog state internally for immediate display, not persisted until confirm */ }
+            onAddTag = { /* Handled by dialog state internally for immediate display, not persisted until confirm */ },
         )
     }
 
@@ -200,7 +224,7 @@ fun CardBrowserScreen(
                     viewModel.deleteSelectedNotes()
                     showDeleteConfirmationDialog = false
                 }
-            }
+            },
         )
     }
 
@@ -209,21 +233,22 @@ fun CardBrowserScreen(
             modifier = Modifier.padding(
                 top = contentPadding.calculateTopPadding(),
                 start = contentPadding.calculateStartPadding(layoutDirection),
-                end = contentPadding.calculateEndPadding(layoutDirection)
-            )
+                end = contentPadding.calculateEndPadding(layoutDirection),
+            ),
         ) {
             CardBrowserHeader(columns = columnHeadings)
             HorizontalDivider()
             when (val state = searchState) {
                 is SearchState.Initializing, is SearchState.Searching -> CardBrowserLoading(
                     Modifier.padding(
-                        bottom = with(LocalDensity.current) { toolbarHeight.toDp() })
+                        bottom = with(LocalDensity.current) { toolbarHeight.toDp() },
+                    ),
                 )
 
                 is SearchState.Completed -> {
                     if (browserRows.isEmpty()) {
                         val selectedDeck by viewModel.flowOfDeckSelection.collectAsStateWithLifecycle(
-                            null
+                            null,
                         )
                         val deckName = when (val deck = selectedDeck) {
                             is SelectableDeck.Deck -> deck.name
@@ -233,13 +258,16 @@ fun CardBrowserScreen(
                     } else {
                         val toolbarHeightInDp = with(LocalDensity.current) { toolbarHeight.toDp() }
                         LazyColumn(
-                            modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(
                                 top = 0.dp,
-                                bottom = toolbarHeightInDp + 32.dp + contentPadding.calculateBottomPadding()
-                            )
+                                bottom = toolbarHeightInDp + 32.dp + contentPadding.calculateBottomPadding(),
+                            ),
                         ) {
                             items(
-                                items = browserRows, key = { it.id }) { row ->
+                                items = browserRows,
+                                key = { it.id },
+                            ) { row ->
                                 CardBrowserRow(
                                     row = row.browserRow,
                                     isSelected = selectedRows.contains(CardOrNoteId(row.id)),
@@ -248,10 +276,11 @@ fun CardBrowserScreen(
                                     }, onLongClick = {
                                         viewModel.handleRowLongPress(
                                             CardBrowserViewModel.RowSelection(
-                                                rowId = CardOrNoteId(row.id), topOffset = 0
-                                            )
+                                                rowId = CardOrNoteId(row.id),
+                                                topOffset = 0,
+                                            ),
                                         )
-                                    })
+                                    }),
                                 )
                                 HorizontalDivider()
                             }
@@ -280,22 +309,28 @@ fun CardBrowserScreen(
                 .align(Alignment.BottomCenter)
                 .offset(y = -ScreenOffset)
                 .padding(bottom = contentPadding.calculateBottomPadding())
-                .onSizeChanged { toolbarHeight = it.height })
+                .onSizeChanged { toolbarHeight = it.height },
+        )
 
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = with(LocalDensity.current) { toolbarHeight.toDp() + 32.dp + contentPadding.calculateBottomPadding() })
+                .padding(
+                    bottom = with(LocalDensity.current) { toolbarHeight.toDp() + 32.dp + contentPadding.calculateBottomPadding() },
+                ),
         )
 
         if (showFilterSheet) {
             FilterBottomSheet(
-                onDismissRequest = { showFilterSheet = false }, onFilter = {
-                onFilter(it)
-            }, onFlagFilter = {
-                showFlagMenu = true
-            }, onFilterByTag = onFilterByTag
+                onDismissRequest = { showFilterSheet = false },
+                onFilter = {
+                    onFilter(it)
+                },
+                onFlagFilter = {
+                    showFlagMenu = true
+                },
+                onFilterByTag = onFilterByTag,
             )
         }
 
@@ -369,12 +404,15 @@ fun CardBrowserScreen(
                         viewModel.undo()
                         showMoreOptionsMenu = false
                     }
-                })
+                },
+            )
         }
 
         if (showSortMenu) {
             SelectableSortOrderBottomSheet(
-                viewModel = viewModel, onDismiss = { showSortMenu = false })
+                viewModel = viewModel,
+                onDismiss = { showSortMenu = false },
+            )
         }
 
         if (showFlagMenu) {
@@ -406,7 +444,7 @@ fun BrowserToolbar(
     onSetFlag: () -> Unit,
     onOptions: () -> Unit,
     onMoreOptions: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     HorizontalFloatingToolbar(
         modifier = modifier,
@@ -420,20 +458,21 @@ fun BrowserToolbar(
                     TooltipBox(
                         positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
                             positioning = TooltipAnchorPosition.Above,
-                        ), tooltip = {
+                        ),
+                        tooltip = {
                             PlainTooltip { Text(stringResource(R.string.card_browser_deselect_all)) }
-                        }, state = rememberTooltipState()
+                        },
+                        state = rememberTooltipState(),
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.deselect_24px),
-                            contentDescription = stringResource(R.string.card_browser_deselect_all)
+                            contentDescription = stringResource(R.string.card_browser_deselect_all),
                         )
                     }
-
                 } else {
                     Icon(
                         painter = painterResource(R.drawable.add_24px),
-                        contentDescription = stringResource(R.string.add_card)
+                        contentDescription = stringResource(R.string.add_card),
                     )
                 }
             }
@@ -444,28 +483,32 @@ fun BrowserToolbar(
             TooltipBox(
                 positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
                     positioning = TooltipAnchorPosition.Above,
-                ), tooltip = {
+                ),
+                tooltip = {
                     PlainTooltip { Text(stringResource(R.string.card_editor_preview_card)) }
-                }, state = rememberTooltipState()
+                },
+                state = rememberTooltipState(),
             ) {
                 IconButton(onClick = onPreview) {
                     Icon(
                         painter = painterResource(R.drawable.preview_24px),
-                        contentDescription = stringResource(R.string.card_editor_preview_card)
+                        contentDescription = stringResource(R.string.card_editor_preview_card),
                     )
                 }
             }
             TooltipBox(
                 positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
                     positioning = TooltipAnchorPosition.Above,
-                ), tooltip = {
+                ),
+                tooltip = {
                     PlainTooltip { Text(stringResource(R.string.card_browser_select_all)) }
-                }, state = rememberTooltipState()
+                },
+                state = rememberTooltipState(),
             ) {
                 IconButton(onClick = onSelectAll) {
                     Icon(
                         painter = painterResource(R.drawable.select_all_24px),
-                        contentDescription = stringResource(R.string.card_browser_select_all)
+                        contentDescription = stringResource(R.string.card_browser_select_all),
                     )
                 }
             }
@@ -473,28 +516,32 @@ fun BrowserToolbar(
                 TooltipBox(
                     positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
                         positioning = TooltipAnchorPosition.Above,
-                    ), tooltip = {
+                    ),
+                    tooltip = {
                         PlainTooltip { Text(stringResource(R.string.menu_mark_note)) }
-                    }, state = rememberTooltipState()
+                    },
+                    state = rememberTooltipState(),
                 ) {
                     IconButton(onClick = onMark) {
                         Icon(
                             painter = painterResource(R.drawable.star_24px),
-                            contentDescription = stringResource(R.string.menu_mark_note)
+                            contentDescription = stringResource(R.string.menu_mark_note),
                         )
                     }
                 }
                 TooltipBox(
                     positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
                         positioning = TooltipAnchorPosition.Above,
-                    ), tooltip = {
+                    ),
+                    tooltip = {
                         PlainTooltip { Text(stringResource(R.string.menu_flag)) }
-                    }, state = rememberTooltipState()
+                    },
+                    state = rememberTooltipState(),
                 ) {
                     IconButton(onClick = onSetFlag) {
                         Icon(
                             painter = painterResource(R.drawable.flag_24px),
-                            contentDescription = stringResource(R.string.menu_flag)
+                            contentDescription = stringResource(R.string.menu_flag),
                         )
                     }
                 }
@@ -502,28 +549,32 @@ fun BrowserToolbar(
                 TooltipBox(
                     positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
                         positioning = TooltipAnchorPosition.Above,
-                    ), tooltip = {
+                    ),
+                    tooltip = {
                         PlainTooltip { Text(stringResource(R.string.filter)) }
-                    }, state = rememberTooltipState()
+                    },
+                    state = rememberTooltipState(),
                 ) {
                     IconButton(onClick = onFilter) {
                         Icon(
                             painter = painterResource(R.drawable.filter_alt_24px),
-                            contentDescription = stringResource(R.string.filter)
+                            contentDescription = stringResource(R.string.filter),
                         )
                     }
                 }
                 TooltipBox(
                     positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
                         positioning = TooltipAnchorPosition.Above,
-                    ), tooltip = {
+                    ),
+                    tooltip = {
                         PlainTooltip { Text(stringResource(R.string.browser_options_dialog_heading)) }
-                    }, state = rememberTooltipState()
+                    },
+                    state = rememberTooltipState(),
                 ) {
                     IconButton(onClick = onOptions) {
                         Icon(
                             painter = painterResource(R.drawable.tune_24px),
-                            contentDescription = stringResource(R.string.browser_options_dialog_heading)
+                            contentDescription = stringResource(R.string.browser_options_dialog_heading),
                         )
                     }
                 }
@@ -531,7 +582,7 @@ fun BrowserToolbar(
             IconButton(onClick = onMoreOptions) {
                 Icon(
                     Icons.Filled.MoreVert,
-                    contentDescription = stringResource(R.string.more_options)
+                    contentDescription = stringResource(R.string.more_options),
                 )
             }
         }
@@ -544,7 +595,7 @@ fun FilterBottomSheet(
     onDismissRequest: () -> Unit,
     onFilter: (String) -> Unit,
     onFlagFilter: () -> Unit,
-    onFilterByTag: () -> Unit
+    onFilterByTag: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
@@ -564,7 +615,8 @@ fun FilterBottomSheet(
                         onDismissRequest()
                     }
                 }
-            })
+            },
+        )
         ListItem(
             headlineContent = { Text(stringResource(R.string.card_browser_show_suspended)) },
             modifier = Modifier.clickable {
@@ -574,7 +626,8 @@ fun FilterBottomSheet(
                         onDismissRequest()
                     }
                 }
-            })
+            },
+        )
         ListItem(
             headlineContent = { Text(stringResource(R.string.filter_by_tag)) },
             modifier = Modifier.clickable {
@@ -584,10 +637,12 @@ fun FilterBottomSheet(
                         onDismissRequest()
                     }
                 }
-            })
+            },
+        )
         ListItem(
             headlineContent = { Text(stringResource(R.string.card_browser_search_by_flag)) },
-            modifier = Modifier.clickable { onFlagFilter() })
+            modifier = Modifier.clickable { onFlagFilter() },
+        )
     }
 }
 
@@ -611,7 +666,7 @@ fun MoreOptionsBottomSheet(
     onGradeNow: () -> Unit,
     onResetProgress: () -> Unit,
     onExportCard: () -> Unit,
-    onUndoDeleteNote: () -> Unit
+    onUndoDeleteNote: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
@@ -631,7 +686,14 @@ fun MoreOptionsBottomSheet(
                 )
             }
             ListItem(
-                headlineContent = { Text(pluralStringResource(R.plurals.card_browser_delete_notes, selectionCount)) },
+                headlineContent = {
+                    Text(
+                        pluralStringResource(
+                            R.plurals.card_browser_delete_notes,
+                            selectionCount
+                        )
+                    )
+                },
                 modifier = Modifier.clickable { onDeleteNote() },
             )
             ListItem(
@@ -683,7 +745,8 @@ fun MoreOptionsBottomSheet(
         } else {
             ListItem(
                 headlineContent = { Text(stringResource(R.string.card_browser_change_display_order)) },
-                modifier = Modifier.clickable { onChangeDisplayOrder() })
+                modifier = Modifier.clickable { onChangeDisplayOrder() },
+            )
             ListItem(
                 headlineContent = { Text(stringResource(R.string.new_dynamic_deck)) },
                 modifier = Modifier.clickable {
@@ -693,17 +756,22 @@ fun MoreOptionsBottomSheet(
                             onDismissRequest()
                         }
                     }
-                })
+                },
+            )
             ListItem(
                 headlineContent = { Text(stringResource(R.string.undo_delete_note)) },
-                modifier = Modifier.clickable { onUndoDeleteNote() })
+                modifier = Modifier.clickable { onUndoDeleteNote() },
+            )
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun SelectableSortOrderBottomSheet(viewModel: CardBrowserViewModel, onDismiss: () -> Unit) {
+fun SelectableSortOrderBottomSheet(
+    viewModel: CardBrowserViewModel,
+    onDismiss: () -> Unit,
+) {
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     val currentSortType by viewModel.sortTypeFlow.collectAsStateWithLifecycle()
@@ -737,7 +805,7 @@ fun SelectableSortOrderBottomSheet(viewModel: CardBrowserViewModel, onDismiss: (
                 ) {
                     val sortOptions = listOf(
                         false to R.string.sort_order_ascending,
-                        true to R.string.sort_order_descending
+                        true to R.string.sort_order_descending,
                     )
 
                     sortOptions.forEach { (isDescending, textRes) ->
@@ -768,13 +836,13 @@ fun SelectableSortOrderBottomSheet(viewModel: CardBrowserViewModel, onDismiss: (
                                             contentDescription = null,
                                             modifier = Modifier
                                                 .padding(end = 8.dp)
-                                                .size(18.dp)
+                                                .size(18.dp),
                                         )
                                     }
                                     Text(
                                         text = stringResource(textRes),
                                         softWrap = false,
-                                        overflow = TextOverflow.Visible
+                                        overflow = TextOverflow.Visible,
                                     )
                                 }
                             },
@@ -792,10 +860,11 @@ fun SelectableSortOrderBottomSheet(viewModel: CardBrowserViewModel, onDismiss: (
                     headlineContent = { Text(text = sortLabels[sortType.cardBrowserLabelIndex]) },
                     leadingContent = {
                         RadioButton(
-                            selected = currentSortType == sortType, onClick = onItemClick
+                            selected = currentSortType == sortType,
+                            onClick = onItemClick,
                         )
                     },
-                    modifier = Modifier.clickable(onClick = onItemClick)
+                    modifier = Modifier.clickable(onClick = onItemClick),
                 )
             }
         }
@@ -804,7 +873,10 @@ fun SelectableSortOrderBottomSheet(viewModel: CardBrowserViewModel, onDismiss: (
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FlagFilterBottomSheet(onDismiss: () -> Unit, onFilter: (String) -> Unit) {
+fun FlagFilterBottomSheet(
+    onDismiss: () -> Unit,
+    onFilter: (String) -> Unit,
+) {
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     var flagLabels by remember { mutableStateOf<Map<Flag, String>>(emptyMap()) }
@@ -820,22 +892,26 @@ fun FlagFilterBottomSheet(onDismiss: () -> Unit, onFilter: (String) -> Unit) {
     ) {
         LazyColumn {
             items(Flag.entries.filter { it != Flag.NONE }) { flag ->
-                ListItem(headlineContent = { Text(flagLabels[flag] ?: "") }, leadingContent = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.flag_24px),
-                        contentDescription = stringResource(R.string.card_browser_search_by_flag),
-                        tint = colorResource(
-                            id = flag.browserColorRes ?: R.color.transparent
+                ListItem(
+                    headlineContent = { Text(flagLabels[flag] ?: "") },
+                    leadingContent = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.flag_24px),
+                            contentDescription = stringResource(R.string.card_browser_search_by_flag),
+                            tint = colorResource(
+                                id = flag.browserColorRes ?: R.color.transparent,
+                            ),
                         )
-                    )
-                }, modifier = Modifier.clickable {
-                    onFilter("flag:${flag.code}")
-                    scope.launch { sheetState.hide() }.invokeOnCompletion {
-                        if (!sheetState.isVisible) {
-                            onDismiss()
+                    },
+                    modifier = Modifier.clickable {
+                        onFilter("flag:${flag.code}")
+                        scope.launch { sheetState.hide() }.invokeOnCompletion {
+                            if (!sheetState.isVisible) {
+                                onDismiss()
+                            }
                         }
-                    }
-                })
+                    },
+                )
             }
         }
     }
@@ -843,7 +919,10 @@ fun FlagFilterBottomSheet(onDismiss: () -> Unit, onFilter: (String) -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SetFlagBottomSheet(onDismiss: () -> Unit, onSetFlag: (Flag) -> Unit) {
+fun SetFlagBottomSheet(
+    onDismiss: () -> Unit,
+    onSetFlag: (Flag) -> Unit,
+) {
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     var flagLabels by remember { mutableStateOf<Map<Flag, String>>(emptyMap()) }
@@ -859,61 +938,75 @@ fun SetFlagBottomSheet(onDismiss: () -> Unit, onSetFlag: (Flag) -> Unit) {
     ) {
         LazyColumn {
             items(Flag.entries) { flag ->
-                ListItem(headlineContent = { Text(flagLabels[flag] ?: "") }, leadingContent = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.flag_24px),
-                        contentDescription = stringResource(R.string.menu_flag),
-                        tint = if (flag == Flag.NONE) {
-                            MaterialTheme.colorScheme.onSurface
-                        } else {
-                            colorResource(
-                                id = flag.browserColorRes ?: R.color.transparent
-                            )
+                ListItem(
+                    headlineContent = { Text(flagLabels[flag] ?: "") },
+                    leadingContent = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.flag_24px),
+                            contentDescription = stringResource(R.string.menu_flag),
+                            tint = if (flag == Flag.NONE) {
+                                MaterialTheme.colorScheme.onSurface
+                            } else {
+                                colorResource(
+                                    id = flag.browserColorRes ?: R.color.transparent,
+                                )
+                            },
+                        )
+                    },
+                    modifier = Modifier.clickable {
+                        onSetFlag(flag)
+                        scope.launch { sheetState.hide() }.invokeOnCompletion {
+                            if (!sheetState.isVisible) {
+                                onDismiss()
+                            }
                         }
-                    )
-                }, modifier = Modifier.clickable {
-                    onSetFlag(flag)
-                    scope.launch { sheetState.hide() }.invokeOnCompletion {
-                        if (!sheetState.isVisible) {
-                            onDismiss()
-                        }
-                    }
-                })
+                    },
+                )
             }
         }
     }
 }
 
 @Composable
-fun EmptyCardBrowser(modifier: Modifier = Modifier, deckName: String) {
+fun EmptyCardBrowser(
+    modifier: Modifier = Modifier,
+    deckName: String,
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         CardBrowserEmpty(deckName = deckName)
     }
 }
 
 @Composable
-fun CardBrowserErrorState(modifier: Modifier = Modifier, error: SearchState.Error) {
+fun CardBrowserErrorState(
+    modifier: Modifier = Modifier,
+    error: SearchState.Error,
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         CardBrowserError(error = error)
     }
 }
 
 @Composable
-fun CardBrowserError(modifier: Modifier = Modifier, error: SearchState.Error) {
+fun CardBrowserError(
+    modifier: Modifier = Modifier,
+    error: SearchState.Error,
+) {
     Text(
-        text = (stringResource(id = R.string.vague_error) + ": " + error.error), modifier = modifier
+        text = (stringResource(id = R.string.vague_error) + ": " + error.error),
+        modifier = modifier,
     )
 }
 
@@ -925,20 +1018,23 @@ fun CardBrowserLoading(modifier: Modifier = Modifier) {
             .fillMaxSize()
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         LoadingIndicator(
             color = LoadingIndicatorDefaults.indicatorColor,
-            polygons = LoadingIndicatorDefaults.IndeterminateIndicatorPolygons
+            polygons = LoadingIndicatorDefaults.IndeterminateIndicatorPolygons,
         )
     }
 }
 
 @Composable
-fun CardBrowserEmpty(deckName: String, modifier: Modifier = Modifier) {
+fun CardBrowserEmpty(
+    deckName: String,
+    modifier: Modifier = Modifier,
+) {
     Text(
         text = stringResource(id = R.string.card_browser_no_cards_in_deck, deckName),
-        modifier = modifier
+        modifier = modifier,
     )
 }
 
@@ -948,7 +1044,7 @@ fun CardBrowserHeader(columns: List<ColumnHeading>) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         columns.forEach { column ->
             Text(
@@ -956,7 +1052,7 @@ fun CardBrowserHeader(columns: List<ColumnHeading>) {
                 style = MaterialTheme.typography.titleSmall,
                 modifier = Modifier.weight(1f),
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }
@@ -993,21 +1089,28 @@ fun CardBrowserRow(
         MaterialTheme.colorScheme.primary -> MaterialTheme.colorScheme.onPrimary
         MaterialTheme.colorScheme.primaryContainer -> MaterialTheme.colorScheme.onPrimaryContainer
         MaterialTheme.colorScheme.tertiaryContainer -> MaterialTheme.colorScheme.onTertiaryContainer
-        colorResource(Flag.RED.browserColorRes!!), colorResource(Flag.ORANGE.browserColorRes!!), colorResource(
-            Flag.GREEN.browserColorRes!!
-        ), colorResource(Flag.BLUE.browserColorRes!!), colorResource(Flag.PINK.browserColorRes!!), colorResource(
-            Flag.TURQUOISE.browserColorRes!!
-        ), colorResource(Flag.PURPLE.browserColorRes!!) -> Color.Black
+        colorResource(Flag.RED.browserColorRes!!), colorResource(Flag.ORANGE.browserColorRes!!),
+        colorResource(
+            Flag.GREEN.browserColorRes!!,
+        ),
+        colorResource(Flag.BLUE.browserColorRes!!), colorResource(Flag.PINK.browserColorRes!!),
+        colorResource(
+            Flag.TURQUOISE.browserColorRes!!,
+        ),
+        colorResource(Flag.PURPLE.browserColorRes!!),
+            -> Color.Black
 
         else -> MaterialTheme.colorScheme.onSurface
     }
 
     Surface(
-        modifier = modifier.fillMaxWidth(), color = backgroundColor, contentColor = contentColor
+        modifier = modifier.fillMaxWidth(),
+        color = backgroundColor,
+        contentColor = contentColor,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             row.cellsList.forEach { cell ->
                 Text(
@@ -1015,7 +1118,7 @@ fun CardBrowserRow(
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 1,
                     modifier = Modifier.weight(1f),
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }

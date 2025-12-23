@@ -46,6 +46,7 @@ import com.ichi2.anki.browser.CardBrowserViewModel.ToggleSelectionState.SELECT_A
 import com.ichi2.anki.browser.CardBrowserViewModel.ToggleSelectionState.SELECT_NONE
 import com.ichi2.anki.browser.RepositionCardsRequest.RepositionData
 import com.ichi2.anki.common.annotations.NeedsTest
+import com.ichi2.anki.dialogs.compose.TagsState
 import com.ichi2.anki.export.ExportDialogFragment.ExportType
 import com.ichi2.anki.launchCatchingIO
 import com.ichi2.anki.libanki.Card
@@ -97,7 +98,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.util.Collections
-import com.ichi2.anki.dialogs.compose.TagsState
 import kotlin.math.max
 import kotlin.math.min
 
@@ -275,6 +275,8 @@ class CardBrowserViewModel(
 
     val flowOfSnackbarMessage = MutableSharedFlow<Int>()
 
+    val flowOfDeleteResult = MutableSharedFlow<Int>()
+
     var focusedRow: CardOrNoteId? = null
         set(value) {
             if (!isFragmented) return
@@ -384,7 +386,7 @@ class CardBrowserViewModel(
         1. "((?:\\.|[^"\\])*)" - A double-quoted string. It handles escaped quotes.
         2. '((?:\\.|[^'\\])*)' - A single-quoted string. It also handles escaped quotes.
         3. ([^\s)]+) - An unquoted string, which ends at the first space or closing parenthesis.
-        */
+         */
         val regex = Regex("""(?i)\bdeck:\s*(?:"((?:\\.|[^"\\])*)"|'((?:\\.|[^'\\])*)'|([^\s)]+))""")
         val m = regex.find(search) ?: return null
         // The deck name is in one of the capturing groups.
@@ -398,7 +400,7 @@ class CardBrowserViewModel(
     val flowOfColumnHeadings: StateFlow<List<ColumnHeading>> = combine(
         flowOfActiveColumns,
         flowOfCardsOrNotes,
-        flowOfAllColumns
+        flowOfAllColumns,
     ) { activeColumns, cardsOrNotes, allColumns ->
         Timber.d("updated headings for %d columns", activeColumns.count)
         activeColumns.columns.map {
@@ -441,7 +443,7 @@ class CardBrowserViewModel(
         data object Loading : TagsState()
         data class Loaded(val tags: List<String>) : TagsState()
     }
-    */
+     */
 
     private val _allTags = MutableStateFlow<TagsState>(TagsState.Loading)
     val allTags: StateFlow<TagsState> = _allTags
@@ -453,7 +455,7 @@ class CardBrowserViewModel(
     val deckTags: StateFlow<Set<String>> = _deckTags
 
     private val _filterTagsByDeck = MutableStateFlow(
-        sharedPrefs().getBoolean("card_browser_filter_tags_by_deck", false)
+        sharedPrefs().getBoolean("card_browser_filter_tags_by_deck", false),
     )
     val filterTagsByDeck: StateFlow<Boolean> = _filterTagsByDeck
 
@@ -527,7 +529,7 @@ class CardBrowserViewModel(
                         BundleCompat.getParcelable(
                             bundle,
                             STATE_MULTISELECT_VALUES,
-                            IdsFile::class.java
+                            IdsFile::class.java,
                         )
                     }
                 val ids = idsFile?.getIds()?.map { CardOrNoteId(it) } ?: emptyList()
@@ -616,7 +618,7 @@ class CardBrowserViewModel(
         STATE_MULTISELECT_VALUES to IdsFile(
             cacheDir,
             selectedRows.map { it.cardOrNoteId },
-            "multiselect-values"
+            "multiselect-values",
         ),
     )
 
@@ -746,9 +748,10 @@ class CardBrowserViewModel(
             focusedRow = null
         }
         return undoableOp { removeNotes(cardIds = cardIds) }.count.also {
-                endMultiSelectMode(SingleSelectCause.Other)
-                refreshSearch()
-            }
+            endMultiSelectMode(SingleSelectCause.Other)
+            refreshSearch()
+            flowOfDeleteResult.emit(it)
+        }
     }
 
     fun setCardsOrNotes(newValue: CardsOrNotes) = viewModelScope.launch {
@@ -847,7 +850,7 @@ class CardBrowserViewModel(
             "selecting %d rows (from %d unvalidated, %d valid in cards)",
             ids.size,
             unvalidatedIds.size,
-            validCardOrNoteIds.size
+            validCardOrNoteIds.size,
         )
         if (_selectedRows.addAll(ids)) {
             onAppendSelectedRows(MultiSelectCause.Other)
@@ -1073,7 +1076,7 @@ class CardBrowserViewModel(
             return withCol {
                 val (min, max) = db.query(
                         "select min(due), max(due) from cards where type=? and odid=0",
-                        CardType.New.code
+                        CardType.New.code,
                     ).use {
                         it.moveToNext()
                         Pair(max(0, it.getInt(0)), it.getInt(1))
@@ -1187,7 +1190,7 @@ class CardBrowserViewModel(
         val searchTerms = when {
             searchTerms.contains("flag:") -> searchTerms.replaceFirst(
                 "flag:.".toRegex(),
-                flagSearchTerm
+                flagSearchTerm,
             )
 
             searchTerms.isNotEmpty() -> "$flagSearchTerm $searchTerms"
@@ -1302,7 +1305,8 @@ class CardBrowserViewModel(
                     }
                     ids.map { id ->
                         BrowserRowWithId(
-                            browserRow = backend.browserRowForId(id), id = id
+                            browserRow = backend.browserRowForId(id),
+                            id = id,
                         )
                     }
                 }
@@ -1312,7 +1316,8 @@ class CardBrowserViewModel(
                 _browserRows.value = newBrowserRows
                 this@CardBrowserViewModel.cards.replaceWith(
                     cardsOrNotes,
-                    newBrowserRows.map { CardOrNoteId(it.id) })
+                    newBrowserRows.map { CardOrNoteId(it.id) },
+                )
                 _searchState.emit(SearchState.Completed)
                 // Apply pending selection if any, using the captured value.
                 // We use the captured value because another search may have started
@@ -1446,9 +1451,7 @@ class CardBrowserViewModel(
     }
 
     enum class TagStatus {
-        CHECKED,
-        UNCHECKED,
-        INDETERMINATE
+        CHECKED, UNCHECKED, INDETERMINATE,
     }
 
     suspend fun loadTagsForSelection(): Map<String, TagStatus> {
@@ -1492,7 +1495,10 @@ class CardBrowserViewModel(
         }
     }
 
-    fun saveTagsForSelection(added: Set<String>, removed: Set<String>) = viewModelScope.launch {
+    fun saveTagsForSelection(
+        added: Set<String>,
+        removed: Set<String>,
+    ) = viewModelScope.launch {
         val noteIds = queryAllSelectedNoteIds()
         if (noteIds.isEmpty()) return@launch
 
@@ -1580,7 +1586,6 @@ class CardBrowserViewModel(
             var previouslySelectedRowIds: Set<CardOrNoteId>? = null
         }
 
-
         sealed class MultiSelectCause : ChangeMultiSelectMode() {
             data class RowSelected(
                 val selection: RowSelection,
@@ -1643,7 +1648,7 @@ class IdsFile(
     constructor(
         directory: File,
         ids: List<Long>,
-        prefix: String = "ids"
+        prefix: String = "ids",
     ) : this(path = createTempFile(prefix, ".tmp", directory).path) {
         DataOutputStream(FileOutputStream(this)).use { outputStream ->
             outputStream.writeInt(ids.size)
