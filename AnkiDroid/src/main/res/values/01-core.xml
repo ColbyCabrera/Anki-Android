@@ -186,7 +186,7 @@ Your data is safe and can be restored. It is located at
 %s
 
 Select an option below to restore:</string>
-    <string name="directory_revoked_after_inactivity" comment="the first parameter is WRITE_EXTERNAL_STORAGE the second parameter is the path to the AnkiDroid folder. Typically /storage/emulated/0.AnkiDroid">Android has removed AnkiDroid\'s %1$s permission due to app inactivity.
+    <string name="directory_revoked_after_inactivity" comment="the first parameter is WRITE_EXTERNAL_STORAGE the second parameter is the path to the AnkiDroid folder. Typically /storage/emulated/0/AnkiDroid">Android has removed AnkiDroid\'s %1$s permission due to app inactivity.
 
 Your data is safe and can be restored. It is located at
 %2$s
