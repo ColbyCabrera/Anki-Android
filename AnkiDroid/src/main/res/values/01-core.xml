@@ -97,12 +97,11 @@ using the + icon.</string>
     <string name="menu_suspend_note" maxLength="28">Suspend Note</string>
     <string name="webview_crash_unknwon_detailed">Unknown webview crash</string>
     <string name="menu_delete_note" maxLength="28">Delete note</string>
+    <string name="delete_note_message">Really delete this note and all its cards?\n%s</string>
     <string name="menu_flag" maxLength="41">Flag</string>
     <string name="rename_flag">Rename flags</string>
     <string name="menu_flag_card" maxLength="28">Flag card</string>
     <string name="menu_edit_tags" maxLength="28">Edit tags</string>
-    <string name="delete_note_message">Really delete this note and all its cards?
-%s</string>
     <string name="menu_search" maxLength="28">Lookup in %1$s</string>
     <string name="menu_mark_note" maxLength="28">Mark note</string>
     <string name="menu_unmark_note">Unmark note</string>

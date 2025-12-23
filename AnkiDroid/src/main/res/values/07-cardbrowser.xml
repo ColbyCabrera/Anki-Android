@@ -114,4 +114,8 @@
 
     <string name="card_browser_no_cards_selected">No cards selected</string>
     <string name="card_browser_reposition_invalid_bounds">Could not determine card range</string>
+    <plurals name="delete_notes_confirmation">
+        <item quantity="one">Delete this note and all of its cards?</item>
+        <item quantity="other">Delete these %d notes and all of their cards?</item>
+    </plurals>
 </resources>
