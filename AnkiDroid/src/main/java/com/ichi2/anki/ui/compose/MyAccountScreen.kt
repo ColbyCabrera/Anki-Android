@@ -7,7 +7,6 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -16,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -46,11 +44,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import com.ichi2.anki.MyAccountScreenState
@@ -201,8 +197,7 @@ fun RemoveAccountContent(
                             }
 
                             override fun shouldOverrideUrlLoading(
-                                view: WebView?,
-                                request: WebResourceRequest?
+                                view: WebView?, request: WebResourceRequest?
                             ): Boolean {
                                 val url = request?.url?.toString()
                                 if (maybeRedirect(url)) return true
@@ -239,89 +234,94 @@ fun LoggedOutContent(
     showSignUp: Boolean,
     showNoAccountText: Boolean
 ) {
-    Column(
+    Box(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .padding(horizontal = 32.dp),
+        contentAlignment = Alignment.Center
     ) {
-        OutlinedTextField(
-            value = email,
-            onValueChange = onEmailChanged,
-            label = { Text(stringResource(R.string.username)) },
-            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = password,
-            onValueChange = onPasswordChanged,
-            label = { Text(stringResource(R.string.password)) },
-            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
-            modifier = Modifier.fillMaxWidth(),
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Button(
-            onClick = onLoginClick,
-            modifier = Modifier.widthIn(min = 200.dp),
-            enabled = email.isNotEmpty() && password.isNotEmpty() && !isLoading
+        Column(
+            modifier = Modifier.verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    strokeWidth = 2.dp
+            OutlinedTextField(
+                value = email,
+                onValueChange = onEmailChanged,
+                label = { Text(stringResource(R.string.username)) },
+                leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = password,
+                onValueChange = onPasswordChanged,
+                label = { Text(stringResource(R.string.password)) },
+                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+                modifier = Modifier.fillMaxWidth(),
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Button(
+                onClick = onLoginClick,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = email.isNotEmpty() && password.isNotEmpty() && !isLoading
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(stringResource(R.string.log_in))
+                }
+            }
+
+            TextButton(onClick = onResetPasswordClick) {
+                Text(stringResource(R.string.reset_password))
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            if (showNoAccountText) {
+                Text(
+                    text = stringResource(R.string.sign_up_description),
+                    style = MaterialTheme.typography.titleMedium
                 )
-            } else {
-                Text(stringResource(R.string.log_in))
+
+                Spacer(Modifier.height(8.dp))
+
+                Text(
+                    text = stringResource(R.string.ankiweb_is_not_affiliated_with_this_app),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        TextButton(onClick = onResetPasswordClick) {
-            Text(stringResource(R.string.reset_password))
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        if (showNoAccountText) {
-            Text(
-                text = stringResource(R.string.sign_up_description),
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
-            )
-
-            Text(
-                text = stringResource(R.string.ankiweb_is_not_affiliated_with_this_app),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        if (showSignUp) {
-            TextButton(onClick = onSignUpClick) {
-                Text(stringResource(R.string.sign_up))
+            if (showSignUp) {
+                Spacer(Modifier.height(8.dp))
+                TextButton(onClick = onSignUpClick) {
+                    Text(stringResource(R.string.sign_up))
+                }
             }
-        }
 
-        TextButton(onClick = onPrivacyPolicyClick) {
-            Text(stringResource(R.string.help_title_privacy))
-        }
+            Spacer(Modifier.height(24.dp))
 
-        TextButton(onClick = onLostEmailClick) {
-            Text(stringResource(R.string.lost_mail_instructions))
+            TextButton(onClick = onPrivacyPolicyClick) {
+                Text(stringResource(R.string.help_title_privacy))
+            }
+
+            TextButton(onClick = onLostEmailClick) {
+                Text(stringResource(R.string.lost_mail_instructions))
+            }
         }
     }
 }
@@ -334,56 +334,58 @@ fun LoggedInContent(
     onRemoveAccountClick: () -> Unit,
     onPrivacyPolicyClick: () -> Unit
 ) {
-    Column(
+    Box(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .padding(horizontal = 32.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Image(
-            painter = painterResource(R.drawable.ic_link),
-            contentDescription = null,
-            modifier = Modifier.size(height = 80.dp, width = 60.dp)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = stringResource(R.string.logged_as), style = MaterialTheme.typography.titleLarge
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = username,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Button(
-            onClick = onLogoutClick, modifier = Modifier.widthIn(min = 200.dp)
+        Column(
+            modifier = Modifier.verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(stringResource(R.string.log_out))
-        }
+            Image(
+                painter = painterResource(R.drawable.ic_link),
+                contentDescription = null,
+                modifier = Modifier.size(height = 100.dp, width = 75.dp)
+            )
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-        Button(
-            onClick = onRemoveAccountClick,
-            modifier = Modifier.widthIn(min = 200.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-        ) {
-            Text(stringResource(R.string.remove_account))
-        }
+            Text(
+                text = stringResource(R.string.logged_as),
+                style = MaterialTheme.typography.titleMedium
+            )
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-        TextButton(onClick = onPrivacyPolicyClick) {
-            Text(stringResource(R.string.help_title_privacy))
+            Text(
+                text = username, style = MaterialTheme.typography.headlineSmall
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Button(
+                onClick = onLogoutClick, modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(stringResource(R.string.log_out))
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = onRemoveAccountClick,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+            ) {
+                Text(stringResource(R.string.remove_account))
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            TextButton(onClick = onPrivacyPolicyClick) {
+                Text(stringResource(R.string.help_title_privacy))
+            }
         }
     }
 }
