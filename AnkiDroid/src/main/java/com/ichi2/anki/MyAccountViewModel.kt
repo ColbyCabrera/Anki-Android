@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ichi2.anki.CollectionManager.withCol
 import com.ichi2.anki.settings.Prefs
+import net.ankiweb.rsdroid.exceptions.BackendSyncException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -49,19 +50,28 @@ class MyAccountViewModel : ViewModel() {
     fun login(onSuccess: () -> Unit) {
         val email = _state.value.email.trim()
         val password = _state.value.password
-        if (email.isEmpty() || password.isEmpty()) return
+        if (email.isEmpty() || password.isEmpty()) {
+            _state.update { it.copy(loginError = "Email and password are required") }
+            return
+        }
 
         _state.update { it.copy(isLoginLoading = true, loginError = null) }
 
         viewModelScope.launch {
             try {
-                // This logic is simplified for now, will be integrated with Activity's logic if needed
-                // or moved here entirely.
-                _state.update { it.copy(isLoginLoading = false) }
-                // In a real implementation, we would call the actual login logic here.
-                // For now, the Activity will handle the actual login as it has the lifecycle/context.
+                val endpoint = if (Prefs.isCustomSyncEnabled) Prefs.customSyncUri else null
+                val auth = withCol {
+                    syncLogin(email, password, endpoint)
+                }
+                Prefs.username = email
+                Prefs.hkey = auth.hkey
+                _state.update { it.copy(isLoginLoading = false, isLoggedIn = true) }
+                onSuccess()
+            } catch (e: BackendSyncException.BackendSyncAuthFailedException) {
+                _state.update { it.copy(isLoginLoading = false, loginError = "Authentication failed") }
             } catch (e: Exception) {
-                _state.update { it.copy(isLoginLoading = false, loginError = e.message) }
+                Timber.e(e, "Login failed")
+                _state.update { it.copy(isLoginLoading = false, loginError = e.message ?: "Unknown error") }
             }
         }
     }
