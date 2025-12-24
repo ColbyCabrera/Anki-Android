@@ -40,6 +40,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -85,20 +88,23 @@ fun MyAccountScreen(
                             onPrivacyPolicyClick = onPrivacyPolicyClick
                         )
 
-                        false -> LoggedOutContent(
-                            email = state.email,
-                            password = state.password,
-                            isLoading = state.isLoginLoading,
-                            onEmailChanged = viewModel::onEmailChanged,
-                            onPasswordChanged = viewModel::onPasswordChanged,
-                            onLoginClick = { onLoginClick(state.email, state.password) },
-                            onResetPasswordClick = onResetPasswordClick,
-                            onSignUpClick = onSignUpClick,
-                            onPrivacyPolicyClick = onPrivacyPolicyClick,
-                            onLostEmailClick = onLostEmailClick,
-                            showSignUp = showSignUp,
-                            showNoAccountText = showNoAccountText
-                        )
+                        false -> {
+                            var password by remember { mutableStateOf("") }
+                            LoggedOutContent(
+                                email = state.email,
+                                password = password,
+                                isLoading = state.isLoginLoading,
+                                onEmailChanged = viewModel::onEmailChanged,
+                                onPasswordChanged = { password = it },
+                                onLoginClick = { onLoginClick(state.email, password) },
+                                onResetPasswordClick = onResetPasswordClick,
+                                onSignUpClick = onSignUpClick,
+                                onPrivacyPolicyClick = onPrivacyPolicyClick,
+                                onLostEmailClick = onLostEmailClick,
+                                showSignUp = showSignUp,
+                                showNoAccountText = showNoAccountText
+                            )
+                        }
                     }
                 }
                 MyAccountScreenState.REMOVE_ACCOUNT -> {
@@ -154,8 +160,6 @@ fun RemoveAccountContent(
                         // Security hardening as requested
                         settings.allowFileAccess = false
                         settings.allowContentAccess = false
-                        settings.allowFileAccessFromFileURLs = false
-                        settings.allowUniversalAccessFromFileURLs = false
 
                         removeJavascriptInterface("searchBoxJavaBridge_")
                         removeJavascriptInterface("accessibility")

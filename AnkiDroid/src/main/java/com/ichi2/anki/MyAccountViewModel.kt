@@ -16,7 +16,6 @@ data class MyAccountState(
     val isLoggedIn: Boolean = false,
     val username: String? = null,
     val email: String = "",
-    val password: String = "",
     val isLoginLoading: Boolean = false,
     val loginError: String? = null,
     val screenState: MyAccountScreenState = MyAccountScreenState.ACCOUNT_MANAGEMENT
@@ -43,13 +42,8 @@ class MyAccountViewModel : ViewModel() {
         _state.update { it.copy(email = email, loginError = null) }
     }
 
-    fun onPasswordChanged(password: String) {
-        _state.update { it.copy(password = password, loginError = null) }
-    }
-
-    fun login(onSuccess: () -> Unit) {
+    fun login(password: String, onSuccess: () -> Unit) {
         val email = _state.value.email.trim()
-        val password = _state.value.password
         if (email.isEmpty() || password.isEmpty()) {
             _state.update { it.copy(loginError = "Email and password are required") }
             return
@@ -88,7 +82,7 @@ class MyAccountViewModel : ViewModel() {
                 Prefs.hkey = null
                 Prefs.username = null
                 Prefs.currentSyncUri = null
-                _state.update { it.copy(isLoggedIn = false, username = null, password = "", email = "") }
+            _state.update { it.copy(isLoggedIn = false, username = null, email = "") }
             }
         }
     }
