@@ -33,7 +33,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -53,12 +52,13 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.net.toUri
 import com.ichi2.anki.MyAccountScreenState
 import com.ichi2.anki.MyAccountViewModel
 import com.ichi2.anki.R
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
-import androidx.core.net.toUri
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyAccountScreen(
     viewModel: MyAccountViewModel,
@@ -75,13 +75,12 @@ fun MyAccountScreen(
     val state by viewModel.state.collectAsState()
 
     AnkiDroidTheme {
-        Surface(
-            modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
-        ) {
-            when (state.screenState) {
-                MyAccountScreenState.ACCOUNT_MANAGEMENT -> {
+        when (state.screenState) {
+            MyAccountScreenState.ACCOUNT_MANAGEMENT -> {
+                Scaffold { padding ->
                     when (state.isLoggedIn) {
                         true -> LoggedInContent(
+                            modifier = Modifier.padding(padding),
                             username = state.username ?: "",
                             onLogoutClick = onLogoutClick,
                             onRemoveAccountClick = onRemoveAccountClick,
@@ -91,6 +90,7 @@ fun MyAccountScreen(
                         false -> {
                             var password by remember { mutableStateOf("") }
                             LoggedOutContent(
+                                modifier = Modifier.padding(padding),
                                 email = state.email,
                                 password = password,
                                 isLoading = state.isLoginLoading,
@@ -107,11 +107,11 @@ fun MyAccountScreen(
                         }
                     }
                 }
-                MyAccountScreenState.REMOVE_ACCOUNT -> {
-                    RemoveAccountContent(
-                        onBack = { viewModel.setScreenState(MyAccountScreenState.ACCOUNT_MANAGEMENT) }
-                    )
-                }
+            }
+
+            MyAccountScreenState.REMOVE_ACCOUNT -> {
+                RemoveAccountContent(
+                    onBack = { viewModel.setScreenState(MyAccountScreenState.ACCOUNT_MANAGEMENT) })
             }
         }
     }
@@ -133,22 +133,20 @@ fun RemoveAccountContent(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.remove_account)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(androidx.appcompat.R.string.abc_action_bar_up_description)
-                        )
-                    }
+            TopAppBar(title = { Text(stringResource(R.string.remove_account)) }, navigationIcon = {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(androidx.appcompat.R.string.abc_action_bar_up_description)
+                    )
                 }
-            )
-        }
-    ) { padding ->
-        Box(modifier = Modifier
-            .padding(padding)
-            .fillMaxSize()) {
+            })
+        }) { padding ->
+        Box(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+        ) {
             AndroidView(
                 factory = { ctx ->
                     WebView(ctx).apply {
@@ -188,8 +186,7 @@ fun RemoveAccountContent(
                             }
 
                             override fun shouldInterceptRequest(
-                                view: WebView?,
-                                request: WebResourceRequest?
+                                view: WebView?, request: WebResourceRequest?
                             ): WebResourceResponse? {
                                 if (!isUrlAllowed(request?.url?.toString())) {
                                     return WebResourceResponse("text/plain", "utf-8", null)
@@ -198,14 +195,15 @@ fun RemoveAccountContent(
                             }
 
                             override fun onReceivedSslError(
-                                view: WebView?,
-                                handler: SslErrorHandler?,
-                                error: SslError?
+                                view: WebView?, handler: SslErrorHandler?, error: SslError?
                             ) {
                                 handler?.cancel()
                             }
 
-                            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                            override fun shouldOverrideUrlLoading(
+                                view: WebView?,
+                                request: WebResourceRequest?
+                            ): Boolean {
                                 val url = request?.url?.toString()
                                 if (maybeRedirect(url)) return true
 
@@ -219,8 +217,7 @@ fun RemoveAccountContent(
                         }
                         loadUrl(removeAccountUrl)
                     }
-                },
-                modifier = Modifier.fillMaxSize()
+                }, modifier = Modifier.fillMaxSize()
             )
         }
     }
@@ -228,6 +225,7 @@ fun RemoveAccountContent(
 
 @Composable
 fun LoggedOutContent(
+    modifier: Modifier = Modifier,
     email: String,
     password: String,
     isLoading: Boolean,
@@ -242,7 +240,7 @@ fun LoggedOutContent(
     showNoAccountText: Boolean
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
             .verticalScroll(rememberScrollState()),
@@ -330,13 +328,14 @@ fun LoggedOutContent(
 
 @Composable
 fun LoggedInContent(
+    modifier: Modifier = Modifier,
     username: String,
     onLogoutClick: () -> Unit,
     onRemoveAccountClick: () -> Unit,
     onPrivacyPolicyClick: () -> Unit
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
             .verticalScroll(rememberScrollState()),
