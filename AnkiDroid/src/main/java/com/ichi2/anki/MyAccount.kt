@@ -85,6 +85,7 @@ open class MyAccount : AnkiActivity() {
 
                 MyAccountScreen(
                     viewModel = viewModel,
+                    onBack = { finish() },
                     onLoginClick = { email, password ->
                         handleNewLogin(
                             email,
