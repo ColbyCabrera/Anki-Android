@@ -196,79 +196,88 @@ fun RemoveAccountContent(
                 .padding(padding)
                 .fillMaxSize()
         ) {
-            AndroidView(
-                factory = { ctx ->
-                    WebView(ctx).apply {
-                        settings.javaScriptEnabled = true
-                        settings.displayZoomControls = false
-                        settings.builtInZoomControls = true
-                        settings.setSupportZoom(true)
-
-                        // Security hardening as requested
-                        settings.allowFileAccess = false
-                        settings.allowContentAccess = false
-
-                        removeJavascriptInterface("searchBoxJavaBridge_")
-                        removeJavascriptInterface("accessibility")
-                        removeJavascriptInterface("accessibilityTraversal")
-
-                        var redirectCount = 0
-
-                        webViewClient = object : WebViewClient() {
-                            private fun isUrlAllowed(url: String?): Boolean {
-                                if (url == null) return false
-                                val uri = url.toUri()
-                                val host = uri.host ?: return false
-                                return host == "ankiweb.net" || host.endsWith(".ankiweb.net")
-                            }
-
-                            private fun maybeRedirect(url: String?): Boolean {
-                                if (url == null) return false
-                                if (urlsToRedirect.any { url.startsWith(it) }) {
-                                    redirectCount++
-                                    if (redirectCount <= 3) {
-                                        loadUrl(removeAccountUrl)
-                                        return true
-                                    }
-                                }
-                                return false
-                            }
-
-                            override fun shouldInterceptRequest(
-                                view: WebView?, request: WebResourceRequest?
-                            ): WebResourceResponse? {
-                                if (!isUrlAllowed(request?.url?.toString())) {
-                                    return WebResourceResponse("text/plain", "utf-8", null)
-                                }
-                                return super.shouldInterceptRequest(view, request)
-                            }
-
-                            override fun onReceivedSslError(
-                                view: WebView?, handler: SslErrorHandler?, error: SslError?
-                            ) {
-                                handler?.cancel()
-                            }
-
-                            override fun shouldOverrideUrlLoading(
-                                view: WebView?, request: WebResourceRequest?
-                            ): Boolean {
-                                val url = request?.url?.toString()
-                                if (maybeRedirect(url)) return true
-
-                                return !isUrlAllowed(url)
-                            }
-
-                            override fun onPageFinished(view: WebView?, url: String?) {
-                                super.onPageFinished(view, url)
-                                maybeRedirect(url)
-                            }
-                        }
-                        loadUrl(removeAccountUrl)
-                    }
-                }, modifier = Modifier.fillMaxSize()
+            RemoveAccountWebView(
+                removeAccountUrl, urlsToRedirect, modifier = Modifier.fillMaxSize()
             )
         }
     }
+}
+
+@Composable
+private fun RemoveAccountWebView(
+    removeAccountUrl: String, urlsToRedirect: List<String>, modifier: Modifier = Modifier
+) {
+    AndroidView(
+        factory = { ctx ->
+            WebView(ctx).apply {
+                settings.javaScriptEnabled = true
+                settings.displayZoomControls = false
+                settings.builtInZoomControls = true
+                settings.setSupportZoom(true)
+
+                // Security hardening as requested
+                settings.allowFileAccess = false
+                settings.allowContentAccess = false
+
+                removeJavascriptInterface("searchBoxJavaBridge_")
+                removeJavascriptInterface("accessibility")
+                removeJavascriptInterface("accessibilityTraversal")
+
+                var redirectCount = 0
+
+                webViewClient = object : WebViewClient() {
+                    private fun isUrlAllowed(url: String?): Boolean {
+                        if (url == null) return false
+                        val uri = url.toUri()
+                        val host = uri.host ?: return false
+                        return host == "ankiweb.net" || host.endsWith(".ankiweb.net")
+                    }
+
+                    private fun maybeRedirect(url: String?): Boolean {
+                        if (url == null) return false
+                        if (urlsToRedirect.any { url.startsWith(it) }) {
+                            redirectCount++
+                            if (redirectCount <= 3) {
+                                loadUrl(removeAccountUrl)
+                                return true
+                            }
+                        }
+                        return false
+                    }
+
+                    override fun shouldInterceptRequest(
+                        view: WebView?, request: WebResourceRequest?
+                    ): WebResourceResponse? {
+                        if (!isUrlAllowed(request?.url?.toString())) {
+                            return WebResourceResponse("text/plain", "utf-8", null)
+                        }
+                        return super.shouldInterceptRequest(view, request)
+                    }
+
+                    override fun onReceivedSslError(
+                        view: WebView?, handler: SslErrorHandler?, error: SslError?
+                    ) {
+                        handler?.cancel()
+                    }
+
+                    override fun shouldOverrideUrlLoading(
+                        view: WebView?, request: WebResourceRequest?
+                    ): Boolean {
+                        val url = request?.url?.toString()
+                        if (maybeRedirect(url)) return true
+
+                        return !isUrlAllowed(url)
+                    }
+
+                    override fun onPageFinished(view: WebView?, url: String?) {
+                        super.onPageFinished(view, url)
+                        maybeRedirect(url)
+                    }
+                }
+                loadUrl(removeAccountUrl)
+            }
+        }, modifier = modifier
+    )
 }
 
 @Composable
@@ -398,12 +407,9 @@ fun LoggedInContent(
     val infiniteTransition = rememberInfiniteTransition(label = "SyncIconRotation")
 
     val rotation by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
+        initialValue = 0f, targetValue = 360f, animationSpec = infiniteRepeatable(
             animation = tween(9000, easing = LinearEasing),
-        ),
-        label = "SyncIconRotationAngle"
+        ), label = "SyncIconRotationAngle"
     )
 
     Box(
@@ -428,7 +434,9 @@ fun LoggedInContent(
                         .graphicsLayer {
                             rotationZ = rotation
                         }
-                        .background(MaterialTheme.colorScheme.surfaceVariant, shape = SoftBurstShape),
+                        .background(
+                            MaterialTheme.colorScheme.surfaceVariant, shape = SoftBurstShape
+                        ),
                 )
                 Image(
                     modifier = Modifier.size(60.dp),
