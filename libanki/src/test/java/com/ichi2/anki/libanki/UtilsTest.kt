@@ -22,7 +22,24 @@ import org.junit.Test
 class UtilsTest {
     @Test
     fun testSplit() {
-        assertEquals(listOf("foo", "bar"), Utils.splitFields("foobar"))
-        assertEquals(listOf("", "foo", "", "", ""), Utils.splitFields("foo"))
+        assertEquals(listOf("foo", "bar"), Utils.splitFields("foo bar"))
+        assertEquals(listOf("", "foo", "", "", ""), Utils.splitFields(" foo   "))
+    }
+
+    @Test
+    fun testIds2Str() {
+        assertEquals("()", Utils.ids2str(null as IntArray?))
+        assertEquals("()", Utils.ids2str(IntArray(0)))
+        assertEquals("(1)", Utils.ids2str(intArrayOf(1)))
+        assertEquals("(1, 2, 3)", Utils.ids2str(intArrayOf(1, 2, 3)))
+
+        assertEquals("()", Utils.ids2str(null as LongArray?))
+        assertEquals("()", Utils.ids2str(LongArray(0)))
+        assertEquals("(1)", Utils.ids2str(longArrayOf(1L)))
+        assertEquals("(1, 2, 3)", Utils.ids2str(longArrayOf(1L, 2L, 3L)))
+
+        assertEquals("()", Utils.ids2str(emptyList<Long>()))
+        assertEquals("(1)", Utils.ids2str(listOf(1L)))
+        assertEquals("(1, 2, 3)", Utils.ids2str(listOf(1L, 2L, 3L)))
     }
 }

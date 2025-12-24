@@ -37,42 +37,48 @@ object Utils {
      */
 
     /** Given a list of integers, return a string '(int1,int2,...)'.  */
-    fun ids2str(ids: IntArray?): String =
-        StringBuilder()
-            .apply {
-                append("(")
-                if (ids != null) {
-                    val s = ids.contentToString()
-                    append(s.substring(1, s.length - 1))
-                }
-                append(")")
-            }.toString()
+    fun ids2str(ids: IntArray?): String {
+        if (ids == null || ids.isEmpty()) {
+            return "()"
+        }
+        val sb = StringBuilder(ids.size * 3 + 2)
+        sb.append("(")
+        sb.append(ids[0])
+        for (i in 1 until ids.size) {
+            sb.append(", ").append(ids[i])
+        }
+        sb.append(")")
+        return sb.toString()
+    }
 
     /** Given a list of integers, return a string '(int1,int2,...)'.  */
-    fun ids2str(ids: LongArray?): String =
-        StringBuilder()
-            .apply {
-                append("(")
-                if (ids != null) {
-                    val s = ids.contentToString()
-                    append(s.substring(1, s.length - 1))
-                }
-                append(")")
-            }.toString()
+    fun ids2str(ids: LongArray?): String {
+        if (ids == null || ids.isEmpty()) {
+            return "()"
+        }
+        val sb = StringBuilder(ids.size * 3 + 2)
+        sb.append("(")
+        sb.append(ids[0])
+        for (i in 1 until ids.size) {
+            sb.append(", ").append(ids[i])
+        }
+        sb.append(")")
+        return sb.toString()
+    }
 
     /** Given a list of integers, return a string '(int1,int2,...)', in order given by the iterator.  */
-    fun <T> ids2str(ids: Iterable<T>): String =
-        StringBuilder(512)
-            .apply {
-                append("(")
-                for ((index, id) in ids.withIndex()) {
-                    if (index != 0) {
-                        append(", ")
-                    }
-                    append(id)
-                }
-                append(")")
-            }.toString()
+    fun <T> ids2str(ids: Iterable<T>): String {
+        val sb = StringBuilder(512).append("(")
+        val iterator = ids.iterator()
+        if (iterator.hasNext()) {
+            sb.append(iterator.next())
+            while (iterator.hasNext()) {
+                sb.append(", ").append(iterator.next())
+            }
+        }
+        sb.append(")")
+        return sb.toString()
+    }
 
     /**
      * Fields
