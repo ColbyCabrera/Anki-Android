@@ -22,6 +22,7 @@ import android.os.Bundle
 import androidx.lifecycle.Lifecycle
 import com.ichi2.anki.common.annotations.NeedsTest
 import com.ichi2.anki.introduction.CollectionPermissionScreenLauncher
+import com.ichi2.anki.settings.Prefs
 import timber.log.Timber
 
 /**
@@ -59,8 +60,8 @@ class LoginActivity : MyAccount(), CollectionPermissionScreenLauncher {
     /**
      * Handles closing the activity and setting the result when the user is logged in
      */
-    override fun switchToState(newState: Int) {
-        if (newState == STATE_LOGGED_IN) {
+    override fun refreshLoginStatus() {
+        if (Prefs.hkey != null) {
             // This was intended to be shown from the 'app intro' where a user should not be logged in
             if (!lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
                 showThemedToast(this, R.string.already_logged_in, true)
@@ -70,6 +71,6 @@ class LoginActivity : MyAccount(), CollectionPermissionScreenLauncher {
             finish()
             return
         }
-        super.switchToState(newState)
+        super.refreshLoginStatus()
     }
 }
