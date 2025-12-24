@@ -1,3 +1,18 @@
+/*
+ *  Copyright (c) 2022 David Allison <davidallisongithub@gmail.com>
+ *
+ *  This program is free software; you can redistribute it and/or modify it under
+ *  the terms of the GNU General Public License as published by the Free Software
+ *  Foundation; either version 3 of the License, or (at your option) any later
+ *  version.
+ *
+ *  This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ *  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ *  PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along with
+ *  this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package com.ichi2.anki.ui.compose
 
 import android.net.http.SslError
@@ -7,6 +22,7 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -29,6 +45,7 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -55,7 +72,11 @@ import androidx.core.net.toUri
 import com.ichi2.anki.MyAccountScreenState
 import com.ichi2.anki.MyAccountViewModel
 import com.ichi2.anki.R
+import com.ichi2.anki.ui.compose.components.RoundedPolygonShape
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+private val SoftBurstShape = RoundedPolygonShape(MaterialShapes.SoftBurst)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -378,12 +399,20 @@ fun LoggedInContent(
             modifier = Modifier.verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Image(
-                painter = painterResource(R.drawable.link_24px),
-                contentDescription = null,
-                modifier = Modifier.size(height = 100.dp, width = 75.dp),
-                colorFilter = tint(MaterialTheme.colorScheme.secondary)
-            )
+            Box(
+                modifier = Modifier
+                    .size(124.dp)
+                    .background(MaterialTheme.colorScheme.surfaceVariant, shape = SoftBurstShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    modifier = Modifier.size(60.dp),
+                    painter = painterResource(R.drawable.link_24px),
+
+                    contentDescription = null,
+                    colorFilter = tint(MaterialTheme.colorScheme.secondary)
+                )
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -475,7 +504,6 @@ private fun LoggedInContentPreview() {
             username = "test@example.com",
             onLogoutClick = {},
             onRemoveAccountClick = {},
-            onPrivacyPolicyClick = {}
-        )
+            onPrivacyPolicyClick = {})
     }
 }
