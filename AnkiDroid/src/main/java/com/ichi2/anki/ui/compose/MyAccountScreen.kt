@@ -60,7 +60,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ColorFilter.Companion.tint
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -393,7 +393,7 @@ fun LoggedInContent(
         modifier = modifier
             .fillMaxSize()
             .padding(horizontal = 32.dp),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.TopCenter
     ) {
         Column(
             modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -401,6 +401,7 @@ fun LoggedInContent(
         ) {
             Box(
                 modifier = Modifier
+                    .padding(top = 64.dp, bottom = 24.dp)
                     .size(124.dp)
                     .background(MaterialTheme.colorScheme.surfaceVariant, shape = SoftBurstShape),
                 contentAlignment = Alignment.Center
@@ -410,7 +411,7 @@ fun LoggedInContent(
                     painter = painterResource(R.drawable.link_24px),
 
                     contentDescription = null,
-                    colorFilter = tint(MaterialTheme.colorScheme.secondary)
+                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.secondary)
                 )
             }
 
