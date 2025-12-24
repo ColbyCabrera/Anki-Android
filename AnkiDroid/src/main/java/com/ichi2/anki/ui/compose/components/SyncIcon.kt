@@ -21,8 +21,14 @@
 package com.ichi2.anki.ui.compose.components
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,6 +38,8 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -50,8 +58,26 @@ fun SyncIcon(
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val rotation = remember { Animatable(0f) }
+    val clickRotation = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
+
+    val infiniteTransition = rememberInfiniteTransition(label = "sync_rotation")
+    val continuousRotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "continuous_rotation",
+    )
+
+    // Reset click rotation when continuous rotation starts or stops
+    LaunchedEffect(isSyncing) {
+        if (!isSyncing) {
+            clickRotation.snapTo(0f)
+        }
+    }
 
     BadgedBox(
         modifier = modifier,
@@ -65,19 +91,23 @@ fun SyncIcon(
             }
         },
     ) {
-        val contentDescription = when (syncState) {
-            SyncIconState.PendingChanges -> stringResource(R.string.sync_menu_title_pending_changes)
-            SyncIconState.OneWay -> stringResource(R.string.sync_menu_title_one_way_sync)
-            SyncIconState.NotLoggedIn -> stringResource(R.string.sync_menu_title_no_account)
-            else -> stringResource(R.string.sync_now)
+        val contentDescription = if (isSyncing) {
+            stringResource(R.string.syncing)
+        } else {
+            when (syncState) {
+                SyncIconState.PendingChanges -> stringResource(R.string.sync_menu_title_pending_changes)
+                SyncIconState.OneWay -> stringResource(R.string.sync_menu_title_one_way_sync)
+                SyncIconState.NotLoggedIn -> stringResource(R.string.sync_menu_title_no_account)
+                else -> stringResource(R.string.sync_now)
+            }
         }
 
         FilledIconButton(
             onClick = {
                 onRefresh()
                 scope.launch {
-                    rotation.animateTo(
-                        targetValue = rotation.value + 360f,
+                    clickRotation.animateTo(
+                        targetValue = clickRotation.value + 360f,
                         animationSpec = spring(
                             dampingRatio = Spring.DampingRatioMediumBouncy,
                             stiffness = Spring.StiffnessLow,
@@ -94,7 +124,7 @@ fun SyncIcon(
             Icon(
                 painter = painterResource(R.drawable.sync_24px),
                 contentDescription = contentDescription,
-                modifier = Modifier.rotate(rotation.value),
+                modifier = Modifier.rotate(if (isSyncing) continuousRotation else clickRotation.value),
             )
         }
     }
