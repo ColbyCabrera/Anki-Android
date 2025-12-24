@@ -45,7 +45,7 @@ open class MyAccount : AnkiActivity() {
     protected open val showSignUpButton: Boolean = true
     protected open val showNoAccountText: Boolean = true
 
-    open fun switchToState(newState: Int) {
+    open fun refreshLoginStatus() {
         // Compose handles state switching via viewModel
         viewModel.updateLoginStatus()
     }
