@@ -21,6 +21,11 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -61,6 +66,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -389,6 +395,17 @@ fun LoggedInContent(
     onRemoveAccountClick: () -> Unit,
     onPrivacyPolicyClick: () -> Unit
 ) {
+    val infiniteTransition = rememberInfiniteTransition(label = "SyncIconRotation")
+
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(3000, easing = LinearEasing),
+        ),
+        label = "SyncIconRotationAngle"
+    )
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -402,10 +419,17 @@ fun LoggedInContent(
             Box(
                 modifier = Modifier
                     .padding(top = 64.dp, bottom = 24.dp)
-                    .size(124.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant, shape = SoftBurstShape),
+                    .size(124.dp),
                 contentAlignment = Alignment.Center
             ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            rotationZ = rotation
+                        }
+                        .background(MaterialTheme.colorScheme.surfaceVariant, shape = SoftBurstShape),
+                )
                 Image(
                     modifier = Modifier.size(60.dp),
                     painter = painterResource(R.drawable.link_24px),
@@ -505,6 +529,6 @@ private fun LoggedInContentPreview() {
             username = "test@example.com",
             onLogoutClick = {},
             onRemoveAccountClick = {},
-            onPrivacyPolicyClick = {})
+            onPrivacyPolicyClick = { })
     }
 }
