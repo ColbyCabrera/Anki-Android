@@ -381,7 +381,7 @@ fun LoggedInContent(
                 painter = painterResource(R.drawable.link_24px),
                 contentDescription = null,
                 modifier = Modifier.size(height = 100.dp, width = 75.dp),
-                colorFilter = tint(MaterialTheme.colorScheme.primary)
+                colorFilter = tint(MaterialTheme.colorScheme.secondary)
             )
 
             Spacer(modifier = Modifier.height(24.dp))
