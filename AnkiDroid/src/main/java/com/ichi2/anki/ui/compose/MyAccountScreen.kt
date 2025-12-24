@@ -48,6 +48,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
@@ -421,5 +422,60 @@ fun LoggedInContent(
                 Text(stringResource(R.string.help_title_privacy))
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun LoggedOutContentPreview() {
+    AnkiDroidTheme {
+        LoggedOutContent(
+            email = "test@example.com",
+            password = "password",
+            isLoading = false,
+            onEmailChanged = {},
+            onPasswordChanged = {},
+            onLoginClick = {},
+            onResetPasswordClick = {},
+            onSignUpClick = {},
+            onPrivacyPolicyClick = {},
+            onLostEmailClick = {},
+            showSignUp = true,
+            showNoAccountText = true
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun LoggedOutContentLoadingPreview() {
+    AnkiDroidTheme {
+        LoggedOutContent(
+            email = "test@example.com",
+            password = "password",
+            isLoading = true,
+            onEmailChanged = {},
+            onPasswordChanged = {},
+            onLoginClick = {},
+            onResetPasswordClick = {},
+            onSignUpClick = {},
+            onPrivacyPolicyClick = {},
+            onLostEmailClick = {},
+            showSignUp = true,
+            showNoAccountText = true
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun LoggedInContentPreview() {
+    AnkiDroidTheme {
+        LoggedInContent(
+            username = "test@example.com",
+            onLogoutClick = {},
+            onRemoveAccountClick = {},
+            onPrivacyPolicyClick = {}
+        )
     }
 }
