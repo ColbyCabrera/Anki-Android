@@ -19,8 +19,6 @@ package com.ichi2.anki
 import android.app.Activity.RESULT_CANCELED
 import android.app.Activity.RESULT_OK
 import android.os.Bundle
-import android.view.View
-import android.view.View.GONE
 import androidx.lifecycle.Lifecycle
 import com.ichi2.anki.common.annotations.NeedsTest
 import com.ichi2.anki.introduction.CollectionPermissionScreenLauncher
@@ -44,10 +42,10 @@ import timber.log.Timber
  * TODO: Move this to a fragment
  */
 @NeedsTest("14650: collection permissions are required for this screen to be usable")
-class LoginActivity :
-    MyAccount(),
-    CollectionPermissionScreenLauncher {
+class LoginActivity : MyAccount(), CollectionPermissionScreenLauncher {
     override val permissionScreenLauncher = recreateActivityResultLauncher()
+    override val showSignUpButton: Boolean = false
+    override val showNoAccountText: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,9 +54,6 @@ class LoginActivity :
         if (collectionPermissionScreenWasOpened()) {
             return
         }
-
-        findViewById<View>(R.id.sign_up_button)?.visibility = GONE
-        findViewById<View>(R.id.no_account_text)?.visibility = GONE
     }
 
     /**
