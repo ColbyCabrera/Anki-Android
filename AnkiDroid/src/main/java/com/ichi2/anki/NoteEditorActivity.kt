@@ -18,9 +18,12 @@ package com.ichi2.anki
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.View
 import androidx.activity.enableEdgeToEdge
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
 import com.ichi2.anki.android.input.ShortcutGroup
@@ -61,6 +64,10 @@ class NoteEditorActivity :
         if (!ensureStoragePermissions()) {
             return
         }
+
+        // Set window background to match theme surface color (fixes keyboard dismiss flash)
+        val backgroundColor = resolveThemeSurfaceColor()
+        window.decorView.setBackgroundColor(backgroundColor)
 
         setContentView(R.layout.note_editor)
 
@@ -108,6 +115,40 @@ class NoteEditorActivity :
 
     override val shortcuts: ShortcutGroup
         get() = noteEditorFragment.shortcuts
+
+    /**
+     * Resolves the colorSurface attribute from the current theme.
+     * Handles both resource references and direct color values robustly.
+     *
+     * @return The resolved color, or a sensible fallback if resolution fails.
+     */
+    private fun resolveThemeSurfaceColor(): Int {
+        val typedValue = TypedValue()
+        val resolved = theme.resolveAttribute(
+            com.google.android.material.R.attr.colorSurface,
+            typedValue,
+            true
+        )
+
+        if (!resolved) {
+            // Attribute not found, return fallback
+            return Color.DKGRAY
+        }
+
+        return when {
+            // If it's a resource reference, resolve it properly
+            typedValue.resourceId != 0 -> {
+                ContextCompat.getColor(this, typedValue.resourceId)
+            }
+            // If it's a direct color value (type is between TYPE_FIRST_COLOR_INT and TYPE_LAST_COLOR_INT)
+            typedValue.type >= TypedValue.TYPE_FIRST_COLOR_INT &&
+                typedValue.type <= TypedValue.TYPE_LAST_COLOR_INT -> {
+                typedValue.data
+            }
+            // Fallback for unexpected types
+            else -> Color.DKGRAY
+        }
+    }
 
     companion object {
         const val FRAGMENT_ARGS_EXTRA = "fragmentArgs"
