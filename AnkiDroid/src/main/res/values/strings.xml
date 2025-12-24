@@ -60,4 +60,13 @@
     <string name="about_fork_of">%s is a fork of AnkiDroid</string>
     <string name="about_version">Version</string>
     <string name="changes_will_not_be_saved">Changes will not be saved.</string>
+    <string name="help_screen_title">Help</string>
+    <string name="help_manual_title">Online Manual</string>
+    <string name="help_manual_subtitle">Read the user guide</string>
+    <string name="help_forum_title">Community Forum</string>
+    <string name="help_forum_subtitle">Ask questions and find answers</string>
+    <string name="help_issue_tracker_title">Report a Bug</string>
+    <string name="help_issue_tracker_subtitle">Submit issues on our tracker</string>
+    <string name="help_donate_title">Donate</string>
+    <string name="help_donate_subtitle">Support the project</string>
 </resources>
