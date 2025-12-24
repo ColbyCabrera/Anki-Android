@@ -401,7 +401,7 @@ fun LoggedInContent(
         initialValue = 0f,
         targetValue = 360f,
         animationSpec = infiniteRepeatable(
-            animation = tween(3000, easing = LinearEasing),
+            animation = tween(9000, easing = LinearEasing),
         ),
         label = "SyncIconRotationAngle"
     )
