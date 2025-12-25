@@ -329,6 +329,18 @@ fun LoggedOutContent(
             modifier = Modifier.verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            if (loginError != null) {
+                Text(
+                    text = when (loginError) {
+                        is LoginError.StringResource -> stringResource(loginError.resId)
+                        is LoginError.DynamicString -> loginError.text
+                    },
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
             OutlinedTextField(
                 value = email,
                 onValueChange = onEmailChanged,
@@ -402,17 +414,6 @@ fun LoggedOutContent(
                 Text(stringResource(R.string.reset_password))
             }
 
-            if (loginError != null) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = when (loginError) {
-                        is LoginError.StringResource -> stringResource(loginError.resId)
-                        is LoginError.DynamicString -> loginError.text
-                    },
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
