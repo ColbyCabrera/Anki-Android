@@ -31,6 +31,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -72,7 +75,10 @@ private val CloverShape = RoundedPolygonShape(MaterialShapes.Clover4Leaf)
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 private val GhostishShape = RoundedPolygonShape(MaterialShapes.Ghostish)
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
+@OptIn(
+    ExperimentalMaterial3ExpressiveApi::class,
+    androidx.compose.foundation.ExperimentalFoundationApi::class
+)
 @Composable
 fun DeckItem(
     deck: DisplayDeckNode,
@@ -106,8 +112,7 @@ fun DeckItem(
                 )
                 .combinedClickable(
                     onClick = { onDeckClick() },
-                    onLongClick = { isContextMenuOpen = true }
-                )
+                    onLongClick = { isContextMenuOpen = true })
                 .padding(horizontal = 8.dp, vertical = if (deck.depth > 0) 4.dp else 0.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -179,14 +184,18 @@ fun DeckItem(
                             onRebuild()
                             isContextMenuOpen = false
                         },
-                    )
+                        leadingIcon = {
+                            Icon(Icons.Filled.Refresh, contentDescription = null)
+                        })
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.empty_cram_label)) },
                         onClick = {
                             onEmpty()
                             isContextMenuOpen = false
                         },
-                    )
+                        leadingIcon = {
+                            Icon(Icons.Filled.Close, contentDescription = null)
+                        })
                 } else {
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.rename_deck)) },
@@ -194,29 +203,39 @@ fun DeckItem(
                             onRename()
                             isContextMenuOpen = false
                         },
-                    )
+                        leadingIcon = {
+                            Icon(
+                                painter = painterResource(R.drawable.edit_24px),
+                                contentDescription = null
+                            )
+                        })
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.export_deck)) },
                         onClick = {
                             onExport()
                             isContextMenuOpen = false
                         },
-                    )
+                        leadingIcon = {
+                            Icon(
+                                painter = painterResource(R.drawable.share_24px),
+                                contentDescription = null
+                            )
+                        })
                 }
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.deck_options)) },
-                    onClick = {
-                        onDeckOptions()
-                        isContextMenuOpen = false
-                    },
-                )
-                DropdownMenuItem(
-                    text = { Text("Delete") },
-                    onClick = {
-                        onDelete()
-                        isContextMenuOpen = false
-                    },
-                )
+                DropdownMenuItem(text = { Text(stringResource(R.string.deck_options)) }, onClick = {
+                    onDeckOptions()
+                    isContextMenuOpen = false
+                }, leadingIcon = {
+                    Icon(painter = painterResource(R.drawable.tune_24px), contentDescription = null)
+                })
+                DropdownMenuItem(text = { Text("Delete") }, onClick = {
+                    onDelete()
+                    isContextMenuOpen = false
+                }, leadingIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.delete_24px), contentDescription = null
+                    )
+                })
             }
         }
     }
@@ -273,8 +292,7 @@ fun CardCountsContainer(
             .background(containerColor)
             .semantics(mergeDescendants = true) {
                 this.contentDescription = contentDescription
-            },
-        contentAlignment = Alignment.Center
+            }, contentAlignment = Alignment.Center
     ) {
         Text(
             text = cardCount.toString(),
@@ -293,8 +311,6 @@ fun CardCountsContainer(
 @Composable
 fun CardCountsContainerPreview() {
     CardCountsContainer(
-        cardCount = 10,
-        contentDescription = "New: 10",
-        shape = CloverShape
+        cardCount = 10, contentDescription = "New: 10", shape = CloverShape
     )
 }
