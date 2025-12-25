@@ -17,20 +17,22 @@
 
 package com.ichi2.anki
 
-import android.content.Intent
-import android.widget.Button
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.google.android.material.textfield.TextInputEditText
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performTextInput
 import com.ichi2.anki.settings.Prefs
-import com.ichi2.ui.TextInputEditField
-import junit.framework.TestCase.assertFalse
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import kotlin.test.assertTrue
 
 @RunWith(AndroidJUnit4::class)
 class MyAccountTest : RobolectricTest() {
+    @get:Rule
+    val composeTestRule = createAndroidComposeRule<MyAccount>()
+
     @Before
     fun setup() {
         Prefs.username = ""
@@ -39,48 +41,37 @@ class MyAccountTest : RobolectricTest() {
 
     @Test
     fun testLoginEmailPasswordProvided() {
-        val myAccount =
-            super.startActivityNormallyOpenCollectionWithIntent(
-                MyAccount::class.java,
-                Intent(),
-            )
-
         val testPassword = "randomStrongPassword"
         val testEmail = "random.email@example.com"
 
-        myAccount.findViewById<TextInputEditText>(R.id.username).setText(testEmail)
-        myAccount.findViewById<TextInputEditField>(R.id.password).setText(testPassword)
-        val loginButton = myAccount.findViewById<Button>(R.id.login_button)
-        assertTrue(loginButton.isEnabled)
+        composeTestRule.onNodeWithText(composeTestRule.activity.getString(R.string.username))
+            .performTextInput(testEmail)
+        composeTestRule.onNodeWithText(composeTestRule.activity.getString(R.string.password))
+            .performTextInput(testPassword)
+
+        composeTestRule.onNodeWithText(composeTestRule.activity.getString(R.string.log_in))
+            .assertIsEnabled()
     }
 
     @Test
     fun testLoginFailsNoEmailProvided() {
-        val myAccount =
-            super.startActivityNormallyOpenCollectionWithIntent(
-                MyAccount::class.java,
-                Intent(),
-            )
-
         val testPassword = "randomStrongPassword"
 
-        myAccount.findViewById<TextInputEditField>(R.id.password).setText(testPassword)
-        val loginButton = myAccount.findViewById<Button>(R.id.login_button)
-        assertFalse(loginButton.isEnabled)
+        composeTestRule.onNodeWithText(composeTestRule.activity.getString(R.string.password))
+            .performTextInput(testPassword)
+
+        composeTestRule.onNodeWithText(composeTestRule.activity.getString(R.string.log_in))
+            .assertIsNotEnabled()
     }
 
     @Test
     fun testLoginFailsNoPasswordProvided() {
-        val myAccount =
-            super.startActivityNormallyOpenCollectionWithIntent(
-                MyAccount::class.java,
-                Intent(),
-            )
-
         val testEmail = "random.email@example.com"
 
-        myAccount.findViewById<TextInputEditText>(R.id.username).setText(testEmail)
-        val loginButton = myAccount.findViewById<Button>(R.id.login_button)
-        assertFalse(loginButton.isEnabled)
+        composeTestRule.onNodeWithText(composeTestRule.activity.getString(R.string.username))
+            .performTextInput(testEmail)
+
+        composeTestRule.onNodeWithText(composeTestRule.activity.getString(R.string.log_in))
+            .assertIsNotEnabled()
     }
 }
