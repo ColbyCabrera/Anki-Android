@@ -40,8 +40,8 @@ class RoundedPolygonShape(
         matrix.reset()
         val bounds = polygon.getBounds()
         val maxDimension = max(bounds.width, bounds.height)
-        matrix.postScale(size.width / maxDimension, size.height / maxDimension)
         matrix.postTranslate(-bounds.left, -bounds.top)
+        matrix.postScale(size.width / maxDimension, size.height / maxDimension)
 
         graphicsPath.transform(matrix)
         return Outline.Generic(graphicsPath.asComposePath())
