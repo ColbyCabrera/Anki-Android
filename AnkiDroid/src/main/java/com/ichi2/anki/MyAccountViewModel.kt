@@ -15,6 +15,7 @@
  */
 package com.ichi2.anki
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ichi2.anki.CollectionManager.withCol
@@ -27,12 +28,17 @@ import kotlinx.coroutines.launch
 import net.ankiweb.rsdroid.exceptions.BackendSyncException
 import timber.log.Timber
 
+sealed class LoginError {
+    data class StringResource(@StringRes val resId: Int) : LoginError()
+    data class DynamicString(val text: String) : LoginError()
+}
+
 data class MyAccountState(
     val isLoggedIn: Boolean = false,
     val username: String? = null,
     val email: String = "",
     val isLoginLoading: Boolean = false,
-    val loginError: String? = null,
+    val loginError: LoginError? = null,
     val screenState: MyAccountScreenState = MyAccountScreenState.ACCOUNT_MANAGEMENT,
 )
 
@@ -65,7 +71,7 @@ class MyAccountViewModel : ViewModel() {
     ) {
         val email = _state.value.email.trim()
         if (email.isEmpty() || password.isEmpty()) {
-            _state.update { it.copy(loginError = "Email and password are required") }
+            _state.update { it.copy(loginError = LoginError.StringResource(R.string.login_error_email_password_required)) }
             return
         }
 
@@ -85,7 +91,7 @@ class MyAccountViewModel : ViewModel() {
                 _state.update {
                     it.copy(
                         isLoginLoading = false,
-                        loginError = "Authentication failed",
+                        loginError = LoginError.StringResource(R.string.login_error_authentication_failed),
                     )
                 }
             } catch (e: Exception) {
@@ -93,7 +99,8 @@ class MyAccountViewModel : ViewModel() {
                 _state.update {
                     it.copy(
                         isLoginLoading = false,
-                        loginError = e.message ?: "Unknown error",
+                        loginError = e.message?.let { message -> LoginError.DynamicString(message) }
+                            ?: LoginError.StringResource(R.string.login_error_unknown),
                     )
                 }
             }
