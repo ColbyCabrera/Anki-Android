@@ -49,9 +49,6 @@ fun LoginErrorCard(
     onResetPasswordClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val isAuthError =
-        error is LoginError.StringResource && error.resId == R.string.login_error_authentication_failed
-
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -95,7 +92,7 @@ fun LoginErrorCard(
         }
 
         // Show reset password button for authentication errors
-        if (isAuthError) {
+        if (error.requiresPasswordReset) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End,
@@ -116,7 +113,10 @@ fun LoginErrorCard(
 private fun LoginErrorCardAuthPreview() {
     AnkiDroidTheme {
         LoginErrorCard(
-            error = LoginError.StringResource(R.string.login_error_authentication_failed),
+            error = LoginError.StringResource(
+                resId = R.string.login_error_authentication_failed,
+                requiresPasswordReset = true,
+            ),
             onResetPasswordClick = {},
         )
     }

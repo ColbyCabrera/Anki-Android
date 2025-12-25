@@ -32,12 +32,22 @@ import net.ankiweb.rsdroid.exceptions.BackendSyncException
 import timber.log.Timber
 
 sealed class LoginError {
+    /**
+     * Indicates whether this error type should prompt the user to reset their password.
+     * This encapsulates authentication error detection logic, making it easier to add
+     * new authentication-related error types (e.g., account locked, password expired)
+     * without updating all consumers.
+     */
+    abstract val requiresPasswordReset: Boolean
+
     data class StringResource(
         @StringRes val resId: Int,
+        override val requiresPasswordReset: Boolean = false,
     ) : LoginError()
 
     data class DynamicString(
         val text: String,
+        override val requiresPasswordReset: Boolean = false,
     ) : LoginError()
 }
 
@@ -105,7 +115,10 @@ class MyAccountViewModel : ViewModel() {
                 _state.update {
                     it.copy(
                         isLoginLoading = false,
-                        loginError = LoginError.StringResource(R.string.login_error_authentication_failed),
+                        loginError = LoginError.StringResource(
+                            resId = R.string.login_error_authentication_failed,
+                            requiresPasswordReset = true,
+                        ),
                     )
                 }
             } catch (e: BackendNetworkException) {
