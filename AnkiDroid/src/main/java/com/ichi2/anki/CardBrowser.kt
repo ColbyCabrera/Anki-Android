@@ -260,9 +260,6 @@ open class CardBrowser :
                         onSetDueDate = {
                             actionHandler.rescheduleSelectedCards()
                         },
-                        onEditTags = {
-                            actionHandler.showEditTagsDialog()
-                        },
                         onGradeNow = {
                             actionHandler.onGradeNow()
                         },

@@ -19,11 +19,10 @@ package com.ichi2.anki
 import android.app.Activity.RESULT_CANCELED
 import android.app.Activity.RESULT_OK
 import android.os.Bundle
-import android.view.View
-import android.view.View.GONE
 import androidx.lifecycle.Lifecycle
 import com.ichi2.anki.common.annotations.NeedsTest
 import com.ichi2.anki.introduction.CollectionPermissionScreenLauncher
+import com.ichi2.anki.settings.Prefs
 import timber.log.Timber
 
 /**
@@ -44,10 +43,10 @@ import timber.log.Timber
  * TODO: Move this to a fragment
  */
 @NeedsTest("14650: collection permissions are required for this screen to be usable")
-class LoginActivity :
-    MyAccount(),
-    CollectionPermissionScreenLauncher {
+class LoginActivity : MyAccount(), CollectionPermissionScreenLauncher {
     override val permissionScreenLauncher = recreateActivityResultLauncher()
+    override val showSignUpButton: Boolean = false
+    override val showNoAccountText: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,16 +55,13 @@ class LoginActivity :
         if (collectionPermissionScreenWasOpened()) {
             return
         }
-
-        findViewById<View>(R.id.sign_up_button)?.visibility = GONE
-        findViewById<View>(R.id.no_account_text)?.visibility = GONE
     }
 
     /**
      * Handles closing the activity and setting the result when the user is logged in
      */
-    override fun switchToState(newState: Int) {
-        if (newState == STATE_LOGGED_IN) {
+    override fun refreshLoginStatus() {
+        if (Prefs.hkey != null) {
             // This was intended to be shown from the 'app intro' where a user should not be logged in
             if (!lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
                 showThemedToast(this, R.string.already_logged_in, true)
@@ -75,6 +71,6 @@ class LoginActivity :
             finish()
             return
         }
-        super.switchToState(newState)
+        super.refreshLoginStatus()
     }
 }

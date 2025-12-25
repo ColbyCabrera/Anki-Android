@@ -17,7 +17,6 @@
  ****************************************************************************************/
 package com.ichi2.anki.deckpicker.compose
 
-import android.graphics.Matrix
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
@@ -32,6 +31,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -51,52 +53,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.graphics.shapes.RoundedPolygon
-import androidx.graphics.shapes.toPath
 import com.ichi2.anki.R
 import com.ichi2.anki.deckpicker.DisplayDeckNode
+import com.ichi2.anki.ui.compose.components.RoundedPolygonShape
 
 private val expandedDeckCardRadius = 14.dp
 private val collapsedDeckCardRadius = 70.dp
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-internal class RoundedPolygonShape(private val polygon: RoundedPolygon) : Shape {
-    private var lastSize: Size? = null
-    private var lastOutline: Outline? = null
-
-    override fun createOutline(
-        size: Size, layoutDirection: LayoutDirection, density: Density
-    ): Outline {
-        val cachedOutline = lastOutline
-        if (size == lastSize && cachedOutline != null) {
-            return cachedOutline
-        }
-
-        val matrix = Matrix()
-        matrix.setScale(size.width, size.height)
-        val path = polygon.toPath()
-        path.transform(matrix)
-        val newOutline = Outline.Generic(path.asComposePath())
-
-        lastSize = size
-        lastOutline = newOutline
-        return newOutline
-    }
-}
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 private val CloverShape = RoundedPolygonShape(MaterialShapes.Clover4Leaf)
@@ -104,7 +75,10 @@ private val CloverShape = RoundedPolygonShape(MaterialShapes.Clover4Leaf)
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 private val GhostishShape = RoundedPolygonShape(MaterialShapes.Ghostish)
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
+@OptIn(
+    ExperimentalMaterial3ExpressiveApi::class,
+    androidx.compose.foundation.ExperimentalFoundationApi::class
+)
 @Composable
 fun DeckItem(
     deck: DisplayDeckNode,
@@ -138,8 +112,7 @@ fun DeckItem(
                 )
                 .combinedClickable(
                     onClick = { onDeckClick() },
-                    onLongClick = { isContextMenuOpen = true }
-                )
+                    onLongClick = { isContextMenuOpen = true })
                 .padding(horizontal = 8.dp, vertical = if (deck.depth > 0) 4.dp else 0.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -211,14 +184,18 @@ fun DeckItem(
                             onRebuild()
                             isContextMenuOpen = false
                         },
-                    )
+                        leadingIcon = {
+                            Icon(Icons.Filled.Refresh, contentDescription = null)
+                        })
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.empty_cram_label)) },
                         onClick = {
                             onEmpty()
                             isContextMenuOpen = false
                         },
-                    )
+                        leadingIcon = {
+                            Icon(Icons.Filled.Close, contentDescription = null)
+                        })
                 } else {
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.rename_deck)) },
@@ -226,29 +203,39 @@ fun DeckItem(
                             onRename()
                             isContextMenuOpen = false
                         },
-                    )
+                        leadingIcon = {
+                            Icon(
+                                painter = painterResource(R.drawable.edit_24px),
+                                contentDescription = null
+                            )
+                        })
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.export_deck)) },
                         onClick = {
                             onExport()
                             isContextMenuOpen = false
                         },
-                    )
+                        leadingIcon = {
+                            Icon(
+                                painter = painterResource(R.drawable.share_24px),
+                                contentDescription = null
+                            )
+                        })
                 }
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.deck_options)) },
-                    onClick = {
-                        onDeckOptions()
-                        isContextMenuOpen = false
-                    },
-                )
-                DropdownMenuItem(
-                    text = { Text("Delete") },
-                    onClick = {
-                        onDelete()
-                        isContextMenuOpen = false
-                    },
-                )
+                DropdownMenuItem(text = { Text(stringResource(R.string.deck_options)) }, onClick = {
+                    onDeckOptions()
+                    isContextMenuOpen = false
+                }, leadingIcon = {
+                    Icon(painter = painterResource(R.drawable.tune_24px), contentDescription = null)
+                })
+                DropdownMenuItem(text = { Text("Delete") }, onClick = {
+                    onDelete()
+                    isContextMenuOpen = false
+                }, leadingIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.delete_24px), contentDescription = null
+                    )
+                })
             }
         }
     }
@@ -305,8 +292,7 @@ fun CardCountsContainer(
             .background(containerColor)
             .semantics(mergeDescendants = true) {
                 this.contentDescription = contentDescription
-            },
-        contentAlignment = Alignment.Center
+            }, contentAlignment = Alignment.Center
     ) {
         Text(
             text = cardCount.toString(),
@@ -325,8 +311,6 @@ fun CardCountsContainer(
 @Composable
 fun CardCountsContainerPreview() {
     CardCountsContainer(
-        cardCount = 10,
-        contentDescription = "New: 10",
-        shape = CloverShape
+        cardCount = 10, contentDescription = "New: 10", shape = CloverShape
     )
 }
