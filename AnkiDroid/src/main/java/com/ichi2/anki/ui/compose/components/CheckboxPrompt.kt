@@ -30,7 +30,7 @@ fun CheckboxPrompt(
     ) {
         Checkbox(
             checked = isChecked,
-            onCheckedChange = onCheckedChange
+            onCheckedChange = null
         )
         Text(
             text = text,
