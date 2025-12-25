@@ -77,6 +77,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
+import com.ichi2.anki.LoginError
 import com.ichi2.anki.MyAccountScreenState
 import com.ichi2.anki.MyAccountViewModel
 import com.ichi2.anki.R
@@ -152,7 +153,8 @@ fun MyAccountScreen(
                             onPrivacyPolicyClick = onPrivacyPolicyClick,
                             onLostEmailClick = onLostEmailClick,
                             showSignUp = showSignUp,
-                            showNoAccountText = showNoAccountText
+                            showNoAccountText = showNoAccountText,
+                            loginError = state.loginError
                         )
                     }
                 }
@@ -294,7 +296,8 @@ fun LoggedOutContent(
     onPrivacyPolicyClick: () -> Unit,
     onLostEmailClick: () -> Unit,
     showSignUp: Boolean,
-    showNoAccountText: Boolean
+    showNoAccountText: Boolean,
+    loginError: LoginError? = null
 ) {
     val passwordFocusRequester = remember { FocusRequester() }
 
@@ -371,6 +374,18 @@ fun LoggedOutContent(
 
             TextButton(onClick = onResetPasswordClick) {
                 Text(stringResource(R.string.reset_password))
+            }
+
+            if (loginError != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = when (loginError) {
+                        is LoginError.StringResource -> stringResource(loginError.resId)
+                        is LoginError.DynamicString -> loginError.text
+                    },
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
