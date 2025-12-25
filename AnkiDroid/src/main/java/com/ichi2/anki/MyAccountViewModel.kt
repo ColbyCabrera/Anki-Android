@@ -89,6 +89,11 @@ class MyAccountViewModel : ViewModel() {
         password: String,
         onSuccess: () -> Unit,
     ) {
+        // Prevent multiple concurrent login attempts
+        if (loginJob?.isActive == true) {
+            return
+        }
+
         val email = _state.value.email.trim()
         if (email.isEmpty() || password.isEmpty()) {
             _state.update { it.copy(loginError = LoginError.StringResource(R.string.login_error_email_password_required)) }
