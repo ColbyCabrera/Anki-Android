@@ -25,13 +25,11 @@ import androidx.activity.viewModels
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.content.ContextCompat
-import com.ichi2.anki.CollectionManager.withCol
 import com.ichi2.anki.ui.compose.MyAccountScreen
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import com.ichi2.anki.utils.ext.showDialogFragment
 import com.ichi2.utils.AdaptionUtil.isUserATestClient
 import com.ichi2.utils.Permissions
-import net.ankiweb.rsdroid.exceptions.BackendSyncException
 import timber.log.Timber
 
 /**
@@ -84,10 +82,15 @@ open class MyAccount : AnkiActivity() {
                 MyAccountScreen(
                     viewModel = viewModel,
                     onBack = { finish() },
-                    onLoginClick = { email, password ->
-                        handleNewLogin(
-                            email, password, notificationPermissionLauncher
-                        )
+                    onLoginClick = { _, password ->
+                        viewModel.login(password = password, onSuccess = {
+                            setResult(RESULT_OK)
+                            checkNotificationPermission(
+                                this@MyAccount,
+                                notificationPermissionLauncher
+                            )
+                            finish()
+                        })
                     },
                     onResetPasswordClick = { resetPassword() },
                     onSignUpClick = { openUrl(R.string.register_url) },
@@ -134,36 +137,6 @@ open class MyAccount : AnkiActivity() {
     private fun openAnkiDroidPrivacyPolicy() {
         Timber.i("Opening 'Privacy policy'")
         showDialogFragment(com.ichi2.anki.dialogs.help.HelpDialog.newPrivacyPolicyInstance())
-    }
-
-    private fun handleNewLogin(
-        username: String,
-        password: String,
-        resultLauncher: ActivityResultLauncher<String>,
-    ) {
-        val endpoint = getEndpoint()
-        launchCatchingTask {
-            val auth = try {
-                withProgress(
-                    extractProgress = {
-                        text = getString(R.string.sign_in)
-                    },
-                    onCancel = ::cancelSync,
-                ) {
-                    withCol {
-                        this.syncLogin(username, password, endpoint)
-                    }
-                }
-            } catch (exc: BackendSyncException.BackendSyncAuthFailedException) {
-                // auth failed; clear out login details
-                updateLogin("", "")
-                throw exc
-            }
-            updateLogin(username, auth.hkey)
-            setResult(RESULT_OK)
-            checkNotificationPermission(this@MyAccount, resultLauncher)
-            finish()
-        }
     }
 
     companion object {

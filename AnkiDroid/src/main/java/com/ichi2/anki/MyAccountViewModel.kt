@@ -20,17 +20,24 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ichi2.anki.CollectionManager.withCol
 import com.ichi2.anki.settings.Prefs
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import net.ankiweb.rsdroid.exceptions.BackendInterruptedException
 import net.ankiweb.rsdroid.exceptions.BackendSyncException
 import timber.log.Timber
 
 sealed class LoginError {
-    data class StringResource(@StringRes val resId: Int) : LoginError()
-    data class DynamicString(val text: String) : LoginError()
+    data class StringResource(
+        @StringRes val resId: Int,
+    ) : LoginError()
+
+    data class DynamicString(
+        val text: String,
+    ) : LoginError()
 }
 
 data class MyAccountState(
@@ -49,6 +56,8 @@ enum class MyAccountScreenState {
 class MyAccountViewModel : ViewModel() {
     private val _state = MutableStateFlow(MyAccountState())
     val state: StateFlow<MyAccountState> = _state.asStateFlow()
+
+    private var loginJob: Job? = null
 
     init {
         val loggedIn = Prefs.hkey != null
@@ -77,7 +86,7 @@ class MyAccountViewModel : ViewModel() {
 
         _state.update { it.copy(isLoginLoading = true, loginError = null) }
 
-        viewModelScope.launch {
+        loginJob = viewModelScope.launch {
             try {
                 val endpoint = if (Prefs.isCustomSyncEnabled) Prefs.customSyncUri else null
                 val auth = withCol {
@@ -87,6 +96,10 @@ class MyAccountViewModel : ViewModel() {
                 Prefs.hkey = auth.hkey
                 _state.update { it.copy(isLoginLoading = false, isLoggedIn = true) }
                 onSuccess()
+            } catch (e: BackendInterruptedException) {
+                // User cancelled - just clear loading state, don't show error
+                Timber.i("Login cancelled by user")
+                _state.update { it.copy(isLoginLoading = false) }
             } catch (e: BackendSyncException.BackendSyncAuthFailedException) {
                 _state.update {
                     it.copy(
@@ -103,8 +116,27 @@ class MyAccountViewModel : ViewModel() {
                             ?: LoginError.StringResource(R.string.login_error_unknown),
                     )
                 }
+            } finally {
+                loginJob = null
             }
         }
+    }
+
+    /**
+     * Cancels an in-progress login operation.
+     * Sets the backend abort flag which will cause the network operation to throw BackendInterruptedException.
+     */
+    fun cancelLogin() {
+        viewModelScope.launch {
+            try {
+                CollectionManager.getBackend().setWantsAbort()
+            } catch (e: Exception) {
+                Timber.w(e, "Failed to set abort flag")
+            }
+        }
+        loginJob?.cancel()
+        loginJob = null
+        _state.update { it.copy(isLoginLoading = false) }
     }
 
     fun logout() {

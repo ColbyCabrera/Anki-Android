@@ -100,7 +100,7 @@ fun MyAccountScreen(
     onRemoveAccountClick: () -> Unit,
     onLogoutClick: () -> Unit,
     showSignUp: Boolean = true,
-    showNoAccountText: Boolean = true
+    showNoAccountText: Boolean = true,
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -111,7 +111,7 @@ fun MyAccountScreen(
                     TopAppBar(title = {
                         Text(
                             text = stringResource(if (state.isLoggedIn) R.string.menu_my_account else R.string.log_in),
-                            style = MaterialTheme.typography.displayMediumEmphasized
+                            style = MaterialTheme.typography.displayMediumEmphasized,
                         )
                     }, navigationIcon = {
                         FilledIconButton(
@@ -124,18 +124,19 @@ fun MyAccountScreen(
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.arrow_back_24px),
-                                contentDescription = stringResource(R.string.back)
+                                contentDescription = stringResource(R.string.back),
                             )
                         }
                     })
-                }) { padding ->
+                },
+            ) { padding ->
                 when (state.isLoggedIn) {
                     true -> LoggedInContent(
                         modifier = Modifier.padding(padding),
                         username = state.username ?: "",
                         onLogoutClick = onLogoutClick,
                         onRemoveAccountClick = onRemoveAccountClick,
-                        onPrivacyPolicyClick = onPrivacyPolicyClick
+                        onPrivacyPolicyClick = onPrivacyPolicyClick,
                     )
 
                     false -> {
@@ -154,32 +155,36 @@ fun MyAccountScreen(
                             onLostEmailClick = onLostEmailClick,
                             showSignUp = showSignUp,
                             showNoAccountText = showNoAccountText,
-                            loginError = state.loginError
+                            loginError = state.loginError,
                         )
                     }
                 }
+            }
+
+            // Show login progress dialog
+            if (state.isLoginLoading) {
+                LoginProgressDialog(onCancel = viewModel::cancelLogin)
             }
         }
 
         MyAccountScreenState.REMOVE_ACCOUNT -> {
             RemoveAccountContent(
-                onBack = { viewModel.setScreenState(MyAccountScreenState.ACCOUNT_MANAGEMENT) })
+                onBack = { viewModel.setScreenState(MyAccountScreenState.ACCOUNT_MANAGEMENT) },
+            )
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RemoveAccountContent(
-    onBack: () -> Unit
-) {
+fun RemoveAccountContent(onBack: () -> Unit) {
     val removeAccountUrl = stringResource(R.string.remove_account_url)
 
     // Redirect logic from RemoveAccountFragment
     val urlsToRedirect = listOf(
         "https://ankiweb.net/account/login?afterAuth=1",
         "https://ankiweb.net/decks",
-        "https://ankiweb.net/account/verify-email"
+        "https://ankiweb.net/account/verify-email",
     )
 
     Scaffold(
@@ -188,18 +193,21 @@ fun RemoveAccountContent(
                 IconButton(onClick = onBack) {
                     Icon(
                         painter = painterResource(R.drawable.arrow_back_24px),
-                        contentDescription = stringResource(R.string.back)
+                        contentDescription = stringResource(R.string.back),
                     )
                 }
             })
-        }) { padding ->
+        },
+    ) { padding ->
         Box(
             modifier = Modifier
                 .padding(padding)
-                .fillMaxSize()
+                .fillMaxSize(),
         ) {
             RemoveAccountWebView(
-                removeAccountUrl, urlsToRedirect, modifier = Modifier.fillMaxSize()
+                removeAccountUrl,
+                urlsToRedirect,
+                modifier = Modifier.fillMaxSize(),
             )
         }
     }
@@ -207,7 +215,9 @@ fun RemoveAccountContent(
 
 @Composable
 private fun RemoveAccountWebView(
-    removeAccountUrl: String, urlsToRedirect: List<String>, modifier: Modifier = Modifier
+    removeAccountUrl: String,
+    urlsToRedirect: List<String>,
+    modifier: Modifier = Modifier,
 ) {
     AndroidView(
         factory = { ctx ->
@@ -248,7 +258,8 @@ private fun RemoveAccountWebView(
                     }
 
                     override fun shouldInterceptRequest(
-                        view: WebView?, request: WebResourceRequest?
+                        view: WebView?,
+                        request: WebResourceRequest?,
                     ): WebResourceResponse? {
                         if (!isUrlAllowed(request?.url?.toString())) {
                             return WebResourceResponse("text/plain", "utf-8", null)
@@ -257,13 +268,16 @@ private fun RemoveAccountWebView(
                     }
 
                     override fun onReceivedSslError(
-                        view: WebView?, handler: SslErrorHandler?, error: SslError?
+                        view: WebView?,
+                        handler: SslErrorHandler?,
+                        error: SslError?,
                     ) {
                         handler?.cancel()
                     }
 
                     override fun shouldOverrideUrlLoading(
-                        view: WebView?, request: WebResourceRequest?
+                        view: WebView?,
+                        request: WebResourceRequest?,
                     ): Boolean {
                         val url = request?.url?.toString()
                         if (maybeRedirect(url)) return true
@@ -271,14 +285,18 @@ private fun RemoveAccountWebView(
                         return !isUrlAllowed(url)
                     }
 
-                    override fun onPageFinished(view: WebView?, url: String?) {
+                    override fun onPageFinished(
+                        view: WebView?,
+                        url: String?,
+                    ) {
                         super.onPageFinished(view, url)
                         maybeRedirect(url)
                     }
                 }
                 loadUrl(removeAccountUrl)
             }
-        }, modifier = modifier
+        },
+        modifier = modifier,
     )
 }
 
@@ -297,7 +315,7 @@ fun LoggedOutContent(
     onLostEmailClick: () -> Unit,
     showSignUp: Boolean,
     showNoAccountText: Boolean,
-    loginError: LoginError? = null
+    loginError: LoginError? = null,
 ) {
     val passwordFocusRequester = remember { FocusRequester() }
 
@@ -305,11 +323,11 @@ fun LoggedOutContent(
         modifier = modifier
             .fillMaxSize()
             .padding(horizontal = 32.dp),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Column(
             modifier = Modifier.verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             OutlinedTextField(
                 value = email,
@@ -317,16 +335,20 @@ fun LoggedOutContent(
                 label = { Text(stringResource(R.string.username)) },
                 leadingIcon = {
                     Icon(
-                        painter = painterResource(R.drawable.mail_24px), contentDescription = null
+                        painter = painterResource(R.drawable.mail_24px),
+                        contentDescription = null,
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email, imeAction = ImeAction.Next
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next,
                 ),
                 keyboardActions = KeyboardActions(
-                    onNext = { passwordFocusRequester.requestFocus() }),
-                singleLine = true)
+                    onNext = { passwordFocusRequester.requestFocus() },
+                ),
+                singleLine = true,
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -336,7 +358,8 @@ fun LoggedOutContent(
                 label = { Text(stringResource(R.string.password)) },
                 leadingIcon = {
                     Icon(
-                        painter = painterResource(R.drawable.lock_24px), contentDescription = null
+                        painter = painterResource(R.drawable.lock_24px),
+                        contentDescription = null,
                     )
                 },
                 modifier = Modifier
@@ -344,28 +367,31 @@ fun LoggedOutContent(
                     .focusRequester(passwordFocusRequester),
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password, imeAction = ImeAction.Done
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done,
                 ),
                 keyboardActions = KeyboardActions(
                     onDone = {
                         if (email.isNotEmpty() && password.isNotEmpty() && !isLoading) {
                             onLoginClick()
                         }
-                    }),
-                singleLine = true)
+                    },
+                ),
+                singleLine = true,
+            )
 
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
                 onClick = onLoginClick,
                 modifier = Modifier.fillMaxWidth(),
-                enabled = email.isNotEmpty() && password.isNotEmpty() && !isLoading
+                enabled = email.isNotEmpty() && password.isNotEmpty() && !isLoading,
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
                         color = MaterialTheme.colorScheme.onPrimary,
-                        strokeWidth = 2.dp
+                        strokeWidth = 2.dp,
                     )
                 } else {
                     Text(stringResource(R.string.log_in))
@@ -384,7 +410,7 @@ fun LoggedOutContent(
                         is LoginError.DynamicString -> loginError.text
                     },
                     color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
                 )
             }
 
@@ -393,7 +419,7 @@ fun LoggedOutContent(
             if (showNoAccountText) {
                 Text(
                     text = stringResource(R.string.sign_up_description),
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
                 )
 
                 Spacer(Modifier.height(8.dp))
@@ -401,7 +427,7 @@ fun LoggedOutContent(
                 Text(
                     text = stringResource(R.string.ankiweb_is_not_affiliated_with_this_app),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
@@ -431,31 +457,34 @@ fun LoggedInContent(
     username: String,
     onLogoutClick: () -> Unit,
     onRemoveAccountClick: () -> Unit,
-    onPrivacyPolicyClick: () -> Unit
+    onPrivacyPolicyClick: () -> Unit,
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "SyncIconRotation")
 
     val rotation by infiniteTransition.animateFloat(
-        initialValue = 0f, targetValue = 360f, animationSpec = infiniteRepeatable(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
             animation = tween(9000, easing = LinearEasing),
-        ), label = "SyncIconRotationAngle"
+        ),
+        label = "SyncIconRotationAngle",
     )
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .padding(horizontal = 32.dp),
-        contentAlignment = Alignment.TopCenter
+        contentAlignment = Alignment.TopCenter,
     ) {
         Column(
             modifier = Modifier.verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(
                 modifier = Modifier
                     .padding(top = 64.dp, bottom = 24.dp)
                     .size(124.dp),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Box(
                     modifier = Modifier
@@ -464,15 +493,15 @@ fun LoggedInContent(
                             rotationZ = rotation
                         }
                         .background(
-                            MaterialTheme.colorScheme.surfaceVariant, shape = SoftBurstShape
+                            MaterialTheme.colorScheme.surfaceVariant,
+                            shape = SoftBurstShape,
                         ),
                 )
                 Image(
                     modifier = Modifier.size(60.dp),
                     painter = painterResource(R.drawable.link_24px),
-
                     contentDescription = null,
-                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.secondary)
+                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.secondary),
                 )
             }
 
@@ -480,19 +509,21 @@ fun LoggedInContent(
 
             Text(
                 text = stringResource(R.string.logged_as),
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = username, style = MaterialTheme.typography.headlineSmall
+                text = username,
+                style = MaterialTheme.typography.headlineSmall,
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
-                onClick = onLogoutClick, modifier = Modifier.fillMaxWidth()
+                onClick = onLogoutClick,
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(stringResource(R.string.log_out))
             }
@@ -502,7 +533,7 @@ fun LoggedInContent(
             Button(
                 onClick = onRemoveAccountClick,
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
             ) {
                 Text(stringResource(R.string.remove_account))
             }
@@ -532,7 +563,7 @@ private fun LoggedOutContentPreview() {
             onPrivacyPolicyClick = {},
             onLostEmailClick = {},
             showSignUp = true,
-            showNoAccountText = true
+            showNoAccountText = true,
         )
     }
 }
@@ -553,7 +584,7 @@ private fun LoggedOutContentLoadingPreview() {
             onPrivacyPolicyClick = {},
             onLostEmailClick = {},
             showSignUp = true,
-            showNoAccountText = true
+            showNoAccountText = true,
         )
     }
 }
@@ -566,6 +597,7 @@ private fun LoggedInContentPreview() {
             username = "test@example.com",
             onLogoutClick = {},
             onRemoveAccountClick = {},
-            onPrivacyPolicyClick = { })
+            onPrivacyPolicyClick = { },
+        )
     }
 }
