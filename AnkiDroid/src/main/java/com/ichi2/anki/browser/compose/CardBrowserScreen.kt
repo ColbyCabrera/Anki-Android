@@ -72,6 +72,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -123,7 +124,6 @@ fun CardBrowserScreen(
     onChangeDeck: () -> Unit,
     onReposition: () -> Unit,
     onSetDueDate: () -> Unit,
-    onEditTags: () -> Unit,
     onGradeNow: () -> Unit,
     onResetProgress: () -> Unit,
     onExportCard: () -> Unit,
@@ -143,26 +143,28 @@ fun CardBrowserScreen(
     val scope = rememberCoroutineScope()
     var toolbarHeight by remember { mutableIntStateOf(0) }
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
     val layoutDirection = LocalLayoutDirection.current
     val toolbarHeightInDp = with(LocalDensity.current) { toolbarHeight.toDp() }
+    val context = LocalContext.current
+    val currentContext by rememberUpdatedState(context)
+    val undoLabel = stringResource(R.string.undo)
 
     LaunchedEffect(viewModel.flowOfSnackbarMessage) {
         viewModel.flowOfSnackbarMessage.collect { messageRes ->
-            snackbarHostState.showSnackbar(context.getString(messageRes))
+            snackbarHostState.showSnackbar(currentContext.getString(messageRes))
         }
     }
 
     LaunchedEffect(viewModel.flowOfDeleteResult) {
         viewModel.flowOfDeleteResult.collect { count ->
-            val message = context.resources.getQuantityString(
+            val message = currentContext.resources.getQuantityString(
                 R.plurals.card_browser_cards_deleted,
                 count,
                 count,
             )
             val result = snackbarHostState.showSnackbar(
                 message = message,
-                actionLabel = context.getString(R.string.undo),
+                actionLabel = undoLabel,
                 duration = SnackbarDuration.Short,
             )
             if (result == SnackbarResult.ActionPerformed) {
@@ -699,8 +701,7 @@ fun MoreOptionsBottomSheet(
                 headlineContent = {
                     Text(
                         pluralStringResource(
-                            R.plurals.card_browser_delete_notes,
-                            selectionCount
+                            R.plurals.card_browser_delete_notes, selectionCount
                         )
                     )
                 },
