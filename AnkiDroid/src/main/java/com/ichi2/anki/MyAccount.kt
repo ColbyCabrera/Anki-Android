@@ -22,9 +22,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.content.ContextCompat
+import com.ichi2.anki.dialogs.help.HelpDialog.Companion.newPrivacyPolicyInstance
 import com.ichi2.anki.ui.compose.MyAccountScreen
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import com.ichi2.anki.utils.ext.showDialogFragment
@@ -103,7 +105,7 @@ open class MyAccount : AnkiActivity() {
                 )
 
                 // Update back button callback enabled state
-                androidx.compose.runtime.LaunchedEffect(state.screenState) {
+                LaunchedEffect(state.screenState) {
                     onBackPressedCallback.isEnabled =
                         state.screenState == MyAccountScreenState.REMOVE_ACCOUNT
                 }
@@ -136,7 +138,7 @@ open class MyAccount : AnkiActivity() {
 
     private fun openAnkiDroidPrivacyPolicy() {
         Timber.i("Opening 'Privacy policy'")
-        showDialogFragment(com.ichi2.anki.dialogs.help.HelpDialog.newPrivacyPolicyInstance())
+        showDialogFragment(newPrivacyPolicyInstance())
     }
 
     companion object {
