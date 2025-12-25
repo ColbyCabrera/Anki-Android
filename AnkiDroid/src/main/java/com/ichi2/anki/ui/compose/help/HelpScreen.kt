@@ -96,9 +96,9 @@ private val HeroShape = RoundedPolygonShape(MaterialShapes.Cookie4Sided)
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 private val iconShapes = listOf(
     RoundedPolygonShape(MaterialShapes.Clover4Leaf),
-    RoundedPolygonShape(MaterialShapes.Gem),
+    RoundedPolygonShape(MaterialShapes.SoftBoom),
     RoundedPolygonShape(MaterialShapes.Sunny),
-    RoundedPolygonShape(MaterialShapes.Heart),
+    RoundedPolygonShape(MaterialShapes.VerySunny),
 )
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -136,10 +136,10 @@ fun HelpScreen() {
     )
 
     val cardColors = listOf(
-        MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer,
         MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer,
-        MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.onTertiaryContainer,
-        MaterialTheme.colorScheme.surfaceContainerHighest to MaterialTheme.colorScheme.onSurface,
+        MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer,
+        MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer,
+        MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer,
     )
 
     AnkiDroidTheme {
