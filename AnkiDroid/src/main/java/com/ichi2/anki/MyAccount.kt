@@ -26,8 +26,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.content.ContextCompat
 import com.ichi2.anki.CollectionManager.withCol
-import com.ichi2.anki.common.utils.annotation.KotlinCleanup
-import com.ichi2.anki.settings.Prefs
 import com.ichi2.anki.ui.compose.MyAccountScreen
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import com.ichi2.anki.utils.ext.showDialogFragment
@@ -88,9 +86,7 @@ open class MyAccount : AnkiActivity() {
                     onBack = { finish() },
                     onLoginClick = { email, password ->
                         handleNewLogin(
-                            email,
-                            password,
-                            notificationPermissionLauncher
+                            email, password, notificationPermissionLauncher
                         )
                     },
                     onResetPasswordClick = { resetPassword() },
@@ -114,15 +110,7 @@ open class MyAccount : AnkiActivity() {
 
 
     private fun logout() {
-        launchCatchingTask {
-            Prefs.hkey = null
-            Prefs.username = null
-            Prefs.currentSyncUri = null
-            withCol {
-                this.media.forceResync()
-            }
-            viewModel.updateLoginStatus()
-        }
+        viewModel.logout()
     }
 
     /**
@@ -179,10 +167,6 @@ open class MyAccount : AnkiActivity() {
     }
 
     companion object {
-        @KotlinCleanup("change to enum")
-        internal const val STATE_LOG_IN = 1
-        internal const val STATE_LOGGED_IN = 2
-
         /**
          * Displays a system prompt: "Allow AnkiDroid to send you notifications"
          *
