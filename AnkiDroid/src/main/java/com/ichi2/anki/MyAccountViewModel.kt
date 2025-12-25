@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.ankiweb.rsdroid.exceptions.BackendInterruptedException
+import net.ankiweb.rsdroid.exceptions.BackendNetworkException
 import net.ankiweb.rsdroid.exceptions.BackendSyncException
 import timber.log.Timber
 
@@ -105,6 +106,14 @@ class MyAccountViewModel : ViewModel() {
                     it.copy(
                         isLoginLoading = false,
                         loginError = LoginError.StringResource(R.string.login_error_authentication_failed),
+                    )
+                }
+            } catch (e: BackendNetworkException) {
+                Timber.w(e, "Network error during login")
+                _state.update {
+                    it.copy(
+                        isLoginLoading = false,
+                        loginError = LoginError.StringResource(R.string.login_error_network),
                     )
                 }
             } catch (e: Exception) {

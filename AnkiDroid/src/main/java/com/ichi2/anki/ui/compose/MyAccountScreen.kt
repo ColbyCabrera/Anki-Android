@@ -81,6 +81,7 @@ import com.ichi2.anki.LoginError
 import com.ichi2.anki.MyAccountScreenState
 import com.ichi2.anki.MyAccountViewModel
 import com.ichi2.anki.R
+import com.ichi2.anki.ui.compose.components.LoginErrorCard
 import com.ichi2.anki.ui.compose.components.RoundedPolygonShape
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 
@@ -330,15 +331,11 @@ fun LoggedOutContent(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             if (loginError != null) {
-                Text(
-                    text = when (loginError) {
-                        is LoginError.StringResource -> stringResource(loginError.resId)
-                        is LoginError.DynamicString -> loginError.text
-                    },
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium,
+                LoginErrorCard(
+                    error = loginError,
+                    onResetPasswordClick = onResetPasswordClick,
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(16.dp))
             }
 
             OutlinedTextField(

@@ -61,6 +61,8 @@
     <string name="about_version">Version</string>
     <string name="changes_will_not_be_saved">Changes will not be saved.</string>
     <string name="login_error_email_password_required">Email and password are required</string>
-    <string name="login_error_authentication_failed">Authentication failed</string>
-    <string name="login_error_unknown">Unknown error</string>
+    <string name="login_error_authentication_failed">The email or password you entered is incorrect. Please check your credentials and try again, or reset your password.</string>
+    <string name="login_error_unknown">An unexpected error occurred. Please check your internet connection and try again.</string>
+    <string name="login_error_network">Unable to connect. Please check your internet connection and try again.</string>
+    <string name="login_error_title">Sign in failed</string>
 </resources>
