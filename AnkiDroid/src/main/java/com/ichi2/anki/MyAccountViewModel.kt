@@ -110,7 +110,13 @@ class MyAccountViewModel : ViewModel() {
                 }
                 Prefs.username = email
                 Prefs.hkey = auth.hkey
-                _state.update { it.copy(isLoginLoading = false, isLoggedIn = true) }
+                _state.update {
+                    it.copy(
+                        isLoginLoading = false,
+                        isLoggedIn = true,
+                        username = email
+                    )
+                }
                 onSuccess()
             } catch (e: BackendInterruptedException) {
                 // User cancelled - just clear loading state, don't show error
