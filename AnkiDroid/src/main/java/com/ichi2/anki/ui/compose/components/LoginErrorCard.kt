@@ -24,11 +24,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -69,15 +67,15 @@ fun LoginErrorCard(
                 .fillMaxWidth()
                 .background(
                     color = MaterialTheme.colorScheme.errorContainer,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(16.dp),
                 )
                 .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.Start,
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Icon(
                     painter = painterResource(R.drawable.error_24px),
@@ -85,15 +83,16 @@ fun LoginErrorCard(
                     modifier = Modifier.size(24.dp),
                     tint = MaterialTheme.colorScheme.error,
                 )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
                     Text(
                         text = stringResource(R.string.login_error_title),
-                        style = MaterialTheme.typography.titleSmall,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onErrorContainer,
                     )
-                    Spacer(modifier = Modifier.size(4.dp))
                     Text(
                         text = when (error) {
                             is LoginError.StringResource -> stringResource(error.resId)
@@ -107,14 +106,16 @@ fun LoginErrorCard(
 
             // Show reset password button for authentication errors
             if (isAuthError) {
-                TextButton(
-                    onClick = onResetPasswordClick,
-                    modifier = Modifier.padding(top = 8.dp),
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
                 ) {
-                    Text(
-                        text = stringResource(R.string.reset_password),
-                        color = MaterialTheme.colorScheme.error,
-                    )
+                    TextButton(onClick = onResetPasswordClick) {
+                        Text(
+                            text = stringResource(R.string.reset_password),
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
                 }
             }
         }
