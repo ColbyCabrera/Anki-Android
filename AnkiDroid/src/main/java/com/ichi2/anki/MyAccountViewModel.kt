@@ -33,11 +33,11 @@ data class MyAccountState(
     val email: String = "",
     val isLoginLoading: Boolean = false,
     val loginError: String? = null,
-    val screenState: MyAccountScreenState = MyAccountScreenState.ACCOUNT_MANAGEMENT
+    val screenState: MyAccountScreenState = MyAccountScreenState.ACCOUNT_MANAGEMENT,
 )
 
 enum class MyAccountScreenState {
-    ACCOUNT_MANAGEMENT, REMOVE_ACCOUNT
+    ACCOUNT_MANAGEMENT, REMOVE_ACCOUNT,
 }
 
 class MyAccountViewModel : ViewModel() {
@@ -45,10 +45,12 @@ class MyAccountViewModel : ViewModel() {
     val state: StateFlow<MyAccountState> = _state.asStateFlow()
 
     init {
-        val loggedIn = Prefs.username != null
+        val loggedIn = Prefs.hkey != null
         _state.update {
             it.copy(
-                isLoggedIn = loggedIn, username = Prefs.username, email = Prefs.username ?: ""
+                isLoggedIn = loggedIn,
+                username = Prefs.username,
+                email = Prefs.username ?: "",
             )
         }
     }
@@ -57,7 +59,10 @@ class MyAccountViewModel : ViewModel() {
         _state.update { it.copy(email = email, loginError = null) }
     }
 
-    fun login(password: String, onSuccess: () -> Unit) {
+    fun login(
+        password: String,
+        onSuccess: () -> Unit,
+    ) {
         val email = _state.value.email.trim()
         if (email.isEmpty() || password.isEmpty()) {
             _state.update { it.copy(loginError = "Email and password are required") }
@@ -80,7 +85,7 @@ class MyAccountViewModel : ViewModel() {
                 _state.update {
                     it.copy(
                         isLoginLoading = false,
-                        loginError = "Authentication failed"
+                        loginError = "Authentication failed",
                     )
                 }
             } catch (e: Exception) {
@@ -88,7 +93,7 @@ class MyAccountViewModel : ViewModel() {
                 _state.update {
                     it.copy(
                         isLoginLoading = false,
-                        loginError = e.message ?: "Unknown error"
+                        loginError = e.message ?: "Unknown error",
                     )
                 }
             }
@@ -117,10 +122,11 @@ class MyAccountViewModel : ViewModel() {
     }
 
     fun updateLoginStatus() {
-        val loggedIn = Prefs.username != null
+        val loggedIn = Prefs.hkey != null
         _state.update {
             it.copy(
-                isLoggedIn = loggedIn, username = Prefs.username
+                isLoggedIn = loggedIn,
+                username = Prefs.username,
             )
         }
     }
