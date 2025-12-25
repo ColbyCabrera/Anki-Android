@@ -1,15 +1,30 @@
+/*
+ *  Copyright (c) 2022 David Allison <davidallisongithub@gmail.com>
+ *
+ *  This program is free software; you can redistribute it and/or modify it under
+ *  the terms of the GNU General Public License as published by the Free Software
+ *  Foundation; either version 3 of the License, or (at your option) any later
+ *  version.
+ *
+ *  This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ *  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ *  PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along with
+ *  this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package com.ichi2.anki
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ichi2.anki.CollectionManager.withCol
 import com.ichi2.anki.settings.Prefs
-import net.ankiweb.rsdroid.exceptions.BackendSyncException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import net.ankiweb.rsdroid.exceptions.BackendSyncException
 import timber.log.Timber
 
 data class MyAccountState(
@@ -62,10 +77,20 @@ class MyAccountViewModel : ViewModel() {
                 _state.update { it.copy(isLoginLoading = false, isLoggedIn = true) }
                 onSuccess()
             } catch (e: BackendSyncException.BackendSyncAuthFailedException) {
-                _state.update { it.copy(isLoginLoading = false, loginError = "Authentication failed") }
+                _state.update {
+                    it.copy(
+                        isLoginLoading = false,
+                        loginError = "Authentication failed"
+                    )
+                }
             } catch (e: Exception) {
                 Timber.e(e, "Login failed")
-                _state.update { it.copy(isLoginLoading = false, loginError = e.message ?: "Unknown error") }
+                _state.update {
+                    it.copy(
+                        isLoginLoading = false,
+                        loginError = e.message ?: "Unknown error"
+                    )
+                }
             }
         }
     }
@@ -82,7 +107,7 @@ class MyAccountViewModel : ViewModel() {
                 Prefs.hkey = null
                 Prefs.username = null
                 Prefs.currentSyncUri = null
-            _state.update { it.copy(isLoggedIn = false, username = null, email = "") }
+                _state.update { it.copy(isLoggedIn = false, username = null, email = "") }
             }
         }
     }
