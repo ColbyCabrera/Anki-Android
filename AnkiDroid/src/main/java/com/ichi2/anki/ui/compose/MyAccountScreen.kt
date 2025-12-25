@@ -39,8 +39,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -185,8 +183,8 @@ fun RemoveAccountContent(
             TopAppBar(title = { Text(stringResource(R.string.remove_account)) }, navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(androidx.appcompat.R.string.abc_action_bar_up_description)
+                        painter = painterResource(R.drawable.arrow_back_24px),
+                        contentDescription = stringResource(R.string.back)
                     )
                 }
             })
