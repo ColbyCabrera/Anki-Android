@@ -57,6 +57,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -100,10 +101,17 @@ fun MyAccountScreen(
     onLostEmailClick: () -> Unit,
     onRemoveAccountClick: () -> Unit,
     onLogoutClick: () -> Unit,
+    onBackPressedCallback: androidx.activity.OnBackPressedCallback? = null,
     showSignUp: Boolean = true,
     showNoAccountText: Boolean = true,
 ) {
     val state by viewModel.state.collectAsState()
+
+    // Update back button callback enabled state based on screen state
+    LaunchedEffect(state.screenState) {
+        onBackPressedCallback?.isEnabled = state.screenState == MyAccountScreenState.REMOVE_ACCOUNT
+    }
+
 
     when (state.screenState) {
         MyAccountScreenState.ACCOUNT_MANAGEMENT -> {

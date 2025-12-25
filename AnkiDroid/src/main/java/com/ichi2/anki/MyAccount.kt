@@ -22,9 +22,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.core.content.ContextCompat
 import com.ichi2.anki.dialogs.help.HelpDialog.Companion.newPrivacyPolicyInstance
 import com.ichi2.anki.ui.compose.MyAccountScreen
@@ -79,8 +76,6 @@ open class MyAccount : AnkiActivity() {
 
         setContent {
             AnkiDroidTheme {
-                val state by viewModel.state.collectAsState()
-
                 MyAccountScreen(
                     viewModel = viewModel,
                     onBack = { finish() },
@@ -88,8 +83,7 @@ open class MyAccount : AnkiActivity() {
                         viewModel.login(password = password, onSuccess = {
                             setResult(RESULT_OK)
                             checkNotificationPermission(
-                                this@MyAccount,
-                                notificationPermissionLauncher
+                                this@MyAccount, notificationPermissionLauncher
                             )
                             finish()
                         })
@@ -100,15 +94,10 @@ open class MyAccount : AnkiActivity() {
                     onLostEmailClick = { openUrl(R.string.link_ankiweb_lost_email_instructions) },
                     onRemoveAccountClick = { openRemoveAccountScreen() },
                     onLogoutClick = { logout() },
+                    onBackPressedCallback = onBackPressedCallback,
                     showSignUp = showSignUpButton,
-                    showNoAccountText = showNoAccountText
+                    showNoAccountText = showNoAccountText,
                 )
-
-                // Update back button callback enabled state
-                LaunchedEffect(state.screenState) {
-                    onBackPressedCallback.isEnabled =
-                        state.screenState == MyAccountScreenState.REMOVE_ACCOUNT
-                }
             }
         }
     }
