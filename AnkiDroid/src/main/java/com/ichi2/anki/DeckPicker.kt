@@ -729,7 +729,6 @@ open class DeckPicker :
                                 onChangeDeck = { actionHandler.showChangeDeckDialog() },
                                 onReposition = { actionHandler.repositionSelectedCards() },
                                 onSetDueDate = { actionHandler.rescheduleSelectedCards() },
-                                onEditTags = { actionHandler.showEditTagsDialog() },
                                 onGradeNow = { actionHandler.onGradeNow() },
                                 onResetProgress = { actionHandler.onResetProgress() },
                                 onExportCard = { actionHandler.exportSelected() },
