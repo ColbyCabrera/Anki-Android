@@ -41,9 +41,11 @@ object Utils {
         StringBuilder()
             .apply {
                 append("(")
-                if (ids != null) {
-                    val s = ids.contentToString()
-                    append(s.substring(1, s.length - 1))
+                if (ids != null && ids.isNotEmpty()) {
+                    for (i in ids.indices) {
+                        if (i > 0) append(", ")
+                        append(ids[i])
+                    }
                 }
                 append(")")
             }.toString()
@@ -53,9 +55,11 @@ object Utils {
         StringBuilder()
             .apply {
                 append("(")
-                if (ids != null) {
-                    val s = ids.contentToString()
-                    append(s.substring(1, s.length - 1))
+                if (ids != null && ids.isNotEmpty()) {
+                    for (i in ids.indices) {
+                        if (i > 0) append(", ")
+                        append(ids[i])
+                    }
                 }
                 append(")")
             }.toString()
