@@ -27,7 +27,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Button
-import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -36,12 +35,21 @@ import android.widget.TextView
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.widget.doOnTextChanged
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textfield.TextInputLayout
 import com.ichi2.anki.R
+import com.ichi2.anki.ui.compose.components.CheckboxPrompt
+import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import com.ichi2.themes.Theme
 import com.ichi2.themes.Themes
 import com.ichi2.ui.FixedTextView
@@ -51,7 +59,8 @@ import timber.log.Timber
 /** Wraps [DialogInterface.OnClickListener] as we don't need the `which` parameter */
 typealias DialogInterfaceListener = (DialogInterface) -> Unit
 
-fun DialogInterfaceListener.toClickListener(): OnClickListener = OnClickListener { dialog: DialogInterface, _ -> this(dialog) }
+fun DialogInterfaceListener.toClickListener(): OnClickListener =
+    OnClickListener { dialog: DialogInterface, _ -> this(dialog) }
 
 /*
  * Allows easier transformations from [MaterialDialog] to [AlertDialog].
@@ -139,7 +148,8 @@ fun AlertDialog.Builder.negativeButton(
     }
 }
 
-fun AlertDialog.Builder.cancelable(cancelable: Boolean): AlertDialog.Builder = this.setCancelable(cancelable)
+fun AlertDialog.Builder.cancelable(cancelable: Boolean): AlertDialog.Builder =
+    this.setCancelable(cancelable)
 
 /**
  * Executes the provided block, then creates an [AlertDialog] with the arguments supplied
@@ -209,24 +219,33 @@ fun AlertDialog.Builder.checkBoxPrompt(
     if (stringRes == null && text == null) {
         throw IllegalArgumentException("either `stringRes` or `text` must be set")
     }
-    val checkBoxView = View.inflate(this.context, R.layout.alert_dialog_checkbox, null)
-    val checkBox = checkBoxView.findViewById<CheckBox>(R.id.checkbox)
+    val checkBoxLabel = (if (stringRes != null) context.getString(stringRes) else text).toString()
 
-    val checkBoxLabel = if (stringRes != null) context.getString(stringRes) else text
-    checkBox.text = checkBoxLabel
-    checkBox.isChecked = isCheckedDefault
-
-    checkBox.setOnCheckedChangeListener { _, isChecked ->
-        onToggle(isChecked)
-    }
-
-    return this.setView(checkBoxView)
+    return this.setView(
+        ComposeView(context).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                AnkiDroidTheme {
+                    var isChecked by rememberSaveable {
+                        mutableStateOf(isCheckedDefault)
+                    }
+                    // Report initial/restored state to the caller
+                    LaunchedEffect(Unit) {
+                        onToggle(isChecked)
+                    }
+                    CheckboxPrompt(
+                        text = checkBoxLabel,
+                        isChecked = isChecked,
+                        onCheckedChange = {
+                            isChecked = it
+                            onToggle(it)
+                        },
+                    )
+                }
+            }
+        },
+    )
 }
-
-fun AlertDialog.getCheckBoxPrompt(): CheckBox =
-    requireNotNull(findViewById(R.id.checkbox)) {
-        "CheckBox prompt is not available. Forgot to call AlertDialog.Builder.checkBoxPrompt()?"
-    }
 
 /**
  * Sets a custom view for the dialog.
@@ -249,11 +268,10 @@ fun AlertDialog.Builder.customView(
 ): AlertDialog.Builder {
     val container = FrameLayout(context)
 
-    val containerParams =
-        FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.MATCH_PARENT,
-            FrameLayout.LayoutParams.WRAP_CONTENT,
-        )
+    val containerParams = FrameLayout.LayoutParams(
+        FrameLayout.LayoutParams.MATCH_PARENT,
+        FrameLayout.LayoutParams.WRAP_CONTENT,
+    )
 
     container.setPaddingRelative(paddingStart, paddingTop, paddingEnd, paddingBottom)
     container.addView(view, containerParams)
@@ -263,7 +281,8 @@ fun AlertDialog.Builder.customView(
 }
 
 fun AlertDialog.Builder.customListAdapter(adapter: RecyclerView.Adapter<*>) {
-    val recyclerView = LayoutInflater.from(context).inflate(R.layout.dialog_generic_recycler_view, null, false) as RecyclerView
+    val recyclerView = LayoutInflater.from(context)
+        .inflate(R.layout.dialog_generic_recycler_view, null, false) as RecyclerView
     recyclerView.adapter = adapter
     recyclerView.layoutManager = LinearLayoutManager(context)
     this.setView(recyclerView)
@@ -278,10 +297,12 @@ fun AlertDialog.Builder.customListAdapterWithDecoration(
     adapter: RecyclerView.Adapter<*>,
     context: Context,
 ) {
-    val recyclerView = LayoutInflater.from(context).inflate(R.layout.dialog_generic_recycler_view, null, false) as RecyclerView
+    val recyclerView = LayoutInflater.from(context)
+        .inflate(R.layout.dialog_generic_recycler_view, null, false) as RecyclerView
     recyclerView.adapter = adapter
     recyclerView.layoutManager = LinearLayoutManager(context)
-    val dividerItemDecoration = DividerItemDecoration(recyclerView.context, LinearLayoutManager.VERTICAL)
+    val dividerItemDecoration =
+        DividerItemDecoration(recyclerView.context, LinearLayoutManager.VERTICAL)
     recyclerView.addItemDecoration(dividerItemDecoration)
     this.setView(recyclerView)
 }
@@ -395,10 +416,9 @@ val AlertDialog.neutralButton: Button?
 fun AlertDialog.Builder.listItems(
     items: List<CharSequence>,
     onClick: (dialog: DialogInterface, index: Int) -> Unit,
-): AlertDialog.Builder =
-    this.setItems(items.toTypedArray()) { dialog, which ->
-        onClick(dialog, which)
-    }
+): AlertDialog.Builder = this.setItems(items.toTypedArray()) { dialog, which ->
+    onClick(dialog, which)
+}
 
 /**
  * Extension workaround for Displaying ListView & Message Together
@@ -447,7 +467,8 @@ fun AlertDialog.Builder.titleWithHelpIcon(
     block: View.OnClickListener,
 ) {
     // setup the view for the dialog
-    val customTitleView = LayoutInflater.from(context).inflate(R.layout.alert_dialog_title_with_help, null, false)
+    val customTitleView =
+        LayoutInflater.from(context).inflate(R.layout.alert_dialog_title_with_help, null, false)
     setCustomTitle(customTitleView)
 
     // apply a custom title

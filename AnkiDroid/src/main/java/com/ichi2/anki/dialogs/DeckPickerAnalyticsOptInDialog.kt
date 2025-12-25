@@ -25,7 +25,6 @@ import com.ichi2.anki.utils.ext.dismissAllDialogFragments
 import com.ichi2.utils.cancelable
 import com.ichi2.utils.checkBoxPrompt
 import com.ichi2.utils.create
-import com.ichi2.utils.getCheckBoxPrompt
 import com.ichi2.utils.message
 import com.ichi2.utils.positiveButton
 import com.ichi2.utils.title
@@ -33,12 +32,15 @@ import com.ichi2.utils.title
 class DeckPickerAnalyticsOptInDialog : AnalyticsDialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): AlertDialog {
         super.onCreateDialog(savedInstanceState)
+        var analyticsEnabled = true
         return AlertDialog.Builder(requireActivity()).create {
             title(R.string.analytics_dialog_title)
             message(R.string.analytics_summ)
-            checkBoxPrompt(R.string.analytics_title, isCheckedDefault = true) {}
+            checkBoxPrompt(R.string.analytics_title, isCheckedDefault = true) {
+                analyticsEnabled = it
+            }
             positiveButton(R.string.dialog_continue) {
-                UsageAnalytics.isEnabled = (it as AlertDialog).getCheckBoxPrompt().isChecked
+                UsageAnalytics.isEnabled = analyticsEnabled
                 activity?.dismissAllDialogFragments()
             }
             cancelable(true)
