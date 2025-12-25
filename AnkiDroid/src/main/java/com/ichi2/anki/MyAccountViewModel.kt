@@ -149,6 +149,8 @@ class MyAccountViewModel : ViewModel() {
      * Sets the backend abort flag which will cause the network operation to throw BackendInterruptedException.
      */
     fun cancelLogin() {
+        val jobToCancel = loginJob ?: return
+
         viewModelScope.launch {
             try {
                 CollectionManager.getBackend().setWantsAbort()
@@ -156,8 +158,10 @@ class MyAccountViewModel : ViewModel() {
                 Timber.w(e, "Failed to set abort flag")
             }
         }
-        loginJob?.cancel()
-        loginJob = null
+        jobToCancel.cancel()
+        if (loginJob == jobToCancel) {
+            loginJob = null
+        }
         _state.update { it.copy(isLoginLoading = false) }
     }
 
