@@ -30,14 +30,16 @@ import kotlin.math.max
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 class RoundedPolygonShape(
-    private val polygon: RoundedPolygon, private val matrix: Matrix = Matrix()
+    private val polygon: RoundedPolygon,
 ) : Shape {
 
     override fun createOutline(
-        size: Size, layoutDirection: LayoutDirection, density: Density
+        size: Size,
+        layoutDirection: LayoutDirection,
+        density: Density,
     ): Outline {
         val graphicsPath = polygon.toPath()
-        matrix.reset()
+        val matrix = Matrix()
         val bounds = polygon.getBounds()
         val maxDimension = max(bounds.width, bounds.height)
         matrix.postTranslate(-bounds.left, -bounds.top)
