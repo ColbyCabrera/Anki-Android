@@ -15,11 +15,6 @@
  */
 package com.ichi2.anki.ui.compose.components
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -57,65 +52,59 @@ fun LoginErrorCard(
     val isAuthError =
         error is LoginError.StringResource && error.resId == R.string.login_error_authentication_failed
 
-    AnimatedVisibility(
-        visible = true,
-        enter = fadeIn() + slideInVertically { -it / 2 },
-        exit = fadeOut() + slideOutVertically { -it / 2 },
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(
+                color = MaterialTheme.colorScheme.errorContainer,
+                shape = RoundedCornerShape(16.dp),
+            )
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Column(
-            modifier = modifier
-                .fillMaxWidth()
-                .background(
-                    color = MaterialTheme.colorScheme.errorContainer,
-                    shape = RoundedCornerShape(16.dp),
-                )
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            Icon(
+                painter = painterResource(R.drawable.error_24px),
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.error,
+            )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.login_error_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                )
+                Text(
+                    text = when (error) {
+                        is LoginError.StringResource -> stringResource(error.resId)
+                        is LoginError.DynamicString -> error.text
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                )
+            }
+        }
+
+        // Show reset password button for authentication errors
+        if (isAuthError) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.End,
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.error_24px),
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp),
-                    tint = MaterialTheme.colorScheme.error,
-                )
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
+                TextButton(onClick = onResetPasswordClick) {
                     Text(
-                        text = stringResource(R.string.login_error_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        text = stringResource(R.string.reset_password),
+                        color = MaterialTheme.colorScheme.error,
                     )
-                    Text(
-                        text = when (error) {
-                            is LoginError.StringResource -> stringResource(error.resId)
-                            is LoginError.DynamicString -> error.text
-                        },
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                    )
-                }
-            }
-
-            // Show reset password button for authentication errors
-            if (isAuthError) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                ) {
-                    TextButton(onClick = onResetPasswordClick) {
-                        Text(
-                            text = stringResource(R.string.reset_password),
-                            color = MaterialTheme.colorScheme.error,
-                        )
-                    }
                 }
             }
         }
