@@ -7,12 +7,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -27,11 +26,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SliderPreferenceContent(
     title: String,
@@ -51,6 +52,8 @@ fun SliderPreferenceContent(
     // We use a local state for the slider to ensure smooth dragging,
     // and only commit the change when dragging stops (or as needed).
     var sliderPosition by remember(value) { mutableFloatStateOf(value.toFloat()) }
+    val interactionSource = remember { MutableInteractionSource() }
+    val isDragged by interactionSource.collectIsDraggedAsState()
 
     // XML ComposeView handles horizontal padding (?attr/listPreferredItemPaddingStart/End)
     Row(
@@ -107,7 +110,7 @@ fun SliderPreferenceContent(
                     }
                 }
 
-                if (displayValue) {
+                if (displayValue && !isDragged) {
                     val displayText =
                         displayFormat?.let { String.format(it, sliderPosition.toInt()) }
                             ?: sliderPosition.toInt().toString()
@@ -122,8 +125,7 @@ fun SliderPreferenceContent(
                 }
             }
 
-            // Material3 Slider with custom thumb for value indicator
-            val interactionSource = remember { MutableInteractionSource() }
+            // Material3 Slider with Label for value indicator
             Slider(
                 value = sliderPosition,
                 onValueChange = {
@@ -136,39 +138,50 @@ fun SliderPreferenceContent(
                 steps = if (stepSize > 0) maxOf(
                     0, ((valueTo - valueFrom) / stepSize).toInt() - 1
                 ) else 0,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp), // Space for the value bubble
+                modifier = Modifier.fillMaxWidth(),
                 enabled = enabled,
                 interactionSource = interactionSource,
                 thumb = {
-                    val isDragged by interactionSource.collectIsDraggedAsState()
-                    Box(contentAlignment = Alignment.Center) {
-                        SliderDefaults.Thumb(
-                            interactionSource = interactionSource,
-                            enabled = enabled
-                        )
-                        if (isDragged) {
-                            Box(
-                                modifier = Modifier
-                                    .align(Alignment.TopCenter)
-                                    .offset(y = (-28).dp)
-                                    .width(0.dp)
-                                    .background(
-                                        color = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.12f
-                                        ),
-                                        shape = RoundedCornerShape(4.dp)
+                    Layout(
+                        content = {
+                            if (isDragged && displayValue) {
+                                val displayText =
+                                    displayFormat?.let { String.format(it, sliderPosition.toInt()) }
+                                        ?: sliderPosition.toInt().toString()
+                                Box(
+                                    modifier = Modifier
+                                        .layoutId("label")
+                                        .background(
+                                            color = MaterialTheme.colorScheme.primary,
+                                            shape = MaterialTheme.shapes.extraExtraLarge
+                                        )
+                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Text(
+                                        text = displayText,
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        style = MaterialTheme.typography.labelMedium
                                     )
-                                    .padding(horizontal = 6.dp, vertical = 2.dp)
-                            ) {
-                                Text(
-                                    text = sliderPosition.toInt().toString(),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = if (enabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface.copy(
-                                        alpha = 0.38f
-                                    )
-                                )
+                                }
+                            }
+                            SliderDefaults.Thumb(
+                                interactionSource = interactionSource,
+                                enabled = enabled,
+                                modifier = Modifier.layoutId("thumb")
+                            )
+                        }) { measurables, constraints ->
+                        val thumbPlaceable =
+                            measurables.first { it.layoutId == "thumb" }.measure(constraints)
+                        val labelPlaceable = measurables.find { it.layoutId == "label" }
+                            ?.measure(constraints.copy(minWidth = 0, minHeight = 0))
+
+                        layout(thumbPlaceable.width, thumbPlaceable.height) {
+                            thumbPlaceable.placeRelative(0, 0)
+                            labelPlaceable?.let {
+                                val x = (thumbPlaceable.width - labelPlaceable.width) / 2
+                                // Place label above the thumb
+                                val y = -it.height - 8.dp.roundToPx()
+                                it.placeRelative(x, y)
                             }
                         }
                     }
