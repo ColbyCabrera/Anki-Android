@@ -22,7 +22,6 @@ import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
@@ -30,8 +29,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -64,7 +61,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -165,7 +161,8 @@ fun HelpScreen() {
                         visible = visible,
                         enter = fadeIn(animationSpec = tween(300)) + slideInVertically(
                             animationSpec = spring(dampingRatio = 0.8f),
-                            initialOffsetY = { it / 2 })) {
+                            initialOffsetY = { it / 2 })
+                    ) {
                         HelpItem(
                             titleRes = helpLink.titleRes,
                             subtitleRes = helpLink.subtitleRes,
@@ -244,26 +241,16 @@ private fun HelpItem(
     contentColor: Color,
     onClick: () -> Unit
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.96f else 1f,
-        animationSpec = spring(dampingRatio = 0.5f, stiffness = 400f),
-        label = "CardScale"
-    )
 
     ElevatedCard(
         onClick = onClick,
-        interactionSource = interactionSource,
-        modifier = Modifier
-            .fillMaxWidth()
-            .scale(scale),
+        modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraExtraLarge,
         colors = CardDefaults.elevatedCardColors(
             containerColor = containerColor, contentColor = contentColor
         ),
         elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = 0.dp, pressedElevation = 4.dp
+            defaultElevation = 0.dp, pressedElevation = 2.dp
         )
     ) {
         Row(
