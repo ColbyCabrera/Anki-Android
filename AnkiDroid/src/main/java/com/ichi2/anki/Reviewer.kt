@@ -107,7 +107,6 @@ import com.ichi2.anki.settings.Prefs
 import com.ichi2.anki.snackbar.showSnackbar
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import com.ichi2.anki.ui.internationalization.toSentenceCase
-import com.ichi2.anki.ui.windows.reviewer.ReviewerFragment
 import com.ichi2.anki.ui.windows.reviewer.whiteboard.WhiteboardRepository
 import com.ichi2.anki.ui.windows.reviewer.whiteboard.WhiteboardViewModel
 import com.ichi2.anki.utils.ext.flag
@@ -1636,11 +1635,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         /** Default (500ms) time for action snackbars, such as undo, bury and suspend */
         const val ACTION_SNACKBAR_TIME = 500
 
-        fun getIntent(context: Context): Intent = if (Prefs.isNewStudyScreenEnabled) {
-            ReviewerFragment.getIntent(context)
-        } else {
-            Intent(context, Reviewer::class.java)
-        }
+        fun getIntent(context: Context): Intent = Intent(context, Reviewer::class.java)
     }
 
 }

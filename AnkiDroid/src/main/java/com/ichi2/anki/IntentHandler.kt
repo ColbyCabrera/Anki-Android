@@ -36,7 +36,6 @@ import com.ichi2.anki.libanki.DeckId
 import com.ichi2.anki.noteeditor.NoteEditorLauncher
 import com.ichi2.anki.servicelayer.ScopedStorageService
 import com.ichi2.anki.settings.Prefs
-import com.ichi2.anki.ui.windows.reviewer.ReviewerFragment
 import com.ichi2.anki.utils.MimeTypeUtils
 import com.ichi2.anki.worker.SyncWorker
 import com.ichi2.utils.FileUtil
@@ -164,14 +163,9 @@ class IntentHandler : AbstractIntentHandler() {
         val deckId = intent.getLongExtra(REVIEW_DECK_INTENT_EXTRA_DECK_ID, 0)
         Timber.i("Handling intent to review deck '%d'", deckId)
 
-        val reviewIntent =
-            if (Prefs.isNewStudyScreenEnabled) {
-                ReviewerFragment.getIntent(this)
-            } else {
-                Intent(this, Reviewer::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                }
-            }
+        val reviewIntent = Intent(this, Reviewer::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
         CollectionManager.getColUnsafe().decks.select(deckId)
         // Clean the stack out under the reviewer to avoid any incorrect activities / dialogs /
         // data state from prior app usage showing after reviewer exits if going to reviewer directly

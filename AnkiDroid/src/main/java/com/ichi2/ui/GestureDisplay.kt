@@ -42,7 +42,6 @@ import com.ichi2.anki.cardviewer.Gesture.TAP_TOP_LEFT
 import com.ichi2.anki.cardviewer.Gesture.TAP_TOP_RIGHT
 import com.ichi2.anki.cardviewer.GestureListener
 import com.ichi2.anki.cardviewer.TapGestureMode
-import com.ichi2.anki.settings.Prefs
 import timber.log.Timber
 
 /** Allows selection, and display of a single gesture on a square grid
@@ -90,8 +89,7 @@ class GestureDisplay
         fun availableValues(): List<Gesture> =
             Gesture.entries
                 .filter {
-                    (tapGestureMode == TapGestureMode.NINE_POINT || !NINE_POINT_TAP_GESTURES.contains(it)) &&
-                        (Prefs.isNewStudyScreenEnabled || !MULTI_FINGER_GESTURES.contains(it))
+                    tapGestureMode == TapGestureMode.NINE_POINT || !NINE_POINT_TAP_GESTURES.contains(it)
                 }
 
         /** Sets a callback which is called when the gesture is changed, and non-null */

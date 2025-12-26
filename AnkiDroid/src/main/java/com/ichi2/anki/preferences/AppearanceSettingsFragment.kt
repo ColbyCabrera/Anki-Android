@@ -22,7 +22,6 @@ import androidx.preference.SwitchPreferenceCompat
 import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.R
 import com.ichi2.anki.launchCatchingTask
-import com.ichi2.anki.settings.Prefs
 import com.ichi2.anki.utils.CollectionPreferences
 import com.ichi2.themes.Themes
 import com.ichi2.themes.Themes.systemIsInNightMode
@@ -105,7 +104,7 @@ class AppearanceSettingsFragment : SettingsFragment() {
     }
 
     private fun setupNewStudyScreenSettings() {
-        if (!Prefs.isNewStudyScreenEnabled) return
+        // New study screen is always enabled, so always hide legacy settings
         for (key in legacyStudyScreenSettings) {
             val keyString = getString(key)
             findPreference<Preference>(keyString)?.isVisible = false
