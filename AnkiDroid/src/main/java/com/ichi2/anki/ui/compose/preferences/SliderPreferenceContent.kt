@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -17,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -123,11 +125,16 @@ fun SliderPreferenceContent(
                 },
                 valueRange = valueFrom.toFloat()..valueTo.toFloat(),
                 steps = if (stepSize > 0) maxOf(
-                    0,
-                    ((valueTo - valueFrom) / stepSize).toInt() - 1
+                    0, ((valueTo - valueFrom) / stepSize).toInt() - 1
                 ) else 0,
                 modifier = Modifier.fillMaxWidth(),
-                enabled = enabled
+                enabled = enabled,
+                colors = SliderDefaults.colors(
+                    activeTickColor = Color.Transparent,
+                    inactiveTickColor = Color.Transparent,
+                    disabledActiveTickColor = Color.Transparent,
+                    disabledInactiveTickColor = Color.Transparent
+                )
             )
         }
     }
