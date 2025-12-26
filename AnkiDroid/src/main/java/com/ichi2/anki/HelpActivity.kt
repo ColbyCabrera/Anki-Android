@@ -22,33 +22,30 @@ package com.ichi2.anki
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import com.ichi2.anki.ui.compose.help.HelpScreen
+import com.ichi2.themes.Themes
 
 class HelpActivity : AppCompatActivity() {
+    private var wasNightMode: Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        wasNightMode = Themes.currentTheme.isNightMode
         setContent {
-            // Use your app's theme here
-            MaterialTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(text = "Help Information", style = MaterialTheme.typography.headlineMedium)
-                        // Add your help content here
-                        Text(text = "This is the help screen. More content will be added here.")
-                    }
-                }
-            }
+            HelpScreen()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Update the theme and recreate if it changed while we were paused
+        Themes.updateCurrentTheme(this)
+        if (Themes.currentTheme.isNightMode != wasNightMode) {
+            recreate()
         }
     }
 }
+
