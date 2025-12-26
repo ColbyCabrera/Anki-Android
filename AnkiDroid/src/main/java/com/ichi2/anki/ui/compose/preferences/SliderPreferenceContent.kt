@@ -35,23 +35,24 @@ fun SliderPreferenceContent(
     onValueChange: (Int) -> Unit,
     icon: Painter? = null,
     isIconSpaceReserved: Boolean = false,
+    enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     // We use a local state for the slider to ensure smooth dragging,
     // and only commit the change when dragging stops (or as needed).
     var sliderPosition by remember(value) { mutableFloatStateOf(value.toFloat()) }
 
+    // XML ComposeView handles horizontal padding (?attr/listPreferredItemPaddingStart/End)
     Row(
-        modifier = modifier
-            .fillMaxWidth(),
-            // XML ComposeView handles horizontal padding (?attr/listPreferredItemPaddingStart/End)
-        verticalAlignment = Alignment.CenterVertically
+        modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
     ) {
         if (icon != null) {
             Icon(
                 painter = icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface.copy(
+                    alpha = 0.38f
+                ),
                 modifier = Modifier
                     .padding(end = 16.dp) // Standard icon padding
                     .size(24.dp)
@@ -76,7 +77,9 @@ fun SliderPreferenceContent(
                     Text(
                         text = title,
                         style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(
+                            alpha = 0.38f
+                        ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -84,7 +87,9 @@ fun SliderPreferenceContent(
                         Text(
                             text = summary,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.38f
+                            ),
                             modifier = Modifier.padding(top = 2.dp),
                             maxLines = 4,
                             overflow = TextOverflow.Ellipsis
@@ -93,12 +98,15 @@ fun SliderPreferenceContent(
                 }
 
                 if (displayValue) {
-                    val displayText = displayFormat?.let { String.format(it, sliderPosition.toInt()) }
-                        ?: sliderPosition.toInt().toString()
+                    val displayText =
+                        displayFormat?.let { String.format(it, sliderPosition.toInt()) }
+                            ?: sliderPosition.toInt().toString()
                     Text(
                         text = displayText,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface.copy(
+                            alpha = 0.38f
+                        ),
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 }
@@ -114,8 +122,12 @@ fun SliderPreferenceContent(
                     onValueChange(sliderPosition.toInt())
                 },
                 valueRange = valueFrom.toFloat()..valueTo.toFloat(),
-                steps = if (stepSize > 0) ((valueTo - valueFrom) / stepSize).toInt() - 1 else 0,
-                modifier = Modifier.fillMaxWidth()
+                steps = if (stepSize > 0) maxOf(
+                    0,
+                    ((valueTo - valueFrom) / stepSize).toInt() - 1
+                ) else 0,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = enabled
             )
         }
     }
