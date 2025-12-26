@@ -1,11 +1,18 @@
 package com.ichi2.anki.ui.compose.preferences
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -24,6 +31,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SliderPreferenceContent(
     title: String,
@@ -114,7 +122,8 @@ fun SliderPreferenceContent(
                 }
             }
 
-            // Material3 Slider
+            // Material3 Slider with custom thumb for value indicator
+            val interactionSource = remember { MutableInteractionSource() }
             Slider(
                 value = sliderPosition,
                 onValueChange = {
@@ -127,8 +136,43 @@ fun SliderPreferenceContent(
                 steps = if (stepSize > 0) maxOf(
                     0, ((valueTo - valueFrom) / stepSize).toInt() - 1
                 ) else 0,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp), // Space for the value bubble
                 enabled = enabled,
+                interactionSource = interactionSource,
+                thumb = {
+                    val isDragged by interactionSource.collectIsDraggedAsState()
+                    Box(contentAlignment = Alignment.Center) {
+                        SliderDefaults.Thumb(
+                            interactionSource = interactionSource,
+                            enabled = enabled
+                        )
+                        if (isDragged) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopCenter)
+                                    .offset(y = (-28).dp)
+                                    .width(0.dp)
+                                    .background(
+                                        color = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(
+                                            alpha = 0.12f
+                                        ),
+                                        shape = RoundedCornerShape(4.dp)
+                                    )
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = sliderPosition.toInt().toString(),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (enabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.38f
+                                    )
+                                )
+                            }
+                        }
+                    }
+                },
                 colors = SliderDefaults.colors(
                     activeTickColor = Color.Transparent,
                     inactiveTickColor = Color.Transparent,
