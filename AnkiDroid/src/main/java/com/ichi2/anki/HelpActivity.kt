@@ -22,14 +22,30 @@ package com.ichi2.anki
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.ichi2.anki.ui.compose.help.HelpScreen
+import com.ichi2.themes.Themes
 
 class HelpActivity : AppCompatActivity() {
+    private var wasNightMode: Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        wasNightMode = Themes.currentTheme.isNightMode
         setContent {
             HelpScreen()
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+        // Update the theme and recreate if it changed while we were paused
+        Themes.updateCurrentTheme(this)
+        if (Themes.currentTheme.isNightMode != wasNightMode) {
+            recreate()
+        }
+    }
 }
+
