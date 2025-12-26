@@ -38,24 +38,28 @@ object Utils {
 
     /** Given a list of integers, return a string '(int1,int2,...)'.  */
     fun ids2str(ids: IntArray?): String =
-        StringBuilder()
+        StringBuilder(2 + (ids?.size ?: 0) * 12)
             .apply {
                 append("(")
-                if (ids != null) {
-                    val s = ids.contentToString()
-                    append(s.substring(1, s.length - 1))
+                if (ids != null && ids.isNotEmpty()) {
+                    for (i in ids.indices) {
+                        if (i > 0) append(", ")
+                        append(ids[i])
+                    }
                 }
                 append(")")
             }.toString()
 
     /** Given a list of integers, return a string '(int1,int2,...)'.  */
     fun ids2str(ids: LongArray?): String =
-        StringBuilder()
+        StringBuilder(2 + (ids?.size ?: 0) * 22)
             .apply {
                 append("(")
-                if (ids != null) {
-                    val s = ids.contentToString()
-                    append(s.substring(1, s.length - 1))
+                if (ids != null && ids.isNotEmpty()) {
+                    for (i in ids.indices) {
+                        if (i > 0) append(", ")
+                        append(ids[i])
+                    }
                 }
                 append(")")
             }.toString()
@@ -123,16 +127,12 @@ object Utils {
             Timber.e(e, "Utils.checksum :: UnsupportedEncodingException")
         }
         val biginteger = BigInteger(1, digest)
-        var result = biginteger.toString(16)
+        val result = biginteger.toString(16)
 
         // pad with zeros to length of 40 This method used to pad
         // to the length of 32. As it turns out, sha1 has a digest
         // size of 160 bits, leading to a hex digest size of 40,
         // not 32.
-        if (result.length < 40) {
-            val zeroes = "0000000000000000000000000000000000000000"
-            result = zeroes.substring(0, zeroes.length - result.length) + result
-        }
-        return result
+        return result.padStart(40, '0')
     }
 }
