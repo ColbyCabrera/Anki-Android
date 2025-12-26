@@ -18,19 +18,16 @@ package com.ichi2.preferences
 import android.content.Context
 import android.content.res.TypedArray
 import android.util.AttributeSet
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.core.content.ContextCompat
-import androidx.core.content.res.getIntOrThrow
-import androidx.core.content.withStyledAttributes
-import androidx.preference.Preference
-import androidx.preference.PreferenceViewHolder
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.core.content.res.getIntOrThrow
+import androidx.core.content.withStyledAttributes
 import androidx.core.graphics.drawable.toBitmap
+import androidx.preference.Preference
+import androidx.preference.PreferenceViewHolder
 import com.ichi2.anki.R
 import com.ichi2.anki.common.annotations.NeedsTest
 import com.ichi2.anki.ui.compose.preferences.SliderPreferenceContent
@@ -40,6 +37,27 @@ import com.ichi2.anki.utils.getFormattedStringOrPlurals
 /**
  * Similar to [androidx.preference.SeekBarPreference],
  * but with a material Slider instead of a SeekBar, and more customizable.
+ *
+ * Besides the default [Preference] attrs, the following XML attrs can be used to customize it:
+ * * android:valueFrom (**required**): minimum value of the slider. It must be lower than `valueTo`
+ * * android:valueTo (**required**): maximum value of the slider. It must be higher than `valueFrom`
+ * * android:stepSize (*optional*): This value dictates whether the slider operates
+ *       in continuous mode, or in discrete mode. If greater than 0 and evenly divides the range described by `valueFrom`
+ *       and `valueTo`, the slider operates in discrete mode. If negative an IllegalArgumentException is thrown,
+ *       or if greater than 0 but not a factor of the range described by `valueFrom` and `valueTo`.
+ *       Its default value is 1.
+ * * android:defaultValue (*optional*): Default value of the preference.
+ *       If not set, the `valueFrom` value is going to be used.
+ *       It must be between `valueFrom` and `valueTo`
+ * * app:summaryFormat (*optional*):
+ *       Format `string` or `plurals` to be used as template to display the value in the preference summary.
+ *       There must be ONLY ONE placeholder, which will be replaced by the preference value.
+ * * app:displayValue (*optional*): whether to show the current preference value on a TextView
+ *       by the end of the preference
+ * * app:displayFormat (*optional*): Format string to be used as template to display the value by
+ *       the end of the slider. There must be ONLY ONE placeholder,
+ *       which will be replaced by the preference value.
+ *       `displayValue` is always true if a `displayFormat` is provided.
  */
 @NeedsTest("onTouchListener is only called once")
 class SliderPreference(
@@ -59,7 +77,7 @@ class SliderPreference(
             if (field == value) {
                 return
             }
-            if (value < valueFrom || value > valueTo) {
+            if (value !in valueFrom..valueTo) {
                 throw IllegalArgumentException("value $value should be between the min of $valueFrom and max of $valueTo")
             }
             field = value
@@ -71,21 +89,23 @@ class SliderPreference(
         layoutResource = R.layout.preference_slider
 
         context.withStyledAttributes(attrs, com.google.android.material.R.styleable.Slider) {
-            valueFrom = getIntOrThrow(com.google.android.material.R.styleable.Slider_android_valueFrom)
+            valueFrom =
+                getIntOrThrow(com.google.android.material.R.styleable.Slider_android_valueFrom)
             valueTo = getIntOrThrow(com.google.android.material.R.styleable.Slider_android_valueTo)
             stepSize = getFloat(com.google.android.material.R.styleable.Slider_android_stepSize, 1F)
         }
 
         context.withStyledAttributes(attrs, R.styleable.CustomPreference) {
             summaryFormatResource =
-                getResourceId(R.styleable.CustomPreference_summaryFormat, 0)
-                    .takeIf { it != 0 }
+                getResourceId(R.styleable.CustomPreference_summaryFormat, 0).takeIf { it != 0 }
         }
 
         context.withStyledAttributes(attrs, R.styleable.SliderPreference) {
             displayFormat = getString(R.styleable.SliderPreference_displayFormat)
-            displayValue = displayFormat != null ||
-                getBoolean(R.styleable.SliderPreference_displayValue, false)
+            displayValue = displayFormat != null || getBoolean(
+                R.styleable.SliderPreference_displayValue,
+                false
+            )
         }
     }
 
@@ -108,7 +128,7 @@ class SliderPreference(
             AnkiDroidTheme {
                 val iconPainter = icon?.let {
                     remember(it) {
-                        androidx.compose.ui.graphics.painter.BitmapPainter(it.toBitmap().asImageBitmap())
+                        BitmapPainter(it.toBitmap().asImageBitmap())
                     }
                 }
 
@@ -132,7 +152,8 @@ class SliderPreference(
                         }
                     },
                     icon = iconPainter,
-                    isIconSpaceReserved = isIconSpaceReserved
+                    isIconSpaceReserved = isIconSpaceReserved,
+                    enabled = isEnabled
                 )
             }
         }
