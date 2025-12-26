@@ -121,7 +121,7 @@ class SliderPreference(
     override fun onBindViewHolder(holder: PreferenceViewHolder) {
         super.onBindViewHolder(holder)
 
-        val composeView = holder.findViewById(R.id.compose_view) as ComposeView
+        val composeView = holder.itemView as ComposeView
         composeView.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
 
         composeView.setContent {
