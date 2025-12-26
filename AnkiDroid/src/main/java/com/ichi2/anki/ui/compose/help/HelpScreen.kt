@@ -42,12 +42,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Help
-import androidx.compose.material.icons.automirrored.filled.OpenInNew
-import androidx.compose.material.icons.filled.BugReport
-import androidx.compose.material.icons.filled.Forum
-import androidx.compose.material.icons.filled.VolunteerActivism
+import androidx.compose.material3.Card
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -71,10 +66,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -86,7 +81,7 @@ import kotlinx.coroutines.delay
 private class HelpLink(
     @StringRes val titleRes: Int,
     @StringRes val subtitleRes: Int,
-    val icon: ImageVector,
+    val icon: Int,
     val url: String
 )
 
@@ -112,34 +107,27 @@ fun HelpScreen() {
         HelpLink(
             R.string.help_manual_title,
             R.string.help_manual_subtitle,
-            Icons.AutoMirrored.Filled.Help,
+            R.drawable.help_24px,
             "https://docs.ankidroid.org"
         ),
         HelpLink(
             R.string.help_forum_title,
             R.string.help_forum_subtitle,
-            Icons.Default.Forum,
+            R.drawable.forum_24px,
             "https://forums.ankiweb.net"
         ),
         HelpLink(
             R.string.help_issue_tracker_title,
             R.string.help_issue_tracker_subtitle,
-            Icons.Default.BugReport,
+            R.drawable.bug_report_24px,
             "https://github.com/ColbyCabrera/Anki-Android"
         ),
         HelpLink(
             R.string.help_donate_title,
             R.string.help_donate_subtitle,
-            Icons.Default.VolunteerActivism,
+            R.drawable.volunteer_activism_24px,
             "https://ankidroid.org/#donations"
         )
-    )
-
-    val cardColors = listOf(
-        MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer,
-        MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer,
-        MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer,
-        MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer,
     )
 
     AnkiDroidTheme {
@@ -171,7 +159,6 @@ fun HelpScreen() {
 
                 // Help Cards with staggered animation
                 itemsIndexed(helpLinks) { index, helpLink ->
-                    val (containerColor, contentColor) = cardColors[index % cardColors.size]
                     val iconShape = iconShapes[index % iconShapes.size]
                     
                     var visible by remember { mutableStateOf(false) }
@@ -193,8 +180,8 @@ fun HelpScreen() {
                             subtitleRes = helpLink.subtitleRes,
                             icon = helpLink.icon,
                             iconShape = iconShape,
-                            containerColor = containerColor,
-                            contentColor = contentColor,
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                             onClick = {
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(helpLink.url))
                                 context.startActivity(intent)
@@ -247,7 +234,7 @@ private fun HelpHeroSection() {
             )
             // Help icon
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.Help,
+                painter = painterResource(R.drawable.help_filled_24px),
                 contentDescription = null,
                 modifier = Modifier.size(48.dp),
                 tint = MaterialTheme.colorScheme.primary
@@ -264,11 +251,12 @@ private fun HelpHeroSection() {
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun HelpItem(
     @StringRes titleRes: Int,
     @StringRes subtitleRes: Int,
-    icon: ImageVector,
+    icon: Int,
     iconShape: RoundedPolygonShape,
     containerColor: Color,
     contentColor: Color,
@@ -281,7 +269,7 @@ private fun HelpItem(
         label = "CardScale"
     )
 
-    ElevatedCard(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
             .scale(scale)
@@ -295,14 +283,14 @@ private fun HelpItem(
                     }
                 )
             },
-        shape = MaterialTheme.shapes.large,
+        shape = MaterialTheme.shapes.extraExtraLarge,
         colors = CardDefaults.elevatedCardColors(
             containerColor = containerColor,
             contentColor = contentColor
         ),
         elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = 2.dp,
-            pressedElevation = 6.dp
+            defaultElevation = 0.dp,
+            pressedElevation = 4.dp
         )
     ) {
         Row(
@@ -315,16 +303,16 @@ private fun HelpItem(
                 modifier = Modifier
                     .size(56.dp)
                     .background(
-                        contentColor.copy(alpha = 0.15f),
+                        color = MaterialTheme.colorScheme.tertiaryContainer,
                         shape = iconShape
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = icon,
+                    painter = painterResource(icon),
                     contentDescription = null,
-                    modifier = Modifier.size(28.dp),
-                    tint = contentColor
+                    modifier = Modifier.size(26.dp),
+                    tint = MaterialTheme.colorScheme.onTertiaryContainer
                 )
             }
 
@@ -341,10 +329,10 @@ private fun HelpItem(
             }
 
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                painter = painterResource(R.drawable.arrow_outward_24px),
                 contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = contentColor.copy(alpha = 0.6f)
+                modifier = Modifier.size(24.dp),
+                tint = contentColor
             )
         }
     }
