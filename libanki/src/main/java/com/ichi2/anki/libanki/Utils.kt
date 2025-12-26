@@ -38,7 +38,7 @@ object Utils {
 
     /** Given a list of integers, return a string '(int1,int2,...)'.  */
     fun ids2str(ids: IntArray?): String =
-        StringBuilder()
+        StringBuilder(2 + (ids?.size ?: 0) * 12)
             .apply {
                 append("(")
                 if (ids != null && ids.isNotEmpty()) {
@@ -52,7 +52,7 @@ object Utils {
 
     /** Given a list of integers, return a string '(int1,int2,...)'.  */
     fun ids2str(ids: LongArray?): String =
-        StringBuilder()
+        StringBuilder(2 + (ids?.size ?: 0) * 22)
             .apply {
                 append("(")
                 if (ids != null && ids.isNotEmpty()) {
