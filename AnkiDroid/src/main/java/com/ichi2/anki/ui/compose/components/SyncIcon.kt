@@ -21,8 +21,10 @@
 package com.ichi2.anki.ui.compose.components
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,6 +34,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -40,6 +43,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.ichi2.anki.R
 import com.ichi2.anki.SyncIconState
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,6 +57,30 @@ fun SyncIcon(
     val rotation = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
 
+    LaunchedEffect(isSyncing) {
+        if (isSyncing) {
+            rotation.snapTo(0f)
+            while (isActive) {
+                rotation.animateTo(
+                    targetValue = rotation.value + 360f,
+                    animationSpec = tween(durationMillis = 1000, easing = LinearEasing),
+                )
+            }
+        } else {
+            // Reset to 0 when not syncing to avoid "stuck" rotation
+            if (rotation.value % 360f != 0f) {
+                rotation.animateTo(
+                    targetValue = (rotation.value / 360f + 1).toInt() * 360f,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessLow,
+                    ),
+                )
+                rotation.snapTo(0f)
+            }
+        }
+    }
+
     BadgedBox(
         modifier = modifier,
         badge = {
@@ -65,11 +93,15 @@ fun SyncIcon(
             }
         },
     ) {
-        val contentDescription = when (syncState) {
-            SyncIconState.PendingChanges -> stringResource(R.string.sync_menu_title_pending_changes)
-            SyncIconState.OneWay -> stringResource(R.string.sync_menu_title_one_way_sync)
-            SyncIconState.NotLoggedIn -> stringResource(R.string.sync_menu_title_no_account)
-            else -> stringResource(R.string.sync_now)
+        val contentDescription = if (isSyncing) {
+            stringResource(R.string.syncing)
+        } else {
+            when (syncState) {
+                SyncIconState.PendingChanges -> stringResource(R.string.sync_menu_title_pending_changes)
+                SyncIconState.OneWay -> stringResource(R.string.sync_menu_title_one_way_sync)
+                SyncIconState.NotLoggedIn -> stringResource(R.string.sync_menu_title_no_account)
+                else -> stringResource(R.string.sync_now)
+            }
         }
 
         FilledIconButton(
