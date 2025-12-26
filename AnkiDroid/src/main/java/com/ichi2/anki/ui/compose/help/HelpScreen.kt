@@ -17,6 +17,7 @@ package com.ichi2.anki.ui.compose.help
 
 import android.content.Intent
 import android.net.Uri
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
@@ -29,7 +30,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,8 +44,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -66,7 +68,6 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -77,11 +78,35 @@ import com.ichi2.anki.ui.compose.components.RoundedPolygonShape
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import kotlinx.coroutines.delay
 
-private class HelpLink(
+private data class HelpLink(
     @StringRes val titleRes: Int,
     @StringRes val subtitleRes: Int,
-    val icon: Int,
+    @DrawableRes val icon: Int,
     val url: String
+)
+
+private val helpLinks = listOf(
+    HelpLink(
+        R.string.help_manual_title,
+        R.string.help_manual_subtitle,
+        R.drawable.help_24px,
+        "https://docs.ankidroid.org"
+    ), HelpLink(
+        R.string.help_forum_title,
+        R.string.help_forum_subtitle,
+        R.drawable.forum_24px,
+        "https://forums.ankiweb.net"
+    ), HelpLink(
+        R.string.help_issue_tracker_title,
+        R.string.help_issue_tracker_subtitle,
+        R.drawable.bug_report_24px,
+        "https://github.com/ColbyCabrera/Anki-Android"
+    ), HelpLink(
+        R.string.help_donate_title,
+        R.string.help_donate_subtitle,
+        R.drawable.volunteer_activism_24px,
+        "https://ankidroid.org/#donations"
+    )
 )
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -102,48 +127,18 @@ fun HelpScreen() {
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val context = LocalContext.current
 
-    val helpLinks = listOf(
-        HelpLink(
-            R.string.help_manual_title,
-            R.string.help_manual_subtitle,
-            R.drawable.help_24px,
-            "https://docs.ankidroid.org"
-        ),
-        HelpLink(
-            R.string.help_forum_title,
-            R.string.help_forum_subtitle,
-            R.drawable.forum_24px,
-            "https://forums.ankiweb.net"
-        ),
-        HelpLink(
-            R.string.help_issue_tracker_title,
-            R.string.help_issue_tracker_subtitle,
-            R.drawable.bug_report_24px,
-            "https://github.com/ColbyCabrera/Anki-Android"
-        ),
-        HelpLink(
-            R.string.help_donate_title,
-            R.string.help_donate_subtitle,
-            R.drawable.volunteer_activism_24px,
-            "https://ankidroid.org/#donations"
-        )
-    )
-
     AnkiDroidTheme {
         Scaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-            topBar = {
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection), topBar = {
                 LargeTopAppBar(
                     title = {
                         Text(
                             text = stringResource(id = R.string.help_screen_title),
                             style = MaterialTheme.typography.displayMediumEmphasized,
                         )
-                    },
-                    scrollBehavior = scrollBehavior
+                    }, scrollBehavior = scrollBehavior
                 )
-            }
-        ) { innerPadding ->
+            }) { innerPadding ->
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -159,7 +154,7 @@ fun HelpScreen() {
                 // Help Cards with staggered animation
                 itemsIndexed(helpLinks) { index, helpLink ->
                     val iconShape = iconShapes[index % iconShapes.size]
-                    
+
                     var visible by remember { mutableStateOf(false) }
                     LaunchedEffect(Unit) {
                         delay(index * 100L)
@@ -168,12 +163,9 @@ fun HelpScreen() {
 
                     AnimatedVisibility(
                         visible = visible,
-                        enter = fadeIn(animationSpec = tween(300)) +
-                                slideInVertically(
-                                    animationSpec = spring(dampingRatio = 0.8f),
-                                    initialOffsetY = { it / 2 }
-                                )
-                    ) {
+                        enter = fadeIn(animationSpec = tween(300)) + slideInVertically(
+                            animationSpec = spring(dampingRatio = 0.8f),
+                            initialOffsetY = { it / 2 })) {
                         HelpItem(
                             titleRes = helpLink.titleRes,
                             subtitleRes = helpLink.subtitleRes,
@@ -184,8 +176,7 @@ fun HelpScreen() {
                             onClick = {
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(helpLink.url))
                                 context.startActivity(intent)
-                            }
-                        )
+                            })
                     }
                 }
 
@@ -198,17 +189,13 @@ fun HelpScreen() {
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun HelpHeroSection() {
     val infiniteTransition = rememberInfiniteTransition(label = "HeroRotation")
     val rotation by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
+        initialValue = 0f, targetValue = 360f, animationSpec = infiniteRepeatable(
             animation = tween(12000, easing = LinearEasing)
-        ),
-        label = "HeroRotationAngle"
+        ), label = "HeroRotationAngle"
     )
 
     Column(
@@ -218,19 +205,15 @@ private fun HelpHeroSection() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
-            modifier = Modifier.size(100.dp),
-            contentAlignment = Alignment.Center
+            modifier = Modifier.size(100.dp), contentAlignment = Alignment.Center
         ) {
             // Animated background shape
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer { rotationZ = rotation }
-                    .background(
-                        MaterialTheme.colorScheme.primaryContainer,
-                        shape = HeroShape
-                    )
-            )
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer { rotationZ = rotation }
+                .background(
+                    MaterialTheme.colorScheme.primaryContainer, shape = HeroShape
+                ))
             // Help icon
             Icon(
                 painter = painterResource(R.drawable.help_filled_24px),
@@ -255,41 +238,32 @@ private fun HelpHeroSection() {
 private fun HelpItem(
     @StringRes titleRes: Int,
     @StringRes subtitleRes: Int,
-    icon: Int,
+    @DrawableRes icon: Int,
     iconShape: RoundedPolygonShape,
     containerColor: Color,
     contentColor: Color,
     onClick: () -> Unit
 ) {
-    var isPressed by remember { mutableStateOf(false) }
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.96f else 1f,
         animationSpec = spring(dampingRatio = 0.5f, stiffness = 400f),
         label = "CardScale"
     )
 
-    Card(
+    ElevatedCard(
+        onClick = onClick,
+        interactionSource = interactionSource,
         modifier = Modifier
             .fillMaxWidth()
-            .scale(scale)
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onPress = {
-                        isPressed = true
-                        tryAwaitRelease()
-                        isPressed = false
-                        onClick()
-                    }
-                )
-            },
+            .scale(scale),
         shape = MaterialTheme.shapes.extraExtraLarge,
         colors = CardDefaults.elevatedCardColors(
-            containerColor = containerColor,
-            contentColor = contentColor
+            containerColor = containerColor, contentColor = contentColor
         ),
         elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = 0.dp,
-            pressedElevation = 4.dp
+            defaultElevation = 0.dp, pressedElevation = 4.dp
         )
     ) {
         Row(
@@ -302,10 +276,8 @@ private fun HelpItem(
                 modifier = Modifier
                     .size(56.dp)
                     .background(
-                        color = MaterialTheme.colorScheme.tertiaryContainer,
-                        shape = iconShape
-                    ),
-                contentAlignment = Alignment.Center
+                        color = MaterialTheme.colorScheme.tertiaryContainer, shape = iconShape
+                    ), contentAlignment = Alignment.Center
             ) {
                 Icon(
                     painter = painterResource(icon),
