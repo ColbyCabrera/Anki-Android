@@ -133,10 +133,6 @@ object Utils {
         // to the length of 32. As it turns out, sha1 has a digest
         // size of 160 bits, leading to a hex digest size of 40,
         // not 32.
-        if (result.length < 40) {
-            val zeroes = "0000000000000000000000000000000000000000"
-            result = zeroes.substring(0, zeroes.length - result.length) + result
-        }
-        return result
+        return result.padStart(40, '0')
     }
 }
