@@ -1,4 +1,5 @@
-<?xml version='1.0' encoding='UTF-8'?><!--
+<?xml version='1.0' encoding='UTF-8'?>
+<!--
 ~ Copyright (c) 2009 Andrew <andrewdubya@gmail>
 ~ Copyright (c) 2009 Edu Zamora <edu.zasu@gmail.com>
 ~ Copyright (c) 2009 Daniel Svärd <daniel.svard@gmail.com>
@@ -219,4 +220,5 @@ Select an option below to restore:</string>
 
     <!-- Instant Note Editor -->
     <string name="instant_card" comment="Used in the Android system context menu/share dialog to quickly create a note. This does not need to be translated literally, translate the concept of quickly adding a Cloze note with a popup. ">Instant card</string>
+    <string name="no_application_to_open_link">No application found to open link</string>
 </resources>

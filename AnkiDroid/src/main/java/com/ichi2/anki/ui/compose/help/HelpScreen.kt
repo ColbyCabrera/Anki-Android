@@ -15,8 +15,11 @@
  */
 package com.ichi2.anki.ui.compose.help
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
+import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
@@ -96,7 +99,7 @@ private val helpLinks = listOf(
         R.string.help_issue_tracker_title,
         R.string.help_issue_tracker_subtitle,
         R.drawable.bug_report_24px,
-        "https://github.com/ColbyCabrera/Anki-Android"
+        "https://github.com/ankidroid/Anki-Android/issues"
     ), HelpLink(
         R.string.help_donate_title,
         R.string.help_donate_subtitle,
@@ -171,8 +174,20 @@ fun HelpScreen() {
                             containerColor = MaterialTheme.colorScheme.surfaceContainer,
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             onClick = {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(helpLink.url))
-                                context.startActivity(intent)
+                                try {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(helpLink.url))
+                                    context.startActivity(intent)
+                                } catch (_: ActivityNotFoundException) {
+                                    Log.w(
+                                        "HelpScreen",
+                                        "No application found to open link: ${helpLink.url}"
+                                    )
+                                    Toast.makeText(
+                                        context,
+                                        R.string.no_application_to_open_link,
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
                             })
                     }
                 }
