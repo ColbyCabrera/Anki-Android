@@ -43,7 +43,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Card
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -150,7 +149,7 @@ fun HelpScreen() {
                     .fillMaxSize()
                     .padding(innerPadding)
                     .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 // Hero Section
                 item {
@@ -180,8 +179,8 @@ fun HelpScreen() {
                             subtitleRes = helpLink.subtitleRes,
                             icon = helpLink.icon,
                             iconShape = iconShape,
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             onClick = {
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(helpLink.url))
                                 context.startActivity(intent)
