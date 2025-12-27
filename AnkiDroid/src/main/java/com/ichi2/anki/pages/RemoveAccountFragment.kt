@@ -91,24 +91,9 @@ class RemoveAccountFragment : Fragment(R.layout.page_fragment) {
                 webViewClient =
                     object : WebViewClient() {
                         override fun shouldOverrideUrlLoading(
-                            view: WebView?,
-                            request: WebResourceRequest?,
-                        ): Boolean {
-                            @Suppress("DEPRECATION")
-                            return shouldOverrideUrlLoading(view, request?.url.toString())
-                        }
-
-                        @Deprecated(
-                            "Deprecated in java, still needed for API 23",
-                            replaceWith = ReplaceWith("shouldOverrideUrlLoading"),
-                        )
-                        override fun shouldOverrideUrlLoading(
-                            view: WebView?,
-                            url: String?,
-                        ): Boolean {
-                            if (url == null) return false
-                            return maybeRedirectToRemoveAccount(url)
-                        }
+                            view: WebView,
+                            request: WebResourceRequest,
+                        ): Boolean = maybeRedirectToRemoveAccount(request.url.toString())
 
                         override fun onPageFinished(
                             view: WebView?,

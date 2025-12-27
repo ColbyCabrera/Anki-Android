@@ -18,20 +18,24 @@ package com.ichi2.preferences
 import android.content.Context
 import android.content.res.TypedArray
 import android.util.AttributeSet
-import android.view.View
-import android.widget.TextView
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.content.res.getIntOrThrow
 import androidx.core.content.withStyledAttributes
+import androidx.core.graphics.drawable.toBitmap
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
-import com.google.android.material.slider.Slider
 import com.ichi2.anki.R
-import com.ichi2.anki.common.annotations.NeedsTest
+import com.ichi2.anki.ui.compose.preferences.SliderPreferenceContent
+import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import com.ichi2.anki.utils.getFormattedStringOrPlurals
 
 /**
  * Similar to [androidx.preference.SeekBarPreference],
- * but with a material [Slider] instead of a SeekBar, and more customizable.
+ * but with a material Slider instead of a SeekBar, and more customizable.
  *
  * Besides the default [Preference] attrs, the following XML attrs can be used to customize it:
  * * android:valueFrom (**required**): minimum value of the slider. It must be lower than `valueTo`
@@ -54,7 +58,6 @@ import com.ichi2.anki.utils.getFormattedStringOrPlurals
  *       which will be replaced by the preference value.
  *       `displayValue` is always true if a `displayFormat` is provided.
  */
-@NeedsTest("onTouchListener is only called once")
 class SliderPreference(
     context: Context,
     attrs: AttributeSet? = null,
@@ -67,27 +70,12 @@ class SliderPreference(
     private var displayValue: Boolean = false
     private var displayFormat: String? = null
 
-    // flyweight pattern: all listeners for an instance of the class as the same
-    // We also need to avoid any method-level closures: this callback is unused
-    // the second time `onBindViewHolder` is called
-    private val onTouchListener =
-        object : Slider.OnSliderTouchListener {
-            override fun onStartTrackingTouch(slider: Slider) {}
-
-            override fun onStopTrackingTouch(slider: Slider) {
-                val sliderValue = slider.value.toInt()
-                if (sliderValue != value && callChangeListener(sliderValue)) {
-                    value = sliderValue
-                }
-            }
-        }
-
     var value: Int = valueFrom
         set(value) {
             if (field == value) {
                 return
             }
-            if (value < valueFrom || value > valueTo) {
+            if (value !in valueFrom..valueTo) {
                 throw IllegalArgumentException("value $value should be between the min of $valueFrom and max of $valueTo")
             }
             field = value
@@ -99,21 +87,23 @@ class SliderPreference(
         layoutResource = R.layout.preference_slider
 
         context.withStyledAttributes(attrs, com.google.android.material.R.styleable.Slider) {
-            valueFrom = getIntOrThrow(com.google.android.material.R.styleable.Slider_android_valueFrom)
+            valueFrom =
+                getIntOrThrow(com.google.android.material.R.styleable.Slider_android_valueFrom)
             valueTo = getIntOrThrow(com.google.android.material.R.styleable.Slider_android_valueTo)
             stepSize = getFloat(com.google.android.material.R.styleable.Slider_android_stepSize, 1F)
         }
 
         context.withStyledAttributes(attrs, R.styleable.CustomPreference) {
             summaryFormatResource =
-                getResourceId(R.styleable.CustomPreference_summaryFormat, 0)
-                    .takeIf { it != 0 }
+                getResourceId(R.styleable.CustomPreference_summaryFormat, 0).takeIf { it != 0 }
         }
 
         context.withStyledAttributes(attrs, R.styleable.SliderPreference) {
             displayFormat = getString(R.styleable.SliderPreference_displayFormat)
-            displayValue = displayFormat != null ||
-                getBoolean(R.styleable.SliderPreference_displayValue, false)
+            displayValue = displayFormat != null || getBoolean(
+                R.styleable.SliderPreference_displayValue,
+                false
+            )
         }
     }
 
@@ -129,27 +119,41 @@ class SliderPreference(
     override fun onBindViewHolder(holder: PreferenceViewHolder) {
         super.onBindViewHolder(holder)
 
-        val slider = holder.findViewById(R.id.slider) as Slider
-        slider.valueFrom = valueFrom.toFloat()
-        slider.valueTo = valueTo.toFloat()
-        slider.stepSize = stepSize
-        slider.value = value.toFloat()
+        val composeView = holder.itemView as ComposeView
+        composeView.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
 
-        // set the listener once: avoid any method-level closures
-        slider.setOnSliderTouchListenerOnce(onTouchListener)
+        composeView.setContent {
+            AnkiDroidTheme {
+                val iconPainter = icon?.let {
+                    remember(it) {
+                        BitmapPainter(it.toBitmap().asImageBitmap())
+                    }
+                }
 
-        val summaryView = holder.findViewById(android.R.id.summary) as TextView
-        summaryFormatResource?.let {
-            summaryView.text = context.getFormattedStringOrPlurals(it, slider.value.toInt())
-            summaryView.visibility = View.VISIBLE
-        }
+                // Calculate dynamic summary if needed
+                val dynamicSummary = summaryFormatResource?.let {
+                    context.getFormattedStringOrPlurals(it, value)
+                } ?: summary?.toString()
 
-        val displayValueTextView = holder.findViewById(R.id.value_display) as TextView
-        if (displayValue) {
-            displayValueTextView.text = displayFormat?.let { String.format(it, value) }
-                ?: value.toString()
-        } else {
-            displayValueTextView.visibility = View.GONE
+                SliderPreferenceContent(
+                    title = title?.toString() ?: "",
+                    summary = dynamicSummary,
+                    value = value,
+                    valueFrom = valueFrom,
+                    valueTo = valueTo,
+                    stepSize = stepSize,
+                    displayValue = displayValue,
+                    displayFormat = displayFormat,
+                    onValueChange = { newValue ->
+                        if (newValue != value && callChangeListener(newValue)) {
+                            value = newValue
+                        }
+                    },
+                    icon = iconPainter,
+                    isIconSpaceReserved = isIconSpaceReserved,
+                    enabled = isEnabled
+                )
+            }
         }
     }
 
@@ -164,22 +168,6 @@ class SliderPreference(
             if (newValue !is Int) return@setOnPreferenceChangeListener false
             onPreferenceChangeListener(newValue)
             true
-        }
-    }
-
-    companion object {
-        /**
-         * [Slider] has no easy means of de-duplicating listeners
-         * If a listener has already been added using this method. This does nothing
-         * @see [Slider.addOnSliderTouchListener]
-         *
-         * @param listener A [Slider.OnSliderTouchListener].
-         * Must not use method-level state, as this method does not replace the listener
-         */
-        private fun Slider.setOnSliderTouchListenerOnce(listener: Slider.OnSliderTouchListener) {
-            if (this.getTag(R.id.tag_slider_listener_set) != null) return
-            this.addOnSliderTouchListener(listener)
-            this.setTag(R.id.tag_slider_listener_set, "set")
         }
     }
 }
