@@ -61,6 +61,7 @@ import com.ichi2.utils.AdaptionUtil
 import com.ichi2.utils.ExceptionUtil
 import com.ichi2.utils.LanguageUtil
 import com.ichi2.utils.Permissions
+import com.ichi2.widget.HeatmapWidget
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -270,6 +271,14 @@ open class AnkiDroidApp :
         TtsVoices.launchBuildLocalesJob()
         // enable {{tts-voices:}} field filter
         TtsVoicesFieldFilter.ensureApplied()
+
+        applicationScope.launch {
+            try {
+                HeatmapWidget.updateHeatmapWidgetPreview(this@AnkiDroidApp)
+            } catch (e: Exception) {
+                Timber.w(e, "Failed to update HeatmapWidget preview")
+            }
+        }
     }
 
     /**
