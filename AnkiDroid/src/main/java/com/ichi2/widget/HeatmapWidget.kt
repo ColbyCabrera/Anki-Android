@@ -333,7 +333,7 @@ class HeatmapWidget : GlanceAppWidget() {
             val dummyData = mutableMapOf<Long, Int>()
             // Fill some days
             for (i in 0..100) {
-                // Use when to explicitly define precedence (last condition in original logic wins)
+                // Use when to explicitly define precedence (first matching condition wins)
                 when {
                     i % 11 == 0 -> dummyData[today - i] = 21
                     i % 5 == 0 -> dummyData[today - i] = 11
@@ -350,7 +350,8 @@ class HeatmapWidget : GlanceAppWidget() {
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
                     val manager = GlanceAppWidgetManager(context)
-                    manager.setWidgetPreviews(
+                    @Suppress("UNUSED_VARIABLE")
+                    val ignored = manager.setWidgetPreviews(
                         HeatmapWidgetReceiver::class,
                     )
                 }
