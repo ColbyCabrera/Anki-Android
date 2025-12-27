@@ -29,7 +29,6 @@ import com.ichi2.anki.preferences.reviewer.ViewerAction
 import com.ichi2.anki.previewer.PreviewerAction
 import com.ichi2.anki.reviewer.MappableAction
 import com.ichi2.anki.reviewer.MappableBinding.Companion.toPreferenceString
-import com.ichi2.anki.settings.Prefs
 import com.ichi2.anki.ui.internationalization.toSentenceCase
 import com.ichi2.anki.utils.ext.sharedPrefs
 import com.ichi2.preferences.ControlPreference
@@ -131,11 +130,7 @@ class ControlsSettingsFragment :
     ): String = this.toSentenceCase(this@ControlsSettingsFragment, resId)
 
     private fun setupNewStudyScreenSettings() {
-        if (!Prefs.isNewStudyScreenEnabled) {
-            findPreference<Preference>(R.string.gestures_corner_touch_preference)?.dependency = getString(R.string.gestures_preference)
-            findPreference<Preference>(R.string.pref_swipe_sensitivity_key)?.dependency = getString(R.string.gestures_preference)
-            return
-        }
+        // New study screen is always enabled, so always hide legacy settings and show new ones
         for (keyRes in legacyStudyScreenSettings) {
             val key = getString(keyRes)
             findPreference<Preference>(key)?.isVisible = false

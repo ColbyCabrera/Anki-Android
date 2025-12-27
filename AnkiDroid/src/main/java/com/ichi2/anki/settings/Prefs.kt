@@ -288,7 +288,7 @@ object Prefs {
         get() = getBoolean(R.string.dev_options_enabled_by_user_key, false) || BuildConfig.DEBUG
         set(value) = putBoolean(R.string.dev_options_enabled_by_user_key, value)
 
-    val isNewStudyScreenEnabled by booleanPref(R.string.new_reviewer_options_key, false)
+
 
     val devUsingCardBrowserSearchView: Boolean by booleanPref(R.string.dev_card_browser_search_view, false)
 

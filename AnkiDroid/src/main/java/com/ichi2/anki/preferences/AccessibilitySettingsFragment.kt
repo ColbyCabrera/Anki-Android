@@ -17,7 +17,6 @@ package com.ichi2.anki.preferences
 
 import androidx.preference.Preference
 import com.ichi2.anki.R
-import com.ichi2.anki.settings.Prefs
 
 /**
  * Fragment with preferences related to notifications
@@ -33,8 +32,7 @@ class AccessibilitySettingsFragment : SettingsFragment() {
     }
 
     private fun setupNewStudyScreenSettings() {
-        if (!Prefs.isNewStudyScreenEnabled) return
-
+        // New study screen is always enabled, so always show new settings and hide legacy ones
         requirePreference<Preference>(R.string.answer_button_size_pref_key).isVisible = true
 
         for (key in legacyStudyScreenSettings) {

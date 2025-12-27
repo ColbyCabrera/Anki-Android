@@ -30,7 +30,6 @@ import com.ichi2.anki.R
 import com.ichi2.anki.exception.StorageAccessException
 import com.ichi2.anki.launchCatchingTask
 import com.ichi2.anki.provider.CardContentProvider
-import com.ichi2.anki.settings.Prefs
 import com.ichi2.anki.snackbar.showSnackbar
 import com.ichi2.anki.utils.openUrl
 import com.ichi2.compat.CompatHelper
@@ -148,7 +147,7 @@ class AdvancedSettingsFragment : SettingsFragment() {
     }
 
     private fun setupNewStudyScreenSettings() {
-        if (!Prefs.isNewStudyScreenEnabled) return
+        // New study screen is always enabled, so always hide legacy settings
         for (key in legacyStudyScreenSettings) {
             val keyString = getString(key)
             findPreference<Preference>(keyString)?.isVisible = false

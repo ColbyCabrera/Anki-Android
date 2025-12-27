@@ -28,7 +28,6 @@ import androidx.core.content.FileProvider
 import androidx.core.content.IntentCompat
 import androidx.work.WorkManager
 import com.ichi2.anki.common.annotations.NeedsTest
-import com.ichi2.anki.common.utils.trimToLength
 import com.ichi2.anki.dialogs.DialogHandler.Companion.storeMessage
 import com.ichi2.anki.dialogs.DialogHandlerMessage
 import com.ichi2.anki.dialogs.requireDeckPickerOrShowError
@@ -36,7 +35,6 @@ import com.ichi2.anki.libanki.DeckId
 import com.ichi2.anki.noteeditor.NoteEditorLauncher
 import com.ichi2.anki.servicelayer.ScopedStorageService
 import com.ichi2.anki.settings.Prefs
-import com.ichi2.anki.ui.windows.reviewer.ReviewerFragment
 import com.ichi2.anki.utils.MimeTypeUtils
 import com.ichi2.anki.worker.SyncWorker
 import com.ichi2.utils.FileUtil
@@ -104,7 +102,7 @@ class IntentHandler : AbstractIntentHandler() {
                     finish()
                 }
             LaunchType.SYNC -> runIfStoragePermissions { handleSyncIntent(reloadIntent, action) }
-            LaunchType.REVIEW -> runIfStoragePermissions { handleReviewIntent(reloadIntent, intent) }
+            LaunchType.REVIEW -> runIfStoragePermissions { handleReviewIntent(reloadIntent) }
             LaunchType.DEFAULT_START_APP_IF_NEW -> {
                 Timber.d("onCreate() performing default action")
                 launchDeckPickerIfNoOtherTasks(reloadIntent)
@@ -157,21 +155,13 @@ class IntentHandler : AbstractIntentHandler() {
         }
     }
 
-    private fun handleReviewIntent(
-        reloadIntent: Intent,
-        reviewerIntent: Intent,
-    ) {
+    private fun handleReviewIntent(reloadIntent: Intent) {
         val deckId = intent.getLongExtra(REVIEW_DECK_INTENT_EXTRA_DECK_ID, 0)
         Timber.i("Handling intent to review deck '%d'", deckId)
 
-        val reviewIntent =
-            if (Prefs.isNewStudyScreenEnabled) {
-                ReviewerFragment.getIntent(this)
-            } else {
-                Intent(this, Reviewer::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                }
-            }
+        val reviewIntent = Intent(this, Reviewer::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
         CollectionManager.getColUnsafe().decks.select(deckId)
         // Clean the stack out under the reviewer to avoid any incorrect activities / dialogs /
         // data state from prior app usage showing after reviewer exits if going to reviewer directly
@@ -400,15 +390,6 @@ class IntentHandler : AbstractIntentHandler() {
             storeMessage(DoSync().toMessage())
         }
 
-        fun copyStringToClipboardIntent(
-            context: Context,
-            textToCopy: String,
-        ) = Intent(context, IntentHandler::class.java).also {
-            it.action = CLIPBOARD_INTENT
-            // max length for an intent is 500KB.
-            // 25000 * 2 (bytes per char) = 50,000 bytes <<< 500KB
-            it.putExtra(CLIPBOARD_INTENT_EXTRA_DATA, textToCopy.trimToLength(25000))
-        }
 
         fun requiresCollectionAccess(launchType: LaunchType): Boolean =
             when (launchType) {
@@ -483,18 +464,5 @@ class IntentHandler : AbstractIntentHandler() {
             deckId: DeckId,
         ): Intent = Intent(context, IntentHandler::class.java).putExtra(REVIEW_DECK_INTENT_EXTRA_DECK_ID, deckId)
 
-        /**
-         * Returns an intent to review a specific deck.
-         * This does not states which reviewer to use, instead IntentHandler will choose whether to use the
-         * legacy or the new reviewer based on the "newReviewer" preference.
-         * It is expected to be used from widget, shortcut, reminders but not from ankidroid directly because of the CLEAR_TOP flag.
-         */
-        fun intentToReviewDeckFromShortcuts(
-            context: Context,
-            deckId: DeckId,
-        ) = Intent(context, IntentHandler::class.java).apply {
-            setAction(Intent.ACTION_VIEW)
-            putExtra(REVIEW_DECK_INTENT_EXTRA_DECK_ID, deckId)
-        }
     }
 }
