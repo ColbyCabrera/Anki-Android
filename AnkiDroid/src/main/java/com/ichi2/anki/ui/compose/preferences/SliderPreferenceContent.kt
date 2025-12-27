@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -142,49 +141,16 @@ fun SliderPreferenceContent(
                 enabled = enabled,
                 interactionSource = interactionSource,
                 thumb = {
-                    Layout(
-                        content = {
-                            if (isDragged && displayValue) {
-                                val displayText =
-                                    displayFormat?.let { String.format(it, sliderPosition.toInt()) }
-                                        ?: sliderPosition.toInt().toString()
-                                Box(
-                                    modifier = Modifier
-                                        .layoutId("label")
-                                        .background(
-                                            color = MaterialTheme.colorScheme.primary,
-                                            shape = MaterialTheme.shapes.extraExtraLarge
-                                        )
-                                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                                ) {
-                                    Text(
-                                        text = displayText,
-                                        color = MaterialTheme.colorScheme.onPrimary,
-                                        style = MaterialTheme.typography.labelMedium
-                                    )
-                                }
-                            }
-                            SliderDefaults.Thumb(
-                                interactionSource = interactionSource,
-                                enabled = enabled,
-                                modifier = Modifier.layoutId("thumb")
-                            )
-                        }) { measurables, constraints ->
-                        val thumbPlaceable =
-                            measurables.first { it.layoutId == "thumb" }.measure(constraints)
-                        val labelPlaceable = measurables.find { it.layoutId == "label" }
-                            ?.measure(constraints.copy(minWidth = 0, minHeight = 0))
-
-                        layout(thumbPlaceable.width, thumbPlaceable.height) {
-                            thumbPlaceable.placeRelative(0, 0)
-                            labelPlaceable?.let {
-                                val x = (thumbPlaceable.width - labelPlaceable.width) / 2
-                                // Place label above the thumb
-                                val y = -it.height - 8.dp.roundToPx()
-                                it.placeRelative(x, y)
-                            }
-                        }
-                    }
+                    val displayText =
+                        displayFormat?.let { String.format(it, sliderPosition.toInt()) }
+                            ?: sliderPosition.toInt().toString()
+                    SliderThumbWithLabel(
+                        isDragged = isDragged,
+                        displayValue = displayValue,
+                        displayText = displayText,
+                        interactionSource = interactionSource,
+                        enabled = enabled
+                    )
                 },
                 colors = SliderDefaults.colors(
                     activeTickColor = Color.Transparent,
@@ -193,6 +159,58 @@ fun SliderPreferenceContent(
                     disabledInactiveTickColor = Color.Transparent
                 )
             )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun SliderThumbWithLabel(
+    isDragged: Boolean,
+    displayValue: Boolean,
+    displayText: String,
+    interactionSource: MutableInteractionSource,
+    enabled: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Layout(
+        content = {
+            if (isDragged && displayValue) {
+                Box(
+                    modifier = Modifier
+                        .layoutId("label")
+                        .background(
+                            color = MaterialTheme.colorScheme.primary,
+                            shape = MaterialTheme.shapes.extraExtraLarge
+                        )
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = displayText,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
+            }
+            SliderDefaults.Thumb(
+                interactionSource = interactionSource,
+                enabled = enabled,
+                modifier = Modifier.layoutId("thumb")
+            )
+        }, modifier = modifier
+    ) { measurables, constraints ->
+        val thumbPlaceable = measurables.first { it.layoutId == "thumb" }.measure(constraints)
+        val labelPlaceable = measurables.find { it.layoutId == "label" }
+            ?.measure(constraints.copy(minWidth = 0, minHeight = 0))
+
+        layout(thumbPlaceable.width, thumbPlaceable.height) {
+            thumbPlaceable.placeRelative(0, 0)
+            labelPlaceable?.let {
+                val x = (thumbPlaceable.width - labelPlaceable.width) / 2
+                // Place label above the thumb
+                val y = -it.height - 8.dp.roundToPx()
+                it.placeRelative(x, y)
+            }
         }
     }
 }
@@ -213,5 +231,21 @@ fun PreviewSliderPreferenceContent() {
             onValueChange = {},
             isIconSpaceReserved = true
         )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewSliderThumbWithLabel() {
+    MaterialTheme {
+        Box(modifier = Modifier.padding(top = 40.dp, start = 40.dp)) {
+            SliderThumbWithLabel(
+                isDragged = true,
+                displayValue = true,
+                displayText = "100%",
+                interactionSource = remember { MutableInteractionSource() },
+                enabled = true
+            )
+        }
     }
 }
