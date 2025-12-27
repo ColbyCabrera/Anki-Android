@@ -45,6 +45,12 @@ import kotlin.reflect.jvm.jvmName
  * [getIntent] can be used as an easy way to build a [SingleFragmentActivity]
  */
 open class SingleFragmentActivity : AnkiActivity() {
+    /**
+     * Whether to apply system bar insets as padding to the fragment container.
+     * Set to false for edge-to-edge layouts where the fragment handles insets.
+     */
+    protected open val applyInsetsPadding: Boolean = true
+
     override fun onCreate(savedInstanceState: Bundle?) {
         if (showedActivityFailedScreen(savedInstanceState)) {
             return
@@ -59,10 +65,12 @@ open class SingleFragmentActivity : AnkiActivity() {
 
         val fragmentContainer = findViewById<FragmentContainerView>(R.id.fragment_container)
 
-        ViewCompat.setOnApplyWindowInsetsListener(fragmentContainer) { view, insets ->
-            val systemBars = insets.getInsets(systemBars())
-            view.updatePadding(left = systemBars.left, right = systemBars.right, top = systemBars.top, bottom = systemBars.bottom)
-            insets
+        if (applyInsetsPadding) {
+            ViewCompat.setOnApplyWindowInsetsListener(fragmentContainer) { view, insets ->
+                val systemBars = insets.getInsets(systemBars())
+                view.updatePadding(left = systemBars.left, right = systemBars.right, top = systemBars.top, bottom = systemBars.bottom)
+                insets
+            }
         }
 
         // avoid recreating the fragment on configuration changes

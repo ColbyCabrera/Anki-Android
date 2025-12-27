@@ -24,6 +24,8 @@ import android.widget.FrameLayout
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.XmlRes
 import androidx.core.os.bundleOf
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
@@ -96,6 +98,16 @@ abstract class SettingsFragment :
             setTitle(title)
             setNavigationOnClickListener { requireActivity().onBackPressedDispatcher.onBackPressed() }
         }
+
+        // Apply bottom insets to the RecyclerView so last item is not obscured by navigation bar
+        listView?.let { recyclerView ->
+            recyclerView.clipToPadding = false
+            ViewCompat.setOnApplyWindowInsetsListener(recyclerView) { v, insets ->
+                val navigationBars = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+                v.setPadding(v.paddingLeft, v.paddingTop, v.paddingRight, navigationBars.bottom)
+                insets
+            }
+        }
     }
 
     override fun onCreatePreferences(
@@ -159,7 +171,7 @@ abstract class SettingsFragment :
                 is String ->
                     try {
                         value.toInt()
-                    } catch (e: NumberFormatException) {
+                    } catch (_: NumberFormatException) {
                         null
                     }
                 is Boolean -> if (value) 1 else 0
