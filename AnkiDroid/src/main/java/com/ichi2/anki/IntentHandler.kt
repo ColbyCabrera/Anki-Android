@@ -479,8 +479,7 @@ class IntentHandler : AbstractIntentHandler() {
 
         /**
          * Returns an intent to review a specific deck.
-         * This does not states which reviewer to use, instead IntentHandler will choose whether to use the
-         * legacy or the new reviewer based on the "newReviewer" preference.
+         * This does not state which reviewer to use, instead IntentHandler will always route to the Reviewer activity.
          * It is expected to be used from widget, shortcut, reminders but not from ankidroid directly because of the CLEAR_TOP flag.
          */
         fun intentToReviewDeckFromShortcuts(
