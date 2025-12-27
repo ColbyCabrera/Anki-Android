@@ -32,6 +32,8 @@ import androidx.glance.action.actionParametersOf
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.glance.appwidget.WidgetCategory
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
@@ -68,6 +70,18 @@ class HeatmapWidget : GlanceAppWidget() {
     ) {
         // Fetch data before providing content to ensure it's fresh on every update
         val heatmapData = fetchHeatmapData()
+        provideContent {
+            GlanceTheme {
+                HeatmapContent(heatmapData, context)
+            }
+        }
+    }
+
+    override suspend fun providePreview(
+        context: Context,
+        widgetCategory: WidgetCategory,
+    ) {
+        val heatmapData = getDummyHeatmapData()
         provideContent {
             GlanceTheme {
                 HeatmapContent(heatmapData, context)
@@ -337,6 +351,38 @@ class HeatmapWidget : GlanceAppWidget() {
                 Timber.e(e, "Failed to fetch heatmap data")
                 emptyMap()
             }
+
+        fun getDummyHeatmapData(): Map<Long, Int> {
+            @Suppress("DirectSystemCurrentTimeMillisUsage")
+            val today = System.currentTimeMillis() / DAY_IN_MILLIS
+            val dummyData = mutableMapOf<Long, Int>()
+            // Fill some days
+            for (i in 0..100) {
+                if (i % 3 == 0) {
+                    dummyData[today - i] = 0
+                }
+                if (i % 2 == 0) {
+                    dummyData[today - i] = 1
+                }
+                if (i % 13 == 0) {
+                    dummyData[today - i] = 6
+                }
+                if (i % 5 == 0) {
+                    dummyData[today - i] = 11
+                }
+                if (i % 11 == 0) {
+                    dummyData[today - i] = 21
+                }
+            }
+            dummyData[today] = 294
+            return dummyData
+        }
+
+        suspend fun updateHeatmapWidgetPreview(context: Context) {
+            GlanceAppWidgetManager.get(context).setWidgetPreviews(
+                providers = listOf(HeatmapWidget::class.java),
+            )
+        }
     }
 }
 
@@ -346,30 +392,7 @@ class HeatmapWidget : GlanceAppWidget() {
 @Composable
 fun HeatmapWidgetPreview() {
     val context = androidx.glance.LocalContext.current
-    // Generate dummy data
-    // Preview function uses dummy data - direct time APIs are appropriate
-    @Suppress("DirectSystemCurrentTimeMillisUsage")
-    val today = System.currentTimeMillis() / HeatmapWidget.DAY_IN_MILLIS
-    val dummyData = mutableMapOf<Long, Int>()
-    // Fill some days
-    for (i in 0..100) {
-        if (i % 3 == 0) {
-            dummyData[today - i] = 0
-        }
-        if (i % 2 == 0) {
-            dummyData[today - i] = 1
-        }
-        if (i % 13 == 0) {
-            dummyData[today - i] = 6
-        }
-        if (i % 5 == 0) {
-            dummyData[today - i] = 11
-        }
-        if (i % 11 == 0) {
-            dummyData[today - i] = 21
-        }
-    }
-    dummyData[today] = 294
+    val dummyData = HeatmapWidget.getDummyHeatmapData()
 
     androidx.compose.runtime.CompositionLocalProvider(
         LocalSize provides
