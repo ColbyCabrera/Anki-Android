@@ -321,8 +321,7 @@ object ReadText {
                                 }
                             }
 
-                            @Suppress("DeprecatedCallableAddReplaceWith")
-                            @Deprecated("")
+                            @Suppress("OVERRIDE_DEPRECATION", "DeprecatedCallableAddReplaceWith")
                             override fun onError(utteranceId: String) {
                                 // required for UtteranceProgressListener, but also deprecated
                                 Timber.e("onError(string) should not have been called")
