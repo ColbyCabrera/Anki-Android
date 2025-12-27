@@ -181,14 +181,14 @@ fun SliderThumbWithLabel(
                     modifier = Modifier
                         .layoutId("label")
                         .background(
-                            color = MaterialTheme.colorScheme.primary,
+                            color = MaterialTheme.colorScheme.tertiaryContainer,
                             shape = MaterialTheme.shapes.extraExtraLarge
                         )
                         .padding(horizontal = 10.dp, vertical = 4.dp),
                 ) {
                     Text(
                         text = displayText,
-                        color = MaterialTheme.colorScheme.onPrimary,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer,
                         style = MaterialTheme.typography.labelMedium
                     )
                 }
