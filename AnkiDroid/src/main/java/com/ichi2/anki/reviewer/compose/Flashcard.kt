@@ -19,6 +19,7 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.view.GestureDetector
 import android.view.MotionEvent
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.animation.Crossfade
@@ -63,12 +64,9 @@ fun Flashcard(
                     settings.javaScriptEnabled = true
                     settings.allowFileAccess = true
                     webViewClient = object : WebViewClient() {
-                        override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
-                            if (url != null) {
-                                onLinkClick(url)
-                                return true
-                            }
-                            return false
+                        override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                            onLinkClick(request.url.toString())
+                            return true
                         }
                     }
                     val gestureDetector = GestureDetector(
