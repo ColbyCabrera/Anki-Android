@@ -123,7 +123,7 @@ class ReviewerTest : InstrumentedTest() {
 
         try {
             runAssertion()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             // Give separate threads a greater chance of doing the custom scheduling
             // if the card scheduling values aren't updated immediately
             ThreadUtils.sleep(2000)
@@ -180,7 +180,7 @@ class ReviewerTest : InstrumentedTest() {
         try {
             // ...on the command line it has resource name "good_button"...
             onView(withResourceName("good_button")).perform(click())
-        } catch (e: NoMatchingViewException) {
+        } catch (_: NoMatchingViewException) {
             // ...but in Android Studio it has resource name "flashcard_layout_ease3" !?
             onView(withResourceName("flashcard_layout_ease3")).perform(click())
         }
@@ -190,7 +190,7 @@ class ReviewerTest : InstrumentedTest() {
         try {
             // ... on the command line, it has resource name "show_answer"...
             onView(withResourceName("show_answer")).perform(click())
-        } catch (e: NoMatchingViewException) {
+        } catch (_: NoMatchingViewException) {
             // ... but in Android Studio it has resource name "flashcard_layout_flip" !?
             onView(withResourceName("flashcard_layout_flip")).perform(click())
         }
@@ -207,7 +207,7 @@ class ReviewerTest : InstrumentedTest() {
                 matches(isDisplayed()),
                 100,
             )
-        } catch (e: AssertionError) {
+        } catch (_: AssertionError) {
             // ...but in Android Studio it has resource name "flashcard_layout_ease3" !?
             onView(withResourceName("flashcard_layout_ease3")).checkWithTimeout(
                 matches(isDisplayed()),
@@ -217,7 +217,7 @@ class ReviewerTest : InstrumentedTest() {
     }
 
     private fun disableNewReviewer() {
-        val newReviewerPrefKey = testContext.getString(R.string.new_reviewer_options_key)
+        val newReviewerPrefKey = "newReviewerOptions"
         val prefs = testContext.sharedPrefs()
         val isUsingNewReviewer = prefs.getBoolean(newReviewerPrefKey, false)
         if (!isUsingNewReviewer) return
