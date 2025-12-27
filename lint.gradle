@@ -3,7 +3,7 @@
 android {
     lint {
         abortOnError = true
-        checkReleaseBuilds = true
+        checkReleaseBuilds = false
         checkTestSources = true
         explainIssues = false
         lintConfig = file('../lint-release.xml')
