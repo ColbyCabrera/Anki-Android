@@ -29,7 +29,6 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import com.ichi2.anki.R
-import com.ichi2.anki.common.annotations.NeedsTest
 import com.ichi2.anki.ui.compose.preferences.SliderPreferenceContent
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import com.ichi2.anki.utils.getFormattedStringOrPlurals
