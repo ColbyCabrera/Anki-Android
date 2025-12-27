@@ -31,6 +31,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
+import kotlin.math.roundToInt
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SliderPreferenceContent(
@@ -131,7 +133,16 @@ fun SliderPreferenceContent(
                     sliderPosition = it
                 },
                 onValueChangeFinished = {
-                    onValueChange(sliderPosition.toInt())
+                    // M3 slider distributes steps evenly across the whole range, which may
+                    // result in values that are not exact multiples of stepSize if the range is not evenly divisible.
+                    // We enforce discrete values by rounding to the nearest step.
+                    if (stepSize > 0) {
+                        val steps = ((sliderPosition - valueFrom) / stepSize).roundToInt()
+                        val roundedValue = valueFrom + (steps * stepSize).toInt()
+                        onValueChange(roundedValue.coerceIn(valueFrom, valueTo))
+                    } else {
+                        onValueChange(sliderPosition.toInt())
+                    }
                 },
                 valueRange = valueFrom.toFloat()..valueTo.toFloat(),
                 steps = if (stepSize > 0) maxOf(
@@ -139,6 +150,7 @@ fun SliderPreferenceContent(
                 ) else 0,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = enabled,
+
                 interactionSource = interactionSource,
                 thumb = {
                     val displayText =
