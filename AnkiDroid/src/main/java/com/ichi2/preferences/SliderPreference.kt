@@ -59,7 +59,6 @@ import com.ichi2.anki.utils.getFormattedStringOrPlurals
  *       which will be replaced by the preference value.
  *       `displayValue` is always true if a `displayFormat` is provided.
  */
-@NeedsTest("onTouchListener is only called once")
 class SliderPreference(
     context: Context,
     attrs: AttributeSet? = null,
