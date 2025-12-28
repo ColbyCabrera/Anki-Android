@@ -61,11 +61,10 @@ class CardAppearance(
             return style.toString()
         }
 
-    fun getCardClass(oneBasedCardOrdinal: Int): String = "card card$oneBasedCardOrdinal" + getCssClasses()
+    fun getCardClass(oneBasedCardOrdinal: Int): String =
+        "card card$oneBasedCardOrdinal" + getCssClasses()
 
     companion object {
-        private val nightModeClassRegex = Regex("\\.night(?:_m|M)ode\\b")
-
         fun create(
             customFonts: ReviewerCustomFonts,
             preferences: SharedPreferences,
