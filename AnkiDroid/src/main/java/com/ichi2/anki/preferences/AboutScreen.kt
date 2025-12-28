@@ -96,9 +96,8 @@ fun AboutScreen(
                 .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Logo
             Image(
-                painter = painterResource(R.drawable.ic_dialog_info),
+                painter = painterResource(R.drawable.info_24px),
                 contentDescription = null,
                 modifier = Modifier
                     .size(96.dp)
