@@ -29,9 +29,6 @@ import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.view.KeyEvent
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageButton
@@ -53,7 +50,6 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.core.content.edit
 import androidx.core.os.BundleCompat
-import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -69,7 +65,6 @@ import com.ichi2.anki.common.annotations.NeedsTest
 import com.ichi2.anki.common.utils.annotation.KotlinCleanup
 import com.ichi2.anki.dialogs.DeckSelectionDialog
 import com.ichi2.anki.dialogs.DeckSelectionDialog.DeckSelectionListener
-import com.ichi2.anki.dialogs.IntegerDialog
 import com.ichi2.anki.dialogs.tags.TagsDialog
 import com.ichi2.anki.dialogs.tags.TagsDialogFactory
 import com.ichi2.anki.dialogs.tags.TagsDialogListener
@@ -157,7 +152,7 @@ const val CALLER_KEY = "caller"
  * @see [Anki Desktop manual](https://docs.ankiweb.net/getting-started.html.cards)
  */
 class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectionListener,
-    TagsDialogListener, BaseSnackbarBuilderProvider, DispatchKeyEventListener, MenuProvider,
+    TagsDialogListener, BaseSnackbarBuilderProvider, DispatchKeyEventListener,
     ShortcutGroupProvider {
     /** Whether any change are saved. E.g. multimedia, new card added, field changed and saved. */
     private var changed = false
@@ -1132,120 +1127,15 @@ class NoteEditorFragment : Fragment(R.layout.note_editor_fragment), DeckSelectio
         updateToolbar()
     }
 
-    override fun onCreateMenu(
-        menu: Menu,
-        menuInflater: MenuInflater,
-    ) {
-        menuInflater.inflate(R.menu.note_editor, menu)
-        onPrepareMenu(menu)
-    }
-
-    override fun onPrepareMenu(menu: Menu) {
-        if (addNote) {
-            menu.findItem(R.id.action_copy_note).isVisible = false
-            val iconVisible = allowSaveAndPreview()
-            menu.findItem(R.id.action_save).isVisible = iconVisible
-            menu.findItem(R.id.action_preview).isVisible = iconVisible
-        } else {
-            menu.findItem(R.id.action_add_note_from_note_editor).isVisible = !inCardBrowserActivity
-        }
-
-        val copyEnabled =
-            noteEditorViewModel.noteEditorState.value.fields.any { it.value.text.isNotBlank() }
-        menu.findItem(R.id.action_copy_note).isEnabled = copyEnabled
-
-        menu.findItem(R.id.action_show_toolbar).isChecked = !shouldHideToolbar()
-        menu.findItem(R.id.action_capitalize).isChecked =
-            sharedPrefs().getBoolean(PREF_NOTE_EDITOR_CAPITALIZE, true)
-        menu.findItem(R.id.action_scroll_toolbar).isChecked =
-            sharedPrefs().getBoolean(PREF_NOTE_EDITOR_SCROLL_TOOLBAR, true)
-    }
-
     private fun allowSaveAndPreview(): Boolean = when {
         addNote && noteEditorViewModel.noteEditorState.value.isImageOcclusion -> false
         else -> true
-    }
-
-    override fun onMenuItemSelected(item: MenuItem): Boolean {
-        Timber.d("NoteEditor::onMenuItemSelected")
-        when (item.itemId) {
-            R.id.action_preview -> {
-                Timber.i("NoteEditor:: Preview button pressed")
-                if (allowSaveAndPreview()) {
-                    launchCatchingTask { performPreview() }
-                }
-                return true
-            }
-
-            R.id.action_save -> {
-                Timber.i("NoteEditor:: Save note button pressed")
-                if (allowSaveAndPreview()) {
-                    launchCatchingTask { saveNote() }
-                }
-                return true
-            }
-
-            R.id.action_add_note_from_note_editor -> {
-                Timber.i("NoteEditor:: Add Note button pressed")
-                addNewNote()
-                return true
-            }
-
-            R.id.action_copy_note -> {
-                Timber.i("NoteEditor:: Copy Note button pressed")
-                copyNote()
-                return true
-            }
-
-            R.id.action_font_size -> {
-                Timber.i("NoteEditor:: Font Size button pressed")
-                val fontSizeDialog = IntegerDialog()
-                val currentFontSize =
-                    sharedPrefs().getInt(PREF_NOTE_EDITOR_FONT_SIZE, 18).toString()
-                fontSizeDialog.setArgs(getString(R.string.menu_font_size), currentFontSize, 2)
-                fontSizeDialog.setCallbackRunnable { fontSizeSp: Int? -> setFontSize(fontSizeSp) }
-                showDialogFragment(fontSizeDialog)
-                return true
-            }
-
-            R.id.action_show_toolbar -> {
-                item.isChecked = !item.isChecked
-                this.sharedPrefs().edit {
-                    putBoolean(PREF_NOTE_EDITOR_SHOW_TOOLBAR, item.isChecked)
-                }
-                updateToolbar()
-            }
-
-            R.id.action_capitalize -> {
-                Timber.i("NoteEditor:: Capitalize button pressed. New State: %b", !item.isChecked)
-                item.isChecked = !item.isChecked
-                toggleCapitalize(item.isChecked)
-                return true
-            }
-
-            R.id.action_scroll_toolbar -> {
-                item.isChecked = !item.isChecked
-                this.sharedPrefs().edit {
-                    putBoolean(PREF_NOTE_EDITOR_SCROLL_TOOLBAR, item.isChecked)
-                }
-                updateToolbar()
-            }
-        }
-        return false
     }
 
     private fun toggleCapitalize(value: Boolean) {
         this.sharedPrefs().edit {
             putBoolean(PREF_NOTE_EDITOR_CAPITALIZE, value)
         }
-    }
-
-    private fun setFontSize(fontSizeSp: Int?) {
-        if (fontSizeSp == null || fontSizeSp <= 0) {
-            return
-        }
-        Timber.i("Setting font size to %d", fontSizeSp)
-        this.sharedPrefs().edit { putInt(PREF_NOTE_EDITOR_FONT_SIZE, fontSizeSp) }
     }
 
     private fun addNewNote() {
