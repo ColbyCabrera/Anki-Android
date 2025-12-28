@@ -23,10 +23,14 @@ enum class Theme(
     @StyleRes val resId: Int,
     val isNightMode: Boolean,
 ) {
-    // IDs must correspond to the ones at @array/app_theme_values on res/values/constants.xml
-    // Follow system is "0", Light is "1", Dark is "2"
-    // All themes use dynamic theming via DynamicColors.applyToActivityIfAvailable()
-    LIGHT("1", R.style.Theme_Dynamic_Light, false), DARK("2", R.style.Theme_Dynamic_Dark, true), ;
+    // IDs correspond to @array/app_theme_values in res/values/constants.xml.
+    // This enum defines LIGHT ("1") and DARK ("2") only.
+    // The preference value "0" (Follow system) is not an enum constant; it is handled
+    // by Themes.updateCurrentTheme() which selects LIGHT or DARK based on system mode.
+    // All themes use dynamic theming via DynamicColors.applyToActivityIfAvailable().
+    LIGHT("1", R.style.Theme_Dynamic_Light, false),
+    DARK("2", R.style.Theme_Dynamic_Dark, true),
+    ;
 
     companion object {
         val fallback: Theme
