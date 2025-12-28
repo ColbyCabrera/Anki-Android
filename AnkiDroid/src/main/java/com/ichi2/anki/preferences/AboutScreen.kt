@@ -80,7 +80,7 @@ fun AboutScreen(
     onCopyDebugClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "SyncIconRotation")
+    val infiniteTransition = rememberInfiniteTransition(label = "AboutIconRotation")
 
     val rotation by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -88,7 +88,7 @@ fun AboutScreen(
         animationSpec = infiniteRepeatable(
             animation = tween(9000, easing = LinearEasing),
         ),
-        label = "SyncIconRotationAngle",
+        label = "AboutIconRotationAngle",
     )
 
     Scaffold(
