@@ -228,7 +228,7 @@ fun DeckItem(
                 }, leadingIcon = {
                     Icon(painter = painterResource(R.drawable.tune_24px), contentDescription = null)
                 })
-                DropdownMenuItem(text = { Text("Delete") }, onClick = {
+                DropdownMenuItem(text = { Text(stringResource(R.string.contextmenu_deckpicker_delete_deck)) }, onClick = {
                     onDelete()
                     isContextMenuOpen = false
                 }, leadingIcon = {
