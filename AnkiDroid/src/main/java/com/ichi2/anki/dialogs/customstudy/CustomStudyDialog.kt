@@ -53,7 +53,6 @@ import com.ichi2.anki.R
 import com.ichi2.anki.analytics.AnalyticsDialogFragment
 import com.ichi2.anki.asyncIO
 import com.ichi2.anki.common.annotations.NeedsTest
-import com.ichi2.anki.common.utils.annotation.KotlinCleanup
 import com.ichi2.anki.dialogs.customstudy.CustomStudyDialog.ContextMenuOption.EXTEND_NEW
 import com.ichi2.anki.dialogs.customstudy.CustomStudyDialog.ContextMenuOption.EXTEND_REV
 import com.ichi2.anki.dialogs.customstudy.CustomStudyDialog.ContextMenuOption.STUDY_AHEAD
@@ -87,7 +86,6 @@ import com.ichi2.utils.setPaddingRelative
 import com.ichi2.utils.textAsIntOrNull
 import com.ichi2.utils.title
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.runBlocking
 import kotlinx.parcelize.Parcelize
 import net.ankiweb.rsdroid.BackendException
 import timber.log.Timber
@@ -122,7 +120,6 @@ import timber.log.Timber
  *
  * @see TagLimitFragment
  */
-@KotlinCleanup("remove 'runBlocking' call'")
 @NeedsTest("deferredDefaults")
 class CustomStudyDialog : AnalyticsDialogFragment() {
     /** ID of the [Deck] which this dialog was created for */
@@ -188,8 +185,7 @@ class CustomStudyDialog : AnalyticsDialogFragment() {
         return if (option == null) {
             Timber.i("Showing Custom Study main menu")
             deferredDefaults = loadCustomStudyDefaults()
-            // Select the specified deck
-            runBlocking { withCol { decks.select(dialogDeckId) } }
+            // Deck selection is now handled in loadCustomStudyDefaults
             buildContextMenu()
         } else {
             Timber.i("Showing Custom Study dialog: $option")
@@ -468,6 +464,8 @@ class CustomStudyDialog : AnalyticsDialogFragment() {
      */
     private fun loadCustomStudyDefaults() =
         lifecycleScope.asyncIO {
+            // Select the specified deck (moved from onCreateDialog to avoid runBlocking)
+            withCol { decks.select(dialogDeckId) }
             coMeasureTime("loadCustomStudyDefaults") {
                 withCol { sched.customStudyDefaults(dialogDeckId).toDomainModel() }
             }
