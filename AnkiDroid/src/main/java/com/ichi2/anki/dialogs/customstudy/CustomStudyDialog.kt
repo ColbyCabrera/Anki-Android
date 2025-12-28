@@ -184,8 +184,9 @@ class CustomStudyDialog : AnalyticsDialogFragment() {
         val option = selectedSubDialog
         return if (option == null) {
             Timber.i("Showing Custom Study main menu")
+            // Deck selection + defaults loading happens async in loadCustomStudyDefaults.
+            // Menu items with availability checks stay disabled until deferredDefaults completes.
             deferredDefaults = loadCustomStudyDefaults()
-            // Deck selection is now handled in loadCustomStudyDefaults
             buildContextMenu()
         } else {
             Timber.i("Showing Custom Study dialog: $option")
