@@ -18,6 +18,7 @@
 
 package com.ichi2.themes
 
+import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Configuration
@@ -28,6 +29,7 @@ import androidx.core.content.withStyledAttributes
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.FragmentActivity
+import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.MaterialColors
 import com.ichi2.anki.AnkiDroidApp
 import com.ichi2.anki.R
@@ -53,6 +55,9 @@ object Themes {
         updateCurrentTheme(context)
         Timber.i("Setting theme to %s", currentTheme.name)
         context.setTheme(currentTheme.resId)
+        // Apply dynamic colors from wallpaper on top of the base theme (Android 12+)
+        // This allows all themes to use wallpaper-based colors while respecting light/dark mode
+        DynamicColors.applyToActivityIfAvailable(context as? Activity ?: return)
     }
 
     fun setLegacyActionBar(context: Context) {
