@@ -205,8 +205,9 @@
         <item name="tickVisible">false</item>
     </style>
 
-    <style name="PreferenceThemeOverlay.AnkiDroid">
+    <style name="PreferenceThemeOverlay.AnkiDroid" parent="PreferenceThemeOverlay.v14.Material">
         <item name="singleLineTitle">false</item>
+        <item name="android:colorBackground">?attr/colorSurface</item>
     </style>
 
     <style name="AppCompatProgressDialogStyle" parent="Theme.AppCompat.Dialog.Alert">

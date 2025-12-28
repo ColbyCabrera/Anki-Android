@@ -50,7 +50,6 @@ import com.google.android.material.textfield.TextInputLayout
 import com.ichi2.anki.R
 import com.ichi2.anki.ui.compose.components.CheckboxPrompt
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
-import com.ichi2.themes.Theme
 import com.ichi2.themes.Themes
 import com.ichi2.ui.FixedTextView
 import com.ichi2.utils.HandlerUtils.executeOnMainThread
@@ -338,9 +337,9 @@ fun AlertDialog.input(
 
     getInputTextLayout().hint = hint
     // TODO Fix this:
-    //  Disable the error icon when the black theme is applied. With this theme, showing an error
+    //  Disable the error icon when night mode is applied. With dark themes, showing an error
     //  makes the wrapped TextInputEditText's outline to disappear around the error icon(#18535, #18596)
-    if (Themes.currentTheme == Theme.BLACK) {
+    if (Themes.currentTheme.isNightMode) {
         getInputTextLayout().errorIconDrawable = null
     }
 

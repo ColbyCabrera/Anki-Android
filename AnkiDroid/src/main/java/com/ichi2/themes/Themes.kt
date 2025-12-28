@@ -18,8 +18,8 @@
 
 package com.ichi2.themes
 
+import android.app.Activity
 import android.content.Context
-import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.graphics.Color
 import androidx.annotation.ColorInt
@@ -28,6 +28,7 @@ import androidx.core.content.withStyledAttributes
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.FragmentActivity
+import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.MaterialColors
 import com.ichi2.anki.AnkiDroidApp
 import com.ichi2.anki.R
@@ -44,8 +45,6 @@ object Themes {
 
     const val FOLLOW_SYSTEM_MODE = "0"
     private const val APP_THEME_KEY = "appTheme"
-    private const val DAY_THEME_KEY = "dayTheme"
-    private const val NIGHT_THEME_KEY = "nightTheme"
 
     var currentTheme: Theme = Theme.fallback
 
@@ -53,6 +52,9 @@ object Themes {
         updateCurrentTheme(context)
         Timber.i("Setting theme to %s", currentTheme.name)
         context.setTheme(currentTheme.resId)
+        // Apply dynamic colors from wallpaper on top of the base theme (Android 12+)
+        // This allows all themes to use wallpaper-based colors while respecting light/dark mode
+        (context as? Activity)?.let { DynamicColors.applyToActivityIfAvailable(it) }
     }
 
     fun setLegacyActionBar(context: Context) {
@@ -61,9 +63,9 @@ object Themes {
 
     /**
      * Updates [currentTheme] value based on preferences.
-     * If `Follow system` is selected, it's updated to the theme set
-     * on `Day` or `Night` theme according to system's current mode
-     * Otherwise, updates to the selected theme.
+     * If `Follow system` is selected, it's updated to Light or Dark
+     * according to system's current mode.
+     * Otherwise, updates to the selected theme (Light or Dark).
      */
     fun updateCurrentTheme(context: Context) {
         // AppCompatPreferenceActivity's sharedPreferences is initialized
@@ -76,20 +78,23 @@ object Themes {
                 context.sharedPrefs()
             }
 
-        currentTheme =
-            if (themeFollowsSystem(prefs)) {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-                if (systemIsInNightMode(context)) {
-                    Theme.ofId(prefs.getString(NIGHT_THEME_KEY, Theme.BLACK.id)!!)
-                } else {
-                    Theme.ofId(prefs.getString(DAY_THEME_KEY, Theme.LIGHT.id)!!)
-                }
-            } else {
-                Theme.ofId(prefs.getString(APP_THEME_KEY, Theme.fallback.id)!!).also {
-                    val mode = if (it.isNightMode) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
-                    AppCompatDelegate.setDefaultNightMode(mode)
-                }
+        val selectedTheme = prefs.getString(APP_THEME_KEY, FOLLOW_SYSTEM_MODE) ?: FOLLOW_SYSTEM_MODE
+
+        currentTheme = when (selectedTheme) {
+            Theme.LIGHT.id -> {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                Theme.LIGHT
             }
+            Theme.DARK.id -> {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                Theme.DARK
+            }
+            else -> {
+                // Handles FOLLOW_SYSTEM_MODE ("0") and any legacy preference values
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+                if (systemIsInNightMode(context)) Theme.DARK else Theme.LIGHT
+            }
+        }
     }
 
     /**
@@ -139,11 +144,7 @@ object Themes {
         return attrs
     }
 
-    /**
-     * @return if current selected theme is `Follow system`
-     */
-    private fun themeFollowsSystem(sharedPreferences: SharedPreferences): Boolean =
-        sharedPreferences.getString(APP_THEME_KEY, FOLLOW_SYSTEM_MODE) == FOLLOW_SYSTEM_MODE
+
 
     fun systemIsInNightMode(context: Context): Boolean =
         context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==

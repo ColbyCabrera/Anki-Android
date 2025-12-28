@@ -24,7 +24,6 @@ import com.ichi2.anki.R
 import com.ichi2.anki.launchCatchingTask
 import com.ichi2.anki.utils.CollectionPreferences
 import com.ichi2.themes.Themes
-import com.ichi2.themes.Themes.systemIsInNightMode
 import com.ichi2.themes.Themes.updateCurrentTheme
 
 class AppearanceSettingsFragment : SettingsFragment() {
@@ -35,39 +34,17 @@ class AppearanceSettingsFragment : SettingsFragment() {
 
     override fun initSubscreen() {
         val appThemePref = requirePreference<ListPreference>(R.string.app_theme_key)
-        val dayThemePref = requirePreference<ListPreference>(R.string.day_theme_key)
-        val nightThemePref = requirePreference<ListPreference>(R.string.night_theme_key)
-        val themeIsFollowSystem = appThemePref.value == Themes.FOLLOW_SYSTEM_MODE
-
-        dayThemePref.isEnabled = themeIsFollowSystem
-        nightThemePref.isEnabled = themeIsFollowSystem
 
         appThemePref.setOnPreferenceChangeListener { newValue ->
-            val selectedThemeIsFollowSystem = newValue == Themes.FOLLOW_SYSTEM_MODE
-            dayThemePref.isEnabled = selectedThemeIsFollowSystem
-            nightThemePref.isEnabled = selectedThemeIsFollowSystem
-
             // Only restart if theme has changed
             if (newValue != appThemePref.value) {
                 val previousThemeId = Themes.currentTheme.id
-                appThemePref.value = newValue.toString()
+                appThemePref.value = newValue
                 updateCurrentTheme(requireContext())
 
                 if (previousThemeId != Themes.currentTheme.id) {
                     ActivityCompat.recreate(requireActivity())
                 }
-            }
-        }
-
-        dayThemePref.setOnPreferenceChangeListener { newValue ->
-            if (newValue != dayThemePref.value && !systemIsInNightMode(requireContext()) && newValue != Themes.currentTheme.id) {
-                ActivityCompat.recreate(requireActivity())
-            }
-        }
-
-        nightThemePref.setOnPreferenceChangeListener { newValue ->
-            if (newValue != nightThemePref.value && systemIsInNightMode(requireContext()) && newValue != Themes.currentTheme.id) {
-                ActivityCompat.recreate(requireActivity())
             }
         }
 
