@@ -1,6 +1,6 @@
 # Note Editor Compose Migration Status
 
-**Last Updated**: October 31, 2025 (Session 2)
+**Last Updated**: December 28, 2025
 
 ## ✅ Completed
 
@@ -51,33 +51,18 @@
 - ✅ **Fixed deckSpinnerSelection null safety**: Changed `!!` to `?.` for safer legacy spinner access
 - ✅ **Removed 2 TODO markers**: Replaced with working Compose implementations
 
-## ⚠️ Partially Complete / Needs Work
+## ⚠️ Remaining Work
 
-### Fragment Legacy Code
-The `NoteEditorFragment.kt` still contains ~3000 lines of legacy code that references XML views. Many of these have been **commented out** with TODO markers:
+### Fragment Legacy Code Cleanup
+The `NoteEditorFragment.kt` is now ~1950 lines but still contains legacy code that can be cleaned up:
 
-#### Commented Out (Needs Re-implementation):
-1. **Line 487**: `baseSnackbarBuilder` - Snackbar anchor view
-2. **Lines 803-815**: XML view initialization
-   - `fieldsLayoutContainer`
-   - `tagsButton`, `cardsButton`
-   - `imageOcclusionButtonsContainer` and related buttons
-3. **Lines 926-928**: Note type spinner setup
-4. **Lines 997-1003**: Note type listener and tags button click handler
-5. **Line 2001**: Tab order for accessibility
-6. **Line 2537**: Editor layout reference for toolbar margins
-7. **Lines 2959, 2967**: Tags button enable/disable
-
-### How Legacy Code Works Now (Updated Oct 31, 2025)
-- All legacy view references use safe call operators (`?.`) to prevent crashes
-- Legacy methods check for null views and early return when using Compose UI
-- Fragment methods update both ViewModel (for Compose) and legacy views (when present)
-- Multimedia, tags, templates, and image occlusion still use legacy Fragment methods
-- **No runtime crashes** from null legacy views during Compose migration
+- Remove commented-out XML view references
+- Consolidate helper methods that are now handled by ViewModel
+- Remove unused imports and dead code paths
 
 ### Card Browser Integration
-- `CardBrowserLayout.kt` split-view NoteEditor integration is commented out
-- Needs proper integration after core editor is stable
+- `CardBrowserLayout.kt` split-view NoteEditor integration needs testing
+- Needs proper integration after core editor is verified stable
 
 ## 🔨 Required Next Steps
 
@@ -89,34 +74,27 @@ Build and test the app to verify:
 - [ ] Note type selection works
 - [ ] Deck selection works
 
-### 2. Re-implement Commented Features
-For each commented TODO:
+### 2. Previously High Priority (Now Complete ✅)
+All high-priority features have been integrated into the Compose UI:
 
-#### High Priority:
-- [ ] **Multimedia buttons** - Clicking multimedia in field cards
-  - Integrate with existing `MultimediaViewModel`
-  - Hook up to Fragment's multimedia launchers
-- [ ] **Tags functionality** - Tags dialog launch
-  - Connect Compose button to existing `showTagsDialog()`
-- [ ] **Cards/Templates button** - Template editor access
-  - Connect to existing `showCardTemplateEditor()`
-- [ ] **Image Occlusion buttons** - Edit/Select/Paste image
-  - Integrate with existing IO infrastructure
+- [x] **Multimedia buttons** - `onMultimediaClick` calls `showMultimediaBottomSheet()` and `handleMultimediaActions()`
+- [x] **Tags functionality** - `onUpdateTags` and `onAddTag` update ViewModel directly
+- [x] **Cards/Templates button** - `onCardsClick` calls `showCardTemplateEditor()`
+- [x] **Image Occlusion buttons** - `onImageOcclusionSelectImage`, `onImageOcclusionPasteImage`, `onImageOcclusionEdit` all wired up
 
-#### Medium Priority:
-- [ ] **Toolbar visibility/margins** - Handle compose toolbar layout
-- [ ] **Snackbar anchoring** - Use Compose Scaffold snackbar host (already in place, needs testing)
+### 3. Medium Priority
+- [x] **Toolbar visibility/margins** - Compose toolbar is integrated
+- [x] **Snackbar anchoring** - Compose Scaffold snackbar host is in place
 
-#### Low Priority:
+### 4. Low Priority (Still Pending)
 - [ ] **Tab order/accessibility** - Implement Compose focus management
-- [ ] **Keyboard shortcuts** - Verify still work with Compose
+- [ ] **Keyboard shortcuts** - Verify all shortcuts still work with Compose
 
-### 3. ViewModel Enhancement
-Expand `NoteEditorViewModel` to handle:
-- [ ] Multimedia operations
-- [ ] Tags management
-- [ ] Template editing triggers
-- [ ] Image Occlusion operations
+### 5. Code Cleanup
+Now that features are integrated:
+- [ ] Remove legacy commented-out XML code from `NoteEditorFragment.kt`
+- [ ] Remove unused Fragment methods
+- [ ] Clean up imports
 
 ### 4. Remove Legacy Code
 Once all functionality is re-implemented in Compose/ViewModel:
@@ -162,9 +140,9 @@ When ready to test:
 
 1. ~~**Runtime Crashes Expected**: Many Fragment methods still expect XML views to exist. These will throw NullPointerExceptions until properly integrated.~~ **FIXED Oct 31, 2025**: All legacy view references now use safe calls and null checks.
 
-2. **Multimedia May Not Work**: The multimedia buttons are in Compose UI but not hooked up to Fragment's multimedia infrastructure.
+2. ~~**Multimedia May Not Work**: The multimedia buttons are in Compose UI but not hooked up to Fragment's multimedia infrastructure.~~ **FIXED Dec 28, 2025**: `onMultimediaClick` now properly calls `showMultimediaBottomSheet()` and `handleMultimediaActions()`.
 
-3. **Tags/Templates May Not Work**: Buttons exist in Compose but click handlers may not be connected.
+3. ~~**Tags/Templates May Not Work**: Buttons exist in Compose but click handlers may not be connected.~~ **FIXED Dec 28, 2025**: Tags use `onUpdateTags`/`onAddTag`, Cards button uses `onCardsClick` → `showCardTemplateEditor()`.
 
 4. **No Error Handling**: ViewModel and Compose don't have comprehensive error handling yet.
 
@@ -184,20 +162,20 @@ When ready to test:
 Incremental approach:
 1. ✅ Create Compose UI (done)
 2. ✅ Create basic ViewModel (done)
-3. ⏳ Test core functionality (current step)
-4. ⏭️ Move functionality from Fragment to ViewModel
-5. ⏭️ Connect Compose UI to ViewModel operations
+3. ✅ Connect Compose UI to ViewModel operations (done Dec 28, 2025)
+4. ⏳ Test core functionality (current step)
+5. ⏭️ Move remaining functionality from Fragment to ViewModel
 6. ⏭️ Remove legacy Fragment code
 
 ## 🔗 Related Files
 
-- `NoteEditor.kt` - Main Compose UI
-- `NoteEditorToolbar.kt` - Toolbar Compose UI
-- `NoteEditorViewModel.kt` - State management
-- `NoteEditorFragment.kt` - Host Fragment (needs refactoring)
-- `note_editor_fragment.xml` - Simplified layout
+- `noteeditor/compose/NoteEditor.kt` - Main Compose UI
+- `noteeditor/compose/NoteEditorToolbar.kt` - Toolbar Compose UI
+- `noteeditor/NoteEditorViewModel.kt` - State management
+- `NoteEditorFragment.kt` - Host Fragment (needs cleanup)
+- `note_editor_fragment.xml` - Simplified layout (just ComposeView)
 - `noteeditor/old/` - Original backup files
-- `MIGRATION.md` - Detailed migration documentation
+- `noteeditor/MIGRATION.md` - Detailed migration documentation
 
 ## 💡 Tips for Contributors
 
