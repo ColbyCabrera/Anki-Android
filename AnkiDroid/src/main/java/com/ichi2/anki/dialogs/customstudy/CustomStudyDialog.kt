@@ -464,10 +464,12 @@ class CustomStudyDialog : AnalyticsDialogFragment() {
      */
     private fun loadCustomStudyDefaults() =
         lifecycleScope.asyncIO {
-            // Select the specified deck (moved from onCreateDialog to avoid runBlocking)
-            withCol { decks.select(dialogDeckId) }
             coMeasureTime("loadCustomStudyDefaults") {
-                withCol { sched.customStudyDefaults(dialogDeckId).toDomainModel() }
+                withCol {
+                    // Select the specified deck (moved from onCreateDialog to avoid runBlocking)
+                    decks.select(dialogDeckId)
+                    sched.customStudyDefaults(dialogDeckId).toDomainModel()
+                }
             }
         }
 
