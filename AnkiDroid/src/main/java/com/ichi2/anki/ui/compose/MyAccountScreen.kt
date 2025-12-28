@@ -465,7 +465,7 @@ fun LoggedInContent(
     onRemoveAccountClick: () -> Unit,
     onPrivacyPolicyClick: () -> Unit,
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "SyncIconRotation")
+    val infiniteTransition = rememberInfiniteTransition(label = "AccountIconRotation")
 
     val rotation by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -473,7 +473,7 @@ fun LoggedInContent(
         animationSpec = infiniteRepeatable(
             animation = tween(9000, easing = LinearEasing),
         ),
-        label = "SyncIconRotationAngle",
+        label = "AccountIconRotationAngle",
     )
 
     Box(
