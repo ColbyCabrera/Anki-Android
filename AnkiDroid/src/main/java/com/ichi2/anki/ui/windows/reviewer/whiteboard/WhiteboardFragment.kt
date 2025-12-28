@@ -40,6 +40,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -49,7 +50,9 @@ import com.google.android.material.slider.Slider
 import com.ichi2.anki.AnkiDroidApp
 import com.ichi2.anki.R
 import com.ichi2.anki.snackbar.showSnackbar
+import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import com.ichi2.anki.ui.windows.reviewer.whiteboard.compose.AddBrushButton
+import com.ichi2.anki.ui.windows.reviewer.whiteboard.compose.BrushOptionsPopup
 import com.ichi2.anki.ui.windows.reviewer.whiteboard.compose.ColorBrushButton
 import com.ichi2.themes.Themes
 import com.ichi2.utils.dp
@@ -315,42 +318,23 @@ class WhiteboardFragment :
         brushIndex: Int,
     ) {
         Timber.i("Showing brush %d popup", brushIndex)
-        val inflater = LayoutInflater.from(requireContext())
-        val popupView = inflater.inflate(R.layout.popup_brush_options, null)
-        val strokeSlider = popupView.findViewById<Slider>(R.id.stroke_width_slider)
-        val colorButton = popupView.findViewById<MaterialButton>(R.id.color_picker_button)
-        val valueIndicator = popupView.findViewById<TextView>(R.id.stroke_width_value_indicator)
-
         val currentBrush = viewModel.brushes.value.getOrNull(brushIndex) ?: return
 
-        val previewDrawable = (colorButton.icon as? LayerDrawable)
-        val fillDrawable = previewDrawable?.findDrawableByLayerId(R.id.brush_preview_fill) as? GradientDrawable
-        fillDrawable?.setColor(currentBrush.color)
-        colorButton.icon = previewDrawable
-
-        colorButton.setOnClickListener {
-            showChangeColorDialog()
+        val popupView = ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                AnkiDroidTheme {
+                    val strokeWidth = viewModel.activeStrokeWidth.collectAsState(initial = currentBrush.width)
+                    val brushColor = viewModel.brushColor.collectAsState(initial = currentBrush.color)
+                    BrushOptionsPopup(
+                        strokeWidth = strokeWidth.value,
+                        onStrokeWidthChange = { width -> viewModel.setActiveStrokeWidth(width) },
+                        color = brushColor.value,
+                        onColorClick = { showChangeColorDialog() }
+                    )
+                }
+            }
         }
-
-        strokeSlider.value = currentBrush.width
-        valueIndicator.text = currentBrush.width.roundToInt().toString()
-        colorButton.iconSize = currentBrush.width.roundToInt()
-
-        // Set slider colors
-        val color = currentBrush.color
-        val colorStateList = ColorStateList.valueOf(color)
-        strokeSlider.trackActiveTintList = colorStateList
-        strokeSlider.thumbTintList = colorStateList
-        strokeSlider.haloTintList = colorStateList
-
-        strokeSlider.addOnChangeListener { _, value, fromUser ->
-            // Dynamically change the size of the brush preview icon
-            colorButton.iconSize = value.roundToInt()
-            valueIndicator.text = value.roundToInt().toString()
-
-            if (fromUser) viewModel.setActiveStrokeWidth(value)
-        }
-        strokeSlider.setLabelFormatter { value: Float -> value.roundToInt().toString() }
 
         strokeWidthPopup = PopupWindow(popupView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true)
         strokeWidthPopup?.elevation = resources.getDimension(R.dimen.study_screen_elevation)
