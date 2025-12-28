@@ -25,7 +25,6 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -78,7 +77,6 @@ fun AboutScreen(
     contributorsText: String,
     licenseText: String,
     onBackClick: () -> Unit,
-    onLogoClick: () -> Unit,
     onCopyDebugClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -94,33 +92,28 @@ fun AboutScreen(
     )
 
     Scaffold(
-        modifier = modifier,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(R.string.pref_cat_about_title),
-                        style = MaterialTheme.typography.displayMediumEmphasized,
+        modifier = modifier, topBar = {
+            TopAppBar(title = {
+                Text(
+                    text = stringResource(R.string.pref_cat_about_title),
+                    style = MaterialTheme.typography.displayMediumEmphasized,
+                )
+            }, navigationIcon = {
+                FilledIconButton(
+                    modifier = Modifier.padding(end = 8.dp),
+                    onClick = onBackClick,
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    ),
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.arrow_back_24px),
+                        contentDescription = stringResource(R.string.back),
                     )
-                },
-                navigationIcon = {
-                    FilledIconButton(
-                        modifier = Modifier.padding(end = 8.dp),
-                        onClick = onBackClick,
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        ),
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.arrow_back_24px),
-                            contentDescription = stringResource(R.string.back),
-                        )
-                    }
                 }
-            )
-        }
-    ) { innerPadding ->
+            })
+        }) { innerPadding ->
         Box(
             modifier = Modifier
                 .padding(innerPadding)
@@ -129,8 +122,7 @@ fun AboutScreen(
             contentAlignment = Alignment.TopCenter,
         ) {
             Column(
-                modifier = Modifier
-                    .verticalScroll(rememberScrollState()),
+                modifier = Modifier.verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Box(
@@ -151,9 +143,7 @@ fun AboutScreen(
                             ),
                     )
                     Image(
-                        modifier = Modifier
-                            .size(60.dp)
-                            .clickable(onClick = onLogoClick),
+                        modifier = Modifier.size(60.dp),
                         painter = painterResource(R.drawable.info_24px),
                         contentDescription = null,
                         colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.secondary),
@@ -161,7 +151,10 @@ fun AboutScreen(
                 }
 
                 Text(
-                    text = stringResource(R.string.about_fork_of, stringResource(R.string.app_name)),
+                    text = stringResource(
+                        R.string.about_fork_of,
+                        stringResource(R.string.app_name)
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -183,8 +176,7 @@ fun AboutScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     // Contributors
                     SectionTitle(stringResource(R.string.contributors_title))
@@ -241,16 +233,14 @@ private fun HtmlTextView(text: String) {
 
     AndroidView(
         factory = { context ->
-            TextView(context).apply {
-                movementMethod = LinkMovementMethod.getInstance()
-                setTextColor(textColor)
-                textSize = 14f
-            }
-        },
-        update = {
-            it.text = text.parseAsHtml()
-        },
-        modifier = Modifier.padding(vertical = 4.dp)
+        TextView(context).apply {
+            movementMethod = LinkMovementMethod.getInstance()
+            setTextColor(textColor)
+            textSize = 14f
+        }
+    }, update = {
+        it.text = text.parseAsHtml()
+    }, modifier = Modifier.padding(vertical = 4.dp)
     )
 }
 
@@ -266,8 +256,6 @@ private fun AboutScreenPreview() {
             contributorsText = "Contributors...",
             licenseText = "License...",
             onBackClick = {},
-            onLogoClick = {},
-            onCopyDebugClick = {}
-        )
+            onCopyDebugClick = {})
     }
 }

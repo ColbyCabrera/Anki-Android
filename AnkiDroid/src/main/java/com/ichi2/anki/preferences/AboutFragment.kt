@@ -15,13 +15,11 @@
  */
 package com.ichi2.anki.preferences
 
-import android.content.Context
 import android.os.Bundle
 import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AlertDialog
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
@@ -30,8 +28,6 @@ import com.ichi2.anki.R
 import com.ichi2.anki.launchCatchingTask
 import com.ichi2.anki.scheduling.Fsrs
 import com.ichi2.anki.servicelayer.DebugInfoService
-import com.ichi2.anki.settings.Prefs
-import com.ichi2.anki.showThemedToast
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import com.ichi2.utils.VersionUtils.pkgVersionName
 import com.ichi2.utils.copyToClipboard
@@ -43,9 +39,6 @@ import java.util.Locale
 import net.ankiweb.rsdroid.BuildConfig as BackendBuildConfig
 
 class AboutFragment : Fragment() {
-
-    private val secretClickListener by lazy { DevOptionsSecretClickListener(this) }
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -86,7 +79,6 @@ class AboutFragment : Fragment() {
                         contributorsText = contributorsText,
                         licenseText = licenseText,
                         onBackClick = { requireActivity().onBackPressedDispatcher.onBackPressed() },
-                        onLogoClick = { secretClickListener.onSecretClick() },
                         onCopyDebugClick = { copyDebugInfo() }
                     )
                 }
@@ -107,46 +99,6 @@ class AboutFragment : Fragment() {
                 debugInfo,
                 failureMessageId = R.string.about_ankidroid_error_copy_debug_info,
             )
-        }
-    }
-
-    /**
-     * Click listener which enables developer options on release builds
-     * if the user clicks it a minimum number of times
-     */
-    private class DevOptionsSecretClickListener(
-        val fragment: Fragment,
-    ) {
-        private var clickCount = 0
-        private val clickLimit = 6
-
-        fun onSecretClick() {
-            if (Prefs.isDevOptionsEnabled) {
-                return
-            }
-            if (++clickCount == clickLimit) {
-                showEnableDevOptionsDialog(fragment.requireContext())
-            }
-        }
-
-        /**
-         * Shows a dialog to confirm if developer options should be enabled or not
-         */
-        fun showEnableDevOptionsDialog(context: Context) {
-            AlertDialog.Builder(context)
-                .setTitle(R.string.dev_options_enabled_pref)
-                .setIcon(R.drawable.ic_warning)
-                .setMessage(R.string.dev_options_warning)
-                .setPositiveButton(R.string.dialog_ok) { _, _ -> enableDevOptions(context) }
-                .setNegativeButton(R.string.dialog_cancel) { _, _ -> clickCount = 0 }
-                .setCancelable(false)
-                .show()
-        }
-
-        fun enableDevOptions(context: Context) {
-            Prefs.isDevOptionsEnabled = true
-            fragment.requireActivity().recreate()
-            showThemedToast(context, R.string.dev_options_enabled_msg, shortLength = true)
         }
     }
 }
