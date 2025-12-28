@@ -230,7 +230,7 @@ private fun SectionTitle(text: String) {
 @Composable
 private fun HtmlTextView(text: String) {
     val textColor = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
-    val textSizeSp = MaterialTheme.typography.bodySmall.fontSize.value
+    val textSizeSp = MaterialTheme.typography.bodyMedium.fontSize.value
 
     AndroidView(
         factory = { context ->
