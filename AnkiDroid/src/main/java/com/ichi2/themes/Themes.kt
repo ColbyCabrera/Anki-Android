@@ -54,7 +54,7 @@ object Themes {
         context.setTheme(currentTheme.resId)
         // Apply dynamic colors from wallpaper on top of the base theme (Android 12+)
         // This allows all themes to use wallpaper-based colors while respecting light/dark mode
-        DynamicColors.applyToActivityIfAvailable(context as? Activity ?: return)
+        (context as? Activity)?.let { DynamicColors.applyToActivityIfAvailable(it) }
     }
 
     fun setLegacyActionBar(context: Context) {
