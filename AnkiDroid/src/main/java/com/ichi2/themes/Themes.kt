@@ -81,10 +81,6 @@ object Themes {
         val selectedTheme = prefs.getString(APP_THEME_KEY, FOLLOW_SYSTEM_MODE) ?: FOLLOW_SYSTEM_MODE
 
         currentTheme = when (selectedTheme) {
-            FOLLOW_SYSTEM_MODE -> {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-                if (systemIsInNightMode(context)) Theme.DARK else Theme.LIGHT
-            }
             Theme.LIGHT.id -> {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
                 Theme.LIGHT
@@ -94,7 +90,7 @@ object Themes {
                 Theme.DARK
             }
             else -> {
-                // Handle legacy preference values by mapping to new themes
+                // Handles FOLLOW_SYSTEM_MODE ("0") and any legacy preference values
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
                 if (systemIsInNightMode(context)) Theme.DARK else Theme.LIGHT
             }
