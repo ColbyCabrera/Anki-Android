@@ -19,8 +19,6 @@ import androidx.test.espresso.matcher.ViewMatchers.assertThat
 import com.ichi2.anki.libanki.DeckConfig.New
 import com.ichi2.anki.reviewer.AutomaticAnswerAction
 import com.ichi2.anki.reviewer.AutomaticAnswerAction.Companion.answerAction
-import com.ichi2.anki.ui.windows.reviewer.autoadvance.QuestionAction
-import com.ichi2.anki.ui.windows.reviewer.autoadvance.QuestionAction.Companion.questionAction
 import com.ichi2.testutils.isJsonHolderEqual
 import org.json.JSONArray
 import org.json.JSONObject
@@ -67,12 +65,6 @@ class DeckConfigTest {
         assertTrue(dc.stopTimerOnAnswer)
     }
 
-    @Test
-    fun testQuestionAction() {
-        assertEquals(QuestionAction.SHOW_ANSWER, dc.questionAction)
-        val dc = DeckConfig(""" {"questionAction": 1} """)
-        assertEquals(QuestionAction.SHOW_REMINDER, dc.questionAction)
-    }
 
     @Test
     fun testSecondsToShowQuestion() {
