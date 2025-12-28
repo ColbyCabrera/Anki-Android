@@ -1,4 +1,3 @@
-
 /*
  *  Copyright (c) 2022 Brayan Oliveira <brayandso.dev@gmail.com>
  *
@@ -25,14 +24,9 @@ enum class Theme(
     val isNightMode: Boolean,
 ) {
     // IDs must correspond to the ones at @array/app_theme_values on res/values/constants.xml
-    // Follow system is "0", so it starts at "1"
-    LIGHT("1", R.style.Theme_Light, false),
-    PLAIN("2", R.style.Theme_Light_Plain, false),
-    BLACK("3", R.style.Theme_Dark_Black, true),
-    DARK("4", R.style.Theme_Dark, true),
-    LIGHT_DYNAMIC("5", R.style.Theme_Dynamic_Light, false),
-    DARK_DYNAMIC("6", R.style.Theme_Dynamic_Dark, true),
-    ;
+    // Follow system is "0", Light is "1", Dark is "2"
+    // All themes use dynamic theming via DynamicColors.applyToActivityIfAvailable()
+    LIGHT("1", R.style.Theme_Dynamic_Light, false), DARK("2", R.style.Theme_Dynamic_Dark, true), ;
 
     companion object {
         val fallback: Theme

@@ -20,7 +20,6 @@ package com.ichi2.themes
 
 import android.app.Activity
 import android.content.Context
-import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.graphics.Color
 import androidx.annotation.ColorInt
@@ -46,8 +45,6 @@ object Themes {
 
     const val FOLLOW_SYSTEM_MODE = "0"
     private const val APP_THEME_KEY = "appTheme"
-    private const val DAY_THEME_KEY = "dayTheme"
-    private const val NIGHT_THEME_KEY = "nightTheme"
 
     var currentTheme: Theme = Theme.fallback
 
@@ -66,9 +63,9 @@ object Themes {
 
     /**
      * Updates [currentTheme] value based on preferences.
-     * If `Follow system` is selected, it's updated to the theme set
-     * on `Day` or `Night` theme according to system's current mode
-     * Otherwise, updates to the selected theme.
+     * If `Follow system` is selected, it's updated to Light or Dark
+     * according to system's current mode.
+     * Otherwise, updates to the selected theme (Light or Dark).
      */
     fun updateCurrentTheme(context: Context) {
         // AppCompatPreferenceActivity's sharedPreferences is initialized
@@ -81,20 +78,27 @@ object Themes {
                 context.sharedPrefs()
             }
 
-        currentTheme =
-            if (themeFollowsSystem(prefs)) {
+        val selectedTheme = prefs.getString(APP_THEME_KEY, FOLLOW_SYSTEM_MODE) ?: FOLLOW_SYSTEM_MODE
+
+        currentTheme = when (selectedTheme) {
+            FOLLOW_SYSTEM_MODE -> {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-                if (systemIsInNightMode(context)) {
-                    Theme.ofId(prefs.getString(NIGHT_THEME_KEY, Theme.BLACK.id)!!)
-                } else {
-                    Theme.ofId(prefs.getString(DAY_THEME_KEY, Theme.LIGHT.id)!!)
-                }
-            } else {
-                Theme.ofId(prefs.getString(APP_THEME_KEY, Theme.fallback.id)!!).also {
-                    val mode = if (it.isNightMode) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
-                    AppCompatDelegate.setDefaultNightMode(mode)
-                }
+                if (systemIsInNightMode(context)) Theme.DARK else Theme.LIGHT
             }
+            Theme.LIGHT.id -> {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                Theme.LIGHT
+            }
+            Theme.DARK.id -> {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                Theme.DARK
+            }
+            else -> {
+                // Handle legacy preference values by mapping to new themes
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+                if (systemIsInNightMode(context)) Theme.DARK else Theme.LIGHT
+            }
+        }
     }
 
     /**
@@ -144,11 +148,7 @@ object Themes {
         return attrs
     }
 
-    /**
-     * @return if current selected theme is `Follow system`
-     */
-    private fun themeFollowsSystem(sharedPreferences: SharedPreferences): Boolean =
-        sharedPreferences.getString(APP_THEME_KEY, FOLLOW_SYSTEM_MODE) == FOLLOW_SYSTEM_MODE
+
 
     fun systemIsInNightMode(context: Context): Boolean =
         context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
