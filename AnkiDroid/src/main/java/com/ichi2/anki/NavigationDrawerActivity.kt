@@ -257,7 +257,9 @@ abstract class NavigationDrawerActivity :
      * function is a no-op if the drawer hasn't been initialized.
      */
     fun disableDrawerSwipe() {
-        drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
+        if (::drawerLayout.isInitialized) {
+            drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
+        }
     }
 
     /**
@@ -265,7 +267,9 @@ abstract class NavigationDrawerActivity :
      * function is a no-op if the drawer hasn't been initialized.
      */
     fun enableDrawerSwipe() {
-        drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
+        if (::drawerLayout.isInitialized) {
+            drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
+        }
     }
 
     private val preferencesLauncher =
