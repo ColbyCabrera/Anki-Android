@@ -22,11 +22,13 @@ import android.widget.HorizontalScrollView
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ScrollView
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.widget.PopupMenu
 import androidx.appcompat.widget.ThemeUtils
 import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -68,6 +70,7 @@ class WhiteboardFragment : Fragment(R.layout.fragment_whiteboard),
     private val showEraserOptions = MutableStateFlow(false)
     private val showBrushOptionsIndex = MutableStateFlow<Int?>(null)
     private val showAddBrushDialog = MutableStateFlow(false)
+    private val showRemoveBrushDialogIndex = MutableStateFlow<Int?>(null)
 
     /**
      * Sets up the view, observers, and event listeners.
@@ -123,6 +126,28 @@ class WhiteboardFragment : Fragment(R.layout.fragment_whiteboard),
                             showAddBrushDialog.value = false
                         },
                         onDismiss = { showAddBrushDialog.value = false })
+                }
+
+                val removeBrushIndex by showRemoveBrushDialogIndex.collectAsState()
+                removeBrushIndex?.let { index ->
+                    AlertDialog(
+                        onDismissRequest = { showRemoveBrushDialogIndex.value = null },
+                        confirmButton = {
+                            TextButton(onClick = {
+                                Timber.i("Removed brush of index %d", index)
+                                viewModel.removeBrush(index)
+                                showRemoveBrushDialogIndex.value = null
+                            }) {
+                                Text(getString(R.string.dialog_remove))
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showRemoveBrushDialogIndex.value = null }) {
+                                Text(getString(R.string.dialog_cancel))
+                            }
+                        },
+                        text = { Text(getString(R.string.whiteboard_remove_brush_message)) }
+                    )
                 }
             }
         }
@@ -322,11 +347,7 @@ class WhiteboardFragment : Fragment(R.layout.fragment_whiteboard),
      * Shows a confirmation dialog for removing a brush.
      */
     private fun showRemoveColorDialog(index: Int) {
-        AlertDialog.Builder(requireContext()).setMessage(R.string.whiteboard_remove_brush_message)
-            .setPositiveButton(R.string.dialog_remove) { _, _ ->
-                Timber.i("Removed brush of index %d", index)
-                viewModel.removeBrush(index)
-            }.setNegativeButton(R.string.dialog_cancel, null).show()
+        showRemoveBrushDialogIndex.value = index
     }
 
     /**
