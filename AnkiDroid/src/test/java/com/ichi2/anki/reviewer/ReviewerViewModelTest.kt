@@ -102,4 +102,66 @@ class ReviewerViewModelTest : RobolectricTest() {
         val state = viewModel.state.first()
         assertThat("Voice playback should be enabled", state.isVoicePlaybackEnabled, equalTo(true))
     }
+
+    @Test
+    fun `showAnswer updates state correctly`() = runTest {
+        addBasicNote("Front", "Back")
+        val viewModel = ReviewerViewModel(ApplicationProvider.getApplicationContext())
+        advanceRobolectricLooper()
+
+        // Initially answer should not be shown
+        var state = viewModel.state.first()
+        assertThat("Answer should not be shown initially", state.isAnswerShown, equalTo(false))
+
+        viewModel.onEvent(ReviewerEvent.ShowAnswer)
+        advanceRobolectricLooper()
+
+        state = viewModel.state.first()
+        assertThat("Answer should be shown after ShowAnswer event", state.isAnswerShown, equalTo(true))
+        assertThat("Next times should be populated", state.nextTimes.any { it.isNotEmpty() }, equalTo(true))
+    }
+
+    @Test
+    fun `rateCard loads next card`() = runTest {
+        // Add two cards so we can verify navigation to next
+        addBasicNote("Front1", "Back1")
+        addBasicNote("Front2", "Back2")
+
+        val viewModel = ReviewerViewModel(ApplicationProvider.getApplicationContext())
+        advanceRobolectricLooper()
+
+        var state = viewModel.state.first()
+        assertThat("Should have 2 new cards", state.newCount, equalTo(2))
+
+        // Show answer first (required before rating)
+        viewModel.onEvent(ReviewerEvent.ShowAnswer)
+        advanceRobolectricLooper()
+
+        // Rate the card
+        viewModel.onEvent(ReviewerEvent.RateCard(anki.scheduler.CardAnswer.Rating.GOOD))
+        advanceRobolectricLooper()
+
+        state = viewModel.state.first()
+        // After rating, we should be on the next card with answer hidden
+        assertThat("Answer should be hidden after rating", state.isAnswerShown, equalTo(false))
+        assertThat("New count should decrease", state.newCount, equalTo(1))
+    }
+
+    @Test
+    fun `card actions are blocked when review is finished`() = runTest {
+        // Create a ViewModel with no cards (will be finished immediately)
+        val viewModel = ReviewerViewModel(ApplicationProvider.getApplicationContext())
+        advanceRobolectricLooper()
+
+        val state = viewModel.state.first()
+        assertThat("Review should be finished with no cards", state.isFinished, equalTo(true))
+
+        // Try to show answer - should have no effect since isFinished is true
+        viewModel.onEvent(ReviewerEvent.ShowAnswer)
+        advanceRobolectricLooper()
+
+        val stateAfter = viewModel.state.first()
+        assertThat("State should remain finished", stateAfter.isFinished, equalTo(true))
+        assertThat("Answer should not be shown", stateAfter.isAnswerShown, equalTo(false))
+    }
 }
