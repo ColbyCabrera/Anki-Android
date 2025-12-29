@@ -440,12 +440,7 @@ fun ReviewerContent(
             ) {
                 val menuOptions =
                     remember(state.isWhiteboardEnabled, state.isVoicePlaybackEnabled) {
-                        listOf(/*
-                                THIS DOESN'T WORK AS UNDO ISN'T IMPLEMENTED
-                                Triple(R.string.redo, Icons.AutoMirrored.Filled.Undo) {
-                                    viewModel.onEvent(ReviewerEvent.Redo)
-                                },
-                                */
+                        listOf(
                             Triple(
                                 if (state.isWhiteboardEnabled) R.string.disable_whiteboard else R.string.enable_whiteboard,
                                 Icons.Filled.Edit
