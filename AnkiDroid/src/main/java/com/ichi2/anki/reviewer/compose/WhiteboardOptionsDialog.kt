@@ -152,7 +152,7 @@ fun BrushOptionsContent(
                 value = brush.width,
                 onValueChange = { viewModel.setActiveStrokeWidth(it) },
                 valueRange = 1f..70f,
-                steps = 7, // Smoother slider to match legacy behavior (stepSize="1.0")
+                steps = 7,
             )
         }
     }
@@ -232,7 +232,7 @@ fun EraserOptionsContent(
                 value = width,
                 onValueChange = { viewModel.setActiveStrokeWidth(it) },
                 valueRange = 5f..200f,
-                steps = 8, // Smoother slider to match legacy behavior (stepSize="5.0")
+                steps = 8,
             )
         }
 
