@@ -119,7 +119,6 @@ import com.ichi2.utils.show
 import com.ichi2.utils.tintOverflowMenuIcons
 import com.ichi2.utils.title
 import com.ichi2.widget.WidgetStatus.updateInBackground
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -365,7 +364,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         whiteboardController.initialize()
         lifecycleScope.launch {
             val isMicToolbarEnabled =
-                withContext(Dispatchers.IO) { MetaDB.getMicToolbarState(this@Reviewer, parentDid) }
+                withContext(ioDispatcher) { MetaDB.getMicToolbarState(this@Reviewer, parentDid) }
             if (isMicToolbarEnabled) {
                 openMicToolbar()
             }
@@ -486,7 +485,8 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
             R.id.action_hide_whiteboard -> { // toggle whiteboard visibility
                 if (::whiteboardController.isInitialized) {
                     Timber.i(
-                        "Reviewer:: Whiteboard visibility set to %b", !whiteboardController.isVisible
+                        "Reviewer:: Whiteboard visibility set to %b",
+                        !whiteboardController.isVisible
                     )
                     whiteboardController.setVisibility(!whiteboardController.isVisible)
                     refreshActionBar()
@@ -679,7 +679,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         isMicToolBarVisible = !isMicToolBarVisible
         viewModel.onEvent(ReviewerEvent.OnVoicePlaybackStateChanged(isMicToolBarVisible))
 
-        lifecycleScope.launch(Dispatchers.IO) {
+        lifecycleScope.launch(ioDispatcher) {
             MetaDB.storeMicToolbarState(this@Reviewer, parentDid, isMicToolBarVisible)
         }
 
@@ -953,8 +953,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
             if (menu is MenuBuilder) {
                 // Use reflection to bypass package-private visibility
                 val method = menu.javaClass.getDeclaredMethod(
-                    "setOptionalIconsVisible",
-                    Boolean::class.javaPrimitiveType
+                    "setOptionalIconsVisible", Boolean::class.javaPrimitiveType
                 )
                 method.isAccessible = true
                 method.invoke(menu, true)
