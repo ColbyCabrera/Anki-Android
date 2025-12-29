@@ -111,7 +111,7 @@ class WhiteboardFragment : Fragment(R.layout.fragment_whiteboard),
                         onDismissRequest = { showEraserOptions.value = false })
                 }
 
-                brushIndex?.let { _ ->
+                brushIndex?.let {
                     BrushOptionsPopup(
                         viewModel = viewModel,
                         onDismissRequest = { showBrushOptionsIndex.value = null })
@@ -302,7 +302,7 @@ class WhiteboardFragment : Fragment(R.layout.fragment_whiteboard),
             ColorBrushButton(
                 brush = brush,
                 isSelected = (index == activeIndex && !isEraserActive),
-                onClick = { _ ->
+                onClick = {
                     if (viewModel.activeBrushIndex.value == index && !viewModel.isEraserActive.value) {
                         showBrushOptionsIndex.value = index
                     } else {
