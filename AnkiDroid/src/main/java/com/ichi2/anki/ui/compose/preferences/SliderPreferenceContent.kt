@@ -158,7 +158,6 @@ fun SliderPreferenceContent(
                             ?: sliderPosition.toInt().toString()
                     SliderThumbWithLabel(
                         isDragged = isDragged,
-                        displayValue = displayValue,
                         displayText = displayText,
                         interactionSource = interactionSource,
                         enabled = enabled
@@ -179,7 +178,6 @@ fun SliderPreferenceContent(
 @Composable
 fun SliderThumbWithLabel(
     isDragged: Boolean,
-    displayValue: Boolean,
     displayText: String,
     interactionSource: MutableInteractionSource,
     enabled: Boolean,
@@ -187,7 +185,7 @@ fun SliderThumbWithLabel(
 ) {
     Layout(
         content = {
-            if (isDragged && displayValue) {
+            if (isDragged) {
                 Box(
                     modifier = Modifier
                         .layoutId("label")
@@ -253,7 +251,6 @@ fun PreviewSliderThumbWithLabel() {
         Box(modifier = Modifier.padding(top = 40.dp, start = 40.dp)) {
             SliderThumbWithLabel(
                 isDragged = true,
-                displayValue = true,
                 displayText = "100%",
                 interactionSource = remember { MutableInteractionSource() },
                 enabled = true
