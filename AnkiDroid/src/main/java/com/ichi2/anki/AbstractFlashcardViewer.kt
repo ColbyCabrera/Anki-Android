@@ -752,7 +752,7 @@ abstract class AbstractFlashcardViewer : NavigationDrawerActivity(), ViewerComma
     // CUSTOM METHODS
     // ----------------------------------------------------------------------------
     // Get the did of the parent deck (ignoring any subdecks)
-    protected val parentDid: DeckId
+    val parentDid: DeckId
         get() = getColUnsafe.decks.selected()
 
     private fun redrawCard() {
@@ -1917,7 +1917,7 @@ abstract class AbstractFlashcardViewer : NavigationDrawerActivity(), ViewerComma
         finish()
     }
 
-    protected fun refreshActionBar() {
+    fun refreshActionBar() {
         invalidateOptionsMenu()
     }
 
@@ -2543,7 +2543,7 @@ abstract class AbstractFlashcardViewer : NavigationDrawerActivity(), ViewerComma
             }
             try {
                 startActivity(intent)
-            } catch (ignored: ActivityNotFoundException) {
+            } catch (_: ActivityNotFoundException) {
                 Timber.w("No app found to handle open external url from AbstractFlashcardViewer")
                 showSnackbar(R.string.activity_start_failed)
             }

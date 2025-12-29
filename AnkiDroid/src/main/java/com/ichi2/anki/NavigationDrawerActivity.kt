@@ -256,7 +256,12 @@ abstract class NavigationDrawerActivity :
      * but continues to allowed it to be opened via it's indicator button. This
      * function in a noop if the drawer hasn't been initialized.
      */
-    protected fun disableDrawerSwipe() {
+    /**
+     * This function locks the navigation drawer closed in regards to swipes,
+     * but continues to allowed it to be opened via it's indicator button. This
+     * function in a noop if the drawer hasn't been initialized.
+     */
+    fun disableDrawerSwipe() {
         drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
     }
 
@@ -264,7 +269,7 @@ abstract class NavigationDrawerActivity :
      * This function allows swipes to open the navigation drawer. This
      * function in a noop if the drawer hasn't been initialized.
      */
-    protected fun enableDrawerSwipe() {
+    fun enableDrawerSwipe() {
         drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
     }
 
