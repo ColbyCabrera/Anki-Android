@@ -237,6 +237,10 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
                 }
             }
         }
+
+        // Initialize whiteboard controller directly (collection is already loaded from DeckPicker)
+        whiteboardController = WhiteboardController(this, whiteboardViewModel, viewModel)
+        whiteboardController.initialize()
     }
 
     override fun onResume() {
@@ -513,8 +517,14 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     }
 
     public override fun toggleWhiteboard() {
+        Timber.d(
+            "toggleWhiteboard() called, isInitialized: %s",
+            ::whiteboardController.isInitialized
+        )
         if (::whiteboardController.isInitialized) {
             whiteboardController.toggle()
+        } else {
+            Timber.w("toggleWhiteboard() called but whiteboardController not initialized")
         }
     }
 
