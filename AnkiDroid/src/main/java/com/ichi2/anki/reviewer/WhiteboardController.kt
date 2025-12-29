@@ -18,6 +18,7 @@
 package com.ichi2.anki.reviewer
 
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.snackbar.Snackbar
 import com.ichi2.anki.MetaDB
 import com.ichi2.anki.R
 import com.ichi2.anki.Reviewer
@@ -82,13 +83,14 @@ class WhiteboardController(
                 viewModel.setActiveBrush(viewModel.activeBrushIndex.value)
                 Timber.i("Reviewer:: Whiteboard eraser mode disabled")
                 activity.showSnackbar(
-                    activity.getString(R.string.white_board_eraser_disabled),
-                    1000
+                    activity.getString(R.string.white_board_eraser_disabled), Snackbar.LENGTH_SHORT
                 )
             } else {
                 viewModel.enableEraser()
                 Timber.i("Reviewer:: Whiteboard eraser mode enabled")
-                activity.showSnackbar(activity.getString(R.string.white_board_eraser_enabled), 1000)
+                activity.showSnackbar(
+                    activity.getString(R.string.white_board_eraser_enabled), Snackbar.LENGTH_SHORT
+                )
             }
             activity.refreshActionBar()
         }
@@ -128,7 +130,7 @@ class WhiteboardController(
                 if (savedFile != null) {
                     activity.showSnackbar(
                         activity.getString(R.string.white_board_image_saved, savedFile.path),
-                        com.google.android.material.snackbar.Snackbar.LENGTH_SHORT
+                        Snackbar.LENGTH_SHORT
                     )
                 } else {
                     val errorReason = if (viewModel.paths.value.isEmpty()) {
@@ -138,7 +140,7 @@ class WhiteboardController(
                     }
                     activity.showSnackbar(
                         activity.getString(R.string.white_board_image_save_failed, errorReason),
-                        com.google.android.material.snackbar.Snackbar.LENGTH_SHORT
+                        Snackbar.LENGTH_SHORT
                     )
                 }
             } catch (e: Exception) {
@@ -147,7 +149,7 @@ class WhiteboardController(
                     activity.getString(
                         R.string.white_board_image_save_failed,
                         e.localizedMessage ?: activity.getString(R.string.something_wrong)
-                    ), com.google.android.material.snackbar.Snackbar.LENGTH_SHORT
+                    ), Snackbar.LENGTH_SHORT
                 )
             }
         }
@@ -158,6 +160,7 @@ class WhiteboardController(
             viewModel.reset()
         }
     }
+
     fun changePenColor() {
         // No-op in legacy Reviewer, handled by Compose/ViewModel interactions if needed
     }
