@@ -75,10 +75,10 @@ fun BrushOptionsDialog(
         onDismissRequest = onDismissRequest,
         confirmButton = {
             TextButton(onClick = onDismissRequest) {
-                Text(stringResource(R.string.brush_options))
+                Text(stringResource(R.string.dialog_ok))
             }
         },
-        title = { Text(stringResource(R.string.add_brush)) },
+        title = { Text(stringResource(R.string.brush_options)) },
         text = {
             BrushOptionsContent(viewModel)
         },
@@ -151,8 +151,8 @@ fun BrushOptionsContent(
             Slider(
                 value = brush.width,
                 onValueChange = { viewModel.setActiveStrokeWidth(it) },
-                valueRange = 1f..60f,
-                steps = 59, // Smoother slider to match legacy behavior (stepSize="1.0")
+                valueRange = 1f..70f,
+                steps = 7, // Smoother slider to match legacy behavior (stepSize="1.0")
             )
         }
     }
