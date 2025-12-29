@@ -27,7 +27,6 @@ import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
-import android.os.Looper
 import android.os.Message
 import android.os.Parcelable
 import android.view.Menu
@@ -45,7 +44,6 @@ import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.widget.ThemeUtils
-import androidx.appcompat.widget.Toolbar
 import androidx.appcompat.widget.TooltipCompat
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.app.ActivityCompat
@@ -173,7 +171,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     private var showRemainingCardCount = false
     private var stopTimerOnAnswer = false
     private val actionButtons = ActionButtons()
-    private lateinit var toolbar: Toolbar
 
 
     private val addNoteLauncher = registerForActivityResult(
@@ -561,8 +558,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
             whiteboardController.toggleEraser()
         }
     }
-
-    private val handler = Handler(Looper.getMainLooper())
 
     public override fun clearWhiteboard() {
         if (::whiteboardController.isInitialized) {
