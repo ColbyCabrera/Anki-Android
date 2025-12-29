@@ -103,6 +103,16 @@ class WhiteboardControllerTest : RobolectricTest() {
     }
 
     @Test
+    fun whiteboardVisibilityCanBeHidden() {
+        // First show, then hide
+        MetaDB.storeWhiteboardVisibility(targetContext, Consts.DEFAULT_DECK_ID, true)
+        MetaDB.storeWhiteboardVisibility(targetContext, Consts.DEFAULT_DECK_ID, false)
+
+        val visibility = MetaDB.getWhiteboardVisibility(targetContext, Consts.DEFAULT_DECK_ID)
+        assertThat("Whiteboard visibility can be hidden", visibility, equalTo(false))
+    }
+
+    @Test
     fun whiteboardVisibilityIsDeckSpecific() {
         val deck1 = 1L
         val deck2 = 2L
