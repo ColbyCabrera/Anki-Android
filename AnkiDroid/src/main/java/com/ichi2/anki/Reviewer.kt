@@ -18,16 +18,12 @@
 package com.ichi2.anki
 
 import android.Manifest
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.os.Handler
-import android.os.Message
 import android.os.Parcelable
 import android.view.Menu
 import android.view.MenuItem
@@ -51,7 +47,6 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import anki.frontend.SetSchedulingStatesRequest
 import anki.scheduler.CardAnswer.Rating
-import com.google.android.material.color.MaterialColors
 import com.google.android.material.snackbar.Snackbar
 import com.ichi2.anim.ActivityTransitionAnimation.getInverseTransition
 import com.ichi2.anki.CollectionManager.TR
@@ -86,7 +81,6 @@ import com.ichi2.anki.reviewer.ActionButtons
 import com.ichi2.anki.reviewer.AnswerButtons.Companion.getBackgroundColors
 import com.ichi2.anki.reviewer.AnswerButtons.Companion.getTextColors
 import com.ichi2.anki.reviewer.AutomaticAnswerAction
-import com.ichi2.anki.reviewer.FullScreenMode.Companion.fromPreference
 import com.ichi2.anki.reviewer.FullScreenMode.Companion.isFullScreenReview
 import com.ichi2.anki.reviewer.ReviewerEffect
 import com.ichi2.anki.reviewer.ReviewerEvent
@@ -106,7 +100,6 @@ import com.ichi2.anki.utils.ext.setUserFlagForCards
 import com.ichi2.anki.utils.ext.showDialogFragment
 import com.ichi2.themes.Themes
 import com.ichi2.utils.HandlerUtils.executeFunctionWithDelay
-import com.ichi2.utils.HandlerUtils.getDefaultLooper
 import com.ichi2.utils.Permissions.canRecordAudio
 import com.ichi2.utils.ViewGroupUtils.setRenderWorkaround
 import com.ichi2.utils.cancelable
@@ -375,10 +368,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         }
         disableDrawerSwipeOnConflicts()
 
-        // Set full screen/immersive mode if needed
-        if (prefFullscreenReview) {
-            setFullScreen(this)
-        }
         setRenderWorkaround(this)
     }
 
@@ -387,8 +376,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // 100ms was not enough on my device (Honor 9 Lite -  Android Pie)
-        delayedHide(1000)
         if (drawerToggle.onOptionsItemSelected(item)) {
             return true
         }
@@ -1084,7 +1071,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     override fun displayCardQuestion() {
         statesMutated = false
         // show timer, if activated in the deck's preferences
-        delayedHide(100)
         super.displayCardQuestion()
     }
 
@@ -1098,7 +1084,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
             return
         }
 
-        delayedHide(100)
         super.displayCardAnswer()
     }
 
@@ -1295,17 +1280,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     }
 
     override fun onSingleTap(): Boolean {
-        if (prefFullscreenReview && isImmersiveSystemUiVisible(this)) {
-            delayedHide(INITIAL_HIDE_DELAY)
-            return true
-        }
         return false
-    }
-
-    override fun onFling() {
-        if (prefFullscreenReview && isImmersiveSystemUiVisible(this)) {
-            delayedHide(INITIAL_HIDE_DELAY)
-        }
     }
 
     override fun onCardEdited(card: Card) {
@@ -1319,83 +1294,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
             card.startTimer()
         }
     }
-
-    private val fullScreenHandler: Handler = object : Handler(getDefaultLooper()) {
-        override fun handleMessage(msg: Message) {
-            if (prefFullscreenReview) {
-                setFullScreen(this@Reviewer)
-            }
-        }
-    }
-
-    /** Hide the navigation if in full-screen mode after a given period of time  */
-    protected open fun delayedHide(delayMillis: Int) {
-        Timber.d("Fullscreen delayed hide in %dms", delayMillis)
-        fullScreenHandler.removeMessages(0)
-        fullScreenHandler.sendEmptyMessageDelayed(0, delayMillis.toLong())
-    }
-
-
-    @Suppress("deprecation") // #9332: UI Visibility -> Insets
-    private fun setFullScreen(a: AbstractFlashcardViewer) {
-        // Set appropriate flags to enable Sticky Immersive mode.
-        a.window.decorView.systemUiVisibility =
-            (View.SYSTEM_UI_FLAG_LAYOUT_STABLE // | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION // temporarily disabled due to #5245
-                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_LOW_PROFILE or View.SYSTEM_UI_FLAG_IMMERSIVE)
-        // Show / hide the Action bar together with the status bar
-        val prefs = a.sharedPrefs()
-        val fullscreenMode = fromPreference(prefs)
-        a.window.statusBarColor = MaterialColors.getColor(a, R.attr.appBarColor, 0)
-        val decorView = a.window.decorView
-        decorView.setOnSystemUiVisibilityChangeListener { flags: Int ->
-            val toolbar = a.findViewById<View>(R.id.toolbar)
-            val answerButtons = a.findViewById<View>(R.id.answer_options_layout)
-            val topbar = a.findViewById<View>(R.id.top_bar)
-            if (toolbar == null || topbar == null || answerButtons == null) {
-                return@setOnSystemUiVisibilityChangeListener
-            }
-            // Note that system bars will only be "visible" if none of the
-            // LOW_PROFILE, HIDE_NAVIGATION, or FULLSCREEN flags are set.
-            val visible = flags and View.SYSTEM_UI_FLAG_HIDE_NAVIGATION == 0
-            Timber.d("System UI visibility change. Visible: %b", visible)
-            if (visible) {
-                showViewWithAnimation(toolbar)
-                if (fullscreenMode == com.ichi2.anki.reviewer.FullScreenMode.FULLSCREEN_ALL_GONE) {
-                    showViewWithAnimation(topbar)
-                    showViewWithAnimation(answerButtons)
-                }
-            } else {
-                hideViewWithAnimation(toolbar)
-                if (fullscreenMode == com.ichi2.anki.reviewer.FullScreenMode.FULLSCREEN_ALL_GONE) {
-                    hideViewWithAnimation(topbar)
-                    hideViewWithAnimation(answerButtons)
-                }
-            }
-        }
-    }
-
-    private fun showViewWithAnimation(view: View) {
-        view.alpha = 0.0f
-        view.visibility = View.VISIBLE
-        view.animate().alpha(TRANSPARENCY).setDuration(ANIMATION_DURATION.toLong())
-            .setListener(null)
-    }
-
-    private fun hideViewWithAnimation(view: View) {
-        view.animate().alpha(0f).setDuration(ANIMATION_DURATION.toLong()).setListener(
-            object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator) {
-                    view.visibility = View.GONE
-                }
-            },
-        )
-    }
-
-    @Suppress("deprecation") // #9332: UI Visibility -> Insets
-    private fun isImmersiveSystemUiVisible(
-        activity: AnkiActivity,
-    ): Boolean =
-        activity.window.decorView.systemUiVisibility and View.SYSTEM_UI_FLAG_HIDE_NAVIGATION == 0
 
     override suspend fun handlePostRequest(
         uri: String,
@@ -1477,12 +1375,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        // Restore full screen once we regain focus
-        if (hasFocus) {
-            delayedHide(INITIAL_HIDE_DELAY)
-        } else {
-            fullScreenHandler.removeMessages(0)
-        }
     }
 
     /**
@@ -1539,8 +1431,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         const val EXTRA_DECK_ID = "deckId"
 
         private const val REQUEST_AUDIO_PERMISSION = 0
-        private const val ANIMATION_DURATION = 200
-        private const val TRANSPARENCY = 0.90f
 
         /** Default (500ms) time for action snackbars, such as undo, bury and suspend */
         const val ACTION_SNACKBAR_TIME = 500
