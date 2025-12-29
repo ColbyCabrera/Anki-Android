@@ -56,6 +56,7 @@ import com.ichi2.anki.requireAnkiActivity
 import com.ichi2.anki.scheduling.SetDueDateViewModel.Tab
 import com.ichi2.anki.servicelayer.getFSRSStatus
 import com.ichi2.anki.showThemedToast
+import com.ichi2.anki.snackbar.canProperlyShowSnackbars
 import com.ichi2.anki.snackbar.showSnackbar
 import com.ichi2.anki.ui.internationalization.toSentenceCase
 import com.ichi2.anki.utils.openUrl
@@ -156,7 +157,7 @@ class SetDueDateDialog : DialogFragment() {
                 viewPager.adapter = DueDateStateAdapter(this@SetDueDateDialog)
                 val tabLayout = findViewById<TabLayout>(R.id.tab_layout)!!
                 TabLayoutMediator(tabLayout, viewPager) { tab: TabLayout.Tab, position: Int ->
-                    SetDueDateViewModel.Tab.entries
+                    Tab.entries
                         .first { it.position == position }
                         .let { selectedTab ->
                             tab.setIcon(selectedTab.icon)
@@ -167,7 +168,7 @@ class SetDueDateDialog : DialogFragment() {
                 viewPager.registerOnPageChangeCallback(
                     object : ViewPager2.OnPageChangeCallback() {
                         override fun onPageSelected(position: Int) {
-                            SetDueDateViewModel.Tab.entries.first { it.position == position }.let { selectedTab ->
+                            Tab.entries.first { it.position == position }.let { selectedTab ->
                                 viewModel.currentTab = selectedTab
                             }
                             super.onPageSelected(position)
@@ -394,14 +395,19 @@ private fun AnkiActivity.updateDueDate(
             return@asyncCatching null
         }
         Timber.d("updated %d cards", cardsUpdated)
-        showSnackbar(TR.schedulingSetDueDateDone(cardsUpdated), Snackbar.LENGTH_SHORT)
+        val message = TR.schedulingSetDueDateDone(cardsUpdated)
+        if (canProperlyShowSnackbars()) {
+            showSnackbar(message, Snackbar.LENGTH_SHORT)
+        } else {
+            showThemedToast(this@updateDueDate, message, true)
+        }
         return@asyncCatching cardsUpdated
     }
 
 private fun EditText.selectAllWhenFocused() {
-    setOnFocusChangeListener({ _, hasFocus ->
+    setOnFocusChangeListener { _, hasFocus ->
         if (hasFocus) {
             selectAll()
         }
-    })
+    }
 }
