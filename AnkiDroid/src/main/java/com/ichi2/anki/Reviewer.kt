@@ -411,7 +411,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
             R.id.action_undo -> {
                 Timber.i("Reviewer:: Undo button pressed")
-                if (whiteboardController.isVisible && whiteboardController.canUndo()) {
+                if (::whiteboardController.isInitialized && whiteboardController.isVisible && whiteboardController.canUndo()) {
                     whiteboardController.undo()
                 } else {
                     undo()
@@ -476,7 +476,9 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
             R.id.action_save_whiteboard -> {
                 Timber.i("Reviewer:: Save whiteboard button pressed")
-                whiteboardController.saveToFile()
+                if (::whiteboardController.isInitialized) {
+                    whiteboardController.saveToFile()
+                }
             }
 
             R.id.action_clear_whiteboard -> {
@@ -485,11 +487,13 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
             }
 
             R.id.action_hide_whiteboard -> { // toggle whiteboard visibility
-                Timber.i(
-                    "Reviewer:: Whiteboard visibility set to %b", !whiteboardController.isVisible
-                )
-                whiteboardController.setVisibility(!whiteboardController.isVisible)
-                refreshActionBar()
+                if (::whiteboardController.isInitialized) {
+                    Timber.i(
+                        "Reviewer:: Whiteboard visibility set to %b", !whiteboardController.isVisible
+                    )
+                    whiteboardController.setVisibility(!whiteboardController.isVisible)
+                    refreshActionBar()
+                }
             }
 
             R.id.action_toggle_eraser -> { // toggle eraser mode
@@ -547,21 +551,29 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     }
 
     public override fun toggleWhiteboard() {
-        whiteboardController.toggle()
+        if (::whiteboardController.isInitialized) {
+            whiteboardController.toggle()
+        }
     }
 
     public override fun toggleEraser() {
-        whiteboardController.toggleEraser()
+        if (::whiteboardController.isInitialized) {
+            whiteboardController.toggleEraser()
+        }
     }
 
     private val handler = Handler(Looper.getMainLooper())
 
     public override fun clearWhiteboard() {
-        whiteboardController.clear()
+        if (::whiteboardController.isInitialized) {
+            whiteboardController.clear()
+        }
     }
 
     public override fun changeWhiteboardPenColor() {
-        whiteboardController.changePenColor()
+        if (::whiteboardController.isInitialized) {
+            whiteboardController.changePenColor()
+        }
     }
 
     override fun replayVoice() {
@@ -595,7 +607,9 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
     override fun updateForNewCard() {
         Timber.i("updateForNewCard")
-        whiteboardController.updateForNewCard()
+        if (::whiteboardController.isInitialized) {
+            whiteboardController.updateForNewCard()
+        }
         audioRecordingController?.updateUIForNewCard()
     }
 
@@ -764,7 +778,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         @DrawableRes val undoIconId: Int
         val undoEnabled: Boolean
         val whiteboardIsShownAndHasStrokes =
-            whiteboardController.isVisible && whiteboardViewModel.canUndo.value
+            ::whiteboardController.isInitialized && whiteboardController.isVisible && whiteboardController.canUndo()
         if (whiteboardIsShownAndHasStrokes) {
             undoIconId = R.drawable.ic_arrow_u_left_top
             undoEnabled = true
@@ -832,7 +846,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         val hideWhiteboardIcon = menu.findItem(R.id.action_hide_whiteboard)
         val changePenColorIcon = menu.findItem(R.id.action_change_whiteboard_pen_color)
         // White board button
-        if (whiteboardController.isEnabled) {
+        if (::whiteboardController.isInitialized && whiteboardController.isEnabled) {
             // Configure the whiteboard related items in the action bar
             toggleWhiteboardIcon.setTitle(R.string.disable_whiteboard)
             // Always allow "Disable Whiteboard", even if "Enable Whiteboard" is disabled
@@ -862,7 +876,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
                     .mutate()
             val eraserIcon =
                 ContextCompat.getDrawable(applicationContext, R.drawable.ic_eraser)!!.mutate()
-            if (whiteboardController.isVisible) {
+            if (::whiteboardController.isInitialized && whiteboardController.isVisible) {
                 // "hide whiteboard" icon
                 whiteboardIcon.alpha = Themes.ALPHA_ICON_ENABLED_LIGHT
                 hideWhiteboardIcon.icon = whiteboardIcon
@@ -1014,7 +1028,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
     override fun fillFlashcard() {
         super.fillFlashcard()
-        if (!isDisplayingAnswer && whiteboardController.isVisible) {
+        if (::whiteboardController.isInitialized && !isDisplayingAnswer && whiteboardController.isVisible) {
             whiteboardController.clear()
         }
     }
@@ -1130,7 +1144,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
     override fun initControls() {
         super.initControls()
-        if (whiteboardController.isEnabled) {
+        if (::whiteboardController.isInitialized && whiteboardController.isEnabled) {
             whiteboardController.setVisibility(whiteboardController.isVisible)
         }
     }
@@ -1302,7 +1316,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
     override fun onCardEdited(card: Card) {
         super.onCardEdited(card)
-        if (whiteboardController.isEnabled) {
+        if (::whiteboardController.isInitialized && whiteboardController.isEnabled) {
             whiteboardController.clear()
         }
         if (!isDisplayingAnswer) {
@@ -1539,5 +1553,4 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
         fun getIntent(context: Context): Intent = Intent(context, Reviewer::class.java)
     }
-
 }
