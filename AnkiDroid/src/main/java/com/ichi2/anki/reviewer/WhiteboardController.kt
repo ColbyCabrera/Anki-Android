@@ -24,7 +24,7 @@ import com.ichi2.anki.R
 import com.ichi2.anki.Reviewer
 import com.ichi2.anki.snackbar.showSnackbar
 import com.ichi2.anki.ui.windows.reviewer.whiteboard.WhiteboardViewModel
-import kotlinx.coroutines.Dispatchers
+import com.ichi2.anki.ioDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -42,14 +42,14 @@ class WhiteboardController(
 
     fun initialize() {
         activity.lifecycleScope.launch {
-            isEnabled = withContext(Dispatchers.IO) {
+            isEnabled = withContext(ioDispatcher) {
                 MetaDB.getWhiteboardState(activity, activity.parentDid)
             }
             reviewerViewModel.onEvent(ReviewerEvent.OnWhiteboardStateChanged(isEnabled))
 
             if (isEnabled) {
                 // DEFECT: Slight inefficiency here, as we set the database using these methods
-                isVisible = withContext(Dispatchers.IO) {
+                isVisible = withContext(ioDispatcher) {
                     MetaDB.getWhiteboardVisibility(activity, activity.parentDid)
                 }
                 setEnabledState(true) // Updates persistence and viewmodel
@@ -98,14 +98,14 @@ class WhiteboardController(
 
     private fun setEnabledState(state: Boolean) {
         isEnabled = state
-        activity.lifecycleScope.launch(Dispatchers.IO) {
+        activity.lifecycleScope.launch(ioDispatcher) {
             MetaDB.storeWhiteboardState(activity, activity.parentDid, state)
         }
     }
 
     fun setVisibility(state: Boolean) {
         isVisible = state
-        activity.lifecycleScope.launch(Dispatchers.IO) {
+        activity.lifecycleScope.launch(ioDispatcher) {
             MetaDB.storeWhiteboardVisibility(activity, activity.parentDid, state)
         }
         // Whiteboard visibility is now managed by Compose UI
