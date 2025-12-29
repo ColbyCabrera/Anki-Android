@@ -239,10 +239,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-    }
-
     override fun onResume() {
         super.onResume()
         if (typeAnswer?.autoFocusEditText() == true) {
@@ -284,13 +280,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         launchCatchingTask {
             toggleMark(card.note(getColUnsafe), handler = this@Reviewer)
             refreshActionBar()
-            onMarkChanged()
-        }
-    }
-
-    private fun onMarkChanged() {
-        if (currentCard == null) {
-            return
         }
     }
 
@@ -307,13 +296,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
                 setUserFlagForCards(listOf(card.id), flag)
             }
             refreshActionBar()
-            onFlagChanged()
-        }
-    }
-
-    private fun onFlagChanged() {
-        if (currentCard == null) {
-            return
         }
     }
 
@@ -518,15 +500,11 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
                 openCardInfo()
             }
 
-            R.id.user_action_1 -> userAction(1)
-            R.id.user_action_2 -> userAction(2)
-            R.id.user_action_3 -> userAction(3)
-            R.id.user_action_4 -> userAction(4)
-            R.id.user_action_5 -> userAction(5)
-            R.id.user_action_6 -> userAction(6)
-            R.id.user_action_7 -> userAction(7)
-            R.id.user_action_8 -> userAction(8)
-            R.id.user_action_9 -> userAction(9)
+            in USER_ACTION_MENU_IDS -> {
+                val actionNumber = USER_ACTION_MENU_IDS.indexOf(item.itemId) + 1
+                userAction(actionNumber)
+            }
+
             else -> {
                 return super.onOptionsItemSelected(item)
             }
@@ -687,7 +665,8 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
     private fun showDueDateDialog() = launchCatchingTask {
         Timber.i("showing due date dialog")
-        val dialog = SetDueDateDialog.newInstance(listOf(currentCardId!!))
+        val cardId = currentCardId ?: return@launchCatchingTask
+        val dialog = SetDueDateDialog.newInstance(listOf(cardId))
         showDialogFragment(dialog)
     }
 
@@ -994,7 +973,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
     override fun automaticShowQuestion(action: AutomaticAnswerAction) {
         // explicitly do not call super
-        if (easeButton1!!.canPerformClick) {
+        if (easeButton1?.canPerformClick == true) {
             action.execute(this)
         }
     }
@@ -1016,8 +995,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
     override fun onPageFinished(view: WebView) {
         super.onPageFinished(view)
-        onFlagChanged()
-        onMarkChanged()
         if (!displayAnswer) {
             runStateMutationHook()
         }
@@ -1035,8 +1012,9 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     }
 
     override suspend fun answerCardInner(rating: Rating) {
-        val state = queueState!!
-        Timber.d("answerCardInner: ${currentCard!!.id} $rating")
+        val state = queueState ?: return
+        val card = currentCard ?: return
+        Timber.d("answerCardInner: ${card.id} $rating")
         undoableOp(this) {
             sched.answerCard(state, rating)
         }
@@ -1132,42 +1110,19 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         which: ViewerCommand,
         fromGesture: Gesture?,
     ): Boolean {
+        // Handle flag toggle commands via lookup
+        VIEWER_COMMAND_TO_FLAG[which]?.let { flag ->
+            toggleFlag(flag)
+            return true
+        }
+
+        // Handle user action commands via lookup
+        VIEWER_COMMAND_TO_USER_ACTION[which]?.let { actionNumber ->
+            userAction(actionNumber)
+            return true
+        }
+
         when (which) {
-            ViewerCommand.TOGGLE_FLAG_RED -> {
-                toggleFlag(Flag.RED)
-                return true
-            }
-
-            ViewerCommand.TOGGLE_FLAG_ORANGE -> {
-                toggleFlag(Flag.ORANGE)
-                return true
-            }
-
-            ViewerCommand.TOGGLE_FLAG_GREEN -> {
-                toggleFlag(Flag.GREEN)
-                return true
-            }
-
-            ViewerCommand.TOGGLE_FLAG_BLUE -> {
-                toggleFlag(Flag.BLUE)
-                return true
-            }
-
-            ViewerCommand.TOGGLE_FLAG_PINK -> {
-                toggleFlag(Flag.PINK)
-                return true
-            }
-
-            ViewerCommand.TOGGLE_FLAG_TURQUOISE -> {
-                toggleFlag(Flag.TURQUOISE)
-                return true
-            }
-
-            ViewerCommand.TOGGLE_FLAG_PURPLE -> {
-                toggleFlag(Flag.PURPLE)
-                return true
-            }
-
             ViewerCommand.UNSET_FLAG -> {
                 onFlag(currentCard, Flag.NONE)
                 return true
@@ -1203,50 +1158,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
                 return true
             }
 
-            ViewerCommand.USER_ACTION_1 -> {
-                userAction(1)
-                return true
-            }
-
-            ViewerCommand.USER_ACTION_2 -> {
-                userAction(2)
-                return true
-            }
-
-            ViewerCommand.USER_ACTION_3 -> {
-                userAction(3)
-                return true
-            }
-
-            ViewerCommand.USER_ACTION_4 -> {
-                userAction(4)
-                return true
-            }
-
-            ViewerCommand.USER_ACTION_5 -> {
-                userAction(5)
-                return true
-            }
-
-            ViewerCommand.USER_ACTION_6 -> {
-                userAction(6)
-                return true
-            }
-
-            ViewerCommand.USER_ACTION_7 -> {
-                userAction(7)
-                return true
-            }
-
-            ViewerCommand.USER_ACTION_8 -> {
-                userAction(8)
-                return true
-            }
-
-            ViewerCommand.USER_ACTION_9 -> {
-                userAction(9)
-                return true
-            }
 
             else -> return super.executeCommand(which, fromGesture)
         }
@@ -1264,12 +1175,13 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     }
 
     private fun toggleFlag(flag: Flag) {
-        if (currentCard!!.flag == flag) {
+        val card = currentCard ?: return
+        if (card.flag == flag) {
             Timber.i("Toggle flag: unsetting flag")
-            onFlag(currentCard, Flag.NONE)
+            onFlag(card, Flag.NONE)
         } else {
             Timber.i("Toggle flag: Setting flag to %d", flag.code)
-            onFlag(currentCard, flag)
+            onFlag(card, flag)
         }
     }
 
@@ -1338,18 +1250,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         return ByteArray(0)
     }
 
-    @Deprecated(
-        "Whiteboard is now managed by WhiteboardViewModel and Compose UI",
-        level = DeprecationLevel.WARNING
-    )
-    private fun createWhiteboard() {
-        // Old whiteboard creation is no longer needed
-        // The whiteboard is now rendered via WhiteboardCanvas composable
-        // and state is managed by WhiteboardViewModel
-    }
-
-    // Show or hide the whiteboard
-
 
     private fun disableDrawerSwipeOnConflicts() {
         if (gestureProcessor.isBound(Gesture.SWIPE_UP, Gesture.SWIPE_DOWN, Gesture.SWIPE_RIGHT)) {
@@ -1371,40 +1271,31 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     }
 
     override val currentCardId: CardId?
-        get() = currentCard!!.id
+        get() = currentCard?.id
 
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-    }
 
     /**
      * Whether or not dismiss note is available for current card and specified DismissType
      * @return true if there is another card of same note that could be dismissed
      */
     private fun suspendNoteAvailable(): Boolean {
-        return if (currentCard == null) {
-            false
-        } else {
-            getColUnsafe.db.queryScalar(
-                "select 1 from cards where nid = ? and id != ? and queue != ${QueueType.Suspended.code} limit 1",
-                currentCard!!.nid,
-                currentCard!!.id,
-            ) == 1
-        }
-        // whether there exists a sibling not buried.
+        val card = currentCard ?: return false
+        // whether there exists a sibling not suspended
+        return getColUnsafe.db.queryScalar(
+            "select 1 from cards where nid = ? and id != ? and queue != ${QueueType.Suspended.code} limit 1",
+            card.nid,
+            card.id,
+        ) == 1
     }
 
     private fun buryNoteAvailable(): Boolean {
-        return if (currentCard == null) {
-            false
-        } else {
-            getColUnsafe.db.queryScalar(
-                "select 1 from cards where nid = ? and id != ? and queue >=  ${QueueType.New.code} limit 1",
-                currentCard!!.nid,
-                currentCard!!.id,
-            ) == 1
-        }
-        // Whether there exists a sibling which is neither suspended nor buried
+        val card = currentCard ?: return false
+        // whether there exists a sibling which is neither suspended nor buried
+        return getColUnsafe.db.queryScalar(
+            "select 1 from cards where nid = ? and id != ? and queue >= ${QueueType.New.code} limit 1",
+            card.nid,
+            card.id,
+        ) == 1
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
@@ -1434,6 +1325,43 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
         /** Default (500ms) time for action snackbars, such as undo, bury and suspend */
         const val ACTION_SNACKBAR_TIME = 500
+
+        /** Maps ViewerCommand to corresponding Flag for toggle operations */
+        private val VIEWER_COMMAND_TO_FLAG = mapOf(
+            ViewerCommand.TOGGLE_FLAG_RED to Flag.RED,
+            ViewerCommand.TOGGLE_FLAG_ORANGE to Flag.ORANGE,
+            ViewerCommand.TOGGLE_FLAG_GREEN to Flag.GREEN,
+            ViewerCommand.TOGGLE_FLAG_BLUE to Flag.BLUE,
+            ViewerCommand.TOGGLE_FLAG_PINK to Flag.PINK,
+            ViewerCommand.TOGGLE_FLAG_TURQUOISE to Flag.TURQUOISE,
+            ViewerCommand.TOGGLE_FLAG_PURPLE to Flag.PURPLE,
+        )
+
+        /** Maps ViewerCommand to corresponding user action number */
+        private val VIEWER_COMMAND_TO_USER_ACTION = mapOf(
+            ViewerCommand.USER_ACTION_1 to 1,
+            ViewerCommand.USER_ACTION_2 to 2,
+            ViewerCommand.USER_ACTION_3 to 3,
+            ViewerCommand.USER_ACTION_4 to 4,
+            ViewerCommand.USER_ACTION_5 to 5,
+            ViewerCommand.USER_ACTION_6 to 6,
+            ViewerCommand.USER_ACTION_7 to 7,
+            ViewerCommand.USER_ACTION_8 to 8,
+            ViewerCommand.USER_ACTION_9 to 9,
+        )
+
+        /** Menu item IDs for user actions, ordered 1-9 */
+        private val USER_ACTION_MENU_IDS = listOf(
+            R.id.user_action_1,
+            R.id.user_action_2,
+            R.id.user_action_3,
+            R.id.user_action_4,
+            R.id.user_action_5,
+            R.id.user_action_6,
+            R.id.user_action_7,
+            R.id.user_action_8,
+            R.id.user_action_9
+        )
 
         fun getIntent(context: Context): Intent = Intent(context, Reviewer::class.java)
     }
