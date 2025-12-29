@@ -48,13 +48,18 @@ class WhiteboardController(
             reviewerViewModel.onEvent(ReviewerEvent.OnWhiteboardStateChanged(isEnabled))
 
             if (isEnabled) {
-                // DEFECT: Slight inefficiency here, as we set the database using these methods
                 isVisible = withContext(ioDispatcher) {
                     MetaDB.getWhiteboardVisibility(activity, activity.parentDid)
                 }
-                setEnabledState(true) // Updates persistence and viewmodel
-                setVisibility(isVisible) // Updates persistence and drawer
-
+                // Apply side effects without redundant DB writes (we just read these values)
+                if (isVisible) {
+                    activity.disableDrawerSwipe()
+                } else {
+                    if (!activity.hasDrawerSwipeConflicts()) {
+                        activity.enableDrawerSwipe()
+                    }
+                }
+                activity.refreshActionBar()
                 // Stylus mode is managed in WhiteboardViewModel
             }
         }
