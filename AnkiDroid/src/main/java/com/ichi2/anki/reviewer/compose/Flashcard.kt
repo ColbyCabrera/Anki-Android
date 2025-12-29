@@ -44,7 +44,7 @@ fun Flashcard(
     modifier: Modifier = Modifier,
     mediaDirectory: File?,
     isAnswerShown: Boolean,
-    toolbarHeight: Int = 0
+    toolbarHeight: Int = 0,
 ) {
     val onSurfaceColor = MaterialTheme.colorScheme.onSurface
     val onSurfaceColorHex = String.format("#%06X", (0xFFFFFF and onSurfaceColor.toArgb()))
@@ -54,7 +54,7 @@ fun Flashcard(
 
     Crossfade(
         targetState = Pair(isAnswerShown, html),
-        animationSpec = tween(300)
+        animationSpec = tween(300),
     ) { (shown, currentHtml) ->
         val currentStyle = if (shown) bodyLargeStyle else displayLargeStyle
         val currentPadding = if (shown) 40 else 36
@@ -63,21 +63,26 @@ fun Flashcard(
                 WebView(context).apply {
                     settings.javaScriptEnabled = true
                     settings.allowFileAccess = true
-                    webViewClient = object : WebViewClient() {
-                        override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
-                            onLinkClick(request.url.toString())
-                            return true
-                        }
-                    }
-                    val gestureDetector = GestureDetector(
-                        context,
-                        object : GestureDetector.SimpleOnGestureListener() {
-                            override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
-                                onTap()
+                    webViewClient =
+                        object : WebViewClient() {
+                            override fun shouldOverrideUrlLoading(
+                                view: WebView,
+                                request: WebResourceRequest,
+                            ): Boolean {
+                                onLinkClick(request.url.toString())
                                 return true
                             }
                         }
-                    )
+                    val gestureDetector =
+                        GestureDetector(
+                            context,
+                            object : GestureDetector.SimpleOnGestureListener() {
+                                override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+                                    onTap()
+                                    return true
+                                }
+                            },
+                        )
                     setOnTouchListener { _, event ->
                         gestureDetector.onTouchEvent(event)
                         false
@@ -86,35 +91,36 @@ fun Flashcard(
                 }
             },
             update = { webView ->
-                val styledHtml = """
-                <style>
-                    @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
-                    html {
-                        color: ${onSurfaceColorHex}EF;
-                        text-align: center;
-                        font-family: 'Roboto', sans-serif;
-                        font-size: ${currentStyle.fontSize.value}px;
-                        font-weight: ${currentStyle.fontWeight?.weight ?: 400};
-                        line-height: ${currentStyle.lineHeight.value}px;
-                        letter-spacing: ${currentStyle.letterSpacing.value}px;
-                        padding-top: ${currentPadding}px;
-                        padding-bottom: ${toolbarHeight}px;
-                    }
-                    hr {
-                        opacity: 0.1;
-                        margin-bottom: 12px;
-                    }
-                    .replay-button {
-                        display: inline-block;
-                        height: 48px;
-                        width: 48px;
-                    }
-                    .play-action {
-                        fill: ${onSurfaceColorHex}EF;
-                    }
-                </style>
-                $currentHtml
-                """.trimIndent()
+                val styledHtml =
+                    """
+                    <style>
+                        @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+                        html {
+                            color: ${onSurfaceColorHex}EF;
+                            text-align: center;
+                            font-family: 'Roboto', sans-serif;
+                            font-size: ${currentStyle.fontSize.value}px;
+                            font-weight: ${currentStyle.fontWeight?.weight ?: 400};
+                            line-height: ${currentStyle.lineHeight.value}px;
+                            letter-spacing: ${currentStyle.letterSpacing.value}px;
+                            padding-top: ${currentPadding}px;
+                            padding-bottom: ${toolbarHeight}px;
+                        }
+                        hr {
+                            opacity: 0.1;
+                            margin-bottom: 12px;
+                        }
+                        .replay-button {
+                            display: inline-block;
+                            height: 48px;
+                            width: 48px;
+                        }
+                        .play-action {
+                            fill: ${onSurfaceColorHex}EF;
+                        }
+                    </style>
+                    $currentHtml
+                    """.trimIndent()
                 Timber.tag("Flashcard").d("styledHtml: %s", styledHtml)
                 if (webView.tag != styledHtml) {
                     webView.tag = styledHtml
@@ -123,7 +129,7 @@ fun Flashcard(
                         styledHtml,
                         "text/html",
                         "UTF-8",
-                        null
+                        null,
                     )
                 }
             },
@@ -133,9 +139,10 @@ fun Flashcard(
                 webView.setOnTouchListener(null)
                 webView.destroy()
             },
-            modifier = modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface)
+            modifier =
+                modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface),
         )
     }
 }
@@ -148,7 +155,7 @@ fun FlashcardPreview() {
         onTap = {},
         onLinkClick = {},
         mediaDirectory = null,
-        isAnswerShown = false
+        isAnswerShown = false,
     )
 }
 
@@ -160,6 +167,6 @@ fun FlashcardPreviewAnswerShown() {
         onTap = {},
         onLinkClick = {},
         mediaDirectory = null,
-        isAnswerShown = true
+        isAnswerShown = true,
     )
 }

@@ -30,7 +30,6 @@ import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -48,7 +47,7 @@ fun SliderPreferenceContent(
     icon: Painter? = null,
     isIconSpaceReserved: Boolean = false,
     enabled: Boolean = true,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     // We use a local state for the slider to ensure smooth dragging,
     // and only commit the change when dragging stops (or as needed).
@@ -58,55 +57,74 @@ fun SliderPreferenceContent(
 
     // XML ComposeView handles horizontal padding (?attr/listPreferredItemPaddingStart/End)
     Row(
-        modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         if (icon != null) {
             Icon(
                 painter = icon,
                 contentDescription = null,
-                tint = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface.copy(
-                    alpha = 0.38f
-                ),
-                modifier = Modifier
-                    .padding(end = 16.dp) // Standard icon padding
-                    .size(24.dp)
+                tint =
+                    if (enabled) {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    } else {
+                        MaterialTheme.colorScheme.onSurface.copy(
+                            alpha = 0.38f,
+                        )
+                    },
+                modifier =
+                    Modifier
+                        .padding(end = 16.dp) // Standard icon padding
+                        .size(24.dp),
             )
         } else if (isIconSpaceReserved) {
             Box(
-                modifier = Modifier
-                    .padding(end = 16.dp)
-                    .size(24.dp)
+                modifier =
+                    Modifier
+                        .padding(end = 16.dp)
+                        .size(24.dp),
             )
         }
 
         Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(top = 12.dp, bottom = 8.dp)
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .padding(top = 12.dp, bottom = 8.dp),
         ) {
             Row(
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.Top,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = title,
                         style = MaterialTheme.typography.bodyLarge,
-                        color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(
-                            alpha = 0.38f
-                        ),
+                        color =
+                            if (enabled) {
+                                MaterialTheme.colorScheme.onSurface
+                            } else {
+                                MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f,
+                                )
+                            },
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
                     )
                     if (!summary.isNullOrEmpty()) {
                         Text(
                             text = summary,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface.copy(
-                                alpha = 0.38f
-                            ),
+                            color =
+                                if (enabled) {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.38f,
+                                    )
+                                },
                             modifier = Modifier.padding(top = 2.dp),
                             maxLines = 4,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                 }
@@ -118,10 +136,15 @@ fun SliderPreferenceContent(
                     Text(
                         text = displayText,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface.copy(
-                            alpha = 0.38f
-                        ),
-                        modifier = Modifier.padding(start = 8.dp)
+                        color =
+                            if (enabled) {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            } else {
+                                MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f,
+                                )
+                            },
+                        modifier = Modifier.padding(start = 8.dp),
                     )
                 }
             }
@@ -145,12 +168,17 @@ fun SliderPreferenceContent(
                     }
                 },
                 valueRange = valueFrom.toFloat()..valueTo.toFloat(),
-                steps = if (stepSize > 0) maxOf(
-                    0, ((valueTo - valueFrom) / stepSize).toInt() - 1
-                ) else 0,
+                steps =
+                    if (stepSize > 0) {
+                        maxOf(
+                            0,
+                            ((valueTo - valueFrom) / stepSize).toInt() - 1,
+                        )
+                    } else {
+                        0
+                    },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = enabled,
-
                 interactionSource = interactionSource,
                 thumb = {
                     val displayText =
@@ -160,15 +188,16 @@ fun SliderPreferenceContent(
                         isDragged = isDragged,
                         displayText = displayText,
                         interactionSource = interactionSource,
-                        enabled = enabled
+                        enabled = enabled,
                     )
                 },
-                colors = SliderDefaults.colors(
-                    activeTickColor = Color.Transparent,
-                    inactiveTickColor = Color.Transparent,
-                    disabledActiveTickColor = Color.Transparent,
-                    disabledInactiveTickColor = Color.Transparent
-                )
+                colors =
+                    SliderDefaults.colors(
+                        activeTickColor = Color.Transparent,
+                        inactiveTickColor = Color.Transparent,
+                        disabledActiveTickColor = Color.Transparent,
+                        disabledInactiveTickColor = Color.Transparent,
+                    ),
             )
         }
     }
@@ -181,37 +210,40 @@ fun SliderThumbWithLabel(
     displayText: String,
     interactionSource: MutableInteractionSource,
     enabled: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Layout(
         content = {
             if (isDragged) {
                 Box(
-                    modifier = Modifier
-                        .layoutId("label")
-                        .background(
-                            color = MaterialTheme.colorScheme.tertiaryContainer,
-                            shape = MaterialTheme.shapes.extraExtraLarge
-                        )
-                        .padding(horizontal = 10.dp, vertical = 4.dp),
+                    modifier =
+                        Modifier
+                            .layoutId("label")
+                            .background(
+                                color = MaterialTheme.colorScheme.tertiaryContainer,
+                                shape = MaterialTheme.shapes.extraExtraLarge,
+                            ).padding(horizontal = 10.dp, vertical = 4.dp),
                 ) {
                     Text(
                         text = displayText,
                         color = MaterialTheme.colorScheme.onTertiaryContainer,
-                        style = MaterialTheme.typography.labelMedium
+                        style = MaterialTheme.typography.labelMedium,
                     )
                 }
             }
             SliderDefaults.Thumb(
                 interactionSource = interactionSource,
                 enabled = enabled,
-                modifier = Modifier.layoutId("thumb")
+                modifier = Modifier.layoutId("thumb"),
             )
-        }, modifier = modifier
+        },
+        modifier = modifier,
     ) { measurables, constraints ->
         val thumbPlaceable = measurables.first { it.layoutId == "thumb" }.measure(constraints)
-        val labelPlaceable = measurables.find { it.layoutId == "label" }
-            ?.measure(constraints.copy(minWidth = 0, minHeight = 0))
+        val labelPlaceable =
+            measurables
+                .find { it.layoutId == "label" }
+                ?.measure(constraints.copy(minWidth = 0, minHeight = 0))
 
         layout(thumbPlaceable.width, thumbPlaceable.height) {
             thumbPlaceable.placeRelative(0, 0)
@@ -239,7 +271,7 @@ fun PreviewSliderPreferenceContent() {
             displayValue = true,
             displayFormat = "%d%%",
             onValueChange = {},
-            isIconSpaceReserved = true
+            isIconSpaceReserved = true,
         )
     }
 }
@@ -253,7 +285,7 @@ fun PreviewSliderThumbWithLabel() {
                 isDragged = true,
                 displayText = "100%",
                 interactionSource = remember { MutableInteractionSource() },
-                enabled = true
+                enabled = true,
             )
         }
     }

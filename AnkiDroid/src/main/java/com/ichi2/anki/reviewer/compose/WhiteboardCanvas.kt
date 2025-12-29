@@ -33,7 +33,7 @@ import com.ichi2.anki.ui.windows.reviewer.whiteboard.WhiteboardViewModel
 @Composable
 fun WhiteboardCanvas(
     viewModel: WhiteboardViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     val paths by viewModel.paths.collectAsState()
@@ -43,14 +43,15 @@ fun WhiteboardCanvas(
     val eraserMode by viewModel.eraserMode.collectAsState()
     val isStylusOnlyMode by viewModel.isStylusOnlyMode.collectAsState()
 
-    val whiteboardView = remember {
-        WhiteboardView(context).apply {
-            onNewPath = viewModel::addPath
-            onEraseGestureStart = viewModel::startPathEraseGesture
-            onEraseGestureMove = viewModel::erasePathsAtPoint
-            onEraseGestureEnd = viewModel::endPathEraseGesture
+    val whiteboardView =
+        remember {
+            WhiteboardView(context).apply {
+                onNewPath = viewModel::addPath
+                onEraseGestureStart = viewModel::startPathEraseGesture
+                onEraseGestureMove = viewModel::erasePathsAtPoint
+                onEraseGestureEnd = viewModel::endPathEraseGesture
+            }
         }
-    }
 
     // Update the view when paths change
     LaunchedEffect(paths) {
@@ -76,6 +77,6 @@ fun WhiteboardCanvas(
 
     AndroidView(
         factory = { whiteboardView },
-        modifier = modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize(),
     )
 }

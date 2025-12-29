@@ -40,44 +40,47 @@ import com.ichi2.themes.Themes
 
 @ColorInt
 @Composable
-private fun ankiColor(@AttrRes attr: Int): Int {
+private fun ankiColor(
+    @AttrRes attr: Int,
+): Int {
     val context = LocalContext.current
     val typedValue = TypedValue()
     context.theme.resolveAttribute(attr, typedValue, true)
     return typedValue.data
 }
 
-val AppShapes = Shapes(
-    extraSmall = RoundedCornerShape(4.dp), // Default M3
-    small = RoundedCornerShape(8.dp), // Expressive: Slightly more rounded
-    medium = RoundedCornerShape(16.dp), // Expressive: More pronounced rounding for cards/buttons
-    large = RoundedCornerShape(24.dp), // Expressive: Very rounded for larger elements like dialogs
-    extraLarge = RoundedCornerShape(32.dp), // Expressive: For prominent elements like FABs or hero containers
-)
+val AppShapes =
+    Shapes(
+        extraSmall = RoundedCornerShape(4.dp), // Default M3
+        small = RoundedCornerShape(8.dp), // Expressive: Slightly more rounded
+        medium = RoundedCornerShape(16.dp), // Expressive: More pronounced rounding for cards/buttons
+        large = RoundedCornerShape(24.dp), // Expressive: Very rounded for larger elements like dialogs
+        extraLarge = RoundedCornerShape(32.dp), // Expressive: For prominent elements like FABs or hero containers
+    )
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun AnkiDroidTheme(
-    content: @Composable () -> Unit
-) {
+fun AnkiDroidTheme(content: @Composable () -> Unit) {
     val context = LocalContext.current
     val currentAnkiTheme = Themes.currentTheme
-    val colorScheme = if (currentAnkiTheme.isNightMode) {
-        dynamicDarkColorScheme(context)
-    } else {
-        dynamicLightColorScheme(context)
-    }
+    val colorScheme =
+        if (currentAnkiTheme.isNightMode) {
+            dynamicDarkColorScheme(context)
+        } else {
+            dynamicLightColorScheme(context)
+        }
 
-    val ankiColors = AnkiColors(
-        againButton = Color(ankiColor(R.attr.againButtonBackground)),
-        hardButton = Color(ankiColor(R.attr.hardButtonBackground)),
-        goodButton = Color(ankiColor(R.attr.goodButtonBackground)),
-        easyButton = Color(ankiColor(R.attr.easyButtonBackground)),
-        newCount = Color(ankiColor(R.attr.newCountColor)),
-        learnCount = Color(ankiColor(R.attr.learnCountColor)),
-        reviewCount = Color(ankiColor(R.attr.reviewCountColor)),
-        topBar = Color(ankiColor(R.attr.topBarColor))
-    )
+    val ankiColors =
+        AnkiColors(
+            againButton = Color(ankiColor(R.attr.againButtonBackground)),
+            hardButton = Color(ankiColor(R.attr.hardButtonBackground)),
+            goodButton = Color(ankiColor(R.attr.goodButtonBackground)),
+            easyButton = Color(ankiColor(R.attr.easyButtonBackground)),
+            newCount = Color(ankiColor(R.attr.newCountColor)),
+            learnCount = Color(ankiColor(R.attr.learnCountColor)),
+            reviewCount = Color(ankiColor(R.attr.reviewCountColor)),
+            topBar = Color(ankiColor(R.attr.topBarColor)),
+        )
 
     CompositionLocalProvider(LocalAnkiColors provides ankiColors) {
         MaterialTheme(
@@ -85,7 +88,7 @@ fun AnkiDroidTheme(
             typography = AppTypography,
             shapes = AppShapes,
             motionScheme = MotionScheme.expressive(),
-            content = content
+            content = content,
         )
     }
 }

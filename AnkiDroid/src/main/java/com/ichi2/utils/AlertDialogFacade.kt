@@ -58,8 +58,7 @@ import timber.log.Timber
 /** Wraps [DialogInterface.OnClickListener] as we don't need the `which` parameter */
 typealias DialogInterfaceListener = (DialogInterface) -> Unit
 
-fun DialogInterfaceListener.toClickListener(): OnClickListener =
-    OnClickListener { dialog: DialogInterface, _ -> this(dialog) }
+fun DialogInterfaceListener.toClickListener(): OnClickListener = OnClickListener { dialog: DialogInterface, _ -> this(dialog) }
 
 /*
  * Allows easier transformations from [MaterialDialog] to [AlertDialog].
@@ -147,8 +146,7 @@ fun AlertDialog.Builder.negativeButton(
     }
 }
 
-fun AlertDialog.Builder.cancelable(cancelable: Boolean): AlertDialog.Builder =
-    this.setCancelable(cancelable)
+fun AlertDialog.Builder.cancelable(cancelable: Boolean): AlertDialog.Builder = this.setCancelable(cancelable)
 
 /**
  * Executes the provided block, then creates an [AlertDialog] with the arguments supplied
@@ -267,10 +265,11 @@ fun AlertDialog.Builder.customView(
 ): AlertDialog.Builder {
     val container = FrameLayout(context)
 
-    val containerParams = FrameLayout.LayoutParams(
-        FrameLayout.LayoutParams.MATCH_PARENT,
-        FrameLayout.LayoutParams.WRAP_CONTENT,
-    )
+    val containerParams =
+        FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.WRAP_CONTENT,
+        )
 
     container.setPaddingRelative(paddingStart, paddingTop, paddingEnd, paddingBottom)
     container.addView(view, containerParams)
@@ -280,8 +279,10 @@ fun AlertDialog.Builder.customView(
 }
 
 fun AlertDialog.Builder.customListAdapter(adapter: RecyclerView.Adapter<*>) {
-    val recyclerView = LayoutInflater.from(context)
-        .inflate(R.layout.dialog_generic_recycler_view, null, false) as RecyclerView
+    val recyclerView =
+        LayoutInflater
+            .from(context)
+            .inflate(R.layout.dialog_generic_recycler_view, null, false) as RecyclerView
     recyclerView.adapter = adapter
     recyclerView.layoutManager = LinearLayoutManager(context)
     this.setView(recyclerView)
@@ -296,8 +297,10 @@ fun AlertDialog.Builder.customListAdapterWithDecoration(
     adapter: RecyclerView.Adapter<*>,
     context: Context,
 ) {
-    val recyclerView = LayoutInflater.from(context)
-        .inflate(R.layout.dialog_generic_recycler_view, null, false) as RecyclerView
+    val recyclerView =
+        LayoutInflater
+            .from(context)
+            .inflate(R.layout.dialog_generic_recycler_view, null, false) as RecyclerView
     recyclerView.adapter = adapter
     recyclerView.layoutManager = LinearLayoutManager(context)
     val dividerItemDecoration =
@@ -415,9 +418,10 @@ val AlertDialog.neutralButton: Button?
 fun AlertDialog.Builder.listItems(
     items: List<CharSequence>,
     onClick: (dialog: DialogInterface, index: Int) -> Unit,
-): AlertDialog.Builder = this.setItems(items.toTypedArray()) { dialog, which ->
-    onClick(dialog, which)
-}
+): AlertDialog.Builder =
+    this.setItems(items.toTypedArray()) { dialog, which ->
+        onClick(dialog, which)
+    }
 
 /**
  * Extension workaround for Displaying ListView & Message Together

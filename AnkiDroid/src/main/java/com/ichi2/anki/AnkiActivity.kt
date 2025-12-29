@@ -907,7 +907,9 @@ open class AnkiActivity :
         return true
     }
 
-    private fun postSnackbar(@StringRes text: Int) {
+    private fun postSnackbar(
+        @StringRes text: Int,
+    ) {
         (this as? DeckPicker)?.viewModel?.snackbarMessage?.tryEmit(getString(text))
     }
 

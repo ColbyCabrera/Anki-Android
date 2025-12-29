@@ -99,11 +99,12 @@ fun BrushOptionsDialog(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Box(
-                        modifier = Modifier
-                            .size(64.dp)
-                            .clip(CircleShape)
-                            .background(Color(brush.color))
-                            .border(2.dp, MaterialTheme.colorScheme.outline, CircleShape),
+                        modifier =
+                            Modifier
+                                .size(64.dp)
+                                .clip(CircleShape)
+                                .background(Color(brush.color))
+                                .border(2.dp, MaterialTheme.colorScheme.outline, CircleShape),
                     )
                     Spacer(modifier = Modifier.width(16.dp))
                     OutlinedButton(onClick = { showColorPicker = true }) {
@@ -210,9 +211,10 @@ fun EraserOptionsDialog(
                         onDismissRequest()
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error,
-                    ),
+                    colors =
+                        ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error,
+                        ),
                 ) {
                     Text(stringResource(R.string.whiteboard_clear))
                 }

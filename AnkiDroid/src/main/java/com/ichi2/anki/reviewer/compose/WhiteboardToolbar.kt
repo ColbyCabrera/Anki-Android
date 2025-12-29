@@ -55,7 +55,7 @@ fun WhiteboardToolbar(
     onBrushLongClick: (Int) -> Unit,
     onAddBrush: () -> Unit,
     onEraserClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val canUndo by viewModel.canUndo.collectAsState()
     val canRedo by viewModel.canRedo.collectAsState()
@@ -70,54 +70,55 @@ fun WhiteboardToolbar(
         modifier = modifier,
         color = MaterialTheme.colorScheme.surfaceContainer,
         shape = MaterialTheme.shapes.large,
-        tonalElevation = 2.dp
+        tonalElevation = 2.dp,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             // Undo button
             IconButton(
                 onClick = { viewModel.undo() },
-                enabled = canUndo
+                enabled = canUndo,
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Undo,
                     contentDescription = stringResource(R.string.undo),
-                    tint = if (canUndo) colorNormal else colorNormal.copy(alpha = 0.38f)
+                    tint = if (canUndo) colorNormal else colorNormal.copy(alpha = 0.38f),
                 )
             }
 
             // Redo button
             IconButton(
                 onClick = { viewModel.redo() },
-                enabled = canRedo
+                enabled = canRedo,
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Redo,
                     contentDescription = stringResource(R.string.redo),
-                    tint = if (canRedo) colorNormal else colorNormal.copy(alpha = 0.38f)
+                    tint = if (canRedo) colorNormal else colorNormal.copy(alpha = 0.38f),
                 )
             }
 
             // Eraser button
             IconButton(
-                onClick = onEraserClick
+                onClick = onEraserClick,
             ) {
                 Icon(
                     painter = painterResource(R.drawable.eraser),
                     contentDescription = stringResource(R.string.eraser),
-                    tint = if (isEraserActive) MaterialTheme.colorScheme.primary else colorNormal
+                    tint = if (isEraserActive) MaterialTheme.colorScheme.primary else colorNormal,
                 )
             }
 
             // Divider
             HorizontalDivider(
-                modifier = Modifier
-                    .height(32.dp)
-                    .width(1.dp),
-                color = MaterialTheme.colorScheme.outlineVariant
+                modifier =
+                    Modifier
+                        .height(32.dp)
+                        .width(1.dp),
+                color = MaterialTheme.colorScheme.outlineVariant,
             )
 
             Spacer(modifier = Modifier.width(4.dp))
@@ -125,7 +126,7 @@ fun WhiteboardToolbar(
             // Brush palette with horizontal scroll
             Row(
                 modifier = Modifier.horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(0.dp)
+                horizontalArrangement = Arrangement.spacedBy(0.dp),
             ) {
                 brushes.forEachIndexed { index, brush ->
                     ColorBrushButton(
@@ -134,14 +135,14 @@ fun WhiteboardToolbar(
                         onClick = { view -> onBrushClick(view, index) },
                         onLongClick = { onBrushLongClick(index) },
                         colorNormal = colorNormal,
-                        colorHighlight = colorHighlight
+                        colorHighlight = colorHighlight,
                     )
                 }
 
                 AddBrushButton(
                     onClick = onAddBrush,
                     colorNormal = colorNormal,
-                    tooltip = stringResource(R.string.add_brush)
+                    tooltip = stringResource(R.string.add_brush),
                 )
             }
         }

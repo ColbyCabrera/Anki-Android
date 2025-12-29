@@ -32,7 +32,6 @@ import android.os.Message
 import android.os.Parcelable
 import android.view.Menu
 import android.view.MenuItem
-import android.view.MotionEvent
 import android.view.SubMenu
 import android.view.View
 import android.webkit.WebView
@@ -49,7 +48,6 @@ import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.widget.ThemeUtils
 import androidx.appcompat.widget.Toolbar
 import androidx.appcompat.widget.TooltipCompat
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -61,8 +59,6 @@ import com.google.android.material.snackbar.Snackbar
 import com.ichi2.anim.ActivityTransitionAnimation.getInverseTransition
 import com.ichi2.anki.CollectionManager.TR
 import com.ichi2.anki.CollectionManager.withCol
-import com.ichi2.anki.Whiteboard.Companion.createInstance
-import com.ichi2.anki.Whiteboard.OnPaintColorChangeListener
 import com.ichi2.anki.cardviewer.Gesture
 import com.ichi2.anki.cardviewer.ViewerCommand
 import com.ichi2.anki.common.annotations.NeedsTest
@@ -103,17 +99,14 @@ import com.ichi2.anki.scheduling.ForgetCardsDialog
 import com.ichi2.anki.scheduling.SetDueDateDialog
 import com.ichi2.anki.servicelayer.NoteService.isMarked
 import com.ichi2.anki.servicelayer.NoteService.toggleMark
-import com.ichi2.anki.settings.Prefs
 import com.ichi2.anki.snackbar.showSnackbar
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import com.ichi2.anki.ui.internationalization.toSentenceCase
-import com.ichi2.anki.ui.windows.reviewer.whiteboard.WhiteboardRepository
 import com.ichi2.anki.ui.windows.reviewer.whiteboard.WhiteboardViewModel
 import com.ichi2.anki.utils.ext.flag
 import com.ichi2.anki.utils.ext.setUserFlagForCards
 import com.ichi2.anki.utils.ext.showDialogFragment
 import com.ichi2.themes.Themes
-import com.ichi2.themes.Themes.currentTheme
 import com.ichi2.utils.HandlerUtils.executeFunctionWithDelay
 import com.ichi2.utils.HandlerUtils.getDefaultLooper
 import com.ichi2.utils.Permissions.canRecordAudio
@@ -138,7 +131,9 @@ import kotlin.coroutines.resume
 
 @Suppress("LeakingThis")
 @NeedsTest("#14709: Timebox shouldn't appear instantly when the Reviewer is opened")
-open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
+open class Reviewer :
+    AbstractFlashcardViewer(),
+    ReviewerUi {
     private var queueState: CurrentQueueState? = null
     private val customSchedulingKey = TimeManager.time.intTimeMS().toString()
     private var hasDrawerSwipeConflicts = false
@@ -190,11 +185,11 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     private val actionButtons = ActionButtons()
     private lateinit var toolbar: Toolbar
 
-
-    private val addNoteLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult(),
-        FlashCardViewerResultCallback(),
-    )
+    private val addNoteLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult(),
+            FlashCardViewerResultCallback(),
+        )
 
     private val flagItemIds = mutableSetOf<Int>()
 
@@ -217,7 +212,8 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
         composeView.setContent {
             AnkiDroidTheme {
-                com.ichi2.anki.reviewer.compose.ReviewerContent(viewModel, whiteboardViewModel)
+                com.ichi2.anki.reviewer.compose
+                    .ReviewerContent(viewModel, whiteboardViewModel)
             }
         }
 
@@ -253,9 +249,11 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
                     is ReviewerEffect.ToggleVoicePlayback -> openOrToggleMicToolbar()
                     is ReviewerEffect.NavigateToDeckOptions -> {
-                        val i = com.ichi2.anki.pages.DeckOptions.getIntent(
-                            this@Reviewer, getColUnsafe.decks.current().id
-                        )
+                        val i =
+                            com.ichi2.anki.pages.DeckOptions.getIntent(
+                                this@Reviewer,
+                                getColUnsafe.decks.current().id,
+                            )
                         deckOptionsLauncher.launch(i)
                     }
 
@@ -385,18 +383,22 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
             viewModel.onEvent(ReviewerEvent.OnWhiteboardStateChanged(prefWhiteboard))
             if (prefWhiteboard) {
                 // DEFECT: Slight inefficiency here, as we set the database using these methods
-                val whiteboardVisibility = withContext(Dispatchers.IO) {
-                    MetaDB.getWhiteboardVisibility(
-                        this@Reviewer, parentDid
-                    )
-                }
+                val whiteboardVisibility =
+                    withContext(Dispatchers.IO) {
+                        MetaDB.getWhiteboardVisibility(
+                            this@Reviewer,
+                            parentDid,
+                        )
+                    }
                 setWhiteboardEnabledState(true)
                 setWhiteboardVisibility(whiteboardVisibility)
-                toggleStylus = withContext(Dispatchers.IO) {
-                    MetaDB.getWhiteboardStylusState(
-                        this@Reviewer, parentDid
-                    )
-                }
+                toggleStylus =
+                    withContext(Dispatchers.IO) {
+                        MetaDB.getWhiteboardStylusState(
+                            this@Reviewer,
+                            parentDid,
+                        )
+                    }
                 // Stylus mode is now managed in WhiteboardViewModel
                 // which loads from SharedPreferences
             }
@@ -513,23 +515,27 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
                 lifecycleScope.launch {
                     val displayMetrics = resources.displayMetrics
                     try {
-                        val savedFile = whiteboardViewModel.saveToFile(
-                            this@Reviewer, displayMetrics.widthPixels, displayMetrics.heightPixels
-                        )
+                        val savedFile =
+                            whiteboardViewModel.saveToFile(
+                                this@Reviewer,
+                                displayMetrics.widthPixels,
+                                displayMetrics.heightPixels,
+                            )
                         if (savedFile != null) {
                             showSnackbar(
                                 getString(R.string.white_board_image_saved, savedFile.path),
-                                Snackbar.LENGTH_SHORT
+                                Snackbar.LENGTH_SHORT,
                             )
                         } else {
-                            val errorReason = if (whiteboardViewModel.paths.value.isEmpty()) {
-                                getString(R.string.white_board_no_content)
-                            } else {
-                                getString(R.string.something_wrong)
-                            }
+                            val errorReason =
+                                if (whiteboardViewModel.paths.value.isEmpty()) {
+                                    getString(R.string.white_board_no_content)
+                                } else {
+                                    getString(R.string.something_wrong)
+                                }
                             showSnackbar(
                                 getString(R.string.white_board_image_save_failed, errorReason),
-                                Snackbar.LENGTH_SHORT
+                                Snackbar.LENGTH_SHORT,
                             )
                         }
                     } catch (e: Exception) {
@@ -537,8 +543,9 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
                         showSnackbar(
                             getString(
                                 R.string.white_board_image_save_failed,
-                                e.localizedMessage ?: getString(R.string.something_wrong)
-                            ), Snackbar.LENGTH_SHORT
+                                e.localizedMessage ?: getString(R.string.something_wrong),
+                            ),
+                            Snackbar.LENGTH_SHORT,
                         )
                     }
                 }
@@ -572,9 +579,11 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
             R.id.action_open_deck_options -> {
                 Timber.i("Reviewer:: Opening deck options")
-                val i = com.ichi2.anki.pages.DeckOptions.getIntent(
-                    this, getColUnsafe.decks.current().id
-                )
+                val i =
+                    com.ichi2.anki.pages.DeckOptions.getIntent(
+                        this,
+                        getColUnsafe.decks.current().id,
+                    )
                 deckOptionsLauncher.launch(i)
             }
 
@@ -742,7 +751,8 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
                     CrashReportService.sendExceptionReport(e, "Unable to create recorder tool bar")
                     showThemedToast(
                         this,
-                        this.getText(R.string.multimedia_editor_audio_view_create_failed)
+                        this
+                            .getText(R.string.multimedia_editor_audio_view_create_failed)
                             .toString(),
                         true,
                     )
@@ -773,11 +783,12 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         }
     }
 
-    private fun showDueDateDialog() = launchCatchingTask {
-        Timber.i("showing due date dialog")
-        val dialog = SetDueDateDialog.newInstance(listOf(currentCardId!!))
-        showDialogFragment(dialog)
-    }
+    private fun showDueDateDialog() =
+        launchCatchingTask {
+            Timber.i("showing due date dialog")
+            val dialog = SetDueDateDialog.newInstance(listOf(currentCardId!!))
+            showDialogFragment(dialog)
+        }
 
     private fun showResetCardDialog() {
         Timber.i("showResetCardDialog() Reset progress button pressed")
@@ -796,14 +807,17 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     protected fun openCardInfo(fromGesture: Gesture? = null) {
         if (currentCard == null) {
             showSnackbar(
-                getString(R.string.multimedia_editor_something_wrong), Snackbar.LENGTH_SHORT
+                getString(R.string.multimedia_editor_something_wrong),
+                Snackbar.LENGTH_SHORT,
             )
             return
         }
         Timber.i("opening card info")
-        val intent = CardInfoDestination(
-            currentCard!!.id, TR.cardStatsCurrentCard(TR.decksStudy())
-        ).toIntent(this)
+        val intent =
+            CardInfoDestination(
+                currentCard!!.id,
+                TR.cardStatsCurrentCard(TR.decksStudy()),
+            ).toIntent(this)
         val animation = getAnimationTransitionFromGesture(fromGesture)
         intent.putExtra(FINISH_ANIMATION_EXTRA, getInverseTransition(animation) as Parcelable)
         startActivityWithAnimation(intent, animation)
@@ -936,12 +950,14 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
                 changePenColorIcon.isVisible = true
             }
             val whiteboardIcon =
-                ContextCompat.getDrawable(applicationContext, R.drawable.ic_gesture_white)!!
+                ContextCompat
+                    .getDrawable(applicationContext, R.drawable.ic_gesture_white)!!
                     .mutate()
             val stylusIcon =
                 ContextCompat.getDrawable(this, R.drawable.ic_gesture_stylus)!!.mutate()
             val whiteboardColorPaletteIcon =
-                ContextCompat.getDrawable(applicationContext, R.drawable.ic_color_lens_white_24dp)!!
+                ContextCompat
+                    .getDrawable(applicationContext, R.drawable.ic_color_lens_white_24dp)!!
                     .mutate()
             val eraserIcon =
                 ContextCompat.getDrawable(applicationContext, R.drawable.ic_eraser)!!.mutate()
@@ -1036,7 +1052,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
     private fun isFlagItem(menuItem: MenuItem): Boolean = flagItemIds.contains(menuItem.itemId)
 
-
     override fun canAccessScheduler(): Boolean = true
 
     override fun performReload() {
@@ -1106,11 +1121,12 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     }
 
     override suspend fun updateCurrentCard() {
-        val state = withCol {
-            sched.currentQueueState()?.apply {
-                topCard.renderOutput(this@withCol, reload = true)
+        val state =
+            withCol {
+                sched.currentQueueState()?.apply {
+                    topCard.renderOutput(this@withCol, reload = true)
+                }
             }
-        }
         state?.timeboxReached?.let { dealWithTimeBox(it) }
         currentCard = state?.topCard
         queueState = state
@@ -1389,13 +1405,14 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         }
     }
 
-    private val fullScreenHandler: Handler = object : Handler(getDefaultLooper()) {
-        override fun handleMessage(msg: Message) {
-            if (prefFullscreenReview) {
-                setFullScreen(this@Reviewer)
+    private val fullScreenHandler: Handler =
+        object : Handler(getDefaultLooper()) {
+            override fun handleMessage(msg: Message) {
+                if (prefFullscreenReview) {
+                    setFullScreen(this@Reviewer)
+                }
             }
         }
-    }
 
     /** Hide the navigation if in full-screen mode after a given period of time  */
     protected open fun delayedHide(delayMillis: Int) {
@@ -1416,8 +1433,12 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     private fun setFullScreen(a: AbstractFlashcardViewer) {
         // Set appropriate flags to enable Sticky Immersive mode.
         a.window.decorView.systemUiVisibility =
-            (View.SYSTEM_UI_FLAG_LAYOUT_STABLE // | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION // temporarily disabled due to #5245
-                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_LOW_PROFILE or View.SYSTEM_UI_FLAG_IMMERSIVE)
+            (
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE // | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION // temporarily disabled due to #5245
+                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_FULLSCREEN or
+                    View.SYSTEM_UI_FLAG_LOW_PROFILE or
+                    View.SYSTEM_UI_FLAG_IMMERSIVE
+            )
         // Show / hide the Action bar together with the status bar
         val prefs = a.sharedPrefs()
         val fullscreenMode = fromPreference(prefs)
@@ -1453,7 +1474,10 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     private fun showViewWithAnimation(view: View) {
         view.alpha = 0.0f
         view.visibility = View.VISIBLE
-        view.animate().alpha(TRANSPARENCY).setDuration(ANIMATION_DURATION.toLong())
+        view
+            .animate()
+            .alpha(TRANSPARENCY)
+            .setDuration(ANIMATION_DURATION.toLong())
             .setListener(null)
     }
 
@@ -1476,30 +1500,40 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     override suspend fun handlePostRequest(
         uri: String,
         bytes: ByteArray,
-    ): ByteArray = if (uri.startsWith(ANKI_PREFIX)) {
-        when (val methodName = uri.substring(ANKI_PREFIX.length)) {
-            "getSchedulingStatesWithContext" -> getSchedulingStatesWithContext()
-            "setSchedulingStates" -> setSchedulingStates(bytes)
-            "i18nResources" -> withCol { i18nResourcesRaw(bytes) }
-            else -> throw IllegalArgumentException("unhandled request: $methodName")
+    ): ByteArray =
+        if (uri.startsWith(ANKI_PREFIX)) {
+            when (val methodName = uri.substring(ANKI_PREFIX.length)) {
+                "getSchedulingStatesWithContext" -> getSchedulingStatesWithContext()
+                "setSchedulingStates" -> setSchedulingStates(bytes)
+                "i18nResources" -> withCol { i18nResourcesRaw(bytes) }
+                else -> throw IllegalArgumentException("unhandled request: $methodName")
+            }
+        } else if (uri.startsWith(ANKIDROID_JS_PREFIX)) {
+            jsApi.handleJsApiRequest(
+                uri.substring(ANKIDROID_JS_PREFIX.length),
+                bytes,
+                returnDefaultValues = false,
+            )
+        } else {
+            throw IllegalArgumentException("unhandled request: $uri")
         }
-    } else if (uri.startsWith(ANKIDROID_JS_PREFIX)) {
-        jsApi.handleJsApiRequest(
-            uri.substring(ANKIDROID_JS_PREFIX.length),
-            bytes,
-            returnDefaultValues = false,
-        )
-    } else {
-        throw IllegalArgumentException("unhandled request: $uri")
-    }
 
     private fun getSchedulingStatesWithContext(): ByteArray {
         val state = queueState ?: return ByteArray(0)
-        return state.schedulingStatesWithContext().toBuilder().mergeStates(
-            state.states.toBuilder().mergeCurrent(
-                state.states.current.toBuilder().setCustomData(state.topCard.customData).build(),
-            ).build(),
-        ).build().toByteArray()
+        return state
+            .schedulingStatesWithContext()
+            .toBuilder()
+            .mergeStates(
+                state.states
+                    .toBuilder()
+                    .mergeCurrent(
+                        state.states.current
+                            .toBuilder()
+                            .setCustomData(state.topCard.customData)
+                            .build(),
+                    ).build(),
+            ).build()
+            .toByteArray()
     }
 
     private fun setSchedulingStates(bytes: ByteArray): ByteArray {
@@ -1518,7 +1552,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
     @Deprecated(
         "Whiteboard is now managed by WhiteboardViewModel and Compose UI",
-        level = DeprecationLevel.WARNING
+        level = DeprecationLevel.WARNING,
     )
     private fun createWhiteboard() {
         // Old whiteboard creation is no longer needed
@@ -1609,16 +1643,17 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     fun hasDrawerSwipeConflicts(): Boolean = hasDrawerSwipeConflicts
 
     override fun getCardDataForJsApi(): AnkiDroidJsAPI.CardDataForJsApi {
-        val cardDataForJsAPI = AnkiDroidJsAPI.CardDataForJsApi().apply {
-            newCardCount = queueState?.counts?.new ?: -1
-            lrnCardCount = queueState?.counts?.lrn ?: -1
-            revCardCount = queueState?.counts?.rev ?: -1
-            nextTime1 = easeButton1!!.nextTime
-            nextTime2 = easeButton2!!.nextTime
-            nextTime3 = easeButton3!!.nextTime
-            nextTime4 = easeButton4!!.nextTime
-            eta = this@Reviewer.eta
-        }
+        val cardDataForJsAPI =
+            AnkiDroidJsAPI.CardDataForJsApi().apply {
+                newCardCount = queueState?.counts?.new ?: -1
+                lrnCardCount = queueState?.counts?.lrn ?: -1
+                revCardCount = queueState?.counts?.rev ?: -1
+                nextTime1 = easeButton1!!.nextTime
+                nextTime2 = easeButton2!!.nextTime
+                nextTime3 = easeButton3!!.nextTime
+                nextTime4 = easeButton4!!.nextTime
+                eta = this@Reviewer.eta
+            }
         return cardDataForJsAPI
     }
 
@@ -1637,5 +1672,4 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
         fun getIntent(context: Context): Intent = Intent(context, Reviewer::class.java)
     }
-
 }

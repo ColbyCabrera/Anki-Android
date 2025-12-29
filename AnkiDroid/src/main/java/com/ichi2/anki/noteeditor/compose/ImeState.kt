@@ -36,17 +36,21 @@ import androidx.core.view.WindowInsetsCompat
  */
 @Composable
 fun rememberImeState(): State<Boolean> {
-    val imeState = remember {
-        mutableStateOf(false)
-    }
+    val imeState =
+        remember {
+            mutableStateOf(false)
+        }
 
     val view = LocalView.current
     DisposableEffect(view) {
-        val listener = ViewTreeObserver.OnGlobalLayoutListener {
-            val isKeyboardOpen = ViewCompat.getRootWindowInsets(view)
-                ?.isVisible(WindowInsetsCompat.Type.ime()) ?: false
-            imeState.value = isKeyboardOpen
-        }
+        val listener =
+            ViewTreeObserver.OnGlobalLayoutListener {
+                val isKeyboardOpen =
+                    ViewCompat
+                        .getRootWindowInsets(view)
+                        ?.isVisible(WindowInsetsCompat.Type.ime()) ?: false
+                imeState.value = isKeyboardOpen
+            }
 
         view.viewTreeObserver.addOnGlobalLayoutListener(listener)
         onDispose {

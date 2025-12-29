@@ -213,7 +213,7 @@ open class AnkiDroidApp :
             notifications.observeForever {
                 applicationScope.launch(Dispatchers.Default) {
                     NotificationService.triggerNotificationFor(
-                        this@AnkiDroidApp
+                        this@AnkiDroidApp,
                     )
                 }
             }

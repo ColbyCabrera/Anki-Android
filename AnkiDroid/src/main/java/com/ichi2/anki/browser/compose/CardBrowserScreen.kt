@@ -157,16 +157,18 @@ fun CardBrowserScreen(
 
     LaunchedEffect(viewModel.flowOfDeleteResult) {
         viewModel.flowOfDeleteResult.collect { count ->
-            val message = currentContext.resources.getQuantityString(
-                R.plurals.card_browser_cards_deleted,
-                count,
-                count,
-            )
-            val result = snackbarHostState.showSnackbar(
-                message = message,
-                actionLabel = undoLabel,
-                duration = SnackbarDuration.Short,
-            )
+            val message =
+                currentContext.resources.getQuantityString(
+                    R.plurals.card_browser_cards_deleted,
+                    count,
+                    count,
+                )
+            val result =
+                snackbarHostState.showSnackbar(
+                    message = message,
+                    actionLabel = undoLabel,
+                    duration = SnackbarDuration.Short,
+                )
             if (result == SnackbarResult.ActionPerformed) {
                 viewModel.undo()
             }
@@ -178,7 +180,7 @@ fun CardBrowserScreen(
     if (showEditTagsDialog) {
         var tagsLoadState by remember {
             mutableStateOf<Map<String, CardBrowserViewModel.TagStatus>?>(
-                null
+                null,
             )
         }
 
@@ -236,38 +238,42 @@ fun CardBrowserScreen(
 
     Box(modifier = modifier) {
         Column(
-            modifier = Modifier.padding(
-                top = contentPadding.calculateTopPadding(),
-                start = contentPadding.calculateStartPadding(layoutDirection),
-                end = contentPadding.calculateEndPadding(layoutDirection),
-            ),
+            modifier =
+                Modifier.padding(
+                    top = contentPadding.calculateTopPadding(),
+                    start = contentPadding.calculateStartPadding(layoutDirection),
+                    end = contentPadding.calculateEndPadding(layoutDirection),
+                ),
         ) {
             CardBrowserHeader(columns = columnHeadings)
             HorizontalDivider()
             when (val state = searchState) {
-                is SearchState.Initializing, is SearchState.Searching -> CardBrowserLoading(
-                    Modifier.padding(
-                        bottom = toolbarHeightInDp,
-                    ),
-                )
+                is SearchState.Initializing, is SearchState.Searching ->
+                    CardBrowserLoading(
+                        Modifier.padding(
+                            bottom = toolbarHeightInDp,
+                        ),
+                    )
 
                 is SearchState.Completed -> {
                     if (browserRows.isEmpty()) {
                         val selectedDeck by viewModel.flowOfDeckSelection.collectAsStateWithLifecycle(
                             null,
                         )
-                        val deckName = when (val deck = selectedDeck) {
-                            is SelectableDeck.Deck -> deck.name
-                            else -> stringResource(R.string.card_browser_all_decks)
-                        }
+                        val deckName =
+                            when (val deck = selectedDeck) {
+                                is SelectableDeck.Deck -> deck.name
+                                else -> stringResource(R.string.card_browser_all_decks)
+                            }
                         EmptyCardBrowser(deckName = deckName)
                     } else {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(
-                                top = 0.dp,
-                                bottom = toolbarHeightInDp + ToolbarBottomSpacing + contentPadding.calculateBottomPadding(),
-                            ),
+                            contentPadding =
+                                PaddingValues(
+                                    top = 0.dp,
+                                    bottom = toolbarHeightInDp + ToolbarBottomSpacing + contentPadding.calculateBottomPadding(),
+                                ),
                         ) {
                             items(
                                 items = browserRows,
@@ -276,16 +282,17 @@ fun CardBrowserScreen(
                                 CardBrowserRow(
                                     row = row.browserRow,
                                     isSelected = selectedRows.contains(CardOrNoteId(row.id)),
-                                    modifier = Modifier.combinedClickable(onClick = {
-                                        onCardClicked(row)
-                                    }, onLongClick = {
-                                        viewModel.handleRowLongPress(
-                                            CardBrowserViewModel.RowSelection(
-                                                rowId = CardOrNoteId(row.id),
-                                                topOffset = 0,
-                                            ),
-                                        )
-                                    }),
+                                    modifier =
+                                        Modifier.combinedClickable(onClick = {
+                                            onCardClicked(row)
+                                        }, onLongClick = {
+                                            viewModel.handleRowLongPress(
+                                                CardBrowserViewModel.RowSelection(
+                                                    rowId = CardOrNoteId(row.id),
+                                                    topOffset = 0,
+                                                ),
+                                            )
+                                        }),
                                 )
                                 HorizontalDivider()
                             }
@@ -310,20 +317,22 @@ fun CardBrowserScreen(
             onSetFlag = { showSetFlagMenu = true },
             onOptions = onOptions,
             onMoreOptions = { showMoreOptionsMenu = true },
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .offset(y = -ScreenOffset)
-                .padding(bottom = contentPadding.calculateBottomPadding())
-                .onSizeChanged { toolbarHeight = it.height },
+            modifier =
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .offset(y = -ScreenOffset)
+                    .padding(bottom = contentPadding.calculateBottomPadding())
+                    .onSizeChanged { toolbarHeight = it.height },
         )
 
         SnackbarHost(
             hostState = snackbarHostState,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(
-                    bottom = toolbarHeightInDp + ToolbarBottomSpacing + contentPadding.calculateBottomPadding(),
-                ),
+            modifier =
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(
+                        bottom = toolbarHeightInDp + ToolbarBottomSpacing + contentPadding.calculateBottomPadding(),
+                    ),
         ) { snackbarData ->
             Snackbar(
                 snackbarData = snackbarData,
@@ -468,9 +477,10 @@ fun BrowserToolbar(
             ) {
                 if (hasSelection) {
                     TooltipBox(
-                        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
-                            positioning = TooltipAnchorPosition.Above,
-                        ),
+                        positionProvider =
+                            TooltipDefaults.rememberTooltipPositionProvider(
+                                positioning = TooltipAnchorPosition.Above,
+                            ),
                         tooltip = {
                             PlainTooltip { Text(stringResource(R.string.card_browser_deselect_all)) }
                         },
@@ -493,9 +503,10 @@ fun BrowserToolbar(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             TooltipBox(
-                positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
-                    positioning = TooltipAnchorPosition.Above,
-                ),
+                positionProvider =
+                    TooltipDefaults.rememberTooltipPositionProvider(
+                        positioning = TooltipAnchorPosition.Above,
+                    ),
                 tooltip = {
                     PlainTooltip { Text(stringResource(R.string.card_editor_preview_card)) }
                 },
@@ -509,9 +520,10 @@ fun BrowserToolbar(
                 }
             }
             TooltipBox(
-                positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
-                    positioning = TooltipAnchorPosition.Above,
-                ),
+                positionProvider =
+                    TooltipDefaults.rememberTooltipPositionProvider(
+                        positioning = TooltipAnchorPosition.Above,
+                    ),
                 tooltip = {
                     PlainTooltip { Text(stringResource(R.string.card_browser_select_all)) }
                 },
@@ -526,9 +538,10 @@ fun BrowserToolbar(
             }
             if (hasSelection) {
                 TooltipBox(
-                    positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
-                        positioning = TooltipAnchorPosition.Above,
-                    ),
+                    positionProvider =
+                        TooltipDefaults.rememberTooltipPositionProvider(
+                            positioning = TooltipAnchorPosition.Above,
+                        ),
                     tooltip = {
                         PlainTooltip { Text(stringResource(R.string.menu_mark_note)) }
                     },
@@ -542,9 +555,10 @@ fun BrowserToolbar(
                     }
                 }
                 TooltipBox(
-                    positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
-                        positioning = TooltipAnchorPosition.Above,
-                    ),
+                    positionProvider =
+                        TooltipDefaults.rememberTooltipPositionProvider(
+                            positioning = TooltipAnchorPosition.Above,
+                        ),
                     tooltip = {
                         PlainTooltip { Text(stringResource(R.string.menu_flag)) }
                     },
@@ -559,9 +573,10 @@ fun BrowserToolbar(
                 }
             } else {
                 TooltipBox(
-                    positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
-                        positioning = TooltipAnchorPosition.Above,
-                    ),
+                    positionProvider =
+                        TooltipDefaults.rememberTooltipPositionProvider(
+                            positioning = TooltipAnchorPosition.Above,
+                        ),
                     tooltip = {
                         PlainTooltip { Text(stringResource(R.string.filter)) }
                     },
@@ -575,9 +590,10 @@ fun BrowserToolbar(
                     }
                 }
                 TooltipBox(
-                    positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
-                        positioning = TooltipAnchorPosition.Above,
-                    ),
+                    positionProvider =
+                        TooltipDefaults.rememberTooltipPositionProvider(
+                            positioning = TooltipAnchorPosition.Above,
+                        ),
                     tooltip = {
                         PlainTooltip { Text(stringResource(R.string.browser_options_dialog_heading)) }
                     },
@@ -620,36 +636,39 @@ fun FilterBottomSheet(
     ) {
         ListItem(
             headlineContent = { Text(stringResource(R.string.card_browser_show_marked)) },
-            modifier = Modifier.clickable {
-                onFilter("tag:marked")
-                scope.launch { sheetState.hide() }.invokeOnCompletion {
-                    if (!sheetState.isVisible) {
-                        onDismissRequest()
+            modifier =
+                Modifier.clickable {
+                    onFilter("tag:marked")
+                    scope.launch { sheetState.hide() }.invokeOnCompletion {
+                        if (!sheetState.isVisible) {
+                            onDismissRequest()
+                        }
                     }
-                }
-            },
+                },
         )
         ListItem(
             headlineContent = { Text(stringResource(R.string.card_browser_show_suspended)) },
-            modifier = Modifier.clickable {
-                onFilter("is:suspended")
-                scope.launch { sheetState.hide() }.invokeOnCompletion {
-                    if (!sheetState.isVisible) {
-                        onDismissRequest()
+            modifier =
+                Modifier.clickable {
+                    onFilter("is:suspended")
+                    scope.launch { sheetState.hide() }.invokeOnCompletion {
+                        if (!sheetState.isVisible) {
+                            onDismissRequest()
+                        }
                     }
-                }
-            },
+                },
         )
         ListItem(
             headlineContent = { Text(stringResource(R.string.filter_by_tag)) },
-            modifier = Modifier.clickable {
-                onFilterByTag()
-                scope.launch { sheetState.hide() }.invokeOnCompletion {
-                    if (!sheetState.isVisible) {
-                        onDismissRequest()
+            modifier =
+                Modifier.clickable {
+                    onFilterByTag()
+                    scope.launch { sheetState.hide() }.invokeOnCompletion {
+                        if (!sheetState.isVisible) {
+                            onDismissRequest()
+                        }
                     }
-                }
-            },
+                },
         )
         ListItem(
             headlineContent = { Text(stringResource(R.string.card_browser_search_by_flag)) },
@@ -701,8 +720,9 @@ fun MoreOptionsBottomSheet(
                 headlineContent = {
                     Text(
                         pluralStringResource(
-                            R.plurals.card_browser_delete_notes, selectionCount
-                        )
+                            R.plurals.card_browser_delete_notes,
+                            selectionCount,
+                        ),
                     )
                 },
                 modifier = Modifier.clickable { onDeleteNote() },
@@ -745,10 +765,11 @@ fun MoreOptionsBottomSheet(
             )
             ListItem(
                 headlineContent = {
-                    val exportStringRes = when (cardsOrNotes) {
-                        CardsOrNotes.CARDS -> R.plurals.card_browser_export_cards
-                        CardsOrNotes.NOTES -> R.plurals.card_browser_export_notes
-                    }
+                    val exportStringRes =
+                        when (cardsOrNotes) {
+                            CardsOrNotes.CARDS -> R.plurals.card_browser_export_cards
+                            CardsOrNotes.NOTES -> R.plurals.card_browser_export_notes
+                        }
                     Text(pluralStringResource(exportStringRes, selectionCount))
                 },
                 modifier = Modifier.clickable { onExportCard() },
@@ -760,14 +781,15 @@ fun MoreOptionsBottomSheet(
             )
             ListItem(
                 headlineContent = { Text(stringResource(R.string.new_dynamic_deck)) },
-                modifier = Modifier.clickable {
-                    onCreateFilteredDeck()
-                    scope.launch { sheetState.hide() }.invokeOnCompletion {
-                        if (!sheetState.isVisible) {
-                            onDismissRequest()
+                modifier =
+                    Modifier.clickable {
+                        onCreateFilteredDeck()
+                        scope.launch { sheetState.hide() }.invokeOnCompletion {
+                            if (!sheetState.isVisible) {
+                                onDismissRequest()
+                            }
                         }
-                    }
-                },
+                    },
             )
             ListItem(
                 headlineContent = { Text(stringResource(R.string.undo_delete_note)) },
@@ -806,38 +828,42 @@ fun SelectableSortOrderBottomSheet(
         LazyColumn(modifier = Modifier.fillMaxWidth()) {
             item {
                 ButtonGroup(
-                    modifier = Modifier
-                        .padding(start = 24.dp, end = 24.dp, bottom = 8.dp)
-                        .fillMaxWidth(),
+                    modifier =
+                        Modifier
+                            .padding(start = 24.dp, end = 24.dp, bottom = 8.dp)
+                            .fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(2.dp),
                     overflowIndicator = { menuState ->
                         ButtonGroupDefaults.OverflowIndicator(menuState = menuState)
                     },
                 ) {
-                    val sortOptions = listOf(
-                        false to R.string.sort_order_ascending,
-                        true to R.string.sort_order_descending,
-                    )
+                    val sortOptions =
+                        listOf(
+                            false to R.string.sort_order_ascending,
+                            true to R.string.sort_order_descending,
+                        )
 
                     sortOptions.forEach { (isDescending, textRes) ->
                         customItem(
                             buttonGroupContent = {
                                 val interactionSource = remember { MutableInteractionSource() }
                                 val isChecked = isSortDescending == isDescending
-                                val shape = if (isDescending) {
-                                    ButtonGroupDefaults.connectedTrailingButtonShapes()
-                                } else {
-                                    ButtonGroupDefaults.connectedLeadingButtonShapes()
-                                }
+                                val shape =
+                                    if (isDescending) {
+                                        ButtonGroupDefaults.connectedTrailingButtonShapes()
+                                    } else {
+                                        ButtonGroupDefaults.connectedLeadingButtonShapes()
+                                    }
                                 ToggleButton(
                                     checked = isChecked,
                                     onCheckedChange = {
                                         viewModel.setSortDescending(isDescending)
                                         dismissSheet()
                                     },
-                                    modifier = Modifier
-                                        .weight(1F)
-                                        .animateWidth(interactionSource),
+                                    modifier =
+                                        Modifier
+                                            .weight(1F)
+                                            .animateWidth(interactionSource),
                                     shapes = shape,
                                     interactionSource = interactionSource,
                                 ) {
@@ -845,9 +871,10 @@ fun SelectableSortOrderBottomSheet(
                                         Icon(
                                             painterResource(R.drawable.check_24px),
                                             contentDescription = null,
-                                            modifier = Modifier
-                                                .padding(end = 8.dp)
-                                                .size(18.dp),
+                                            modifier =
+                                                Modifier
+                                                    .padding(end = 8.dp)
+                                                    .size(18.dp),
                                         )
                                     }
                                     Text(
@@ -909,19 +936,21 @@ fun FlagFilterBottomSheet(
                         Icon(
                             painter = painterResource(id = R.drawable.flag_24px),
                             contentDescription = stringResource(R.string.card_browser_search_by_flag),
-                            tint = colorResource(
-                                id = flag.browserColorRes ?: R.color.transparent,
-                            ),
+                            tint =
+                                colorResource(
+                                    id = flag.browserColorRes ?: R.color.transparent,
+                                ),
                         )
                     },
-                    modifier = Modifier.clickable {
-                        onFilter("flag:${flag.code}")
-                        scope.launch { sheetState.hide() }.invokeOnCompletion {
-                            if (!sheetState.isVisible) {
-                                onDismiss()
+                    modifier =
+                        Modifier.clickable {
+                            onFilter("flag:${flag.code}")
+                            scope.launch { sheetState.hide() }.invokeOnCompletion {
+                                if (!sheetState.isVisible) {
+                                    onDismiss()
+                                }
                             }
-                        }
-                    },
+                        },
                 )
             }
         }
@@ -955,23 +984,25 @@ fun SetFlagBottomSheet(
                         Icon(
                             painter = painterResource(id = R.drawable.flag_24px),
                             contentDescription = stringResource(R.string.menu_flag),
-                            tint = if (flag == Flag.NONE) {
-                                MaterialTheme.colorScheme.onSurface
-                            } else {
-                                colorResource(
-                                    id = flag.browserColorRes ?: R.color.transparent,
-                                )
-                            },
+                            tint =
+                                if (flag == Flag.NONE) {
+                                    MaterialTheme.colorScheme.onSurface
+                                } else {
+                                    colorResource(
+                                        id = flag.browserColorRes ?: R.color.transparent,
+                                    )
+                                },
                         )
                     },
-                    modifier = Modifier.clickable {
-                        onSetFlag(flag)
-                        scope.launch { sheetState.hide() }.invokeOnCompletion {
-                            if (!sheetState.isVisible) {
-                                onDismiss()
+                    modifier =
+                        Modifier.clickable {
+                            onSetFlag(flag)
+                            scope.launch { sheetState.hide() }.invokeOnCompletion {
+                                if (!sheetState.isVisible) {
+                                    onDismiss()
+                                }
                             }
-                        }
-                    },
+                        },
                 )
             }
         }
@@ -984,9 +1015,10 @@ fun EmptyCardBrowser(
     deckName: String,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -1000,9 +1032,10 @@ fun CardBrowserErrorState(
     error: SearchState.Error,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -1025,9 +1058,10 @@ fun CardBrowserError(
 @Composable
 fun CardBrowserLoading(modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -1052,9 +1086,10 @@ fun CardBrowserEmpty(
 @Composable
 fun CardBrowserHeader(columns: List<ColumnHeading>) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         columns.forEach { column ->
@@ -1075,44 +1110,46 @@ fun CardBrowserRow(
     isSelected: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val backgroundColor: Color = when {
-        isSelected && row.color == BrowserRow.Color.COLOR_DEFAULT -> MaterialTheme.colorScheme.primaryContainer
-        isSelected -> MaterialTheme.colorScheme.primary
+    val backgroundColor: Color =
+        when {
+            isSelected && row.color == BrowserRow.Color.COLOR_DEFAULT -> MaterialTheme.colorScheme.primaryContainer
+            isSelected -> MaterialTheme.colorScheme.primary
 
-        row.color != BrowserRow.Color.COLOR_DEFAULT -> {
-            when (row.color) {
-                BrowserRow.Color.COLOR_MARKED -> MaterialTheme.colorScheme.tertiaryContainer
-                BrowserRow.Color.COLOR_FLAG_RED -> colorResource(Flag.RED.browserColorRes!!)
-                BrowserRow.Color.COLOR_FLAG_ORANGE -> colorResource(Flag.ORANGE.browserColorRes!!)
-                BrowserRow.Color.COLOR_FLAG_GREEN -> colorResource(Flag.GREEN.browserColorRes!!)
-                BrowserRow.Color.COLOR_FLAG_BLUE -> colorResource(Flag.BLUE.browserColorRes!!)
-                BrowserRow.Color.COLOR_FLAG_PINK -> colorResource(Flag.PINK.browserColorRes!!)
-                BrowserRow.Color.COLOR_FLAG_TURQUOISE -> colorResource(Flag.TURQUOISE.browserColorRes!!)
-                BrowserRow.Color.COLOR_FLAG_PURPLE -> colorResource(Flag.PURPLE.browserColorRes!!)
-                else -> MaterialTheme.colorScheme.surface
+            row.color != BrowserRow.Color.COLOR_DEFAULT -> {
+                when (row.color) {
+                    BrowserRow.Color.COLOR_MARKED -> MaterialTheme.colorScheme.tertiaryContainer
+                    BrowserRow.Color.COLOR_FLAG_RED -> colorResource(Flag.RED.browserColorRes!!)
+                    BrowserRow.Color.COLOR_FLAG_ORANGE -> colorResource(Flag.ORANGE.browserColorRes!!)
+                    BrowserRow.Color.COLOR_FLAG_GREEN -> colorResource(Flag.GREEN.browserColorRes!!)
+                    BrowserRow.Color.COLOR_FLAG_BLUE -> colorResource(Flag.BLUE.browserColorRes!!)
+                    BrowserRow.Color.COLOR_FLAG_PINK -> colorResource(Flag.PINK.browserColorRes!!)
+                    BrowserRow.Color.COLOR_FLAG_TURQUOISE -> colorResource(Flag.TURQUOISE.browserColorRes!!)
+                    BrowserRow.Color.COLOR_FLAG_PURPLE -> colorResource(Flag.PURPLE.browserColorRes!!)
+                    else -> MaterialTheme.colorScheme.surface
+                }
             }
+
+            else -> MaterialTheme.colorScheme.surface
         }
 
-        else -> MaterialTheme.colorScheme.surface
-    }
-
-    val contentColor: Color = when (backgroundColor) {
-        MaterialTheme.colorScheme.primary -> MaterialTheme.colorScheme.onPrimary
-        MaterialTheme.colorScheme.primaryContainer -> MaterialTheme.colorScheme.onPrimaryContainer
-        MaterialTheme.colorScheme.tertiaryContainer -> MaterialTheme.colorScheme.onTertiaryContainer
-        colorResource(Flag.RED.browserColorRes!!), colorResource(Flag.ORANGE.browserColorRes!!),
-        colorResource(
-            Flag.GREEN.browserColorRes!!,
-        ),
-        colorResource(Flag.BLUE.browserColorRes!!), colorResource(Flag.PINK.browserColorRes!!),
-        colorResource(
-            Flag.TURQUOISE.browserColorRes!!,
-        ),
-        colorResource(Flag.PURPLE.browserColorRes!!),
+    val contentColor: Color =
+        when (backgroundColor) {
+            MaterialTheme.colorScheme.primary -> MaterialTheme.colorScheme.onPrimary
+            MaterialTheme.colorScheme.primaryContainer -> MaterialTheme.colorScheme.onPrimaryContainer
+            MaterialTheme.colorScheme.tertiaryContainer -> MaterialTheme.colorScheme.onTertiaryContainer
+            colorResource(Flag.RED.browserColorRes!!), colorResource(Flag.ORANGE.browserColorRes!!),
+            colorResource(
+                Flag.GREEN.browserColorRes!!,
+            ),
+            colorResource(Flag.BLUE.browserColorRes!!), colorResource(Flag.PINK.browserColorRes!!),
+            colorResource(
+                Flag.TURQUOISE.browserColorRes!!,
+            ),
+            colorResource(Flag.PURPLE.browserColorRes!!),
             -> Color.Black
 
-        else -> MaterialTheme.colorScheme.onSurface
-    }
+            else -> MaterialTheme.colorScheme.onSurface
+        }
 
     Surface(
         modifier = modifier.fillMaxWidth(),

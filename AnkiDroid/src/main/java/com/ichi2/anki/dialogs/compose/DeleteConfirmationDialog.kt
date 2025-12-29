@@ -7,7 +7,7 @@
  * version.                                                                             *
  *                                                                                      *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY      *
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A      * 
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A      *
  * PARTICULAR PURPOSE. See the GNU General Public License for more details.             *
  *                                                                                      *
  * You should have received a copy of the GNU General Public License along with         *
@@ -39,11 +39,12 @@ fun DeleteConfirmationDialog(
         },
         text = {
             Text(
-                text = pluralStringResource(
-                    R.plurals.delete_notes_confirmation,
-                    quantity,
-                    quantity
-                )
+                text =
+                    pluralStringResource(
+                        R.plurals.delete_notes_confirmation,
+                        quantity,
+                        quantity,
+                    ),
             )
         },
         confirmButton = {

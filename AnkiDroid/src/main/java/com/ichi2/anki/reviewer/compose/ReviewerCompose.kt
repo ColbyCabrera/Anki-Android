@@ -112,52 +112,65 @@ import com.ichi2.anki.ui.windows.reviewer.whiteboard.WhiteboardViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-private val ratings = listOf(
-    "Again" to CardAnswer.Rating.AGAIN,
-    "Hard" to CardAnswer.Rating.HARD,
-    "Good" to CardAnswer.Rating.GOOD,
-    "Easy" to CardAnswer.Rating.EASY
-)
+private val ratings =
+    listOf(
+        "Again" to CardAnswer.Rating.AGAIN,
+        "Hard" to CardAnswer.Rating.HARD,
+        "Good" to CardAnswer.Rating.GOOD,
+        "Easy" to CardAnswer.Rating.EASY,
+    )
 
 // You can rename this class to be more descriptive
-class InvertedTopCornersShape(private val cornerRadius: Dp) : Shape {
+class InvertedTopCornersShape(
+    private val cornerRadius: Dp,
+) : Shape {
     override fun createOutline(
-        size: Size, layoutDirection: LayoutDirection, density: Density
+        size: Size,
+        layoutDirection: LayoutDirection,
+        density: Density,
     ): Outline {
         val cornerRadiusPx = with(density) { cornerRadius.toPx() }
 
-        val path = Path().apply {
-            // --- Top-Left Corner Path ---
-            moveTo(0f, 0f) // Start at the top-left point
-            lineTo(cornerRadiusPx, 0f) // Line to the start of the arc
-            // Arc from (r, 0) down to (0, r)
-            arcTo(
-                rect = Rect(
-                    left = 0f, top = 0f, right = 2 * cornerRadiusPx, bottom = 2 * cornerRadiusPx
-                ), startAngleDegrees = 270f,   // Top-center of the rect
-                sweepAngleDegrees = -90f, // Sweep counter-clockwise
-                forceMoveTo = false
-            )
-            // lineTo(0f, 0f) is implicitly added by close()
-            close() // Close the path, drawing a line from (0, r) back to (0, 0)
+        val path =
+            Path().apply {
+                // --- Top-Left Corner Path ---
+                moveTo(0f, 0f) // Start at the top-left point
+                lineTo(cornerRadiusPx, 0f) // Line to the start of the arc
+                // Arc from (r, 0) down to (0, r)
+                arcTo(
+                    rect =
+                        Rect(
+                            left = 0f,
+                            top = 0f,
+                            right = 2 * cornerRadiusPx,
+                            bottom = 2 * cornerRadiusPx,
+                        ),
+                    startAngleDegrees = 270f, // Top-center of the rect
+                    sweepAngleDegrees = -90f, // Sweep counter-clockwise
+                    forceMoveTo = false,
+                )
+                // lineTo(0f, 0f) is implicitly added by close()
+                close() // Close the path, drawing a line from (0, r) back to (0, 0)
 
-            // --- Top-Right Corner Path ---
-            moveTo(size.width, 0f) // Start at the top-right point
-            lineTo(size.width - cornerRadiusPx, 0f) // Line to the start of the arc
-            // Arc from (width - r, 0) down to (width, r)
-            arcTo(
-                rect = Rect(
-                    left = size.width - 2 * cornerRadiusPx,
-                    top = 0f,
-                    right = size.width,
-                    bottom = 2 * cornerRadiusPx
-                ), startAngleDegrees = 270f, // Top-center of the rect
-                sweepAngleDegrees = 90f,  // Sweep clockwise
-                forceMoveTo = false
-            )
-            // lineTo(size.width, 0f) is implicitly added by close()
-            close() // Close the path, drawing a line from (width, r) back to (width, 0)
-        }
+                // --- Top-Right Corner Path ---
+                moveTo(size.width, 0f) // Start at the top-right point
+                lineTo(size.width - cornerRadiusPx, 0f) // Line to the start of the arc
+                // Arc from (width - r, 0) down to (width, r)
+                arcTo(
+                    rect =
+                        Rect(
+                            left = size.width - 2 * cornerRadiusPx,
+                            top = 0f,
+                            right = size.width,
+                            bottom = 2 * cornerRadiusPx,
+                        ),
+                    startAngleDegrees = 270f, // Top-center of the rect
+                    sweepAngleDegrees = 90f, // Sweep clockwise
+                    forceMoveTo = false,
+                )
+                // lineTo(size.width, 0f) is implicitly added by close()
+                close() // Close the path, drawing a line from (width, r) back to (width, 0)
+            }
         return Outline.Generic(path)
     }
 }
@@ -165,7 +178,8 @@ class InvertedTopCornersShape(private val cornerRadius: Dp) : Shape {
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ReviewerContent(
-    viewModel: ReviewerViewModel, whiteboardViewModel: WhiteboardViewModel?
+    viewModel: ReviewerViewModel,
+    whiteboardViewModel: WhiteboardViewModel?,
 ) {
     val state by viewModel.state.collectAsState()
     val sheetState = rememberModalBottomSheetState()
@@ -195,19 +209,23 @@ fun ReviewerContent(
         }
     }
 
-    val editCardLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) {
-        viewModel.onEvent(ReviewerEvent.ReloadCard)
-    }
+    val editCardLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.StartActivityForResult(),
+        ) {
+            viewModel.onEvent(ReviewerEvent.ReloadCard)
+        }
 
     LaunchedEffect(Unit) {
         viewModel.effect.collectLatest { effect ->
             when (effect) {
                 is ReviewerEffect.NavigateToEditCard -> {
-                    val intent = NoteEditorLauncher.EditCard(
-                        effect.cardId, ActivityTransitionAnimation.Direction.FADE
-                    ).toIntent(context)
+                    val intent =
+                        NoteEditorLauncher
+                            .EditCard(
+                                effect.cardId,
+                                ActivityTransitionAnimation.Direction.FADE,
+                            ).toIntent(context)
                     editCardLauncher.launch(intent)
                 }
 
@@ -225,7 +243,8 @@ fun ReviewerContent(
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(snackbarHost = {
             SnackbarHost(
-                snackbarHostState, modifier = Modifier.padding(bottom = toolbarHeightDp + 32.dp)
+                snackbarHostState,
+                modifier = Modifier.padding(bottom = toolbarHeightDp + 32.dp),
             ) { data ->
                 Snackbar(
                     snackbarData = data,
@@ -245,33 +264,35 @@ fun ReviewerContent(
                 flag = state.flag,
                 onToggleMark = { viewModel.onEvent(ReviewerEvent.ToggleMark) },
                 onSetFlag = { viewModel.onEvent(ReviewerEvent.SetFlag(it)) },
-                isAnswerShown = state.isAnswerShown
+                isAnswerShown = state.isAnswerShown,
             ) { viewModel.onEvent(ReviewerEvent.UnanswerCard) }
         }) { paddingValues ->
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surfaceContainer)
-                    .padding(
-                        top = paddingValues.calculateTopPadding(),
-                        start = paddingValues.calculateStartPadding(layoutDirection),
-                        end = paddingValues.calculateEndPadding(layoutDirection)
-                    ),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surfaceContainer)
+                        .padding(
+                            top = paddingValues.calculateTopPadding(),
+                            start = paddingValues.calculateStartPadding(layoutDirection),
+                            end = paddingValues.calculateEndPadding(layoutDirection),
+                        ),
             ) {
                 Box(
-                    modifier = Modifier.background(MaterialTheme.colorScheme.background)
+                    modifier = Modifier.background(MaterialTheme.colorScheme.background),
                 ) {
                     val invertedTopCornersShape =
                         remember { InvertedTopCornersShape(cornerRadius = 32.dp) }
 
                     Surface(
-                        modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .zIndex(1F)
-                            .height(100.dp)
-                            .fillMaxWidth(),
+                        modifier =
+                            Modifier
+                                .align(Alignment.TopStart)
+                                .zIndex(1F)
+                                .height(100.dp)
+                                .fillMaxWidth(),
                         shape = invertedTopCornersShape,
-                        color = MaterialTheme.colorScheme.surfaceContainer
+                        color = MaterialTheme.colorScheme.surfaceContainer,
                     ) {}
 
                     Flashcard(
@@ -282,14 +303,14 @@ fun ReviewerContent(
                         },
                         mediaDirectory = state.mediaDirectory,
                         isAnswerShown = state.isAnswerShown,
-                        toolbarHeight = (toolbarHeightDp + 48.dp).value.toInt()
+                        toolbarHeight = (toolbarHeightDp + 48.dp).value.toInt(),
                     )
 
                     // Whiteboard canvas
                     if (state.isWhiteboardEnabled && whiteboardViewModel != null) {
                         WhiteboardCanvas(
                             viewModel = whiteboardViewModel,
-                            modifier = Modifier.padding(bottom = totalBottomPadding + 48.dp)
+                            modifier = Modifier.padding(bottom = totalBottomPadding + 48.dp),
                         )
                     }
 
@@ -319,19 +340,22 @@ fun ReviewerContent(
                                     whiteboardViewModel.enableEraser()
                                 }
                             },
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .offset(y = -ScreenOffset - toolbarHeightDp - 8.dp)
-                                .padding(bottom = paddingValues.calculateBottomPadding())
-                                .onSizeChanged { whiteboardToolbarHeight = it.height })
+                            modifier =
+                                Modifier
+                                    .align(Alignment.BottomCenter)
+                                    .offset(y = -ScreenOffset - toolbarHeightDp - 8.dp)
+                                    .padding(bottom = paddingValues.calculateBottomPadding())
+                                    .onSizeChanged { whiteboardToolbarHeight = it.height },
+                        )
                     }
 
                     HorizontalFloatingToolbar(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .offset(y = -ScreenOffset)
-                            .padding(bottom = paddingValues.calculateBottomPadding())
-                            .onSizeChanged { toolbarHeight = it.height },
+                        modifier =
+                            Modifier
+                                .align(Alignment.BottomCenter)
+                                .offset(y = -ScreenOffset)
+                                .padding(bottom = paddingValues.calculateBottomPadding())
+                                .onSizeChanged { toolbarHeight = it.height },
                         expanded = true,
                         colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(),
                     ) {
@@ -342,44 +366,45 @@ fun ReviewerContent(
                             ) {
                                 Icon(
                                     Icons.Filled.MoreVert,
-                                    contentDescription = stringResource(R.string.more_options)
+                                    contentDescription = stringResource(R.string.more_options),
                                 )
                             }
                             Box(
-                                modifier = Modifier.animateContentSize(motionScheme.fastSpatialSpec())
+                                modifier = Modifier.animateContentSize(motionScheme.fastSpatialSpec()),
                             ) {
                                 if (!state.isAnswerShown) {
                                     val interactionSource = remember { MutableInteractionSource() }
                                     val isPressed by interactionSource.collectIsPressedAsState()
                                     val defaultHorizontalPadding =
                                         ButtonDefaults.MediumContentPadding.calculateLeftPadding(
-                                            layoutDirection = LocalLayoutDirection.current
+                                            layoutDirection = LocalLayoutDirection.current,
                                         )
                                     val horizontalPadding by animateDpAsState(
                                         if (isPressed) defaultHorizontalPadding + 4.dp else defaultHorizontalPadding,
-                                        motionScheme.fastSpatialSpec()
+                                        motionScheme.fastSpatialSpec(),
                                     )
                                     Button(
                                         onClick = { viewModel.onEvent(ReviewerEvent.ShowAnswer) },
                                         modifier = Modifier.height(56.dp),
                                         interactionSource = interactionSource,
                                         contentPadding = PaddingValues(horizontal = horizontalPadding),
-                                        colors = ButtonDefaults.buttonColors(
-                                            MaterialTheme.colorScheme.primary,
-                                            MaterialTheme.colorScheme.onPrimary
-                                        )
+                                        colors =
+                                            ButtonDefaults.buttonColors(
+                                                MaterialTheme.colorScheme.primary,
+                                                MaterialTheme.colorScheme.onPrimary,
+                                            ),
                                     ) {
                                         Text(
                                             text = stringResource(R.string.show_answer),
                                             softWrap = false,
-                                            overflow = TextOverflow.Clip
+                                            overflow = TextOverflow.Clip,
                                         )
                                     }
                                 } else {
                                     ButtonGroup(
                                         horizontalArrangement = Arrangement.spacedBy(2.dp),
-                                        overflowIndicator = { }) {
-
+                                        overflowIndicator = { },
+                                    ) {
                                         ratings.forEachIndexed { index, (_, rating) ->
                                             customItem(
                                                 buttonGroupContent = {
@@ -389,31 +414,33 @@ fun ReviewerContent(
                                                         onClick = {
                                                             viewModel.onEvent(
                                                                 ReviewerEvent.RateCard(
-                                                                    rating
-                                                                )
+                                                                    rating,
+                                                                ),
                                                             )
                                                         },
-                                                        modifier = Modifier
-                                                            .animateWidth(
-                                                                interactionSource
-                                                            )
-                                                            .height(56.dp),
+                                                        modifier =
+                                                            Modifier
+                                                                .animateWidth(
+                                                                    interactionSource,
+                                                                ).height(56.dp),
                                                         contentPadding = ButtonDefaults.ExtraSmallContentPadding,
-                                                        shape = when (index) {
-                                                            0 -> ButtonGroupDefaults.connectedLeadingButtonShape
-                                                            3 -> ButtonGroupDefaults.connectedTrailingButtonShape
-                                                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes().shape
-                                                        },
+                                                        shape =
+                                                            when (index) {
+                                                                0 -> ButtonGroupDefaults.connectedLeadingButtonShape
+                                                                3 -> ButtonGroupDefaults.connectedTrailingButtonShape
+                                                                else -> ButtonGroupDefaults.connectedMiddleButtonShapes().shape
+                                                            },
                                                         interactionSource = interactionSource,
-                                                        colors = ButtonDefaults.buttonColors(
-                                                            MaterialTheme.colorScheme.primary,
-                                                            MaterialTheme.colorScheme.onPrimary
-                                                        )
+                                                        colors =
+                                                            ButtonDefaults.buttonColors(
+                                                                MaterialTheme.colorScheme.primary,
+                                                                MaterialTheme.colorScheme.onPrimary,
+                                                            ),
                                                     ) {
                                                         Text(
                                                             state.nextTimes[index],
                                                             softWrap = false,
-                                                            overflow = TextOverflow.Visible
+                                                            overflow = TextOverflow.Visible,
                                                         )
                                                     }
                                                 },
@@ -445,47 +472,59 @@ fun ReviewerContent(
                                 Triple(R.string.redo, Icons.AutoMirrored.Filled.Undo) {
                                     viewModel.onEvent(ReviewerEvent.Redo)
                                 },
-                                */
+                         */
                             Triple(
                                 if (state.isWhiteboardEnabled) R.string.disable_whiteboard else R.string.enable_whiteboard,
-                                Icons.Filled.Edit
+                                Icons.Filled.Edit,
                             ) {
                                 viewModel.onEvent(ReviewerEvent.ToggleWhiteboard)
-                            }, Triple(R.string.cardeditor_title_edit_card, Icons.Filled.EditNote) {
+                            },
+                            Triple(R.string.cardeditor_title_edit_card, Icons.Filled.EditNote) {
                                 viewModel.onEvent(ReviewerEvent.EditCard)
-                            }, Triple(R.string.menu_edit_tags, Icons.AutoMirrored.Filled.Label) {
+                            },
+                            Triple(R.string.menu_edit_tags, Icons.AutoMirrored.Filled.Label) {
                                 viewModel.onEvent(ReviewerEvent.EditTags)
-                            }, Triple(R.string.menu_bury_card, Icons.Filled.VisibilityOff) {
+                            },
+                            Triple(R.string.menu_bury_card, Icons.Filled.VisibilityOff) {
                                 viewModel.onEvent(ReviewerEvent.BuryCard)
-                            }, Triple(R.string.menu_suspend_card, Icons.Filled.Pause) {
+                            },
+                            Triple(R.string.menu_suspend_card, Icons.Filled.Pause) {
                                 viewModel.onEvent(ReviewerEvent.SuspendCard)
-                            }, Triple(R.string.menu_delete_note, Icons.Filled.Delete) {
+                            },
+                            Triple(R.string.menu_delete_note, Icons.Filled.Delete) {
                                 viewModel.onEvent(ReviewerEvent.DeleteNote)
-                            }, Triple(R.string.card_editor_reschedule_card, Icons.Filled.Schedule) {
+                            },
+                            Triple(R.string.card_editor_reschedule_card, Icons.Filled.Schedule) {
                                 viewModel.onEvent(ReviewerEvent.RescheduleCard)
-                            }, Triple(R.string.replay_media, Icons.Filled.Replay) {
+                            },
+                            Triple(R.string.replay_media, Icons.Filled.Replay) {
                                 viewModel.onEvent(ReviewerEvent.ReplayMedia)
-                            }, Triple(
+                            },
+                            Triple(
                                 if (state.isVoicePlaybackEnabled) R.string.menu_disable_voice_playback else R.string.menu_enable_voice_playback,
-                                Icons.Filled.RecordVoiceOver
+                                Icons.Filled.RecordVoiceOver,
                             ) {
                                 viewModel.onEvent(ReviewerEvent.ToggleVoicePlayback)
-                            }, Triple(R.string.deck_options, Icons.Filled.Tune) {
+                            },
+                            Triple(R.string.deck_options, Icons.Filled.Tune) {
                                 viewModel.onEvent(ReviewerEvent.DeckOptions)
-                            })
+                            },
+                        )
                     }
                 menuOptions.forEach { (textRes, icon, action) ->
                     ListItem(
                         headlineContent = { Text(stringResource(textRes)) },
                         leadingContent = { Icon(icon, contentDescription = null) },
-                        modifier = Modifier.clickable {
-                            scope.launch { sheetState.hide() }.invokeOnCompletion {
-                                if (!sheetState.isVisible) {
-                                    showBottomSheet = false
+                        modifier =
+                            Modifier.clickable {
+                                scope.launch { sheetState.hide() }.invokeOnCompletion {
+                                    if (!sheetState.isVisible) {
+                                        showBottomSheet = false
+                                    }
                                 }
-                            }
-                            action()
-                        })
+                                action()
+                            },
+                    )
                 }
             }
         }
@@ -499,7 +538,8 @@ fun ReviewerContent(
                     whiteboardViewModel.addBrush(color)
                     showColorPickerDialog = false
                 },
-                onDismiss = { showColorPickerDialog = false })
+                onDismiss = { showColorPickerDialog = false },
+            )
         }
 
         // Brush removal confirmation dialog
@@ -514,7 +554,8 @@ fun ReviewerContent(
                                 whiteboardViewModel.removeBrush(index)
                             }
                             brushIndexToRemove = null
-                        }) {
+                        },
+                    ) {
                         Text(stringResource(R.string.dialog_remove))
                     }
                 },
@@ -522,19 +563,24 @@ fun ReviewerContent(
                     TextButton(onClick = { brushIndexToRemove = null }) {
                         Text(stringResource(R.string.dialog_cancel))
                     }
-                })
+                },
+            )
         }
 
         // Brush options dialog
         if (showBrushOptions && whiteboardViewModel != null) {
             BrushOptionsDialog(
-                viewModel = whiteboardViewModel, onDismissRequest = { showBrushOptions = false })
+                viewModel = whiteboardViewModel,
+                onDismissRequest = { showBrushOptions = false },
+            )
         }
 
         // Eraser options dialog
         if (showEraserOptions && whiteboardViewModel != null) {
             EraserOptionsDialog(
-                viewModel = whiteboardViewModel, onDismissRequest = { showEraserOptions = false })
+                viewModel = whiteboardViewModel,
+                onDismissRequest = { showEraserOptions = false },
+            )
         }
     }
 }

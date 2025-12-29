@@ -77,7 +77,7 @@ class NoteEditorActivity :
                 replace(
                     R.id.note_editor_fragment_frame,
                     NoteEditorFragment.newInstance(launcher),
-                    FRAGMENT_TAG
+                    FRAGMENT_TAG,
                 )
                 setReorderingAllowed(true)
                 runOnCommit {
@@ -124,11 +124,12 @@ class NoteEditorActivity :
      */
     private fun resolveThemeSurfaceColor(): Int {
         val typedValue = TypedValue()
-        val resolved = theme.resolveAttribute(
-            com.google.android.material.R.attr.colorSurface,
-            typedValue,
-            true
-        )
+        val resolved =
+            theme.resolveAttribute(
+                com.google.android.material.R.attr.colorSurface,
+                typedValue,
+                true,
+            )
 
         if (!resolved) {
             // Attribute not found, return fallback

@@ -15,10 +15,8 @@
  */
 package com.ichi2.anki.cardviewer
 
-import android.os.Build
 import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebView
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.Lifecycle
 import com.ichi2.anki.AbstractFlashcardViewer

@@ -23,7 +23,6 @@ import android.os.Build
 import android.os.Environment
 import android.os.Parcelable
 import androidx.annotation.CheckResult
-import androidx.annotation.RequiresApi
 import androidx.core.content.edit
 import com.ichi2.anki.exception.StorageAccessException
 import com.ichi2.anki.servicelayer.PreferenceUpgradeService

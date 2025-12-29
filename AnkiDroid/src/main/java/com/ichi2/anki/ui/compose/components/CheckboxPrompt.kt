@@ -18,25 +18,26 @@ fun CheckboxPrompt(
     text: String,
     isChecked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { onCheckedChange(!isChecked) }
-            // Original XML: marginTop=8dp, marginHorizontal=18dp
-            .padding(top = 8.dp, start = 18.dp, end = 18.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clickable { onCheckedChange(!isChecked) }
+                // Original XML: marginTop=8dp, marginHorizontal=18dp
+                .padding(top = 8.dp, start = 18.dp, end = 18.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Checkbox(
             checked = isChecked,
-            onCheckedChange = null
+            onCheckedChange = null,
         )
         Text(
             text = text,
             modifier = Modifier.padding(start = 8.dp),
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }
@@ -48,7 +49,7 @@ private fun CheckboxPromptPreview() {
         CheckboxPrompt(
             text = "Enable analytics",
             isChecked = true,
-            onCheckedChange = {}
+            onCheckedChange = {},
         )
     }
 }

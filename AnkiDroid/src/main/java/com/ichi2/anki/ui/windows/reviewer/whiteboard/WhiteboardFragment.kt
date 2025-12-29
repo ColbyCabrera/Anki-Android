@@ -33,16 +33,16 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.widget.PopupMenu
 import androidx.appcompat.widget.ThemeUtils
-import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.constraintlayout.widget.ConstraintSet
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.slider.Slider
@@ -202,7 +202,10 @@ class WhiteboardFragment :
         val colorNormal = Color(ThemeUtils.getThemeAttrColor(requireContext(), androidx.appcompat.R.attr.colorControlNormal))
         val colorHighlight = Color(ThemeUtils.getThemeAttrColor(requireContext(), androidx.appcompat.R.attr.colorControlHighlight))
 
-        fun setupComposeView(container: LinearLayout, isHorizontal: Boolean) {
+        fun setupComposeView(
+            container: LinearLayout,
+            isHorizontal: Boolean,
+        ) {
             container.removeAllViews()
             container.addView(
                 ComposeView(requireContext()).apply {
@@ -218,7 +221,7 @@ class WhiteboardFragment :
                             }
                         }
                     }
-                }
+                },
             )
         }
 
@@ -232,7 +235,7 @@ class WhiteboardFragment :
         activeIndex: Int,
         isEraserActive: Boolean,
         colorNormal: Color,
-        colorHighlight: Color
+        colorHighlight: Color,
     ) {
         brushesInfo.forEachIndexed { index, brush ->
             ColorBrushButton(
@@ -254,13 +257,13 @@ class WhiteboardFragment :
                     }
                 },
                 colorNormal = colorNormal,
-                colorHighlight = colorHighlight
+                colorHighlight = colorHighlight,
             )
         }
         AddBrushButton(
             onClick = { showAddColorDialog() },
             colorNormal = colorNormal,
-            tooltip = getString(R.string.add_brush)
+            tooltip = getString(R.string.add_brush),
         )
     }
 

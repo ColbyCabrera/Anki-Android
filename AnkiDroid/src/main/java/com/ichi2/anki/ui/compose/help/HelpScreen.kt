@@ -81,43 +81,48 @@ private data class HelpLink(
     @StringRes val titleRes: Int,
     @StringRes val subtitleRes: Int,
     @DrawableRes val icon: Int,
-    val url: String
+    val url: String,
 )
 
-private val helpLinks = listOf(
-    HelpLink(
-        R.string.help_manual_title,
-        R.string.help_manual_subtitle,
-        R.drawable.help_24px,
-        "https://docs.ankidroid.org"
-    ), HelpLink(
-        R.string.help_forum_title,
-        R.string.help_forum_subtitle,
-        R.drawable.forum_24px,
-        "https://forums.ankiweb.net"
-    ), HelpLink(
-        R.string.help_issue_tracker_title,
-        R.string.help_issue_tracker_subtitle,
-        R.drawable.bug_report_24px,
-        "https://github.com/ankidroid/Anki-Android/issues"
-    ), HelpLink(
-        R.string.help_donate_title,
-        R.string.help_donate_subtitle,
-        R.drawable.volunteer_activism_24px,
-        "https://ankidroid.org/#donations"
+private val helpLinks =
+    listOf(
+        HelpLink(
+            R.string.help_manual_title,
+            R.string.help_manual_subtitle,
+            R.drawable.help_24px,
+            "https://docs.ankidroid.org",
+        ),
+        HelpLink(
+            R.string.help_forum_title,
+            R.string.help_forum_subtitle,
+            R.drawable.forum_24px,
+            "https://forums.ankiweb.net",
+        ),
+        HelpLink(
+            R.string.help_issue_tracker_title,
+            R.string.help_issue_tracker_subtitle,
+            R.drawable.bug_report_24px,
+            "https://github.com/ankidroid/Anki-Android/issues",
+        ),
+        HelpLink(
+            R.string.help_donate_title,
+            R.string.help_donate_subtitle,
+            R.drawable.volunteer_activism_24px,
+            "https://ankidroid.org/#donations",
+        ),
     )
-)
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 private val HeroShape = RoundedPolygonShape(MaterialShapes.Cookie4Sided)
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
-private val iconShapes = listOf(
-    RoundedPolygonShape(MaterialShapes.Clover4Leaf),
-    RoundedPolygonShape(MaterialShapes.SoftBoom),
-    RoundedPolygonShape(MaterialShapes.Sunny),
-    RoundedPolygonShape(MaterialShapes.VerySunny),
-)
+private val iconShapes =
+    listOf(
+        RoundedPolygonShape(MaterialShapes.Clover4Leaf),
+        RoundedPolygonShape(MaterialShapes.SoftBoom),
+        RoundedPolygonShape(MaterialShapes.Sunny),
+        RoundedPolygonShape(MaterialShapes.VerySunny),
+    )
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -128,22 +133,26 @@ fun HelpScreen() {
 
     AnkiDroidTheme {
         Scaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection), topBar = {
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            topBar = {
                 LargeTopAppBar(
                     title = {
                         Text(
                             text = stringResource(id = R.string.help_screen_title),
                             style = MaterialTheme.typography.displayMediumEmphasized,
                         )
-                    }, scrollBehavior = scrollBehavior
+                    },
+                    scrollBehavior = scrollBehavior,
                 )
-            }) { innerPadding ->
+            },
+        ) { innerPadding ->
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 // Hero Section
                 item {
@@ -162,9 +171,12 @@ fun HelpScreen() {
 
                     AnimatedVisibility(
                         visible = visible,
-                        enter = fadeIn(animationSpec = tween(300)) + slideInVertically(
-                            animationSpec = spring(dampingRatio = 0.8f),
-                            initialOffsetY = { it / 2 })
+                        enter =
+                            fadeIn(animationSpec = tween(300)) +
+                                slideInVertically(
+                                    animationSpec = spring(dampingRatio = 0.8f),
+                                    initialOffsetY = { it / 2 },
+                                ),
                     ) {
                         HelpItem(
                             titleRes = helpLink.titleRes,
@@ -180,15 +192,17 @@ fun HelpScreen() {
                                 } catch (_: ActivityNotFoundException) {
                                     Log.w(
                                         "HelpScreen",
-                                        "No application found to open link: ${helpLink.url}"
+                                        "No application found to open link: ${helpLink.url}",
                                     )
-                                    Toast.makeText(
-                                        context,
-                                        R.string.no_application_to_open_link,
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+                                    Toast
+                                        .makeText(
+                                            context,
+                                            R.string.no_application_to_open_link,
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
                                 }
-                            })
+                            },
+                        )
                     }
                 }
 
@@ -205,33 +219,43 @@ fun HelpScreen() {
 private fun HelpHeroSection() {
     val infiniteTransition = rememberInfiniteTransition(label = "HeroRotation")
     val rotation by infiniteTransition.animateFloat(
-        initialValue = 0f, targetValue = 360f, animationSpec = infiniteRepeatable(
-            animation = tween(12000, easing = LinearEasing)
-        ), label = "HeroRotationAngle"
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(12000, easing = LinearEasing),
+            ),
+        label = "HeroRotationAngle",
     )
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
-            modifier = Modifier.size(100.dp), contentAlignment = Alignment.Center
+            modifier = Modifier.size(100.dp),
+            contentAlignment = Alignment.Center,
         ) {
             // Animated background shape
-            Box(modifier = Modifier
-                .fillMaxSize()
-                .graphicsLayer { rotationZ = rotation }
-                .background(
-                    MaterialTheme.colorScheme.primaryContainer, shape = HeroShape
-                ))
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .graphicsLayer { rotationZ = rotation }
+                        .background(
+                            MaterialTheme.colorScheme.primaryContainer,
+                            shape = HeroShape,
+                        ),
+            )
             // Help icon
             Icon(
                 painter = painterResource(R.drawable.help_filled_24px),
                 contentDescription = null,
                 modifier = Modifier.size(48.dp),
-                tint = MaterialTheme.colorScheme.primary
+                tint = MaterialTheme.colorScheme.primary,
             )
         }
 
@@ -240,7 +264,7 @@ private fun HelpHeroSection() {
         Text(
             text = stringResource(R.string.help_hero_subtitle),
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -254,50 +278,56 @@ private fun HelpItem(
     iconShape: RoundedPolygonShape,
     containerColor: Color,
     contentColor: Color,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
-
     ElevatedCard(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraExtraLarge,
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = containerColor, contentColor = contentColor
-        ),
-        elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = 0.dp, pressedElevation = 2.dp
-        )
+        colors =
+            CardDefaults.elevatedCardColors(
+                containerColor = containerColor,
+                contentColor = contentColor,
+            ),
+        elevation =
+            CardDefaults.elevatedCardElevation(
+                defaultElevation = 0.dp,
+                pressedElevation = 2.dp,
+            ),
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             // Icon with shaped background
             Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.tertiaryContainer, shape = iconShape
-                    ), contentAlignment = Alignment.Center
+                modifier =
+                    Modifier
+                        .size(56.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.tertiaryContainer,
+                            shape = iconShape,
+                        ),
+                contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     painter = painterResource(icon),
                     contentDescription = null,
                     modifier = Modifier.size(26.dp),
-                    tint = MaterialTheme.colorScheme.onTertiaryContainer
+                    tint = MaterialTheme.colorScheme.onTertiaryContainer,
                 )
             }
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = stringResource(id = titleRes),
-                    style = MaterialTheme.typography.titleLarge
+                    style = MaterialTheme.typography.titleLarge,
                 )
                 Text(
                     text = stringResource(id = subtitleRes),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = contentColor.copy(alpha = 0.8f)
+                    color = contentColor.copy(alpha = 0.8f),
                 )
             }
 
@@ -305,7 +335,7 @@ private fun HelpItem(
                 painter = painterResource(R.drawable.arrow_outward_24px),
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
-                tint = contentColor
+                tint = contentColor,
             )
         }
     }

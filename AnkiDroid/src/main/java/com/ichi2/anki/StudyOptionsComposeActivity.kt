@@ -24,9 +24,9 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.*
 import com.ichi2.anki.CollectionManager.withCol
-import com.ichi2.anki.dialogs.customstudy.CustomStudyDialog
 import com.ichi2.anki.deckpicker.compose.StudyOptionsData
 import com.ichi2.anki.deckpicker.compose.StudyOptionsScreen
+import com.ichi2.anki.dialogs.customstudy.CustomStudyDialog
 import com.ichi2.anki.utils.ext.showDialogFragment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -84,6 +84,7 @@ class StudyOptionsComposeActivity : AnkiActivity() {
             )
         }
     }
+
     companion object {
         const val DECK_ID = "deck_id"
     }

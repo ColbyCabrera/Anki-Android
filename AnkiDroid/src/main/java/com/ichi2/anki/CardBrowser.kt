@@ -69,18 +69,18 @@ open class CardBrowser :
     ChangeManager.Subscriber,
     DeckSelectionDialog.DeckSelectionListener,
     TagsDialogListener {
-
     val fragmented: Boolean
         get() = resources.configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK == Configuration.SCREENLAYOUT_SIZE_XLARGE
 
     private lateinit var viewModel: CardBrowserViewModel
     private lateinit var actionHandler: CardBrowserActionHandler
 
-    private val onMySearches = registerForActivityResult(MySearchesContract()) { query ->
-        if (query != null) {
-            viewModel.search(query)
+    private val onMySearches =
+        registerForActivityResult(MySearchesContract()) { query ->
+            if (query != null) {
+                viewModel.search(query)
+            }
         }
-    }
 
     private var onEditCardActivityResult =
         registerForActivityResult(StartActivityForResult()) { result: ActivityResult ->
@@ -117,11 +117,13 @@ open class CardBrowser :
                 return@registerForActivityResult
             }
             val data = result.data
-            if (data != null && (
-                data.getBooleanExtra(
-                    NoteEditorFragment.RELOAD_REQUIRED_EXTRA_KEY,
-                    false
-                ) || data.getBooleanExtra(NoteEditorFragment.NOTE_CHANGED_EXTRA_KEY, false)
+            if (data != null &&
+                (
+                    data.getBooleanExtra(
+                        NoteEditorFragment.RELOAD_REQUIRED_EXTRA_KEY,
+                        false,
+                    ) ||
+                        data.getBooleanExtra(NoteEditorFragment.NOTE_CHANGED_EXTRA_KEY, false)
                 )
             ) {
                 viewModel.search(viewModel.searchQuery.value)
@@ -141,13 +143,14 @@ open class CardBrowser :
 
         val launchOptions = intent?.toCardBrowserLaunchOptions()
         viewModel = createViewModel(launchOptions, fragmented)
-        actionHandler = CardBrowserActionHandler(
-            this,
-            viewModel,
-            launchEditCard = { onEditCardActivityResult.launch(it) },
-            launchAddNote = { onAddNoteActivityResult.launch(it) },
-            launchPreview = { onPreviewCardsActivityResult.launch(it) }
-        )
+        actionHandler =
+            CardBrowserActionHandler(
+                this,
+                viewModel,
+                launchEditCard = { onEditCardActivityResult.launch(it) },
+                launchAddNote = { onAddNoteActivityResult.launch(it) },
+                launchPreview = { onPreviewCardsActivityResult.launch(it) },
+            )
 
         startLoadingCollection()
 
@@ -184,7 +187,7 @@ open class CardBrowser :
                             onRenameFlagClicked = {
                                 showBrowserOptionsDialog = false
                                 showFlagRenameDialog = true
-                            }
+                            },
                         )
                     }
                     if (showFilterByTagsDialog) {
@@ -198,7 +201,7 @@ open class CardBrowser :
                             initialSelection = selectedTags,
                             deckTags = deckTags,
                             initialFilterByDeck = filterTagsByDeck,
-                            onFilterByDeckChanged = viewModel::setFilterTagsByDeck
+                            onFilterByDeckChanged = viewModel::setFilterTagsByDeck,
                         )
                     }
                     if (showFlagRenameDialog) {
@@ -206,7 +209,7 @@ open class CardBrowser :
                             onDismissRequest = {
                                 showFlagRenameDialog = false
                                 invalidateOptionsMenu()
-                            }
+                            },
                         )
                     }
                     CardBrowserLayout(
@@ -218,11 +221,10 @@ open class CardBrowser :
                                 viewModel.toggleRowSelection(
                                     CardBrowserViewModel.RowSelection(
                                         rowId = CardOrNoteId(row.id),
-                                        topOffset = 0
-                                    )
+                                        topOffset = 0,
+                                    ),
                                 )
-                            }
-                            else {
+                            } else {
                                 actionHandler.openNoteEditorForCard(row.id)
                             }
                         },
@@ -273,7 +275,7 @@ open class CardBrowser :
                             viewModel.loadAllTags()
                             viewModel.loadDeckTags()
                             showFilterByTagsDialog = true
-                        }
+                        },
                     )
                 }
             }
@@ -285,7 +287,10 @@ open class CardBrowser :
         Timber.d("onCollectionLoaded(): Collection loaded, ViewModel will start search.")
     }
 
-    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
+    override fun onKeyUp(
+        keyCode: Int,
+        event: KeyEvent?,
+    ): Boolean {
         if (event == null) {
             return super.onKeyUp(keyCode, event)
         }
@@ -323,19 +328,22 @@ open class CardBrowser :
 
     private fun createViewModel(
         launchOptions: CardBrowserLaunchOptions?,
-        isFragmented: Boolean
+        isFragmented: Boolean,
     ) = ViewModelProvider(
         viewModelStore,
         CardBrowserViewModel.factory(
             lastDeckIdRepository = AnkiDroidApp.instance.sharedPrefsLastDeckIdRepository,
             cacheDir = cacheDir,
             options = launchOptions,
-            isFragmented = isFragmented
+            isFragmented = isFragmented,
         ),
-        defaultViewModelCreationExtras
+        defaultViewModelCreationExtras,
     )[CardBrowserViewModel::class.java]
 
-    override fun opExecuted(changes: OpChanges, handler: Any?) {
+    override fun opExecuted(
+        changes: OpChanges,
+        handler: Any?,
+    ) {
         if (handler === this || handler === viewModel) {
             return
         }
@@ -354,14 +362,12 @@ open class CardBrowser :
     override fun onSelectedTags(
         selectedTags: List<String>,
         indeterminateTags: List<String>,
-        stateFilter: CardStateFilter
+        stateFilter: CardStateFilter,
     ) {
         actionHandler.onSelectedTags(selectedTags, indeterminateTags, stateFilter)
     }
 
-
     override fun onDeckSelected(deck: SelectableDeck?) {
         actionHandler.onDeckSelected(deck)
     }
-
 }

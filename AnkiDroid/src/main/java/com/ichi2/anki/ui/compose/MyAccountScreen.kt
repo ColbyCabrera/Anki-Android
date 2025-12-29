@@ -112,7 +112,6 @@ fun MyAccountScreen(
         onBackPressedCallback?.isEnabled = state.screenState == MyAccountScreenState.REMOVE_ACCOUNT
     }
 
-
     when (state.screenState) {
         MyAccountScreenState.ACCOUNT_MANAGEMENT -> {
             Scaffold(
@@ -126,10 +125,11 @@ fun MyAccountScreen(
                         FilledIconButton(
                             modifier = Modifier.padding(end = 8.dp),
                             onClick = onBack,
-                            colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            ),
+                            colors =
+                                IconButtonDefaults.filledIconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                ),
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.arrow_back_24px),
@@ -140,13 +140,14 @@ fun MyAccountScreen(
                 },
             ) { padding ->
                 when (state.isLoggedIn) {
-                    true -> LoggedInContent(
-                        modifier = Modifier.padding(padding),
-                        username = state.username ?: "",
-                        onLogoutClick = onLogoutClick,
-                        onRemoveAccountClick = onRemoveAccountClick,
-                        onPrivacyPolicyClick = onPrivacyPolicyClick,
-                    )
+                    true ->
+                        LoggedInContent(
+                            modifier = Modifier.padding(padding),
+                            username = state.username ?: "",
+                            onLogoutClick = onLogoutClick,
+                            onRemoveAccountClick = onRemoveAccountClick,
+                            onPrivacyPolicyClick = onPrivacyPolicyClick,
+                        )
 
                     false -> {
                         var password by remember { mutableStateOf("") }
@@ -190,11 +191,12 @@ fun RemoveAccountContent(onBack: () -> Unit) {
     val removeAccountUrl = stringResource(R.string.remove_account_url)
 
     // Redirect logic from RemoveAccountFragment
-    val urlsToRedirect = listOf(
-        "https://ankiweb.net/account/login?afterAuth=1",
-        "https://ankiweb.net/decks",
-        "https://ankiweb.net/account/verify-email",
-    )
+    val urlsToRedirect =
+        listOf(
+            "https://ankiweb.net/account/login?afterAuth=1",
+            "https://ankiweb.net/decks",
+            "https://ankiweb.net/account/verify-email",
+        )
 
     Scaffold(
         topBar = {
@@ -209,9 +211,10 @@ fun RemoveAccountContent(onBack: () -> Unit) {
         },
     ) { padding ->
         Box(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize(),
+            modifier =
+                Modifier
+                    .padding(padding)
+                    .fillMaxSize(),
         ) {
             RemoveAccountWebView(
                 removeAccountUrl,
@@ -246,62 +249,63 @@ private fun RemoveAccountWebView(
 
                 var redirectCount = 0
 
-                webViewClient = object : WebViewClient() {
-                    private fun isUrlAllowed(url: String?): Boolean {
-                        if (url == null) return false
-                        val uri = url.toUri()
-                        val host = uri.host ?: return false
-                        return host == "ankiweb.net" || host.endsWith(".ankiweb.net")
-                    }
+                webViewClient =
+                    object : WebViewClient() {
+                        private fun isUrlAllowed(url: String?): Boolean {
+                            if (url == null) return false
+                            val uri = url.toUri()
+                            val host = uri.host ?: return false
+                            return host == "ankiweb.net" || host.endsWith(".ankiweb.net")
+                        }
 
-                    private fun maybeRedirect(url: String?): Boolean {
-                        if (url == null) return false
-                        if (urlsToRedirect.any { url.startsWith(it) }) {
-                            redirectCount++
-                            if (redirectCount <= 3) {
-                                loadUrl(removeAccountUrl)
-                                return true
+                        private fun maybeRedirect(url: String?): Boolean {
+                            if (url == null) return false
+                            if (urlsToRedirect.any { url.startsWith(it) }) {
+                                redirectCount++
+                                if (redirectCount <= 3) {
+                                    loadUrl(removeAccountUrl)
+                                    return true
+                                }
                             }
+                            return false
                         }
-                        return false
-                    }
 
-                    override fun shouldInterceptRequest(
-                        view: WebView?,
-                        request: WebResourceRequest?,
-                    ): WebResourceResponse? {
-                        if (!isUrlAllowed(request?.url?.toString())) {
-                            return WebResourceResponse("text/plain", "utf-8", null)
+                        override fun shouldInterceptRequest(
+                            view: WebView?,
+                            request: WebResourceRequest?,
+                        ): WebResourceResponse? {
+                            if (!isUrlAllowed(request?.url?.toString())) {
+                                return WebResourceResponse("text/plain", "utf-8", null)
+                            }
+                            return super.shouldInterceptRequest(view, request)
                         }
-                        return super.shouldInterceptRequest(view, request)
-                    }
 
-                    override fun onReceivedSslError(
-                        view: WebView?,
-                        handler: SslErrorHandler?,
-                        error: SslError?,
-                    ) {
-                        handler?.cancel()
-                    }
+                        override fun onReceivedSslError(
+                            view: WebView?,
+                            handler: SslErrorHandler?,
+                            error: SslError?,
+                        ) {
+                            handler?.cancel()
+                        }
 
-                    override fun shouldOverrideUrlLoading(
-                        view: WebView?,
-                        request: WebResourceRequest?,
-                    ): Boolean {
-                        val url = request?.url?.toString()
-                        if (maybeRedirect(url)) return true
+                        override fun shouldOverrideUrlLoading(
+                            view: WebView?,
+                            request: WebResourceRequest?,
+                        ): Boolean {
+                            val url = request?.url?.toString()
+                            if (maybeRedirect(url)) return true
 
-                        return !isUrlAllowed(url)
-                    }
+                            return !isUrlAllowed(url)
+                        }
 
-                    override fun onPageFinished(
-                        view: WebView?,
-                        url: String?,
-                    ) {
-                        super.onPageFinished(view, url)
-                        maybeRedirect(url)
+                        override fun onPageFinished(
+                            view: WebView?,
+                            url: String?,
+                        ) {
+                            super.onPageFinished(view, url)
+                            maybeRedirect(url)
+                        }
                     }
-                }
                 loadUrl(removeAccountUrl)
             }
         },
@@ -329,9 +333,10 @@ fun LoggedOutContent(
     val passwordFocusRequester = remember { FocusRequester() }
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 32.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(horizontal = 32.dp),
         contentAlignment = Alignment.Center,
     ) {
         Column(
@@ -357,13 +362,15 @@ fun LoggedOutContent(
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next,
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = { passwordFocusRequester.requestFocus() },
-                ),
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Next,
+                    ),
+                keyboardActions =
+                    KeyboardActions(
+                        onNext = { passwordFocusRequester.requestFocus() },
+                    ),
                 singleLine = true,
             )
 
@@ -379,21 +386,24 @@ fun LoggedOutContent(
                         contentDescription = null,
                     )
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .focusRequester(passwordFocusRequester),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .focusRequester(passwordFocusRequester),
                 visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done,
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        if (email.isNotEmpty() && password.isNotEmpty() && !isLoading) {
-                            onLoginClick()
-                        }
-                    },
-                ),
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done,
+                    ),
+                keyboardActions =
+                    KeyboardActions(
+                        onDone = {
+                            if (email.isNotEmpty() && password.isNotEmpty() && !isLoading) {
+                                onLoginClick()
+                            }
+                        },
+                    ),
                 singleLine = true,
             )
 
@@ -418,7 +428,6 @@ fun LoggedOutContent(
             TextButton(onClick = onResetPasswordClick) {
                 Text(stringResource(R.string.reset_password))
             }
-
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -470,16 +479,18 @@ fun LoggedInContent(
     val rotation by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(9000, easing = LinearEasing),
-        ),
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(9000, easing = LinearEasing),
+            ),
         label = "AccountIconRotationAngle",
     )
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 32.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(horizontal = 32.dp),
         contentAlignment = Alignment.TopCenter,
     ) {
         Column(
@@ -487,21 +498,22 @@ fun LoggedInContent(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(
-                modifier = Modifier
-                    .padding(top = 64.dp, bottom = 24.dp)
-                    .size(124.dp),
+                modifier =
+                    Modifier
+                        .padding(top = 64.dp, bottom = 24.dp)
+                        .size(124.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .graphicsLayer {
-                            rotationZ = rotation
-                        }
-                        .background(
-                            MaterialTheme.colorScheme.surfaceVariant,
-                            shape = SoftBurstShape,
-                        ),
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .graphicsLayer {
+                                rotationZ = rotation
+                            }.background(
+                                MaterialTheme.colorScheme.surfaceVariant,
+                                shape = SoftBurstShape,
+                            ),
                 )
                 Image(
                     modifier = Modifier.size(60.dp),

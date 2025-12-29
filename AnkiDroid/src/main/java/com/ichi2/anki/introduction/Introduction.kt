@@ -16,7 +16,6 @@
 
 package com.ichi2.anki.introduction
 
-
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -62,7 +61,9 @@ import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalAnimationApi::class)
 @Composable
 fun IntroductionScreen(
-    acknowledgedState: MutableState<Boolean>, onGetStarted: () -> Unit, onSync: () -> Unit
+    acknowledgedState: MutableState<Boolean>,
+    onGetStarted: () -> Unit,
+    onSync: () -> Unit,
 ) {
     val acknowledged by acknowledgedState
     val uriHandler = LocalUriHandler.current
@@ -78,24 +79,26 @@ fun IntroductionScreen(
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background,
-            contentColor = MaterialTheme.colorScheme.onBackground
+            contentColor = MaterialTheme.colorScheme.onBackground,
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                contentAlignment = Alignment.Center,
             ) {
                 AnimatedContent(
-                    targetState = acknowledged, transitionSpec = {
+                    targetState = acknowledged,
+                    transitionSpec = {
                         val upwardTransition =
                             (slideInVertically { height -> height } + fadeIn()).togetherWith(
-                                slideOutVertically { height -> -height } + fadeOut()
+                                slideOutVertically { height -> -height } + fadeOut(),
                             )
 
                         val downwardTransition =
                             (slideInVertically { height -> -height } + fadeIn()).togetherWith(
-                                slideOutVertically { height -> height } + fadeOut()
+                                slideOutVertically { height -> height } + fadeOut(),
                             )
 
                         if (targetState) {
@@ -103,56 +106,61 @@ fun IntroductionScreen(
                         } else {
                             downwardTransition
                         }.using(
-                            SizeTransform(clip = false)
+                            SizeTransform(clip = false),
                         )
-                    }, label = "IntroTransition"
+                    },
+                    label = "IntroTransition",
                 ) { isAcknowledged ->
                     if (!isAcknowledged) {
                         // Disclaimer / Intro State
                         Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(
-                                    color = MaterialTheme.colorScheme.surfaceContainer,
-                                    shape = RoundedCornerShape(32.dp)
-                                )
-                                .padding(24.dp), verticalArrangement = Arrangement.Center
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .background(
+                                        color = MaterialTheme.colorScheme.surfaceContainer,
+                                        shape = RoundedCornerShape(32.dp),
+                                    ).padding(24.dp),
+                            verticalArrangement = Arrangement.Center,
                         ) {
                             Text(
                                 text = stringResource(R.string.intro_title_before_continuing),
                                 style = MaterialTheme.typography.displayMediumEmphasized,
-                                modifier = Modifier.semantics {
-                                    contentDescription = "intro_title"
-                                })
+                                modifier =
+                                    Modifier.semantics {
+                                        contentDescription = "intro_title"
+                                    },
+                            )
                             Spacer(modifier = Modifier.height(24.dp))
                             Text(
                                 text = stringResource(R.string.intro_fork_disclaimer_1),
-                                style = MaterialTheme.typography.bodyLarge
+                                style = MaterialTheme.typography.bodyLarge,
                             )
                             Spacer(modifier = Modifier.height(24.dp))
                             Text(
                                 text = stringResource(R.string.intro_fork_disclaimer_2),
-                                style = MaterialTheme.typography.bodyLarge
+                                style = MaterialTheme.typography.bodyLarge,
                             )
                             Spacer(modifier = Modifier.height(32.dp))
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
                                 Button(
                                     onClick = { uriHandler.openUri("https://opencollective.com/ankidroid") },
                                     modifier = Modifier.weight(1F),
                                     colors = ButtonDefaults.filledTonalButtonColors(),
-                                    shapes = ButtonDefaults.shapes()
+                                    shapes = ButtonDefaults.shapes(),
                                 ) {
                                     Text(stringResource(R.string.donate))
                                 }
                                 Button(
                                     onClick = { acknowledgedState.value = true },
-                                    modifier = Modifier
-                                        .weight(1F)
-                                        .semantics { contentDescription = "ok_button" },
-                                    shapes = ButtonDefaults.shapes()
+                                    modifier =
+                                        Modifier
+                                            .weight(1F)
+                                            .semantics { contentDescription = "ok_button" },
+                                    shapes = ButtonDefaults.shapes(),
                                 ) {
                                     Text(stringResource(R.string.dialog_ok))
                                 }
@@ -163,32 +171,34 @@ fun IntroductionScreen(
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
                             Button(
                                 onClick = onGetStarted,
-                                modifier = Modifier
-                                    .fillMaxWidth(0.8f)
-                                    .height(56.dp),
-                                shapes = ButtonDefaults.shapes()
-                                ) {
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth(0.8f)
+                                        .height(56.dp),
+                                shapes = ButtonDefaults.shapes(),
+                            ) {
                                 Text(
                                     stringResource(R.string.intro_get_started),
-                                    style = MaterialTheme.typography.bodyLarge
+                                    style = MaterialTheme.typography.bodyLarge,
                                 )
                             }
                             Spacer(modifier = Modifier.height(16.dp))
                             Button(
                                 onClick = onSync,
-                                modifier = Modifier
-                                    .fillMaxWidth(0.8f)
-                                    .height(56.dp),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth(0.8f)
+                                        .height(56.dp),
                                 colors = ButtonDefaults.filledTonalButtonColors(),
-                                shapes = ButtonDefaults.shapes()
+                                shapes = ButtonDefaults.shapes(),
                             ) {
                                 Text(
                                     stringResource(R.string.intro_sync_from_ankiweb),
-                                    style = MaterialTheme.typography.bodyLarge
+                                    style = MaterialTheme.typography.bodyLarge,
                                 )
                             }
                         }
@@ -201,11 +211,14 @@ fun IntroductionScreen(
 
 @Composable
 fun IntroductionScreen(
-    onGetStarted: () -> Unit, onSync: () -> Unit
+    onGetStarted: () -> Unit,
+    onSync: () -> Unit,
 ) {
     val acknowledgedState = remember { mutableStateOf(false) }
     IntroductionScreen(
-        acknowledgedState = acknowledgedState, onGetStarted = onGetStarted, onSync = onSync
+        acknowledgedState = acknowledgedState,
+        onGetStarted = onGetStarted,
+        onSync = onSync,
     )
 }
 

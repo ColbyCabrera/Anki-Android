@@ -32,7 +32,6 @@ import kotlin.math.max
 class RoundedPolygonShape(
     private val polygon: RoundedPolygon,
 ) : Shape {
-
     override fun createOutline(
         size: Size,
         layoutDirection: LayoutDirection,

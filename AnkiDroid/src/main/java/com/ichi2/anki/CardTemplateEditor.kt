@@ -486,9 +486,7 @@ open class CardTemplateEditor :
 
         override fun getItemId(position: Int): Long = baseId + position
 
-        override fun containsItem(id: Long): Boolean {
-            return (id - baseId < itemCount) && (id - baseId >= 0)
-        }
+        override fun containsItem(id: Long): Boolean = (id - baseId < itemCount) && (id - baseId >= 0)
 
         /** Force fragments to reinitialize contents by invalidating previous set of ordinal-based ids  */
         fun ordinalShift() {
