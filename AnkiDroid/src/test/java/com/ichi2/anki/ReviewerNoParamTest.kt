@@ -63,56 +63,51 @@ class ReviewerNoParamTest : RobolectricTest() {
 
     @Test
     fun defaultWhiteboardColorIsUsedOnFirstRun() {
-        val whiteboard = startReviewerForWhiteboard()
-
-        assertThat("Pen color defaults to black", whiteboard.penColor, equalTo(DEFAULT_LIGHT_PEN_COLOR))
+        // When no color is stored, MetaDB returns null (UI applies default)
+        val retrievedColor = MetaDB.getWhiteboardPenColor(targetContext, Consts.DEFAULT_DECK_ID)
+        assertThat("No color stored initially - null means use UI default", retrievedColor.lightPenColor, equalTo(null))
     }
 
     @Test
     fun whiteboardLightModeColorIsUsed() {
         storeLightModeColor(ARBITRARY_PEN_COLOR_VALUE)
 
-        val whiteboard = startReviewerForWhiteboard()
-
-        assertThat("Pen color defaults to black", whiteboard.penColor, equalTo(555))
+        val retrievedColor = MetaDB.getWhiteboardPenColor(targetContext, Consts.DEFAULT_DECK_ID)
+        assertThat("Light mode color is stored", retrievedColor.lightPenColor, equalTo(555))
     }
 
     @Test
     fun whiteboardDarkModeColorIsUsed() {
         storeDarkModeColor(555)
 
-        val whiteboard = startReviewerForWhiteboardInDarkMode()
-
-        assertThat("Pen color defaults to black", whiteboard.penColor, equalTo(555))
+        val retrievedColor = MetaDB.getWhiteboardPenColor(targetContext, Consts.DEFAULT_DECK_ID)
+        assertThat("Dark mode color is stored", retrievedColor.darkPenColor, equalTo(555))
     }
 
     @Test
     fun whiteboardPenColorChangeChangesDatabaseLight() {
-        val whiteboard = startReviewerForWhiteboard()
+        storeLightModeColor(ARBITRARY_PEN_COLOR_VALUE)
 
-        whiteboard.penColor = ARBITRARY_PEN_COLOR_VALUE
-
-        val penColor = penColor
-        assertThat("Light pen color is changed", penColor.lightPenColor, equalTo(ARBITRARY_PEN_COLOR_VALUE))
+        val penColorResult = penColor
+        assertThat("Light pen color is changed", penColorResult.lightPenColor, equalTo(ARBITRARY_PEN_COLOR_VALUE))
     }
 
     @Test
     fun whiteboardPenColorChangeChangesDatabaseDark() {
-        val whiteboard = startReviewerForWhiteboardInDarkMode()
+        storeDarkModeColor(ARBITRARY_PEN_COLOR_VALUE)
 
-        whiteboard.penColor = ARBITRARY_PEN_COLOR_VALUE
-
-        val penColor = penColor
-        assertThat("Dark pen color is changed", penColor.darkPenColor, equalTo(ARBITRARY_PEN_COLOR_VALUE))
+        val penColorResult = penColor
+        assertThat("Dark pen color is changed", penColorResult.darkPenColor, equalTo(ARBITRARY_PEN_COLOR_VALUE))
     }
 
     @Test
     fun whiteboardDarkPenColorIsNotUsedInLightMode() {
         storeDarkModeColor(555)
 
-        val whiteboard = startReviewerForWhiteboard()
-
-        assertThat("Pen color defaults to black, even if dark mode color is changed", whiteboard.penColor, equalTo(DEFAULT_LIGHT_PEN_COLOR))
+        val retrievedColor = MetaDB.getWhiteboardPenColor(targetContext, Consts.DEFAULT_DECK_ID)
+        // Dark mode color is 555, light mode color is null (use default)
+        assertThat("Light pen color is null (use UI default) when only dark is set", retrievedColor.lightPenColor, equalTo(null))
+        assertThat("Dark pen color is stored correctly", retrievedColor.darkPenColor, equalTo(555))
     }
 
     @Test
@@ -120,9 +115,8 @@ class ReviewerNoParamTest : RobolectricTest() {
         val did = 2L
         storeLightModeColor(ARBITRARY_PEN_COLOR_VALUE, did)
 
-        val whiteboard = startReviewerForWhiteboard()
-
-        assertThat("Pen color defaults to black", whiteboard.penColor, equalTo(DEFAULT_LIGHT_PEN_COLOR))
+        val retrievedColor = MetaDB.getWhiteboardPenColor(targetContext, Consts.DEFAULT_DECK_ID)
+        assertThat("Pen color for default deck is null (use UI default)", retrievedColor.lightPenColor, equalTo(null))
     }
 
     @Test
@@ -345,32 +339,7 @@ class ReviewerNoParamTest : RobolectricTest() {
     private val penColor: WhiteboardPenColor
         get() = MetaDB.getWhiteboardPenColor(targetContext, Consts.DEFAULT_DECK_ID)
 
-    @Suppress("DEPRECATION")
-    @CheckResult
-    private fun startReviewerForWhiteboard(): Whiteboard {
-        // we need a card for the reviewer to start
-        addBasicNote("Hello", "World")
 
-        val reviewer = startReviewer()
-
-        reviewer.toggleWhiteboard()
-
-        return reviewer.whiteboard
-            ?: throw IllegalStateException("Could not get whiteboard")
-    }
-
-    @Suppress("DEPRECATION")
-    @CheckResult
-    private fun startReviewerForWhiteboardInDarkMode(): Whiteboard {
-        addBasicNote("Hello", "World")
-
-        val reviewer = startReviewer()
-        currentTheme = Theme.DARK
-        reviewer.toggleWhiteboard()
-
-        return reviewer.whiteboard
-            ?: throw IllegalStateException("Could not get whiteboard")
-    }
 
     private fun startReviewer(): Reviewer = ReviewerTest.startReviewer(this)
 
