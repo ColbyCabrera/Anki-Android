@@ -154,11 +154,11 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
 
     /**
      * Launches a card action job, preventing concurrent execution.
-     * If another job is active, the new action is ignored.
+     * If another job is active or the reviewer is finished, the new action is ignored.
      * @param block The suspend function to execute
      */
     private fun launchCardAction(block: suspend () -> Unit) {
-        if (cardActionJob?.isActive == true) return
+        if (cardActionJob?.isActive == true || _state.value.isFinished) return
         cardActionJob = viewModelScope.launch {
             block()
         }.also {
@@ -373,13 +373,10 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun showAnswer() {
-        if (cardActionJob?.isActive == true || _state.value.isFinished) {
-            return
-        }
         val card = currentCard ?: return
         val queue = queueState ?: return
 
-        cardActionJob = viewModelScope.launch {
+        launchCardAction {
             CollectionManager.withCol {
                 val labels = this.sched.describeNextStates(queue.states)
                 typeAnswer.input = _state.value.typedAnswer
@@ -399,17 +396,13 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
             if (cardMediaPlayer.config.autoplay) {
                 cardMediaPlayer.playAllForSide(SingleCardSide.BACK.toCardSide())
             }
-        }.also {
-            it.invokeOnCompletion { cardActionJob = null }
         }
     }
 
     private fun rateCard(rating: CardAnswer.Rating) {
-        if (cardActionJob?.isActive == true || _state.value.isFinished) {
-            return
-        }
         val queue = queueState ?: return
-        cardActionJob = viewModelScope.launch {
+
+        launchCardAction {
             var wasLeech = false
             CollectionManager.withCol {
                 this.sched.answerCard(queue, rating).also {
@@ -427,8 +420,6 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
             }
 
             loadCardSuspend()
-        }.also {
-            it.invokeOnCompletion { cardActionJob = null }
         }
     }
 
@@ -471,15 +462,11 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun performCardAction(action: suspend (Card) -> Unit) {
-        if (cardActionJob?.isActive == true || _state.value.isFinished) {
-            return
-        }
         val card = currentCard ?: return
-        cardActionJob = viewModelScope.launch {
+
+        launchCardAction {
             action(card)
             loadCardSuspend()
-        }.also {
-            it.invokeOnCompletion { cardActionJob = null }
         }
     }
 
