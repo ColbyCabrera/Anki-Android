@@ -34,8 +34,12 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -61,6 +65,27 @@ fun BrushOptionsDialog(
     viewModel: WhiteboardViewModel,
     onDismissRequest: () -> Unit,
 ) {
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        confirmButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text(stringResource(R.string.dialog_ok))
+            }
+        },
+        title = { Text(stringResource(R.string.title_whiteboard_editor)) },
+        text = {
+            BrushOptionsContent(viewModel)
+        },
+    )
+}
+
+/**
+ * UI content for adjusting brush properties.
+ */
+@Composable
+fun BrushOptionsContent(
+    viewModel: WhiteboardViewModel,
+) {
     val brushes by viewModel.brushes.collectAsState()
     val activeIndex by viewModel.activeBrushIndex.collectAsState()
     val brush = brushes.getOrNull(activeIndex) ?: return
@@ -78,64 +103,53 @@ fun BrushOptionsDialog(
         )
     }
 
-    AlertDialog(
-        onDismissRequest = onDismissRequest,
-        confirmButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(stringResource(R.string.dialog_ok))
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        // Brush Preview & Color Selector
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(CircleShape)
+                    .background(Color(brush.color))
+                    .border(2.dp, MaterialTheme.colorScheme.outline, CircleShape),
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            OutlinedButton(onClick = { showColorPicker = true }) {
+                Text(stringResource(R.string.select_color_title))
             }
-        },
-        title = { Text(stringResource(R.string.title_whiteboard_editor)) },
-        text = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                // Brush Preview & Color Selector
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(64.dp)
-                            .clip(CircleShape)
-                            .background(Color(brush.color))
-                            .border(2.dp, MaterialTheme.colorScheme.outline, CircleShape),
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                    OutlinedButton(onClick = { showColorPicker = true }) {
-                        Text(stringResource(R.string.select_color_title))
-                    }
-                }
+        }
 
-                // Width Slider
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Text(
-                            stringResource(R.string.whiteboard_width),
-                            style = MaterialTheme.typography.labelMedium,
-                        )
-                        Text(
-                            brush.width.roundToInt().toString(),
-                            style = MaterialTheme.typography.labelMedium,
-                        )
-                    }
-                    Slider(
-                        value = brush.width,
-                        onValueChange = { viewModel.setActiveStrokeWidth(it) },
-                        valueRange = 1f..60f,
-                        steps = 7,
-                    )
-                }
+        // Width Slider
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    stringResource(R.string.whiteboard_width),
+                    style = MaterialTheme.typography.labelMedium,
+                )
+                Text(
+                    brush.width.roundToInt().toString(),
+                    style = MaterialTheme.typography.labelMedium,
+                )
             }
-        },
-    )
+            Slider(
+                value = brush.width,
+                onValueChange = { viewModel.setActiveStrokeWidth(it) },
+                valueRange = 1f..60f,
+                steps = 59, // Smoother slider to match legacy behavior (stepSize="1.0")
+            )
+        }
+    }
 }
 
 /**
@@ -146,9 +160,6 @@ fun EraserOptionsDialog(
     viewModel: WhiteboardViewModel,
     onDismissRequest: () -> Unit,
 ) {
-    val mode by viewModel.eraserMode.collectAsState()
-    val width by viewModel.eraserDisplayWidth.collectAsState()
-
     AlertDialog(
         onDismissRequest = onDismissRequest,
         confirmButton = {
@@ -158,65 +169,137 @@ fun EraserOptionsDialog(
         },
         title = { Text(stringResource(R.string.eraser)) },
         text = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                // Mode Selector
-                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                    SegmentedButton(
-                        selected = mode == EraserMode.INK,
-                        onClick = { viewModel.setEraserMode(EraserMode.INK) },
-                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-                    ) {
-                        Text(stringResource(R.string.whiteboard_ink_eraser))
-                    }
-                    SegmentedButton(
-                        selected = mode == EraserMode.STROKE,
-                        onClick = { viewModel.setEraserMode(EraserMode.STROKE) },
-                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-                    ) {
-                        Text(stringResource(R.string.whiteboard_stroke_eraser))
-                    }
-                }
-
-                // Width Slider
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Text(
-                            stringResource(R.string.whiteboard_width),
-                            style = MaterialTheme.typography.labelMedium,
-                        )
-                        Text(
-                            width.roundToInt().toString(),
-                            style = MaterialTheme.typography.labelMedium,
-                        )
-                    }
-                    Slider(
-                        value = width,
-                        onValueChange = { viewModel.setActiveStrokeWidth(it) },
-                        valueRange = 5f..200f,
-                        steps = 7,
-                    )
-                }
-
-                // Clear Canvas Button
-                OutlinedButton(
-                    onClick = {
-                        viewModel.clearCanvas()
-                        onDismissRequest()
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error,
-                    ),
-                ) {
-                    Text(stringResource(R.string.whiteboard_clear))
-                }
-            }
+            EraserOptionsContent(viewModel, onDismissRequest)
         },
     )
+}
+
+/**
+ * UI content for adjusting eraser properties.
+ */
+@Composable
+fun EraserOptionsContent(
+    viewModel: WhiteboardViewModel,
+    onClearCanvas: () -> Unit = {},
+) {
+    val mode by viewModel.eraserMode.collectAsState()
+    val width by viewModel.eraserDisplayWidth.collectAsState()
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        // Mode Selector
+        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+            SegmentedButton(
+                selected = mode == EraserMode.INK,
+                onClick = { viewModel.setEraserMode(EraserMode.INK) },
+                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+            ) {
+                Text(stringResource(R.string.whiteboard_ink_eraser))
+            }
+            SegmentedButton(
+                selected = mode == EraserMode.STROKE,
+                onClick = { viewModel.setEraserMode(EraserMode.STROKE) },
+                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+            ) {
+                Text(stringResource(R.string.whiteboard_stroke_eraser))
+            }
+        }
+
+        // Width Slider
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    stringResource(R.string.whiteboard_width),
+                    style = MaterialTheme.typography.labelMedium,
+                )
+                Text(
+                    width.roundToInt().toString(),
+                    style = MaterialTheme.typography.labelMedium,
+                )
+            }
+            Slider(
+                value = width,
+                onValueChange = { viewModel.setActiveStrokeWidth(it) },
+                valueRange = 5f..200f,
+                steps = 39, // Smoother slider to match legacy behavior (stepSize="5.0")
+            )
+        }
+
+        // Clear Canvas Button
+        OutlinedButton(
+            onClick = {
+                viewModel.clearCanvas()
+                onClearCanvas()
+            },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.error,
+            ),
+        ) {
+            Text(stringResource(R.string.whiteboard_clear))
+        }
+    }
+}
+
+/**
+ * Popup for adjusting brush properties, anchored to a UI element.
+ */
+@Composable
+fun BrushOptionsPopup(
+    viewModel: WhiteboardViewModel,
+    onDismissRequest: () -> Unit,
+) {
+    Popup(
+        onDismissRequest = onDismissRequest,
+        properties = PopupProperties(focusable = true),
+    ) {
+        PopupSurface {
+            BrushOptionsContent(viewModel)
+        }
+    }
+}
+
+/**
+ * Popup for adjusting eraser properties, anchored to a UI element.
+ */
+@Composable
+fun EraserOptionsPopup(
+    viewModel: WhiteboardViewModel,
+    onDismissRequest: () -> Unit,
+) {
+    Popup(
+        onDismissRequest = onDismissRequest,
+        properties = PopupProperties(focusable = true),
+    ) {
+        PopupSurface {
+            EraserOptionsContent(viewModel, onClearCanvas = onDismissRequest)
+        }
+    }
+}
+
+/**
+ * A common surface for whiteboard popups to provide consistent styling.
+ */
+@Composable
+private fun PopupSurface(
+    content: @Composable () -> Unit,
+) {
+    Surface(
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 8.dp,
+        shadowElevation = 8.dp,
+        modifier = Modifier
+            .width(320.dp) // Standardized width for popups
+            .padding(8.dp)
+    ) {
+        Box(modifier = Modifier.padding(16.dp)) {
+            content()
+        }
+    }
 }

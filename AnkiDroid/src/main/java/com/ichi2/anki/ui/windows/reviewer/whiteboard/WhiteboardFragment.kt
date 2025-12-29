@@ -15,65 +15,59 @@
  */
 package com.ichi2.anki.ui.windows.reviewer.whiteboard
 
-import android.content.res.ColorStateList
-import android.graphics.drawable.GradientDrawable
-import android.graphics.drawable.LayerDrawable
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
-import android.view.ViewGroup
 import android.widget.HorizontalScrollView
 import android.widget.ImageButton
 import android.widget.LinearLayout
-import android.widget.PopupWindow
 import android.widget.ScrollView
-import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.widget.PopupMenu
 import androidx.appcompat.widget.ThemeUtils
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.button.MaterialButtonToggleGroup
-import com.google.android.material.slider.Slider
 import com.ichi2.anki.AnkiDroidApp
 import com.ichi2.anki.R
+import com.ichi2.anki.reviewer.compose.BrushOptionsPopup
+import com.ichi2.anki.reviewer.compose.ColorPickerDialog
+import com.ichi2.anki.reviewer.compose.EraserOptionsPopup
 import com.ichi2.anki.snackbar.showSnackbar
 import com.ichi2.anki.ui.windows.reviewer.whiteboard.compose.AddBrushButton
 import com.ichi2.anki.ui.windows.reviewer.whiteboard.compose.ColorBrushButton
 import com.ichi2.themes.Themes
 import com.ichi2.utils.dp
 import com.ichi2.utils.increaseHorizontalPaddingOfMenuIcons
-import com.mrudultora.colorpicker.ColorPickerPopUp
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import timber.log.Timber
-import kotlin.math.roundToInt
 
 /**
  * Fragment that displays a whiteboard and its controls.
  */
-class WhiteboardFragment :
-    Fragment(R.layout.fragment_whiteboard),
+class WhiteboardFragment : Fragment(R.layout.fragment_whiteboard),
     PopupMenu.OnMenuItemClickListener {
     private val viewModel: WhiteboardViewModel by viewModels {
         WhiteboardViewModel.factory(AnkiDroidApp.sharedPrefs())
     }
     private lateinit var brushToolbarContainerHorizontal: LinearLayout
     private lateinit var brushToolbarContainerVertical: LinearLayout
-    private var eraserPopup: PopupWindow? = null
-    private var strokeWidthPopup: PopupWindow? = null
+    private val showEraserOptions = MutableStateFlow(false)
+    private val showBrushOptionsIndex = MutableStateFlow<Int?>(null)
+    private val showAddBrushDialog = MutableStateFlow(false)
 
     /**
      * Sets up the view, observers, and event listeners.
@@ -97,6 +91,41 @@ class WhiteboardFragment :
         whiteboardView.onEraseGestureStart = viewModel::startPathEraseGesture
         whiteboardView.onEraseGestureMove = viewModel::erasePathsAtPoint
         whiteboardView.onEraseGestureEnd = viewModel::endPathEraseGesture
+
+        setupPopups(view)
+    }
+
+    private fun setupPopups(view: View) {
+        view.findViewById<ComposeView>(R.id.whiteboard_popups_compose_view).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                val eraserVisible by showEraserOptions.collectAsState()
+                val brushIndex by showBrushOptionsIndex.collectAsState()
+
+                if (eraserVisible) {
+                    EraserOptionsPopup(
+                        viewModel = viewModel,
+                        onDismissRequest = { showEraserOptions.value = false })
+                }
+
+                brushIndex?.let { _ ->
+                    BrushOptionsPopup(
+                        viewModel = viewModel,
+                        onDismissRequest = { showBrushOptionsIndex.value = null })
+                }
+
+                val addBrushVisible by showAddBrushDialog.collectAsState()
+                if (addBrushVisible) {
+                    ColorPickerDialog(
+                        defaultColor = viewModel.brushColor.collectAsState().value,
+                        onColorPicked = {
+                            viewModel.addBrush(it)
+                            showAddBrushDialog.value = false
+                        },
+                        onDismiss = { showAddBrushDialog.value = false })
+                }
+            }
+        }
     }
 
     private fun setupUI(view: View) {
@@ -113,12 +142,11 @@ class WhiteboardFragment :
                 (this as? MenuBuilder)?.setOptionalIconsVisible(true)
                 context?.increaseHorizontalPaddingOfMenuIcons(this)
 
-                val alignmentMenuItemId =
-                    when (viewModel.toolbarAlignment.value) {
-                        ToolbarAlignment.LEFT -> R.id.action_align_left
-                        ToolbarAlignment.RIGHT -> R.id.action_align_right
-                        ToolbarAlignment.BOTTOM -> R.id.action_align_bottom
-                    }
+                val alignmentMenuItemId = when (viewModel.toolbarAlignment.value) {
+                    ToolbarAlignment.LEFT -> R.id.action_align_left
+                    ToolbarAlignment.RIGHT -> R.id.action_align_right
+                    ToolbarAlignment.BOTTOM -> R.id.action_align_bottom
+                }
                 findItem(alignmentMenuItemId).isEnabled = false
             }
             popupMenu.setOnMenuItemClickListener(this)
@@ -130,11 +158,7 @@ class WhiteboardFragment :
         eraserButton.setOnClickListener {
             if (viewModel.isEraserActive.value) {
                 eraserButton.isChecked = true
-                if (eraserPopup?.isShowing == true) {
-                    eraserPopup?.dismiss()
-                } else {
-                    showEraserOptionsPopup(it)
-                }
+                showEraserOptions.value = !showEraserOptions.value
             } else {
                 viewModel.enableEraser()
             }
@@ -168,39 +192,43 @@ class WhiteboardFragment :
             eraserButton?.updateState(isActive, mode, width)
             whiteboardView.eraserMode = mode
             if (!isActive) {
-                eraserPopup?.dismiss()
+                showEraserOptions.value = false
             }
         }.launchIn(lifecycleScope)
 
-        viewModel.brushes
-            .onEach { brushesInfo ->
-                updateBrushToolbar(brushesInfo)
-                updateToolbarSelection()
-            }.launchIn(lifecycleScope)
+        viewModel.brushes.onEach { brushesInfo ->
+            updateBrushToolbar(brushesInfo)
+            updateToolbarSelection()
+        }.launchIn(lifecycleScope)
 
         viewModel.activeBrushIndex.onEach { updateToolbarSelection() }.launchIn(lifecycleScope)
-        viewModel.isEraserActive
-            .onEach {
-                updateToolbarSelection()
-            }.launchIn(lifecycleScope)
+        viewModel.isEraserActive.onEach {
+            updateToolbarSelection()
+        }.launchIn(lifecycleScope)
 
-        viewModel.isStylusOnlyMode
-            .onEach { isEnabled ->
-                whiteboardView.isStylusOnlyMode = isEnabled
-            }.launchIn(lifecycleScope)
+        viewModel.isStylusOnlyMode.onEach { isEnabled ->
+            whiteboardView.isStylusOnlyMode = isEnabled
+        }.launchIn(lifecycleScope)
 
-        viewModel.toolbarAlignment
-            .onEach { alignment ->
-                updateLayoutForAlignment(alignment)
-            }.launchIn(lifecycleScope)
+        viewModel.toolbarAlignment.onEach { alignment ->
+            updateLayoutForAlignment(alignment)
+        }.launchIn(lifecycleScope)
     }
 
     private fun updateBrushToolbar(brushesInfo: List<BrushInfo>) {
         val activeIndex = viewModel.activeBrushIndex.value
         val isEraserActive = viewModel.isEraserActive.value
 
-        val colorNormal = Color(ThemeUtils.getThemeAttrColor(requireContext(), androidx.appcompat.R.attr.colorControlNormal))
-        val colorHighlight = Color(ThemeUtils.getThemeAttrColor(requireContext(), androidx.appcompat.R.attr.colorControlHighlight))
+        val colorNormal = Color(
+            ThemeUtils.getThemeAttrColor(
+                requireContext(), androidx.appcompat.R.attr.colorControlNormal
+            )
+        )
+        val colorHighlight = Color(
+            ThemeUtils.getThemeAttrColor(
+                requireContext(), androidx.appcompat.R.attr.colorControlHighlight
+            )
+        )
 
         fun setupComposeView(container: LinearLayout, isHorizontal: Boolean) {
             container.removeAllViews()
@@ -210,16 +238,27 @@ class WhiteboardFragment :
                     setContent {
                         if (isHorizontal) {
                             Row {
-                                RenderBrushes(brushesInfo, activeIndex, isEraserActive, colorNormal, colorHighlight)
+                                RenderBrushes(
+                                    brushesInfo,
+                                    activeIndex,
+                                    isEraserActive,
+                                    colorNormal,
+                                    colorHighlight
+                                )
                             }
                         } else {
                             Column {
-                                RenderBrushes(brushesInfo, activeIndex, isEraserActive, colorNormal, colorHighlight)
+                                RenderBrushes(
+                                    brushesInfo,
+                                    activeIndex,
+                                    isEraserActive,
+                                    colorNormal,
+                                    colorHighlight
+                                )
                             }
                         }
                     }
-                }
-            )
+                })
         }
 
         setupComposeView(brushToolbarContainerHorizontal, true)
@@ -238,9 +277,9 @@ class WhiteboardFragment :
             ColorBrushButton(
                 brush = brush,
                 isSelected = (index == activeIndex && !isEraserActive),
-                onClick = { view ->
+                onClick = { _ ->
                     if (viewModel.activeBrushIndex.value == index && !viewModel.isEraserActive.value) {
-                        showStrokeWidthPopup(view, index)
+                        showBrushOptionsIndex.value = index
                     } else {
                         viewModel.setActiveBrush(index)
                     }
@@ -276,166 +315,18 @@ class WhiteboardFragment :
      * Shows a popup for adding a new brush color.
      */
     private fun showAddColorDialog() {
-        ColorPickerPopUp(context).run {
-            setShowAlpha(true)
-            setDefaultColor(viewModel.brushColor.value)
-            setOnPickColorListener(
-                object : ColorPickerPopUp.OnPickColorListener {
-                    override fun onColorPicked(color: Int) {
-                        Timber.i("Added brush with color %d", color)
-                        viewModel.addBrush(color)
-                    }
-
-                    override fun onCancel() {}
-                },
-            )
-            show()
-        }
+        showAddBrushDialog.value = true
     }
 
     /**
      * Shows a confirmation dialog for removing a brush.
      */
     private fun showRemoveColorDialog(index: Int) {
-        AlertDialog
-            .Builder(requireContext())
-            .setMessage(R.string.whiteboard_remove_brush_message)
+        AlertDialog.Builder(requireContext()).setMessage(R.string.whiteboard_remove_brush_message)
             .setPositiveButton(R.string.dialog_remove) { _, _ ->
                 Timber.i("Removed brush of index %d", index)
                 viewModel.removeBrush(index)
-            }.setNegativeButton(R.string.dialog_cancel, null)
-            .show()
-    }
-
-    /**
-     * Shows a popup for adjusting the stroke width of a specific brush.
-     */
-    private fun showStrokeWidthPopup(
-        anchorView: View,
-        brushIndex: Int,
-    ) {
-        Timber.i("Showing brush %d popup", brushIndex)
-        val inflater = LayoutInflater.from(requireContext())
-        val popupView = inflater.inflate(R.layout.popup_brush_options, null)
-        val strokeSlider = popupView.findViewById<Slider>(R.id.stroke_width_slider)
-        val colorButton = popupView.findViewById<MaterialButton>(R.id.color_picker_button)
-        val valueIndicator = popupView.findViewById<TextView>(R.id.stroke_width_value_indicator)
-
-        val currentBrush = viewModel.brushes.value.getOrNull(brushIndex) ?: return
-
-        val previewDrawable = (colorButton.icon as? LayerDrawable)
-        val fillDrawable = previewDrawable?.findDrawableByLayerId(R.id.brush_preview_fill) as? GradientDrawable
-        fillDrawable?.setColor(currentBrush.color)
-        colorButton.icon = previewDrawable
-
-        colorButton.setOnClickListener {
-            showChangeColorDialog()
-        }
-
-        strokeSlider.value = currentBrush.width
-        valueIndicator.text = currentBrush.width.roundToInt().toString()
-        colorButton.iconSize = currentBrush.width.roundToInt()
-
-        // Set slider colors
-        val color = currentBrush.color
-        val colorStateList = ColorStateList.valueOf(color)
-        strokeSlider.trackActiveTintList = colorStateList
-        strokeSlider.thumbTintList = colorStateList
-        strokeSlider.haloTintList = colorStateList
-
-        strokeSlider.addOnChangeListener { _, value, fromUser ->
-            // Dynamically change the size of the brush preview icon
-            colorButton.iconSize = value.roundToInt()
-            valueIndicator.text = value.roundToInt().toString()
-
-            if (fromUser) viewModel.setActiveStrokeWidth(value)
-        }
-        strokeSlider.setLabelFormatter { value: Float -> value.roundToInt().toString() }
-
-        strokeWidthPopup = PopupWindow(popupView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true)
-        strokeWidthPopup?.elevation = resources.getDimension(R.dimen.study_screen_elevation)
-        strokeWidthPopup?.setOnDismissListener {
-            updateToolbarSelection()
-            strokeWidthPopup = null
-        }
-
-        popupView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
-        val yOffset = -(anchorView.height + popupView.measuredHeight)
-        val xOffset = (anchorView.width - popupView.measuredWidth) / 2
-        strokeWidthPopup?.showAsDropDown(anchorView, xOffset, yOffset)
-    }
-
-    /**
-     * Shows a color picker popup to change the active brush's color.
-     */
-    private fun showChangeColorDialog() {
-        ColorPickerPopUp(requireContext())
-            .setShowAlpha(true)
-            .setDefaultColor(viewModel.brushColor.value)
-            .setOnPickColorListener(
-                object : ColorPickerPopUp.OnPickColorListener {
-                    override fun onColorPicked(color: Int) {
-                        viewModel.updateBrushColor(color)
-                        strokeWidthPopup?.dismiss()
-                    }
-
-                    override fun onCancel() {}
-                },
-            ).show()
-    }
-
-    /**
-     * Shows a popup with eraser options (mode, width, clear).
-     */
-    private fun showEraserOptionsPopup(anchorView: View) {
-        val inflater = LayoutInflater.from(requireContext())
-        val popupView = inflater.inflate(R.layout.popup_eraser_options, null)
-        val slider = popupView.findViewById<Slider>(R.id.eraser_width_slider)
-        val toggleGroup = popupView.findViewById<MaterialButtonToggleGroup>(R.id.eraser_mode_toggle_group)
-        val clearButton = popupView.findViewById<MaterialButton>(R.id.clear_button_popup)
-
-        slider.value = viewModel.eraserDisplayWidth.value
-        slider.addOnChangeListener { _, value, fromUser ->
-            if (fromUser) viewModel.setActiveStrokeWidth(value)
-        }
-        slider.setLabelFormatter { value: Float -> value.roundToInt().toString() }
-
-        toggleGroup.clearOnButtonCheckedListeners()
-        when (viewModel.eraserMode.value) {
-            EraserMode.STROKE -> toggleGroup.check(R.id.eraser_mode_stroke)
-            EraserMode.INK -> toggleGroup.check(R.id.eraser_mode_ink)
-        }
-        toggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
-            if (isChecked) {
-                when (checkedId) {
-                    R.id.eraser_mode_stroke -> {
-                        viewModel.setEraserMode(EraserMode.STROKE)
-                        slider.value = viewModel.strokeEraserStrokeWidth.value
-                    }
-                    R.id.eraser_mode_ink -> {
-                        viewModel.setEraserMode(EraserMode.INK)
-                        slider.value = viewModel.inkEraserStrokeWidth.value
-                    }
-                }
-            }
-        }
-
-        clearButton.setOnClickListener {
-            viewModel.clearCanvas()
-            eraserPopup?.dismiss()
-        }
-
-        eraserPopup = PopupWindow(popupView, 360.dp.toPx(requireContext()), ViewGroup.LayoutParams.WRAP_CONTENT, true)
-        eraserPopup?.elevation = 8f
-        eraserPopup?.setOnDismissListener {
-            updateToolbarSelection()
-            eraserPopup = null
-        }
-
-        popupView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
-        val yOffset = -(anchorView.height + popupView.measuredHeight)
-        val xOffset = (anchorView.width - popupView.measuredWidth) / 2
-        eraserPopup?.showAsDropDown(anchorView, xOffset, yOffset)
+            }.setNegativeButton(R.string.dialog_cancel, null).show()
     }
 
     /**
@@ -446,8 +337,10 @@ class WhiteboardFragment :
         val innerLayout = view?.findViewById<LinearLayout>(R.id.inner_controls_layout) ?: return
         val divider = view?.findViewById<View>(R.id.controls_divider) ?: return
         val rootLayout = view as? ConstraintLayout ?: return
-        val brushScrollViewHorizontal = view?.findViewById<HorizontalScrollView>(R.id.brush_scroll_view_horizontal) ?: return
-        val brushScrollViewVertical = view?.findViewById<ScrollView>(R.id.brush_scroll_view_vertical) ?: return
+        val brushScrollViewHorizontal =
+            view?.findViewById<HorizontalScrollView>(R.id.brush_scroll_view_horizontal) ?: return
+        val brushScrollViewVertical =
+            view?.findViewById<ScrollView>(R.id.brush_scroll_view_vertical) ?: return
 
         val isVertical = alignment == ToolbarAlignment.LEFT || alignment == ToolbarAlignment.RIGHT
         innerLayout.orientation = if (isVertical) LinearLayout.VERTICAL else LinearLayout.HORIZONTAL
@@ -481,9 +374,15 @@ class WhiteboardFragment :
 
         when (alignment) {
             ToolbarAlignment.BOTTOM -> {
-                constraintSet.connect(containerId, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
-                constraintSet.connect(containerId, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
-                constraintSet.connect(containerId, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
+                constraintSet.connect(
+                    containerId, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM
+                )
+                constraintSet.connect(
+                    containerId, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START
+                )
+                constraintSet.connect(
+                    containerId, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END
+                )
                 constraintSet.constrainWidth(containerId, ConstraintSet.WRAP_CONTENT)
                 constraintSet.constrainHeight(containerId, ConstraintSet.WRAP_CONTENT)
                 constraintSet.constrainedWidth(containerId, true)
@@ -491,18 +390,32 @@ class WhiteboardFragment :
                 constraintSet.setMargin(containerId, ConstraintSet.END, 24 * dp)
                 constraintSet.setMargin(containerId, ConstraintSet.BOTTOM, 8 * dp)
             }
+
             ToolbarAlignment.RIGHT -> {
-                constraintSet.connect(containerId, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
-                constraintSet.connect(containerId, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
-                constraintSet.connect(containerId, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
+                constraintSet.connect(
+                    containerId, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END
+                )
+                constraintSet.connect(
+                    containerId, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP
+                )
+                constraintSet.connect(
+                    containerId, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM
+                )
                 constraintSet.constrainWidth(containerId, ConstraintSet.WRAP_CONTENT)
                 constraintSet.constrainHeight(containerId, ConstraintSet.WRAP_CONTENT)
                 constraintSet.setMargin(containerId, ConstraintSet.END, 8 * dp)
             }
+
             ToolbarAlignment.LEFT -> {
-                constraintSet.connect(containerId, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
-                constraintSet.connect(containerId, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
-                constraintSet.connect(containerId, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
+                constraintSet.connect(
+                    containerId, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START
+                )
+                constraintSet.connect(
+                    containerId, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP
+                )
+                constraintSet.connect(
+                    containerId, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM
+                )
                 constraintSet.constrainWidth(containerId, ConstraintSet.WRAP_CONTENT)
                 constraintSet.constrainHeight(containerId, ConstraintSet.WRAP_CONTENT)
                 constraintSet.setMargin(containerId, ConstraintSet.START, 8 * dp)
@@ -519,6 +432,7 @@ class WhiteboardFragment :
                 item.isChecked = !item.isChecked
                 viewModel.toggleStylusOnlyMode()
             }
+
             R.id.action_align_left -> viewModel.setToolbarAlignment(ToolbarAlignment.LEFT)
             R.id.action_align_bottom -> viewModel.setToolbarAlignment(ToolbarAlignment.BOTTOM)
             R.id.action_align_right -> viewModel.setToolbarAlignment(ToolbarAlignment.RIGHT)

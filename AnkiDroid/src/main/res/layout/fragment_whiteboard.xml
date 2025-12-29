@@ -122,4 +122,11 @@
         </LinearLayout>
 
     </com.google.android.material.card.MaterialCardView>
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/whiteboard_popups_compose_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="@id/controls_container"
+        app:layout_constraintBottom_toTopOf="@id/controls_container" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
