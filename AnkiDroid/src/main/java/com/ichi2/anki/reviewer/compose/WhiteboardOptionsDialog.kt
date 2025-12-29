@@ -75,10 +75,10 @@ fun BrushOptionsDialog(
         onDismissRequest = onDismissRequest,
         confirmButton = {
             TextButton(onClick = onDismissRequest) {
-                Text(stringResource(R.string.dialog_ok))
+                Text(stringResource(R.string.brush_options))
             }
         },
-        title = { Text(stringResource(R.string.title_whiteboard_editor)) },
+        title = { Text(stringResource(R.string.add_brush)) },
         text = {
             BrushOptionsContent(viewModel)
         },
