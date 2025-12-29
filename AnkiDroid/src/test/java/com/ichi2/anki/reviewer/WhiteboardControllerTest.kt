@@ -26,11 +26,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Unit tests for [WhiteboardController].
+ * Tests for whiteboard persistence in [MetaDB].
  *
- * These tests verify the whiteboard state management controller behavior.
- * Tests use the injectable [com.ichi2.anki.ioDispatcher] which is set to a test dispatcher
- * by [RobolectricTest.setupTestDispatcher] for reliable async testing.
+ * These tests verify the data layer behavior for whiteboard state and visibility
+ * storage, which [WhiteboardController] depends on. Testing the controller directly
+ * would require mocking Android Views and lifecycle components.
  */
 @RunWith(AndroidJUnit4::class)
 class WhiteboardControllerTest : RobolectricTest() {
