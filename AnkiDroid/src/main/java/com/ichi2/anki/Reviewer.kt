@@ -339,8 +339,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         // Load the first card and start reviewing. Uses the answer card
         // task to load a card, but since we send null
         // as the card to answer, no card will be answered.
-        whiteboardController = WhiteboardController(this, whiteboardViewModel, viewModel)
-        whiteboardController.initialize()
         lifecycleScope.launch {
             val isMicToolbarEnabled =
                 withContext(ioDispatcher) { MetaDB.getMicToolbarState(this@Reviewer, parentDid) }
