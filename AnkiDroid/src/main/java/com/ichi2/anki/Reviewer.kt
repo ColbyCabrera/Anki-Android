@@ -137,7 +137,8 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     private var hasDrawerSwipeConflicts = false
 
     // Whiteboard controller
-    private lateinit var whiteboardController: WhiteboardController
+    @VisibleForTesting
+    internal lateinit var whiteboardController: WhiteboardController
     private val whiteboardViewModel: WhiteboardViewModel by viewModels {
         WhiteboardViewModel.factory(sharedPrefs())
     }
@@ -198,9 +199,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         if (!ensureStoragePermissions()) {
             return
         }
-
-        whiteboardController = WhiteboardController(this, whiteboardViewModel, viewModel)
-
 
         composeView.setContent {
             AnkiDroidTheme {
@@ -489,8 +487,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
             R.id.action_hide_whiteboard -> { // toggle whiteboard visibility
                 Timber.i(
-                    "Reviewer:: Whiteboard visibility set to %b",
-                    !whiteboardController.isVisible
+                    "Reviewer:: Whiteboard visibility set to %b", !whiteboardController.isVisible
                 )
                 whiteboardController.setVisibility(!whiteboardController.isVisible)
                 refreshActionBar()
@@ -946,7 +943,13 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     private fun displayIcons(menu: Menu) {
         try {
             if (menu is MenuBuilder) {
-                menu.setOptionalIconsVisible(true)
+                // Use reflection to bypass package-private visibility
+                val method = menu.javaClass.getDeclaredMethod(
+                    "setOptionalIconsVisible",
+                    Boolean::class.javaPrimitiveType
+                )
+                method.isAccessible = true
+                method.invoke(menu, true)
             }
         } catch (e: Exception) {
             Timber.w(e, "Failed to display icons in Over flow menu")

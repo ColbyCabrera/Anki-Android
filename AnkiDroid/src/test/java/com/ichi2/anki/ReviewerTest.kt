@@ -374,7 +374,7 @@ class ReviewerTest : RobolectricTest() {
     private fun toggleWhiteboard(reviewer: ReviewerForMenuItems) {
         reviewer.toggleWhiteboard()
 
-        assumeTrue("Whiteboard should now be enabled", reviewer.prefWhiteboard)
+        assumeTrue("Whiteboard should now be enabled", reviewer.whiteboardController.isEnabled)
 
         advanceRobolectricLooper()
     }
