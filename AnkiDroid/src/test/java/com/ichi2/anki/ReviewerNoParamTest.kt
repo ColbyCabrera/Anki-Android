@@ -108,8 +108,8 @@ class ReviewerNoParamTest : RobolectricTest() {
     }
 
     @Suppress("SameParameterValue")
-    private fun storeLightModeColor(value: Int, did: DeckId?) {
-        MetaDB.storeWhiteboardPenColor(targetContext, did!!, false, value)
+    private fun storeLightModeColor(value: Int, did: DeckId) {
+        MetaDB.storeWhiteboardPenColor(targetContext, did, true, value)
     }
 
     @Suppress("SameParameterValue")
