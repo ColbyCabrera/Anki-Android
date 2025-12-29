@@ -17,7 +17,6 @@ package com.ichi2.anki
 
 import android.app.Application
 import android.content.Intent
-import androidx.annotation.CheckResult
 import androidx.core.os.BundleCompat
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -69,13 +68,6 @@ class ReviewerTest : RobolectricTest() {
             actualAnimation
         )
     }
-
-    // region Helper Methods
-
-    @CheckResult
-    private fun startReviewer(): Reviewer = startReviewer(this)
-
-    // endregion
 
     companion object {
         fun startReviewer(testClass: RobolectricTest): Reviewer =
