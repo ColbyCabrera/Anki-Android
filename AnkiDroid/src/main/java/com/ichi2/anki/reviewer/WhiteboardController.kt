@@ -161,4 +161,16 @@ class WhiteboardController(
     fun changePenColor() {
         // No-op in legacy Reviewer, handled by Compose/ViewModel interactions if needed
     }
+
+    /**
+     * Returns true if the whiteboard has strokes that can be undone.
+     */
+    fun canUndo(): Boolean = viewModel.canUndo.value
+
+    /**
+     * Undoes the last stroke on the whiteboard.
+     */
+    fun undo() {
+        viewModel.undo()
+    }
 }

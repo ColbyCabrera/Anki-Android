@@ -411,9 +411,8 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
 
             R.id.action_undo -> {
                 Timber.i("Reviewer:: Undo button pressed")
-                // Use viewModel state directly as Controller doesn't expose canUndo yet, or valid check
-                if (whiteboardController.isVisible && whiteboardViewModel.canUndo.value) {
-                    whiteboardViewModel.undo()
+                if (whiteboardController.isVisible && whiteboardController.canUndo()) {
+                    whiteboardController.undo()
                 } else {
                     undo()
                 }
