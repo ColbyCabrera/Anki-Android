@@ -232,7 +232,7 @@ fun EraserOptionsContent(
                 value = width,
                 onValueChange = { viewModel.setActiveStrokeWidth(it) },
                 valueRange = 5f..200f,
-                steps = 39, // Smoother slider to match legacy behavior (stepSize="5.0")
+                steps = 8, // Smoother slider to match legacy behavior (stepSize="5.0")
             )
         }
 
