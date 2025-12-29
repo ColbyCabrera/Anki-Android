@@ -136,6 +136,7 @@ import com.ichi2.anki.preferences.sharedPrefs
 import com.ichi2.anki.reviewer.AutomaticAnswer
 import com.ichi2.anki.reviewer.AutomaticAnswer.AutomaticallyAnswered
 import com.ichi2.anki.reviewer.AutomaticAnswerAction
+import com.ichi2.anki.reviewer.ReviewerConstants
 import com.ichi2.anki.reviewer.CardSide
 import com.ichi2.anki.reviewer.EaseButton
 import com.ichi2.anki.reviewer.FullScreenMode
@@ -769,7 +770,7 @@ abstract class AbstractFlashcardViewer : NavigationDrawerActivity(), ViewerComma
     private fun hasLoadedCardContent(): Boolean = cardContent != null
 
     open fun undo(): Job = launchCatchingTask {
-        undoAndShowSnackbar(duration = Reviewer.ACTION_SNACKBAR_TIME)
+        undoAndShowSnackbar(duration = ReviewerConstants.ACTION_SNACKBAR_DURATION_MS)
     }
 
     private fun finishNoStorageAvailable() {
@@ -1553,7 +1554,7 @@ abstract class AbstractFlashcardViewer : NavigationDrawerActivity(), ViewerComma
                 }
             }
             stopCardMediaPlayer()
-            showSnackbar(R.string.card_buried, Reviewer.ACTION_SNACKBAR_TIME)
+            showSnackbar(R.string.card_buried, ReviewerConstants.ACTION_SNACKBAR_DURATION_MS)
         }
         return true
     }
@@ -1567,7 +1568,7 @@ abstract class AbstractFlashcardViewer : NavigationDrawerActivity(), ViewerComma
                 }
             }
             stopCardMediaPlayer()
-            showSnackbar(TR.studyingCardSuspended(), Reviewer.ACTION_SNACKBAR_TIME)
+            showSnackbar(TR.studyingCardSuspended(), ReviewerConstants.ACTION_SNACKBAR_DURATION_MS)
         }
         return true
     }
@@ -1583,7 +1584,7 @@ abstract class AbstractFlashcardViewer : NavigationDrawerActivity(), ViewerComma
             val count = changed.count
             val noteSuspended = resources.getQuantityString(R.plurals.note_suspended, count, count)
             stopCardMediaPlayer()
-            showSnackbar(noteSuspended, Reviewer.ACTION_SNACKBAR_TIME)
+            showSnackbar(noteSuspended, ReviewerConstants.ACTION_SNACKBAR_DURATION_MS)
         }
         return true
     }
@@ -1597,7 +1598,7 @@ abstract class AbstractFlashcardViewer : NavigationDrawerActivity(), ViewerComma
                 }
             }
             stopCardMediaPlayer()
-            showSnackbar(TR.studyingCardsBuried(changed.count), Reviewer.ACTION_SNACKBAR_TIME)
+            showSnackbar(TR.studyingCardsBuried(changed.count), ReviewerConstants.ACTION_SNACKBAR_DURATION_MS)
         }
         return true
     }
@@ -1834,7 +1835,7 @@ abstract class AbstractFlashcardViewer : NavigationDrawerActivity(), ViewerComma
                 R.string.show_answer_hint_long_press,
                 getString(R.string.pref_show_answer_long_press_time),
             ),
-            minimalClickSpeed + Reviewer.ACTION_SNACKBAR_TIME,
+            minimalClickSpeed + ReviewerConstants.ACTION_SNACKBAR_DURATION_MS,
         ) {
             setAction(R.string.settings) {
                 val settingsIntent = PreferencesActivity.getIntent(

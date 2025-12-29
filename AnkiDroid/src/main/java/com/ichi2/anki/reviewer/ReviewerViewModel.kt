@@ -51,6 +51,11 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.io.File
 
+data class MediaError(
+    val uri: Uri,
+    val message: String
+)
+
 data class ReviewerState(
     val newCount: Int = 0,
     val learnCount: Int = 0,
@@ -66,7 +71,8 @@ data class ReviewerState(
     val mediaDirectory: File? = null,
     val isFinished: Boolean = false,
     val isWhiteboardEnabled: Boolean = false,
-    val isVoicePlaybackEnabled: Boolean = false
+    val isVoicePlaybackEnabled: Boolean = false,
+    val mediaError: MediaError? = null
 )
 
 sealed class ReviewerEvent {
@@ -111,16 +117,6 @@ sealed class ReviewerEffect {
 
 class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
 
-    companion object {
-        private const val PLAY_BUTTON_TEMPLATE = """
-                <a href="%s" class="replay-button" title="%s" aria-label="Play %s" role="button">
-                    <svg xmlns="http://www.w3.org/2000/svg" height="56px" width="56px" class="play-action" viewBox="0 -960 960 960" width="24px">
-                        <path d="M320-273v-414q0-17 12-28.5t28-11.5q5 0 10.5 1.5T381-721l326 207q9 6 13.5 15t4.5 19q0 10-4.5 19T707-446L381-239q-5 3-10.5 4.5T360-233q-16 0-28-11.5T320-273Z"/>
-                    </svg>
-                </a>
-            """
-    }
-
     private val _state = MutableStateFlow(ReviewerState())
     val state: StateFlow<ReviewerState> = _state.asStateFlow()
 
@@ -134,6 +130,7 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
         CardMediaPlayer({ }, object : MediaErrorListener {
             override fun onError(uri: Uri): MediaErrorBehavior {
                 Timber.w("Error playing media: %s", uri)
+                _state.update { it.copy(mediaError = MediaError(uri, "Failed to load media")) }
                 return MediaErrorBehavior.CONTINUE_MEDIA
             }
 
@@ -141,11 +138,13 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
                 mp: MediaPlayer?, which: Int, extra: Int, uri: Uri
             ): MediaErrorBehavior {
                 Timber.w("Error playing media: %s", uri)
+                _state.update { it.copy(mediaError = MediaError(uri, "Failed to load media")) }
                 return MediaErrorBehavior.CONTINUE_MEDIA
             }
 
             override fun onTtsError(error: TtsPlayer.TtsError, isAutomaticPlayback: Boolean) {
                 Timber.w("TTS error: %s", error)
+                // Optionally handle TTS errors in state if needed
             }
         })
 
@@ -494,12 +493,12 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
                 is SoundOrVideoTag -> {
                     val url = "playsound:${avRef.side}:${avRef.index}"
                     val content = avTag.filename.htmlEncode()
-                    PLAY_BUTTON_TEMPLATE.format(url, content, content)
+                    CardHtmlBuilder.createPlayButton(url, content)
                 }
 
                 else -> null
             }
         }
-        return "<style>${renderOutput.css}</style>$processedHtml"
+        return CardHtmlBuilder.wrapWithStyles(processedHtml, renderOutput.css)
     }
 }
