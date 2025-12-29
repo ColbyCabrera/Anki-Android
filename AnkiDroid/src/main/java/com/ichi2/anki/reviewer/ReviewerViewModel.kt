@@ -138,10 +138,7 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
             }
 
             override fun onMediaPlayerError(
-                mp: MediaPlayer?,
-                which: Int,
-                extra: Int,
-                uri: Uri
+                mp: MediaPlayer?, which: Int, extra: Int, uri: Uri
             ): MediaErrorBehavior {
                 Timber.w("Error playing media: %s", uri)
                 return MediaErrorBehavior.CONTINUE_MEDIA
@@ -154,6 +151,20 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
 
     /** A job that is running for the current card. This is used to prevent multiple actions from running at the same time. */
     private var cardActionJob: Job? = null
+
+    /**
+     * Launches a card action job, preventing concurrent execution.
+     * If another job is active, the new action is ignored.
+     * @param block The suspend function to execute
+     */
+    private fun launchCardAction(block: suspend () -> Unit) {
+        if (cardActionJob?.isActive == true) return
+        cardActionJob = viewModelScope.launch {
+            block()
+        }.also {
+            it.invokeOnCompletion { cardActionJob = null }
+        }
+    }
 
     init {
         onEvent(ReviewerEvent.LoadInitialCard)
@@ -302,31 +313,13 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    private fun reloadCard() {
-        if (cardActionJob?.isActive == true) {
-            return
-        }
-        cardActionJob = viewModelScope.launch {
-            reloadCardSuspend()
-        }.also {
-            it.invokeOnCompletion { cardActionJob = null }
-        }
-    }
+    private fun reloadCard() = launchCardAction { reloadCardSuspend() }
 
     private fun onTypedAnswerChanged(newText: String) {
         _state.update { it.copy(typedAnswer = newText) }
     }
 
-    private fun loadCard() {
-        if (cardActionJob?.isActive == true) {
-            return
-        }
-        cardActionJob = viewModelScope.launch {
-            loadCardSuspend()
-        }.also {
-            it.invokeOnCompletion { cardActionJob = null }
-        }
-    }
+    private fun loadCard() = launchCardAction { loadCardSuspend() }
 
     private suspend fun getNextCard(): Pair<Card, CurrentQueueState>? = CollectionManager.withCol {
         this.sched.currentQueueState()?.let {
