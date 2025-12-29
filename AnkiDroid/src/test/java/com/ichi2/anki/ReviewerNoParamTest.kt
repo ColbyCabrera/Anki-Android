@@ -44,7 +44,11 @@ class ReviewerNoParamTest : RobolectricTest() {
     fun defaultWhiteboardColorIsUsedOnFirstRun() {
         // When no color is stored, MetaDB returns null (UI applies default)
         val retrievedColor = MetaDB.getWhiteboardPenColor(targetContext, Consts.DEFAULT_DECK_ID)
-        assertThat("No color stored initially - null means use UI default", retrievedColor.lightPenColor, equalTo(null))
+        assertThat(
+            "No color stored initially - null means use UI default",
+            retrievedColor.lightPenColor,
+            equalTo(null)
+        )
     }
 
     @Test
@@ -52,15 +56,23 @@ class ReviewerNoParamTest : RobolectricTest() {
         storeLightModeColor(ARBITRARY_PEN_COLOR_VALUE)
 
         val retrievedColor = MetaDB.getWhiteboardPenColor(targetContext, Consts.DEFAULT_DECK_ID)
-        assertThat("Light mode color is stored", retrievedColor.lightPenColor, equalTo(555))
+        assertThat(
+            "Light mode color is stored",
+            retrievedColor.lightPenColor,
+            equalTo(ARBITRARY_PEN_COLOR_VALUE)
+        )
     }
 
     @Test
     fun whiteboardDarkModeColorIsUsed() {
-        storeDarkModeColor(555)
+        storeDarkModeColor(ARBITRARY_PEN_COLOR_VALUE)
 
         val retrievedColor = MetaDB.getWhiteboardPenColor(targetContext, Consts.DEFAULT_DECK_ID)
-        assertThat("Dark mode color is stored", retrievedColor.darkPenColor, equalTo(555))
+        assertThat(
+            "Dark mode color is stored",
+            retrievedColor.darkPenColor,
+            equalTo(ARBITRARY_PEN_COLOR_VALUE)
+        )
     }
 
     @Test
@@ -68,7 +80,11 @@ class ReviewerNoParamTest : RobolectricTest() {
         storeLightModeColor(ARBITRARY_PEN_COLOR_VALUE)
 
         val penColorResult = penColor
-        assertThat("Light pen color is changed", penColorResult.lightPenColor, equalTo(ARBITRARY_PEN_COLOR_VALUE))
+        assertThat(
+            "Light pen color is changed",
+            penColorResult.lightPenColor,
+            equalTo(ARBITRARY_PEN_COLOR_VALUE)
+        )
     }
 
     @Test
@@ -76,7 +92,11 @@ class ReviewerNoParamTest : RobolectricTest() {
         storeDarkModeColor(ARBITRARY_PEN_COLOR_VALUE)
 
         val penColorResult = penColor
-        assertThat("Dark pen color is changed", penColorResult.darkPenColor, equalTo(ARBITRARY_PEN_COLOR_VALUE))
+        assertThat(
+            "Dark pen color is changed",
+            penColorResult.darkPenColor,
+            equalTo(ARBITRARY_PEN_COLOR_VALUE)
+        )
     }
 
     @Test
@@ -85,7 +105,11 @@ class ReviewerNoParamTest : RobolectricTest() {
 
         val retrievedColor = MetaDB.getWhiteboardPenColor(targetContext, Consts.DEFAULT_DECK_ID)
         // Dark mode color is 555, light mode color is null (use default)
-        assertThat("Light pen color is null (use UI default) when only dark is set", retrievedColor.lightPenColor, equalTo(null))
+        assertThat(
+            "Light pen color is null (use UI default) when only dark is set",
+            retrievedColor.lightPenColor,
+            equalTo(null)
+        )
         assertThat("Dark pen color is stored correctly", retrievedColor.darkPenColor, equalTo(555))
     }
 
@@ -95,7 +119,11 @@ class ReviewerNoParamTest : RobolectricTest() {
         storeLightModeColor(ARBITRARY_PEN_COLOR_VALUE, did)
 
         val retrievedColor = MetaDB.getWhiteboardPenColor(targetContext, Consts.DEFAULT_DECK_ID)
-        assertThat("Pen color for default deck is null (use UI default)", retrievedColor.lightPenColor, equalTo(null))
+        assertThat(
+            "Pen color for default deck is null (use UI default)",
+            retrievedColor.lightPenColor,
+            equalTo(null)
+        )
     }
 
     // endregion
