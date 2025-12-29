@@ -15,6 +15,8 @@
  */
 package com.ichi2.anki.reviewer.compose
 
+import android.content.Context
+import android.content.SharedPreferences
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -23,6 +25,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
@@ -37,9 +40,6 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.ui.window.Popup
-import androidx.compose.ui.window.PopupProperties
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -50,10 +50,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import com.ichi2.anki.R
+import com.ichi2.anki.ui.windows.reviewer.whiteboard.BrushInfo
 import com.ichi2.anki.ui.windows.reviewer.whiteboard.EraserMode
+import com.ichi2.anki.ui.windows.reviewer.whiteboard.WhiteboardRepository
 import com.ichi2.anki.ui.windows.reviewer.whiteboard.WhiteboardViewModel
 import kotlin.math.roundToInt
 
@@ -296,10 +302,62 @@ private fun PopupSurface(
         shadowElevation = 8.dp,
         modifier = Modifier
             .width(320.dp) // Standardized width for popups
-            .padding(8.dp)
+            .padding(8.dp),
     ) {
         Box(modifier = Modifier.padding(16.dp)) {
             content()
         }
     }
+}
+
+@Composable
+private fun provideFakeWhiteboardViewModel(): WhiteboardViewModel {
+    val context = LocalContext.current
+    val sharedPreferences: SharedPreferences =
+        context.getSharedPreferences("test_prefs", Context.MODE_PRIVATE)
+
+    return remember {
+        WhiteboardViewModel(WhiteboardRepository(sharedPreferences)).apply {
+            brushes.value = listOf(
+                BrushInfo(color = android.graphics.Color.RED, width = 10f),
+                BrushInfo(color = android.graphics.Color.BLUE, width = 20f),
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun BrushOptionsDialogDarkPreview() {
+    BrushOptionsDialog(
+        viewModel = provideFakeWhiteboardViewModel(),
+        onDismissRequest = {},
+    )
+}
+
+@Preview
+@Composable
+private fun EraserOptionsDialogPreview() {
+    EraserOptionsDialog(
+        viewModel = provideFakeWhiteboardViewModel(),
+        onDismissRequest = {},
+    )
+}
+
+@Preview
+@Composable
+private fun BrushOptionsPopupPreview() {
+    BrushOptionsPopup(
+        viewModel = provideFakeWhiteboardViewModel(),
+        onDismissRequest = {},
+    )
+}
+
+@Preview
+@Composable
+private fun EraserOptionsPopupPreview() {
+    EraserOptionsPopup(
+        viewModel = provideFakeWhiteboardViewModel(),
+        onDismissRequest = {},
+    )
 }
