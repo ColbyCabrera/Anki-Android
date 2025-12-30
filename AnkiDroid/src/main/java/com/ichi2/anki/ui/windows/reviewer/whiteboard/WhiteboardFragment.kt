@@ -17,10 +17,8 @@ package com.ichi2.anki.ui.windows.reviewer.whiteboard
 
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.widget.PopupMenu
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,10 +33,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import com.ichi2.anki.AnkiDroidApp
 import com.ichi2.anki.R
 import com.ichi2.anki.reviewer.compose.BrushOptionsPopup
@@ -48,13 +48,14 @@ import com.ichi2.anki.reviewer.compose.WhiteboardToolbar
 import com.ichi2.anki.snackbar.showSnackbar
 import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import timber.log.Timber
 
 /**
  * Fragment that displays a whiteboard and its controls.
  */
-@Suppress("DEPRECATION")
-class WhiteboardFragment : Fragment(), PopupMenu.OnMenuItemClickListener {
+class WhiteboardFragment : Fragment() {
     private val viewModel: WhiteboardViewModel by viewModels {
         WhiteboardViewModel.factory(AnkiDroidApp.sharedPrefs())
     }
@@ -64,9 +65,11 @@ class WhiteboardFragment : Fragment(), PopupMenu.OnMenuItemClickListener {
     private val showRemoveBrushDialogIndex = MutableStateFlow<Int?>(null)
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ): View =
+        ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 AnkiDroidTheme {
@@ -74,6 +77,17 @@ class WhiteboardFragment : Fragment(), PopupMenu.OnMenuItemClickListener {
                 }
             }
         }
+
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?,
+    ) {
+        super.onViewCreated(view, savedInstanceState)
+        // Collect snackbar events with lifecycle-aware scope
+        viewModel.snackbarEvent
+            .onEach { messageResId ->
+                showSnackbar(messageResId)
+            }.launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
     @Composable
@@ -94,42 +108,50 @@ class WhiteboardFragment : Fragment(), PopupMenu.OnMenuItemClickListener {
             // Canvas
             AndroidView(
                 factory = { context ->
-                WhiteboardView(context).apply {
-                    onNewPath = viewModel::addPath
-                    onEraseGestureStart = viewModel::startPathEraseGesture
-                    onEraseGestureMove = viewModel::erasePathsAtPoint
-                    onEraseGestureEnd = viewModel::endPathEraseGesture
-                }
-            }, update = { view ->
-                view.setHistory(paths)
-                view.setCurrentBrush(brushColor, activeStrokeWidth)
-                view.isEraserActive = isEraserActive
-                view.eraserMode = eraserMode
-                view.isStylusOnlyMode = isStylusOnlyMode
-            }, modifier = Modifier.fillMaxSize()
+                    WhiteboardView(context).apply {
+                        onNewPath = viewModel::addPath
+                        onEraseGestureStart = viewModel::startPathEraseGesture
+                        onEraseGestureMove = viewModel::erasePathsAtPoint
+                        onEraseGestureEnd = viewModel::endPathEraseGesture
+                    }
+                },
+                update = { view ->
+                    view.setHistory(paths)
+                    view.setCurrentBrush(brushColor, activeStrokeWidth)
+                    view.isEraserActive = isEraserActive
+                    view.eraserMode = eraserMode
+                    view.isStylusOnlyMode = isStylusOnlyMode
+                },
+                modifier = Modifier.fillMaxSize(),
             )
 
             // Toolbar Positioning logic
-            val toolbarAlignment = when (alignment) {
-                ToolbarAlignment.BOTTOM -> Alignment.BottomCenter
-                ToolbarAlignment.LEFT -> Alignment.CenterStart
-                ToolbarAlignment.RIGHT -> Alignment.CenterEnd
-            }
+            val toolbarAlignment =
+                when (alignment) {
+                    ToolbarAlignment.BOTTOM -> Alignment.BottomCenter
+                    ToolbarAlignment.LEFT -> Alignment.CenterStart
+                    ToolbarAlignment.RIGHT -> Alignment.CenterEnd
+                }
 
-            val toolbarPadding = when (alignment) {
-                ToolbarAlignment.BOTTOM -> Modifier.padding(
-                    bottom = 8.dp, start = 24.dp, end = 24.dp
-                )
+            val toolbarPadding =
+                when (alignment) {
+                    ToolbarAlignment.BOTTOM ->
+                        Modifier.padding(
+                            bottom = 8.dp,
+                            start = 24.dp,
+                            end = 24.dp,
+                        )
 
-                ToolbarAlignment.LEFT -> Modifier.padding(start = 8.dp)
-                ToolbarAlignment.RIGHT -> Modifier.padding(end = 8.dp)
-            }
+                    ToolbarAlignment.LEFT -> Modifier.padding(start = 8.dp)
+                    ToolbarAlignment.RIGHT -> Modifier.padding(end = 8.dp)
+                }
 
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .then(toolbarPadding),
-                contentAlignment = toolbarAlignment
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .then(toolbarPadding),
+                contentAlignment = toolbarAlignment,
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     // Popups are placed relative to the toolbar in the composition
@@ -145,8 +167,7 @@ class WhiteboardFragment : Fragment(), PopupMenu.OnMenuItemClickListener {
                         if (brushes.size > 1) {
                             showRemoveBrushDialogIndex.value = index
                         } else {
-                            Timber.i("Tried to remove the last brush of the whiteboard")
-                            showSnackbar(R.string.cannot_remove_last_brush_message)
+                            viewModel.emitSnackbar(R.string.cannot_remove_last_brush_message)
                         }
                     }, onAddBrush = { showAddBrushDialog.value = true }, onEraserClick = {
                         if (isEraserActive) {
@@ -170,12 +191,16 @@ class WhiteboardFragment : Fragment(), PopupMenu.OnMenuItemClickListener {
 
         if (eraserVisible) {
             EraserOptionsPopup(
-                viewModel = viewModel, onDismissRequest = { showEraserOptions.value = false })
+                viewModel = viewModel,
+                onDismissRequest = { showEraserOptions.value = false },
+            )
         }
 
         brushIndex?.let {
             BrushOptionsPopup(
-                viewModel = viewModel, onDismissRequest = { showBrushOptionsIndex.value = null })
+                viewModel = viewModel,
+                onDismissRequest = { showBrushOptionsIndex.value = null },
+            )
         }
 
         if (addBrushVisible) {
@@ -194,20 +219,17 @@ class WhiteboardFragment : Fragment(), PopupMenu.OnMenuItemClickListener {
                         viewModel.removeBrush(index)
                         showRemoveBrushDialogIndex.value = null
                     }) {
-                        Text(getString(R.string.dialog_remove))
+                        Text(stringResource(R.string.dialog_remove))
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showRemoveBrushDialogIndex.value = null }) {
-                        Text(getString(R.string.dialog_cancel))
+                        Text(stringResource(R.string.dialog_cancel))
                     }
                 },
-                text = { Text(getString(R.string.whiteboard_remove_brush_message)) })
+                text = { Text(stringResource(R.string.whiteboard_remove_brush_message)) },
+            )
         }
-    }
-
-    override fun onMenuItemClick(item: MenuItem): Boolean {
-        return false
     }
 
     fun resetCanvas() = viewModel.reset()

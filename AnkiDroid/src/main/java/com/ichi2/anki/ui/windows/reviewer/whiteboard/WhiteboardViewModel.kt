@@ -104,6 +104,18 @@ class WhiteboardViewModel(
     val isStylusOnlyMode = MutableStateFlow(false)
     val toolbarAlignment = MutableStateFlow(ToolbarAlignment.BOTTOM)
 
+    // One-off events for UI actions (e.g., snackbars) that need to be lifecycle-aware
+    private val _snackbarEvent = kotlinx.coroutines.flow.MutableSharedFlow<Int>()
+    val snackbarEvent: kotlinx.coroutines.flow.SharedFlow<Int> = _snackbarEvent
+
+    /** Emits a snackbar message resource ID for the Fragment to display. */
+    fun emitSnackbar(messageResId: Int) {
+        viewModelScope.launch {
+            Timber.i("Emitting snackbar event: %d", messageResId)
+            _snackbarEvent.emit(messageResId)
+        }
+    }
+
     val eraserDisplayWidth =
         combine(
             eraserMode,
