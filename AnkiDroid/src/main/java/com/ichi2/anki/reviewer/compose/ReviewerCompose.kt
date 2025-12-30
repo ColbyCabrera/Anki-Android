@@ -120,6 +120,9 @@ private val ratings = listOf(
     "Easy" to CardAnswer.Rating.EASY
 )
 
+private val WhiteboardToolbarWidth = 56.dp
+private val WhiteboardBottomBarOffset = 48.dp
+
 // You can rename this class to be more descriptive
 class InvertedTopCornersShape(private val cornerRadius: Dp) : Shape {
     override fun createOutline(
@@ -290,18 +293,18 @@ fun ReviewerContent(
                         },
                         mediaDirectory = state.mediaDirectory,
                         isAnswerShown = state.isAnswerShown,
-                        toolbarHeight = (toolbarHeightDp + 48.dp).value.toInt()
+                        toolbarHeight = (toolbarHeightDp + WhiteboardBottomBarOffset).value.toInt()
                     )
 
                     // Whiteboard canvas and toolbar
                     if (state.isWhiteboardEnabled && whiteboardViewModel != null) {
                         val toolbarAlignment by whiteboardViewModel.toolbarAlignment.collectAsState()
-                        
+
                         // Canvas padding based on toolbar alignment
                         val canvasPadding = when (toolbarAlignment) {
-                            ToolbarAlignment.BOTTOM -> Modifier.padding(bottom = totalBottomPadding + 48.dp)
-                            ToolbarAlignment.LEFT -> Modifier.padding(start = 56.dp)
-                            ToolbarAlignment.RIGHT -> Modifier.padding(end = 56.dp)
+                            ToolbarAlignment.BOTTOM -> Modifier.padding(bottom = totalBottomPadding + WhiteboardBottomBarOffset)
+                            ToolbarAlignment.LEFT -> Modifier.padding(start = WhiteboardToolbarWidth)
+                            ToolbarAlignment.RIGHT -> Modifier.padding(end = WhiteboardToolbarWidth)
                         }
                         WhiteboardCanvas(
                             viewModel = whiteboardViewModel, modifier = canvasPadding
