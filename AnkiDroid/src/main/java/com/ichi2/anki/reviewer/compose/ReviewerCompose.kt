@@ -288,9 +288,14 @@ fun ReviewerContent(
 
                     // Whiteboard canvas
                     if (state.isWhiteboardEnabled && whiteboardViewModel != null) {
+                        val canvasToolbarAlignment by whiteboardViewModel.toolbarAlignment.collectAsState()
+                        val canvasPadding = when (canvasToolbarAlignment) {
+                            ToolbarAlignment.BOTTOM -> Modifier.padding(bottom = totalBottomPadding + 48.dp)
+                            ToolbarAlignment.LEFT -> Modifier.padding(start = 56.dp)
+                            ToolbarAlignment.RIGHT -> Modifier.padding(end = 56.dp)
+                        }
                         WhiteboardCanvas(
-                            viewModel = whiteboardViewModel,
-                            modifier = Modifier.padding(bottom = totalBottomPadding + 48.dp)
+                            viewModel = whiteboardViewModel, modifier = canvasPadding
                         )
                     }
 
