@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -61,6 +62,7 @@ import com.ichi2.anki.ui.windows.reviewer.whiteboard.compose.ColorBrushButton
 /**
  * Compose-based whiteboard toolbar with undo/redo, eraser, and brush selection.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun WhiteboardToolbar(
     viewModel: WhiteboardViewModel,
@@ -87,7 +89,7 @@ fun WhiteboardToolbar(
     Surface(
         modifier = modifier,
         color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = MaterialTheme.shapes.large,
+        shape = MaterialTheme.shapes.extraExtraLarge,
         tonalElevation = 2.dp
     ) {
         val content = @Composable {
@@ -96,7 +98,7 @@ fun WhiteboardToolbar(
                 onClick = { viewModel.undo() }, enabled = canUndo
             ) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Undo,
+                    painter = painterResource(R.drawable.undo_24px),
                     contentDescription = stringResource(R.string.undo),
                     tint = if (canUndo) colorNormal else colorNormal.copy(alpha = 0.38f)
                 )
@@ -107,7 +109,7 @@ fun WhiteboardToolbar(
                 onClick = { viewModel.redo() }, enabled = canRedo
             ) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Redo,
+                    painter = painterResource(R.drawable.redo_24px),
                     contentDescription = stringResource(R.string.redo),
                     tint = if (canRedo) colorNormal else colorNormal.copy(alpha = 0.38f)
                 )
