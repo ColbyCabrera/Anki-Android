@@ -15,6 +15,7 @@
  */
 package com.ichi2.anki.reviewer.compose
 
+import android.content.Context
 import android.view.View
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -27,10 +28,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Redo
-import androidx.compose.material.icons.automirrored.filled.Undo
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -50,10 +47,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ichi2.anki.R
+import com.ichi2.anki.ui.compose.theme.AnkiDroidTheme
 import com.ichi2.anki.ui.windows.reviewer.whiteboard.ToolbarAlignment
 import com.ichi2.anki.ui.windows.reviewer.whiteboard.WhiteboardViewModel
 import com.ichi2.anki.ui.windows.reviewer.whiteboard.compose.AddBrushButton
@@ -147,7 +148,7 @@ fun WhiteboardToolbar(
                         },
                         leadingIcon = {
                             Icon(
-                                imageVector = if (isStylusOnlyMode) Icons.Default.Check else Icons.Default.Edit,
+                                painter = painterResource(if (isStylusOnlyMode) R.drawable.check_24px else R.drawable.edit_24px),
                                 contentDescription = null
                             )
                         })
@@ -254,5 +255,24 @@ fun WhiteboardToolbar(
                 content()
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun WhiteboardToolbarPreview() {
+    val context = LocalContext.current
+    val viewModel: WhiteboardViewModel = viewModel(
+        factory = WhiteboardViewModel.factory(
+            context.getSharedPreferences("whiteboard-preview", Context.MODE_PRIVATE)
+        )
+    )
+    AnkiDroidTheme {
+        WhiteboardToolbar(
+            viewModel = viewModel,
+            onBrushClick = { _, _ -> },
+            onBrushLongClick = { },
+            onAddBrush = { },
+            onEraserClick = { })
     }
 }
