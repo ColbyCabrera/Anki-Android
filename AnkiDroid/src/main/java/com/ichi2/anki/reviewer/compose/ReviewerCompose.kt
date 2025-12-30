@@ -222,6 +222,13 @@ fun ReviewerContent(
         }
     }
 
+    LaunchedEffect(state.mediaError) {
+        state.mediaError?.let {
+            snackbarHostState.showSnackbar(it.message)
+            viewModel.onEvent(ReviewerEvent.MediaErrorHandled)
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(snackbarHost = {
             SnackbarHost(
