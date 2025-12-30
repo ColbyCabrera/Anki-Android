@@ -33,9 +33,9 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconToggleButton
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -139,7 +139,10 @@ fun WhiteboardToolbar(
                 }
 
                 DropdownMenu(
-                    expanded = showOverflowMenu, onDismissRequest = { showOverflowMenu = false }) {
+                    expanded = showOverflowMenu,
+                    onDismissRequest = { showOverflowMenu = false },
+                    shape = MaterialTheme.shapes.large
+                ) {
                     // Stylus mode toggle
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.stylus_mode)) },
