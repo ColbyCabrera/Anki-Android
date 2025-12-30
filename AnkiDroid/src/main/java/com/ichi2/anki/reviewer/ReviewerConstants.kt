@@ -5,7 +5,7 @@ package com.ichi2.anki.reviewer
  */
 object ReviewerConstants {
     /** Default duration (ms) for action snackbars (undo, bury, suspend) */
-    const val ACTION_SNACKBAR_DURATION_MS = 500
+    const val ACTION_SNACKBAR_DURATION_MS = 1000
 
     /** Request code for audio recording permission */
     const val REQUEST_AUDIO_PERMISSION = 0
