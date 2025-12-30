@@ -25,6 +25,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import anki.scheduler.CardAnswer
 import com.ichi2.anki.CollectionManager
+import com.ichi2.anki.R
 import com.ichi2.anki.cardviewer.CardMediaPlayer
 import com.ichi2.anki.cardviewer.MediaErrorBehavior
 import com.ichi2.anki.cardviewer.MediaErrorListener
@@ -52,8 +53,7 @@ import timber.log.Timber
 import java.io.File
 
 data class MediaError(
-    val uri: Uri,
-    val message: String
+    val uri: Uri, val message: String
 )
 
 data class ReviewerState(
@@ -131,7 +131,8 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
         CardMediaPlayer({ }, object : MediaErrorListener {
             override fun onError(uri: Uri): MediaErrorBehavior {
                 Timber.w("Error playing media: %s", uri)
-                _state.update { it.copy(mediaError = MediaError(uri, "Failed to load media")) }
+                val message = getApplication<Application>().getString(R.string.media_load_failed)
+                _state.update { it.copy(mediaError = MediaError(uri, message)) }
                 return MediaErrorBehavior.CONTINUE_MEDIA
             }
 
@@ -139,7 +140,8 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
                 mp: MediaPlayer?, which: Int, extra: Int, uri: Uri
             ): MediaErrorBehavior {
                 Timber.w("Error playing media: %s", uri)
-                _state.update { it.copy(mediaError = MediaError(uri, "Failed to load media")) }
+                val message = getApplication<Application>().getString(R.string.media_load_failed)
+                _state.update { it.copy(mediaError = MediaError(uri, message)) }
                 return MediaErrorBehavior.CONTINUE_MEDIA
             }
 
@@ -419,9 +421,9 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
 
             if (rating == CardAnswer.Rating.AGAIN && wasLeech) {
                 val leechMessage: String = if (queue.topCard.queue.buriedOrSuspended()) {
-                    getApplication<Application>().resources.getString(com.ichi2.anki.R.string.leech_suspend_notification)
+                    getApplication<Application>().resources.getString(R.string.leech_suspend_notification)
                 } else {
-                    getApplication<Application>().resources.getString(com.ichi2.anki.R.string.leech_notification)
+                    getApplication<Application>().resources.getString(R.string.leech_notification)
                 }
                 _effect.emit(ReviewerEffect.ShowSnackbar(leechMessage))
             }
