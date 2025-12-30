@@ -265,6 +265,7 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
 
             _state.update {
                 it.copy(
+                    mediaError = null,
                     html = processHtml(renderOutput.questionText, renderOutput),
                     isAnswerShown = false,
                     showTypeInAnswer = typeAnswer.correct != null,
@@ -356,6 +357,7 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
             val renderOutput = card.renderOutput(this)
             _state.update {
                 it.copy(
+                    mediaError = null,
                     newCount = queue.counts.new,
                     learnCount = queue.counts.lrn,
                     reviewCount = queue.counts.rev,
