@@ -231,6 +231,4 @@ class WhiteboardFragment : Fragment() {
             )
         }
     }
-
-    fun resetCanvas() = viewModel.reset()
 }
