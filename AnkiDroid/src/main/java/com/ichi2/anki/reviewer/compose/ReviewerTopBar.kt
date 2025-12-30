@@ -196,17 +196,20 @@ fun Counts(newCount: Int, learnCount: Int, reviewCount: Int, modifier: Modifier 
         MorphingCardCount(
             newCount,
             MaterialTheme.colorScheme.primaryContainer,
-            MaterialTheme.colorScheme.onPrimaryContainer
+            MaterialTheme.colorScheme.onPrimaryContainer,
+            contentDescription = "${stringResource(R.string.total_new)}: $newCount"
         )
         MorphingCardCount(
             learnCount,
             MaterialTheme.colorScheme.errorContainer,
-            MaterialTheme.colorScheme.onErrorContainer
+            MaterialTheme.colorScheme.onErrorContainer,
+            contentDescription = "${stringResource(R.string.learning)}: $learnCount"
         )
         MorphingCardCount(
             reviewCount,
             MaterialTheme.colorScheme.secondaryContainer,
-            MaterialTheme.colorScheme.onSecondaryContainer
+            MaterialTheme.colorScheme.onSecondaryContainer,
+            contentDescription = "${stringResource(R.string.review)}: $reviewCount"
         )
     }
 }
