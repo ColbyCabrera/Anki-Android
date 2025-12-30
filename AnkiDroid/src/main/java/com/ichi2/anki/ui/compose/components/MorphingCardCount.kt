@@ -45,6 +45,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.graphics.shapes.Morph
 import com.ichi2.utils.MorphShape
@@ -90,6 +92,7 @@ fun MorphingCardCount(
     cardCount: Int,
     containerColor: Color,
     contentColor: Color,
+    contentDescription: String,
     modifier: Modifier = Modifier,
 ) {
     // State for managing the morph animation.
@@ -142,16 +145,21 @@ fun MorphingCardCount(
     // Create the dynamic MorphShape using the current animation progress.
     val morphingShape = MorphShape(morph, morphProgress.value)
 
-    Box(modifier = modifier
-        .size(36.dp)
-        .graphicsLayer {
-            // Apply the rotation from the animation.
-            rotationZ = rotation.value
-        }
-        .clip(morphingShape)
-        .background(containerColor),
+    Box(
+        modifier = modifier
+            .size(36.dp)
+            .graphicsLayer {
+                // Apply the rotation from the animation.
+                rotationZ = rotation.value
+            }
+            .clip(morphingShape)
+            .background(containerColor)
+            .semantics(mergeDescendants = true) {
+                this.contentDescription = contentDescription
+            },
 
-        contentAlignment = Alignment.Center) {
+        contentAlignment = Alignment.Center
+    ) {
         // AnimatedContent provides a nice transition for the text itself.
         AnimatedContent(
             targetState = cardCount, transitionSpec = {
