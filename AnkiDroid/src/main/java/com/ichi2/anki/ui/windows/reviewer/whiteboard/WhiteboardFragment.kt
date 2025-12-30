@@ -20,7 +20,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
@@ -68,15 +67,14 @@ class WhiteboardFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
-    ): View =
-        ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                AnkiDroidTheme {
-                    WhiteboardScreen(viewModel)
-                }
+    ): View = ComposeView(requireContext()).apply {
+        setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+        setContent {
+            AnkiDroidTheme {
+                WhiteboardScreen(viewModel)
             }
         }
+    }
 
     override fun onViewCreated(
         view: View,
@@ -84,8 +82,7 @@ class WhiteboardFragment : Fragment() {
     ) {
         super.onViewCreated(view, savedInstanceState)
         // Collect snackbar events with lifecycle-aware scope
-        viewModel.snackbarEvent
-            .onEach { messageResId ->
+        viewModel.snackbarEvent.onEach { messageResId ->
                 showSnackbar(messageResId)
             }.launchIn(viewLifecycleOwner.lifecycleScope)
     }
@@ -126,57 +123,52 @@ class WhiteboardFragment : Fragment() {
             )
 
             // Toolbar Positioning logic
-            val toolbarAlignment =
-                when (alignment) {
-                    ToolbarAlignment.BOTTOM -> Alignment.BottomCenter
-                    ToolbarAlignment.LEFT -> Alignment.CenterStart
-                    ToolbarAlignment.RIGHT -> Alignment.CenterEnd
-                }
+            val toolbarAlignment = when (alignment) {
+                ToolbarAlignment.BOTTOM -> Alignment.BottomCenter
+                ToolbarAlignment.LEFT -> Alignment.CenterStart
+                ToolbarAlignment.RIGHT -> Alignment.CenterEnd
+            }
 
-            val toolbarPadding =
-                when (alignment) {
-                    ToolbarAlignment.BOTTOM ->
-                        Modifier.padding(
-                            bottom = 8.dp,
-                            start = 24.dp,
-                            end = 24.dp,
-                        )
+            val toolbarPadding = when (alignment) {
+                ToolbarAlignment.BOTTOM -> Modifier.padding(
+                    bottom = 8.dp,
+                    start = 24.dp,
+                    end = 24.dp,
+                )
 
-                    ToolbarAlignment.LEFT -> Modifier.padding(start = 8.dp)
-                    ToolbarAlignment.RIGHT -> Modifier.padding(end = 8.dp)
-                }
+                ToolbarAlignment.LEFT -> Modifier.padding(start = 8.dp)
+                ToolbarAlignment.RIGHT -> Modifier.padding(end = 8.dp)
+            }
 
             Box(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .then(toolbarPadding),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .then(toolbarPadding),
                 contentAlignment = toolbarAlignment,
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    // Popups are placed relative to the toolbar in the composition
-                    PopupsContent()
+                // Popups are placed relative to the toolbar in the composition
+                PopupsContent()
 
-                    WhiteboardToolbar(viewModel = viewModel, onBrushClick = { _, index ->
-                        if (activeBrushIndex == index && !isEraserActive) {
-                            showBrushOptionsIndex.value = index
-                        } else {
-                            viewModel.setActiveBrush(index)
-                        }
-                    }, onBrushLongClick = { index ->
-                        if (brushes.size > 1) {
-                            showRemoveBrushDialogIndex.value = index
-                        } else {
-                            viewModel.emitSnackbar(R.string.cannot_remove_last_brush_message)
-                        }
-                    }, onAddBrush = { showAddBrushDialog.value = true }, onEraserClick = {
-                        if (isEraserActive) {
-                            showEraserOptions.value = !showEraserOptions.value
-                        } else {
-                            viewModel.enableEraser()
-                        }
-                    })
-                }
+                WhiteboardToolbar(viewModel = viewModel, onBrushClick = { _, index ->
+                    if (activeBrushIndex == index && !isEraserActive) {
+                        showBrushOptionsIndex.value = index
+                    } else {
+                        viewModel.setActiveBrush(index)
+                    }
+
+                }, onBrushLongClick = { index ->
+                    if (brushes.size > 1) {
+                        showRemoveBrushDialogIndex.value = index
+                    } else {
+                        viewModel.emitSnackbar(R.string.cannot_remove_last_brush_message)
+                    }
+                }, onAddBrush = { showAddBrushDialog.value = true }, onEraserClick = {
+                    if (isEraserActive) {
+                        showEraserOptions.value = !showEraserOptions.value
+                    } else {
+                        viewModel.enableEraser()
+                    }
+                })
             }
         }
     }

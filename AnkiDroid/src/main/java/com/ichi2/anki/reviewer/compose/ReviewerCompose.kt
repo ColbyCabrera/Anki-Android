@@ -108,6 +108,7 @@ import com.ichi2.anki.noteeditor.NoteEditorLauncher
 import com.ichi2.anki.reviewer.ReviewerEffect
 import com.ichi2.anki.reviewer.ReviewerEvent
 import com.ichi2.anki.reviewer.ReviewerViewModel
+import com.ichi2.anki.ui.windows.reviewer.whiteboard.ToolbarAlignment
 import com.ichi2.anki.ui.windows.reviewer.whiteboard.WhiteboardViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -295,6 +296,25 @@ fun ReviewerContent(
 
                     // Whiteboard toolbar (shown above answer buttons when whiteboard is enabled)
                     if (state.isWhiteboardEnabled && whiteboardViewModel != null) {
+                        val toolbarAlignment by whiteboardViewModel.toolbarAlignment.collectAsState()
+                        val composeAlignment = when (toolbarAlignment) {
+                            ToolbarAlignment.BOTTOM -> Alignment.BottomCenter
+                            ToolbarAlignment.LEFT -> Alignment.CenterStart
+                            ToolbarAlignment.RIGHT -> Alignment.CenterEnd
+                        }
+                        val toolbarPadding = when (toolbarAlignment) {
+                            ToolbarAlignment.BOTTOM -> Modifier
+                                .offset(y = -ScreenOffset - toolbarHeightDp - 8.dp)
+                                .padding(bottom = paddingValues.calculateBottomPadding())
+
+                            ToolbarAlignment.LEFT -> Modifier.padding(
+                                start = 8.dp
+                            )
+
+                            ToolbarAlignment.RIGHT -> Modifier.padding(
+                                end = 8.dp
+                            )
+                        }
                         WhiteboardToolbar(
                             viewModel = whiteboardViewModel,
                             onBrushClick = { _, index ->
@@ -320,11 +340,11 @@ fun ReviewerContent(
                                 }
                             },
                             modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .offset(y = -ScreenOffset - toolbarHeightDp - 8.dp)
-                                .padding(bottom = paddingValues.calculateBottomPadding())
+                                .align(composeAlignment)
+                                .then(toolbarPadding)
                                 .onSizeChanged { whiteboardToolbarHeight = it.height })
                     }
+
 
                     HorizontalFloatingToolbar(
                         modifier = Modifier
@@ -442,32 +462,32 @@ fun ReviewerContent(
                     remember(state.isWhiteboardEnabled, state.isVoicePlaybackEnabled) {
                         listOf(
                             Triple(
-                                if (state.isWhiteboardEnabled) R.string.disable_whiteboard else R.string.enable_whiteboard,
-                                Icons.Filled.Edit
-                            ) {
-                                viewModel.onEvent(ReviewerEvent.ToggleWhiteboard)
-                            }, Triple(R.string.cardeditor_title_edit_card, Icons.Filled.EditNote) {
-                                viewModel.onEvent(ReviewerEvent.EditCard)
-                            }, Triple(R.string.menu_edit_tags, Icons.AutoMirrored.Filled.Label) {
-                                viewModel.onEvent(ReviewerEvent.EditTags)
-                            }, Triple(R.string.menu_bury_card, Icons.Filled.VisibilityOff) {
-                                viewModel.onEvent(ReviewerEvent.BuryCard)
-                            }, Triple(R.string.menu_suspend_card, Icons.Filled.Pause) {
-                                viewModel.onEvent(ReviewerEvent.SuspendCard)
-                            }, Triple(R.string.menu_delete_note, Icons.Filled.Delete) {
-                                viewModel.onEvent(ReviewerEvent.DeleteNote)
-                            }, Triple(R.string.card_editor_reschedule_card, Icons.Filled.Schedule) {
-                                viewModel.onEvent(ReviewerEvent.RescheduleCard)
-                            }, Triple(R.string.replay_media, Icons.Filled.Replay) {
-                                viewModel.onEvent(ReviewerEvent.ReplayMedia)
-                            }, Triple(
-                                if (state.isVoicePlaybackEnabled) R.string.menu_disable_voice_playback else R.string.menu_enable_voice_playback,
-                                Icons.Filled.RecordVoiceOver
-                            ) {
-                                viewModel.onEvent(ReviewerEvent.ToggleVoicePlayback)
-                            }, Triple(R.string.deck_options, Icons.Filled.Tune) {
-                                viewModel.onEvent(ReviewerEvent.DeckOptions)
-                            })
+                            if (state.isWhiteboardEnabled) R.string.disable_whiteboard else R.string.enable_whiteboard,
+                            Icons.Filled.Edit
+                        ) {
+                            viewModel.onEvent(ReviewerEvent.ToggleWhiteboard)
+                        }, Triple(R.string.cardeditor_title_edit_card, Icons.Filled.EditNote) {
+                            viewModel.onEvent(ReviewerEvent.EditCard)
+                        }, Triple(R.string.menu_edit_tags, Icons.AutoMirrored.Filled.Label) {
+                            viewModel.onEvent(ReviewerEvent.EditTags)
+                        }, Triple(R.string.menu_bury_card, Icons.Filled.VisibilityOff) {
+                            viewModel.onEvent(ReviewerEvent.BuryCard)
+                        }, Triple(R.string.menu_suspend_card, Icons.Filled.Pause) {
+                            viewModel.onEvent(ReviewerEvent.SuspendCard)
+                        }, Triple(R.string.menu_delete_note, Icons.Filled.Delete) {
+                            viewModel.onEvent(ReviewerEvent.DeleteNote)
+                        }, Triple(R.string.card_editor_reschedule_card, Icons.Filled.Schedule) {
+                            viewModel.onEvent(ReviewerEvent.RescheduleCard)
+                        }, Triple(R.string.replay_media, Icons.Filled.Replay) {
+                            viewModel.onEvent(ReviewerEvent.ReplayMedia)
+                        }, Triple(
+                            if (state.isVoicePlaybackEnabled) R.string.menu_disable_voice_playback else R.string.menu_enable_voice_playback,
+                            Icons.Filled.RecordVoiceOver
+                        ) {
+                            viewModel.onEvent(ReviewerEvent.ToggleVoicePlayback)
+                        }, Triple(R.string.deck_options, Icons.Filled.Tune) {
+                            viewModel.onEvent(ReviewerEvent.DeckOptions)
+                        })
                     }
                 menuOptions.forEach { (textRes, icon, action) ->
                     ListItem(
