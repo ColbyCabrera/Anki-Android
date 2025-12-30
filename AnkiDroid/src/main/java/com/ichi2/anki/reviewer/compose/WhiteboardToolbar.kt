@@ -224,7 +224,6 @@ fun WhiteboardToolbar(
                 Column(
                     modifier = Modifier.verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(0.dp)
                 ) {
                     brushContent()
                 }
@@ -232,7 +231,6 @@ fun WhiteboardToolbar(
                 Row(
                     modifier = Modifier.horizontalScroll(rememberScrollState()),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(0.dp)
                 ) {
                     brushContent()
                 }
