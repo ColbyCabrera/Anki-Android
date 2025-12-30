@@ -52,9 +52,11 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.io.File
 
-data class MediaError(
-    val uri: Uri, val message: String
-)
+sealed class MediaError(open val message: String) {
+    data class PlaybackError(val uri: Uri, override val message: String) : MediaError(message)
+    data class TtsError(val error: TtsPlayer.TtsError, override val message: String) :
+        MediaError(message)
+}
 
 data class ReviewerState(
     val newCount: Int = 0,
@@ -132,7 +134,7 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
             override fun onError(uri: Uri): MediaErrorBehavior {
                 Timber.w("Error playing media: %s", uri)
                 val message = getApplication<Application>().getString(R.string.media_load_failed)
-                _state.update { it.copy(mediaError = MediaError(uri, message)) }
+                _state.update { it.copy(mediaError = MediaError.PlaybackError(uri, message)) }
                 return MediaErrorBehavior.CONTINUE_MEDIA
             }
 
@@ -141,13 +143,17 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
             ): MediaErrorBehavior {
                 Timber.w("Error playing media: %s", uri)
                 val message = getApplication<Application>().getString(R.string.media_load_failed)
-                _state.update { it.copy(mediaError = MediaError(uri, message)) }
+                _state.update { it.copy(mediaError = MediaError.PlaybackError(uri, message)) }
                 return MediaErrorBehavior.CONTINUE_MEDIA
             }
 
             override fun onTtsError(error: TtsPlayer.TtsError, isAutomaticPlayback: Boolean) {
                 Timber.w("TTS error: %s", error)
-                // Optionally handle TTS errors in state if needed
+                if (!isAutomaticPlayback) {
+                    val message =
+                        getApplication<Application>().getString(R.string.tts_playback_failed)
+                    _state.update { it.copy(mediaError = MediaError.TtsError(error, message)) }
+                }
             }
         })
 
