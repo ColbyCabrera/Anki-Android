@@ -18,29 +18,42 @@ package com.ichi2.anki.reviewer.compose
 import android.view.View
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Redo
 import androidx.compose.material.icons.automirrored.filled.Undo
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.ichi2.anki.R
+import com.ichi2.anki.ui.windows.reviewer.whiteboard.ToolbarAlignment
 import com.ichi2.anki.ui.windows.reviewer.whiteboard.WhiteboardViewModel
 import com.ichi2.anki.ui.windows.reviewer.whiteboard.compose.AddBrushButton
 import com.ichi2.anki.ui.windows.reviewer.whiteboard.compose.ColorBrushButton
@@ -62,7 +75,12 @@ fun WhiteboardToolbar(
     val brushes by viewModel.brushes.collectAsState()
     val activeBrushIndex by viewModel.activeBrushIndex.collectAsState()
     val isEraserActive by viewModel.isEraserActive.collectAsState()
+    val alignment by viewModel.toolbarAlignment.collectAsState()
+    val isStylusOnlyMode by viewModel.isStylusOnlyMode.collectAsState()
 
+    var showOverflowMenu by remember { mutableStateOf(false) }
+
+    val isVertical = alignment == ToolbarAlignment.LEFT || alignment == ToolbarAlignment.RIGHT
     val colorNormal = MaterialTheme.colorScheme.onSurface
     val colorHighlight = MaterialTheme.colorScheme.surfaceVariant
 
@@ -72,15 +90,10 @@ fun WhiteboardToolbar(
         shape = MaterialTheme.shapes.large,
         tonalElevation = 2.dp
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
+        val content = @Composable {
             // Undo button
             IconButton(
-                onClick = { viewModel.undo() },
-                enabled = canUndo
+                onClick = { viewModel.undo() }, enabled = canUndo
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Undo,
@@ -91,8 +104,7 @@ fun WhiteboardToolbar(
 
             // Redo button
             IconButton(
-                onClick = { viewModel.redo() },
-                enabled = canRedo
+                onClick = { viewModel.redo() }, enabled = canRedo
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Redo,
@@ -112,21 +124,80 @@ fun WhiteboardToolbar(
                 )
             }
 
+            // Overflow Menu Button
+            Box {
+                IconButton(onClick = { showOverflowMenu = !showOverflowMenu }) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = stringResource(R.string.whiteboard_more_options),
+                        tint = colorNormal
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = showOverflowMenu, onDismissRequest = { showOverflowMenu = false }) {
+                    // Stylus mode toggle
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.stylus_mode)) },
+                        onClick = {
+                            viewModel.toggleStylusOnlyMode()
+                            showOverflowMenu = false
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = if (isStylusOnlyMode) Icons.Default.Check else Icons.Default.Edit,
+                                contentDescription = null
+                            )
+                        })
+
+                    // Toolbar position submenu
+                    HorizontalDivider()
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.whiteboard_align_left)) },
+                        onClick = {
+                            viewModel.setToolbarAlignment(ToolbarAlignment.LEFT)
+                            showOverflowMenu = false
+                        },
+                        enabled = alignment != ToolbarAlignment.LEFT
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.whiteboard_align_bottom)) },
+                        onClick = {
+                            viewModel.setToolbarAlignment(ToolbarAlignment.BOTTOM)
+                            showOverflowMenu = false
+                        },
+                        enabled = alignment != ToolbarAlignment.BOTTOM
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.whiteboard_align_right)) },
+                        onClick = {
+                            viewModel.setToolbarAlignment(ToolbarAlignment.RIGHT)
+                            showOverflowMenu = false
+                        },
+                        enabled = alignment != ToolbarAlignment.RIGHT
+                    )
+                }
+            }
+
             // Divider
-            HorizontalDivider(
-                modifier = Modifier
-                    .height(32.dp)
-                    .width(1.dp),
-                color = MaterialTheme.colorScheme.outlineVariant
-            )
+            if (isVertical) {
+                HorizontalDivider(
+                    modifier = Modifier
+                        .width(32.dp)
+                        .padding(vertical = 4.dp),
+                    color = MaterialTheme.colorScheme.outlineVariant
+                )
+            } else {
+                VerticalDivider(
+                    modifier = Modifier
+                        .height(32.dp)
+                        .padding(horizontal = 4.dp),
+                    color = MaterialTheme.colorScheme.outlineVariant
+                )
+            }
 
-            Spacer(modifier = Modifier.width(4.dp))
-
-            // Brush palette with horizontal scroll
-            Row(
-                modifier = Modifier.horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(0.dp)
-            ) {
+            // Brush palette
+            val brushContent = @Composable {
                 brushes.forEachIndexed { index, brush ->
                     ColorBrushButton(
                         brush = brush,
@@ -143,6 +214,42 @@ fun WhiteboardToolbar(
                     colorNormal = colorNormal,
                     tooltip = stringResource(R.string.add_brush)
                 )
+            }
+
+            if (isVertical) {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(0.dp)
+                ) {
+                    brushContent()
+                }
+            } else {
+                Row(
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(0.dp)
+                ) {
+                    brushContent()
+                }
+            }
+        }
+
+        if (isVertical) {
+            Column(
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                content()
+            }
+        } else {
+            Row(
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                content()
             }
         }
     }
