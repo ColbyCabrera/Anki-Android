@@ -32,6 +32,7 @@ import android.view.View
 import android.webkit.WebView
 import android.widget.LinearLayout
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.DrawableRes
@@ -82,6 +83,7 @@ import com.ichi2.anki.reviewer.AnswerButtons.Companion.getBackgroundColors
 import com.ichi2.anki.reviewer.AnswerButtons.Companion.getTextColors
 import com.ichi2.anki.reviewer.AutomaticAnswerAction
 import com.ichi2.anki.reviewer.FullScreenMode.Companion.isFullScreenReview
+import com.ichi2.anki.reviewer.ReviewerConstants
 import com.ichi2.anki.reviewer.ReviewerEffect
 import com.ichi2.anki.reviewer.ReviewerEvent
 import com.ichi2.anki.reviewer.ReviewerUi
@@ -119,7 +121,6 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import kotlin.coroutines.resume
 
-@Suppress("LeakingThis")
 @NeedsTest("#14709: Timebox shouldn't appear instantly when the Reviewer is opened")
 open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     private var queueState: CurrentQueueState? = null
@@ -165,10 +166,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     private val actionButtons = ActionButtons()
 
 
-    private val addNoteLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult(),
-        FlashCardViewerResultCallback(),
-    )
+    private lateinit var addNoteLauncher: ActivityResultLauncher<Intent>
 
     private val flagItemIds = mutableSetOf<Int>()
 
@@ -179,6 +177,10 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         if (showedActivityFailedScreen(savedInstanceState)) {
             return
         }
+        addNoteLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult(),
+            FlashCardViewerResultCallback(),
+        )
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
@@ -356,7 +358,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
     }
 
     fun redo() {
-        launchCatchingTask { redoAndShowSnackbar(ACTION_SNACKBAR_TIME) }
+        launchCatchingTask { redoAndShowSnackbar(ReviewerConstants.ACTION_SNACKBAR_DURATION_MS) }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -612,7 +614,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(Manifest.permission.RECORD_AUDIO),
-                REQUEST_AUDIO_PERMISSION,
+                ReviewerConstants.REQUEST_AUDIO_PERMISSION,
             )
         } else {
             toggleMicToolBar()
@@ -665,7 +667,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
         grantResults: IntArray,
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_AUDIO_PERMISSION && permissions.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if (requestCode == ReviewerConstants.REQUEST_AUDIO_PERMISSION && permissions.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             // Get get audio record permission, so we can create the record tool bar
             toggleMicToolBar()
         }
@@ -1066,7 +1068,7 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
             statesMutated = true
         }
         if (!statesMutated) {
-            executeFunctionWithDelay(50) { displayCardAnswer() }
+            executeFunctionWithDelay(ReviewerConstants.STATE_MUTATION_RETRY_DELAY_MS) { displayCardAnswer() }
             return
         }
 
@@ -1328,11 +1330,6 @@ open class Reviewer : AbstractFlashcardViewer(), ReviewerUi {
          * Bundle key for the deck id to review.
          */
         const val EXTRA_DECK_ID = "deckId"
-
-        private const val REQUEST_AUDIO_PERMISSION = 0
-
-        /** Default (500ms) time for action snackbars, such as undo, bury and suspend */
-        const val ACTION_SNACKBAR_TIME = 500
 
         /** Maps ViewerCommand to corresponding Flag for toggle operations */
         private val VIEWER_COMMAND_TO_FLAG = mapOf(
