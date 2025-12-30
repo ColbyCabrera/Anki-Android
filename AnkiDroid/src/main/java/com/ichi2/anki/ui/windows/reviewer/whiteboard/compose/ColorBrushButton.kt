@@ -149,7 +149,7 @@ fun AddBrushButton(
             )
             .semantics { contentDescription = tooltip }) {
         Icon(
-            painter = painterResource(id = R.drawable.ic_add),
+            painter = painterResource(id = R.drawable.add_24px),
             contentDescription = null,
             tint = colorNormal
         )
