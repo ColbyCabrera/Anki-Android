@@ -293,10 +293,12 @@ fun ReviewerContent(
                         toolbarHeight = (toolbarHeightDp + 48.dp).value.toInt()
                     )
 
-                    // Whiteboard canvas
+                    // Whiteboard canvas and toolbar
                     if (state.isWhiteboardEnabled && whiteboardViewModel != null) {
-                        val canvasToolbarAlignment by whiteboardViewModel.toolbarAlignment.collectAsState()
-                        val canvasPadding = when (canvasToolbarAlignment) {
+                        val toolbarAlignment by whiteboardViewModel.toolbarAlignment.collectAsState()
+                        
+                        // Canvas padding based on toolbar alignment
+                        val canvasPadding = when (toolbarAlignment) {
                             ToolbarAlignment.BOTTOM -> Modifier.padding(bottom = totalBottomPadding + 48.dp)
                             ToolbarAlignment.LEFT -> Modifier.padding(start = 56.dp)
                             ToolbarAlignment.RIGHT -> Modifier.padding(end = 56.dp)
@@ -304,11 +306,8 @@ fun ReviewerContent(
                         WhiteboardCanvas(
                             viewModel = whiteboardViewModel, modifier = canvasPadding
                         )
-                    }
 
-                    // Whiteboard toolbar (shown above answer buttons when whiteboard is enabled)
-                    if (state.isWhiteboardEnabled && whiteboardViewModel != null) {
-                        val toolbarAlignment by whiteboardViewModel.toolbarAlignment.collectAsState()
+                        // Toolbar positioning
                         val composeAlignment = when (toolbarAlignment) {
                             ToolbarAlignment.BOTTOM -> Alignment.BottomCenter
                             ToolbarAlignment.LEFT -> Alignment.CenterStart
