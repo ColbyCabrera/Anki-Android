@@ -99,6 +99,7 @@ sealed class ReviewerEvent {
     object ToggleVoicePlayback : ReviewerEvent()
     data class OnVoicePlaybackStateChanged(val enabled: Boolean) : ReviewerEvent()
     object DeckOptions : ReviewerEvent()
+    object MediaErrorHandled : ReviewerEvent()
 }
 
 sealed class ReviewerEffect {
@@ -198,7 +199,12 @@ class ReviewerViewModel(app: Application) : AndroidViewModel(app) {
             is ReviewerEvent.ToggleVoicePlayback -> toggleVoicePlayback()
             is ReviewerEvent.OnVoicePlaybackStateChanged -> onVoicePlaybackStateChanged(event.enabled)
             is ReviewerEvent.DeckOptions -> deckOptions()
+            is ReviewerEvent.MediaErrorHandled -> onMediaErrorHandled()
         }
+    }
+
+    private fun onMediaErrorHandled() {
+        _state.update { it.copy(mediaError = null) }
     }
 
     private fun deckOptions() {
