@@ -122,6 +122,51 @@ class SharedDecksDownloadViewModelTest {
     }
 
     @Test
+    fun `waits to start until the first bytes arrive`() {
+        viewModel.onDownloadStarted("deck.apkg")
+        assertThat(state.isWaitingToStart, equalTo(true))
+
+        viewModel.onProgress(downloadedBytes = 0, totalBytes = 10_000, timeMillis = 0)
+        assertThat(state.isWaitingToStart, equalTo(true))
+
+        viewModel.onProgress(downloadedBytes = 1, totalBytes = 10_000, timeMillis = 1_000)
+        assertThat(state.isWaitingToStart, equalTo(false))
+    }
+
+    @Test
+    fun `first bytes end the wait while the total size is unknown`() {
+        viewModel.onProgress(downloadedBytes = 5_000, totalBytes = -1, timeMillis = 0)
+        assertThat(state.isWaitingToStart, equalTo(false))
+    }
+
+    @Test
+    fun `not waiting to start when progress is unavailable`() {
+        viewModel.onProgressUnavailable()
+        assertThat(state.isWaitingToStart, equalTo(false))
+    }
+
+    @Test
+    fun `not waiting to start once finished without any reported bytes`() {
+        viewModel.onDownloadComplete()
+        assertThat(state.isWaitingToStart, equalTo(false))
+    }
+
+    @Test
+    fun `not waiting to start after a failure until a retry`() {
+        viewModel.onDownloadFailed()
+        assertThat(state.isWaitingToStart, equalTo(false))
+
+        viewModel.onDownloadStarted("deck.apkg")
+        assertThat(state.isWaitingToStart, equalTo(true))
+    }
+
+    @Test
+    fun `not waiting to start when a login is required`() {
+        viewModel.onLoginRequired()
+        assertThat(state.isWaitingToStart, equalTo(false))
+    }
+
+    @Test
     fun `whole percentages lose the decimal place`() {
         assertThat(formatDownloadPercent(0f), equalTo("0"))
         assertThat(formatDownloadPercent(100f), equalTo("100"))
