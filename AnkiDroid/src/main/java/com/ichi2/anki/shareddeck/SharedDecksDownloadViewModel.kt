@@ -83,7 +83,11 @@ data class SharedDecksDownloadUiState(
     val secondsRemaining: Long? = null,
     val phase: DownloadPhase = DownloadPhase.Downloading,
     val isWaitingForNetwork: Boolean = false,
-)
+) {
+    /** The download is running, but no bytes have arrived yet. */
+    val isWaitingToStart: Boolean
+        get() = phase == DownloadPhase.Downloading && percent != null && downloadedBytes <= 0
+}
 
 /** How far the download has got. Decides the status text and which buttons are offered. */
 enum class DownloadPhase {
