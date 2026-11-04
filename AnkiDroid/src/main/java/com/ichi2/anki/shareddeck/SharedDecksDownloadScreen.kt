@@ -79,14 +79,14 @@ private val InfoBadgeSize = 28.dp
 private val ProgressAnimationSpec =
     SpringSpec(
         dampingRatio = Spring.DampingRatioLowBouncy,
-        stiffness = Spring.StiffnessLow,
-        visibilityThreshold = 1 / 1000f,
+        stiffness = Spring.StiffnessMediumLow,
+        visibilityThreshold = Spring.DefaultDisplacementThreshold,
     )
 private val PercentTextAnimationSpec =
     SpringSpec(
         dampingRatio = Spring.DampingRatioNoBouncy,
-        stiffness = Spring.StiffnessLow,
-        visibilityThreshold = 1 / 1000f,
+        stiffness = Spring.StiffnessMediumLow,
+        visibilityThreshold = Spring.DefaultDisplacementThreshold,
     )
 
 /** Stateless download screen. State lives in [SharedDecksDownloadViewModel]. */
