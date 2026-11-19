@@ -27,13 +27,16 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -72,6 +75,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.Hyphens
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -338,18 +342,19 @@ private fun StatCards(state: SharedDecksDownloadUiState) {
         modifier =
             Modifier
                 .fillMaxWidth()
+                .height(IntrinsicSize.Min)
                 .padding(start = dimensions.screenEdge, end = dimensions.screenEdge, bottom = dimensions.space150),
         horizontalArrangement = Arrangement.spacedBy(dimensions.space150),
     ) {
         StatCard(
             label = stringResource(CommonString.download_speed_label),
             value = speedText(state.speedBytesPerSecond, state.downloadedBytes),
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).fillMaxHeight(),
         )
         StatCard(
             label = stringResource(CommonString.download_time_left_label),
             value = timeLeftText(state.secondsRemaining),
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).fillMaxHeight(),
         )
     }
 }
@@ -365,7 +370,7 @@ private fun StatCard(
         Column(modifier = Modifier.padding(MaterialTheme.dimensions.sectionGap)) {
             Text(
                 text = label.uppercase(),
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelMedium.copy(hyphens = Hyphens.Auto),
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
